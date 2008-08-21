@@ -39,7 +39,7 @@ Copyright 2008 by Carnegie Mellon University.
    </license>
 
    <url>
-      <update label="Plural update site" url="http://code.google.com/p/pluralism/trunk/EclipseUpdate/"/>
+      <update label="Plural update site" url="http://pluralism.googlecode.com/svn/trunk/EclipseUpdate/"/>
       <discovery label="Crystal update site" url="http://crystalsaf.googlecode.com/svn/trunk/EclipseUpdate/"/>
    </url>
 
