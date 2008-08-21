@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="edu.cmu.cs.plural.feature"
+      label="Plural"
+      version="1.0.0"
+      plugin="edu.cmu.cs.plural">
+
+   <description url="http://code.google.com/p/pluralism/">
+      Modular object protocol checking for Java.
+   </description>
+
+   <copyright url="http://code.google.com/p/pluralism/">
+      Copyright (C) 2007, 2008 by Kevin Bierhoff and Nels E. Beckman
+   </copyright>
+
+   <license url="http://www.gnu.org/licenses/gpl-2.0.html">
+      BY CLICKING ON THE “ACCEPT” OR “CONTINUE” BUTTON, YOU “LICENSEE”
+REPRESENT AND WARRANT THAT YOU FULLY UNDERSTAND AND AGREE TO
+COMPLY WITH ALL OF THE FOLLOWING TERMS AND CONDITIONS, AND THAT
+FAILURE TO ABIDE BY THESE TERMS AND CONDITIONS MAY RESULT IN
+LEGAL ACTION AGAINST YOU “LICENSEE”.  IF YOU “LICENSEE” HAVE
+ANY QUESTIONS AS TO THESE TERMS AND CONDITIONS, WE ENCOURAGE
+YOU “LICENSEE” TO SEEK INDEPENDENT COUNSEL PRIOR TO CLICKING
+ON THE “ACCEPT” OR “CONTINUE” BUTTON.
+
+These terms and conditions constitute a legally binding agreement
+(“Agreement”) between (a) you, the “Licensee”, and (b) Carnegie
+Mellon University (“Carnegie Mellon”).
+
+This software is available under a dual license agreement. To
+download under the GPL v2 license (http://www.gnu.org/licenses/gpl-2.0.html),
+please click here.
+
+To obtain this software under a commercial license, please contact
+the Carnegie Mellon University Center for Technology Transfer
+at innovation@cmu.edu.
+
+Copyright 2008 by Carnegie Mellon University.
+   </license>
+
+   <url>
+      <update label="Plural update site" url="http://code.google.com/p/pluralism/trunk/EclipseUpdate/"/>
+      <discovery label="Crystal update site" url="http://crystalsaf.googlecode.com/svn/trunk/EclipseUpdate/"/>
+   </url>
+
+   <requires>
+      <import plugin="org.eclipse.ui"/>
+      <import plugin="org.eclipse.core.runtime"/>
+      <import plugin="org.eclipse.jdt.core"/>
+      <import plugin="org.eclipse.ui.console"/>
+      <import plugin="org.eclipse.core.resources"/>
+      <import plugin="org.eclipse.jface.text"/>
+      <import plugin="edu.cmu.cs.crystal" version="3.3.0" match="greaterOrEqual"/>
+      <import plugin="org.junit4"/>
+   </requires>
+
+   <plugin
+         id="edu.cmu.cs.plural"
+         download-size="0"
+         install-size="0"
+         version="1.0.0"/>
+
+   <data
+         id="COPYING"
+         download-size="0"
+         install-size="0"/>
+
+</feature>
