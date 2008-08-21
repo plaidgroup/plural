@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description url="http://code.google.com/p/pluralism/trunk/EclipseUpdate/">
+      The Eclipse update site for Plural.
+   </description>
+   <feature url="features/edu.cmu.cs.plural.feature_1.0.0.jar" id="edu.cmu.cs.plural.feature" version="1.0.0">
+      <category name="Plural"/>
+   </feature>
+   <category-def name="Plural" label="Plural"/>
+</site>
