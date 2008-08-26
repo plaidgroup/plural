@@ -58,10 +58,6 @@
             class="edu.cmu.cs.plural.track.FractionalAnalysis"
             name="Fractional Analysis">
       </analysis>
-      <analysis
-            class="edu.cmu.cs.plural.metrics.MetricsCounter"
-            name="Metrics counter">
-      </analysis>
       <!--
       <analysis
             class="edu.cmu.cs.plural.track.LinearChecker"
