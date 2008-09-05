@@ -49,7 +49,7 @@ import edu.cmu.cs.crystal.tac.ThisVariable;
 public class TACAnalysisHelper {
 
 	private final ITACAnalysisContext context;
-	private final Crystal crystal;
+	private final AnnotationDatabase annoDB;
 	private final ThisVariable thisVar;
 	
 	/**
@@ -57,8 +57,8 @@ public class TACAnalysisHelper {
 	 * @param crystal
 	 * @param ctx
 	 */
-	public TACAnalysisHelper(Crystal crystal, ITACAnalysisContext ctx) {
-		this.crystal = crystal;
+	public TACAnalysisHelper(AnnotationDatabase annoDB, ITACAnalysisContext ctx) {
+		this.annoDB = annoDB;
 		this.context = ctx;
 		this.thisVar = null;
 	}
@@ -69,18 +69,14 @@ public class TACAnalysisHelper {
 	 * @param ctx
 	 * @param thisVar
 	 */
-	public TACAnalysisHelper(Crystal crystal, ITACAnalysisContext ctx, ThisVariable thisVar) {
-		this.crystal = crystal;
+	public TACAnalysisHelper(AnnotationDatabase annoDB, ITACAnalysisContext ctx, ThisVariable thisVar) {
+		this.annoDB = annoDB;
 		this.context = ctx;
 		this.thisVar = thisVar;
 	}
 
 	public ITACAnalysisContext getAnalysisContext() {
 		return context;
-	}
-
-	public Crystal getCrystal() {
-		return crystal;
 	}
 	
 	public ThisVariable getThisVar() {
@@ -92,7 +88,7 @@ public class TACAnalysisHelper {
 	}
 
 	public AnnotationDatabase getAnnoDB() {
-		return crystal.getAnnotationDatabase();
+		return annoDB;
 	}
 
 }

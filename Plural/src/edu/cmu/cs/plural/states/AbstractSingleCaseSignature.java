@@ -48,6 +48,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
@@ -66,9 +67,9 @@ abstract class AbstractSingleCaseSignature extends AbstractBindingSignature
 	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
 	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
 	 */
-	protected AbstractSingleCaseSignature(Crystal crystal,
+	protected AbstractSingleCaseSignature(AnnotationDatabase annoDB,
 			IMethodBinding binding, ITypeBinding staticallyInvokedType) {
-		super(crystal, binding, staticallyInvokedType);
+		super(annoDB, binding, staticallyInvokedType);
 	}
 
 	//

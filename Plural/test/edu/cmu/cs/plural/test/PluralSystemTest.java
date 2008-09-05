@@ -39,7 +39,9 @@ package edu.cmu.cs.plural.test;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -49,11 +51,21 @@ import org.junit.Before;
 import org.junit.Test;
 
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.IAnalysisReporter;
+import edu.cmu.cs.crystal.IRunCrystalCommand;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
+import edu.cmu.cs.crystal.internal.Utilities;
 import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.crystal.test.SystemTestUtils;
 import edu.cmu.cs.plural.track.FractionalAnalysis;
 
+/**
+ * This class is the old way of testing Plural. 
+ * Now use edu.cmu.cs.crystal.test.AnnotatedTest.
+ * 
+ * @see edu.cmu.cs.crystal.test.AnnotatedTest
+ */
+@Deprecated
 public class PluralSystemTest {
 	
 	private Crystal crystal;
@@ -82,9 +94,18 @@ public class PluralSystemTest {
 		files.add("PermissionTest/src/edu.cmu.cs.plural.test/CasesTest");
 		files.add("PermissionTest/src/edu.cmu.cs.plural.test/SpecInheritanceTest");
 		
-		List<ICompilationUnit> compUnits = WorkspaceUtilities.findCompilationUnits(files);
+		final List<ICompilationUnit> compUnits = WorkspaceUtilities.findCompilationUnits(files);
 		Assert.assertEquals("Could not find all test files in workspace; maybe you need to update the test projects?", files.size(), compUnits.size());
-		crystal.runAnalyses(compUnits, null);
+		
+		IRunCrystalCommand run_command = new IRunCrystalCommand(){
+			public Set<String> analyses() {
+				return Collections.singleton("FractionalAnalysis");
+			}
+			public List<ICompilationUnit> compilationUnits() { return compUnits; }
+			public IAnalysisReporter reporter() { return Utilities.nyi(); }
+		};
+		
+		crystal.runAnalyses(run_command, null);
 		
 		SystemTestUtils.assertEqualContent(
 				new File("regression/permission-test.expected"), 

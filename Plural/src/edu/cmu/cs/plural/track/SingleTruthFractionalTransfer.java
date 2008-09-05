@@ -124,7 +124,7 @@ public class SingleTruthFractionalTransfer extends
 	
 	private static final Logger log = Logger.getLogger(SingleTruthFractionalTransfer.class.getName());
 	
-	private Crystal crystal;
+	private final AnnotationDatabase annoDB;
 	private PermissionFactory pf = PermissionFactory.INSTANCE;
 	
 	/*
@@ -138,8 +138,8 @@ public class SingleTruthFractionalTransfer extends
 	
 	private ThisVariable thisVar; 
 	
-	public SingleTruthFractionalTransfer(Crystal crystal, FractionAnalysisContext context) {
-		this.crystal = crystal;
+	public SingleTruthFractionalTransfer(AnnotationDatabase annoDB, FractionAnalysisContext context) {
+		this.annoDB = annoDB;
 		this.context = context;
 	}
 
@@ -183,14 +183,14 @@ public class SingleTruthFractionalTransfer extends
 			start = isConstructor ? 
 				PluralTupleLatticeElement.createConstructorLattice(
 					FractionalPermissions.bottom(),
-					crystal.getAnnotationDatabase(),
+					getAnnoDB(),
 					context.getRepository(),
 					thisVar,
 					d)
 					:	
 				new PluralTupleLatticeElement(
 					FractionalPermissions.bottom(),
-					crystal.getAnnotationDatabase(),
+					getAnnoDB(),
 					context.getRepository());
 			
 			start.storeInitialAliasingInfo(d);
@@ -227,7 +227,7 @@ public class SingleTruthFractionalTransfer extends
 			// static method
 			thisVar = null;
 			start =	new PluralTupleLatticeElement(FractionalPermissions.bottom(),
-					crystal.getAnnotationDatabase(), context.getRepository());
+					getAnnoDB(), context.getRepository());
 			start.storeInitialAliasingInfo(d);
 		}
 		
@@ -1544,7 +1544,7 @@ public class SingleTruthFractionalTransfer extends
 	}
 
 	private AnnotationDatabase getAnnoDB() {
-		return crystal.getAnnotationDatabase();
+		return annoDB;
 	}
 
 	private StateSpace getStateSpace(ITypeBinding type) {

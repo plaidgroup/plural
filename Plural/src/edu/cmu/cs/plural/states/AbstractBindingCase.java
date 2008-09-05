@@ -47,6 +47,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
@@ -71,9 +72,9 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
 	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
 	 */
-	protected AbstractBindingCase(Crystal crystal, IMethodBinding binding, 
+	protected AbstractBindingCase(AnnotationDatabase annoDB, IMethodBinding binding, 
 			ITypeBinding staticallyInvokedType, PermAnnotation perm) {
-		super(crystal, binding, staticallyInvokedType);
+		super(annoDB, binding, staticallyInvokedType);
 		preAndPostString = Pair.create(perm.getRequires(), perm.getEnsures());
 	}
 

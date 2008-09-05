@@ -47,6 +47,7 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.Modifier;
 
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
@@ -72,8 +73,8 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
 	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
 	 */
-	protected AbstractBindingSignature(Crystal crystal, IMethodBinding binding, ITypeBinding staticallyInvokedType) {
-		super(crystal, binding, staticallyInvokedType);
+	protected AbstractBindingSignature(AnnotationDatabase annoDB, IMethodBinding binding, ITypeBinding staticallyInvokedType) {
+		super(annoDB, binding, staticallyInvokedType);
 	}
 
 	/* (non-Javadoc)

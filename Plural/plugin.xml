@@ -63,11 +63,11 @@
             class="edu.cmu.cs.plural.track.LinearChecker"
             name="Backtracking Analysis">
       </analysis>
+      -->
       <analysis
             class="edu.cmu.cs.plural.atomic.NIMBYChecker"
             name="Not In My Back Yard!">
       </analysis>
-      -->
    </extension>
    <extension
          point="edu.cmu.cs.crystal.CrystalAnnotation">

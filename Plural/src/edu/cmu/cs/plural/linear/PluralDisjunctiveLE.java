@@ -48,6 +48,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.LatticeElement;
 import edu.cmu.cs.crystal.internal.Freezable;
 import edu.cmu.cs.crystal.tac.ConstructorCallInstruction;
@@ -88,10 +89,10 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @return
 	 */
 	public static PluralDisjunctiveLE tuple(TensorPluralTupleLE start,
-			Crystal crystal, ITACAnalysisContext tacContext, ThisVariable thisVar,
+			AnnotationDatabase annoDB, ITACAnalysisContext tacContext, ThisVariable thisVar,
 			FractionAnalysisContext fractContext) {
 		return new PluralDisjunctiveLE(ContextFactory.tensor(start),
-				new LinearOperations(crystal, tacContext, thisVar, fractContext));
+				new LinearOperations(annoDB, tacContext, thisVar, fractContext));
 	}
 	
 	/**
@@ -121,12 +122,12 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @param fractContext
 	 * @param reEntrant 
 	 */
-	private PluralDisjunctiveLE(DisjunctiveLE le, Crystal crystal, 
+	private PluralDisjunctiveLE(DisjunctiveLE le, AnnotationDatabase annoDB, 
 			ITACAnalysisContext tacContext, ThisVariable thisVar, 
 			FractionAnalysisContext fractContext) {
 		assert le != null;
 		this.le = le;
-		this.op = new LinearOperations(crystal, tacContext, thisVar, fractContext);
+		this.op = new LinearOperations(annoDB, tacContext, thisVar, fractContext);
 	}
 
 	/**

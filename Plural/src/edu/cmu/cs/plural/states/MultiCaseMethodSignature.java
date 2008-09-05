@@ -47,6 +47,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 import edu.cmu.cs.plural.util.Pair;
@@ -64,15 +65,15 @@ public class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethod
 	 * @param crystal
 	 * @param binding
 	 */
-	public MultiCaseMethodSignature(Crystal crystal, IMethodBinding binding,
+	public MultiCaseMethodSignature(AnnotationDatabase annoDB, IMethodBinding binding,
 			ITypeBinding staticallyInvokedType, PermAnnotation... cases) {
-		super(crystal, binding, staticallyInvokedType, cases);
+		super(annoDB, binding, staticallyInvokedType, cases);
 	}
 
 	@Override
-	protected IMethodCase createCase(Crystal crystal, IMethodBinding binding,
+	protected IMethodCase createCase(AnnotationDatabase annoDB, IMethodBinding binding,
 			PermAnnotation perm, ITypeBinding staticallyInvokedType) {
-		return new MultiMethodCase(crystal, binding, staticallyInvokedType, perm);
+		return new MultiMethodCase(annoDB, binding, staticallyInvokedType, perm);
 	}
 
 	/* (non-Javadoc)
@@ -135,8 +136,8 @@ public class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethod
 	private class MultiMethodCase extends AbstractBindingCase implements
 	IMethodCase {
 
-		public MultiMethodCase(Crystal crystal, IMethodBinding binding, ITypeBinding staticallyInvokedType, PermAnnotation perm) {
-			super(crystal, binding, staticallyInvokedType, perm);
+		public MultiMethodCase(AnnotationDatabase annoDB, IMethodBinding binding, ITypeBinding staticallyInvokedType, PermAnnotation perm) {
+			super(annoDB, binding, staticallyInvokedType, perm);
 		}
 
 		/* Change visibility of inherited method

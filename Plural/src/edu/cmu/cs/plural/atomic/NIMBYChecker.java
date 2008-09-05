@@ -65,7 +65,7 @@ public class NIMBYChecker extends SingleTruthFractionalAnalysis {
 	 */
 	@Override
 	protected SingleTruthFractionalTransfer createNewFractionalTransfer() {
-		return new NIMBYTransferFunction(this.crystal, this);
+		return new NIMBYTransferFunction(analysisInput.getAnnoDB(), this);
 	}
 	
 	@Override
@@ -91,7 +91,7 @@ public class NIMBYChecker extends SingleTruthFractionalAnalysis {
 		 * This is really bad for performance reasons. I am already doing this
 		 * exact same analysis on the same methods inside of NIMBYTransferFunction.
 		 */
-		private IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
+		private final IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
 		
 		private boolean didUnpackOccurHere(ASTNode node) {
 			return 

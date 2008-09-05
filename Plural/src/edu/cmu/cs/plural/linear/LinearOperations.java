@@ -58,6 +58,7 @@ import org.eclipse.jdt.core.dom.Modifier;
 import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
@@ -105,10 +106,10 @@ class LinearOperations extends TACAnalysisHelper {
 	
 	private final boolean packBeforeCall;
 	
-	public LinearOperations(Crystal crystal, ITACAnalysisContext ctx,
+	public LinearOperations(AnnotationDatabase annoDB, ITACAnalysisContext ctx,
 			ThisVariable thisVar,
 			FractionAnalysisContext fractContext) {
-		super(crystal, ctx, thisVar);
+		super(annoDB, ctx, thisVar);
 		this.fractContext = fractContext;
 		this.packBeforeCall = fractContext.getAnalyzedCase().getInvocationCase().isReentrant();
 	}

@@ -49,7 +49,7 @@ public class AbstractBinding {
 
 	protected final IMethodBinding binding;
 	private final ITypeBinding staticallyInvokedType;
-	protected final Crystal crystal;
+	protected final AnnotationDatabase annoDB;
 	private final boolean reentrant;
 
 	/**
@@ -58,8 +58,8 @@ public class AbstractBinding {
 	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
 	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
 	 */
-	public AbstractBinding(Crystal crystal, IMethodBinding binding, ITypeBinding staticallyInvokedType) {
-		this.crystal = crystal;
+	public AbstractBinding(AnnotationDatabase annoDB, IMethodBinding binding, ITypeBinding staticallyInvokedType) {
+		this.annoDB = annoDB;
 		this.binding = binding;
 		this.staticallyInvokedType = staticallyInvokedType;
 		// determine reentrancy from @NonReentrant annotation of invoked type
@@ -77,7 +77,7 @@ public class AbstractBinding {
 	}
 
 	protected AnnotationDatabase getAnnoDB() {
-		return crystal.getAnnotationDatabase();
+		return annoDB;
 	}
 
 	protected AnnotationSummary getMethodSummary() {
@@ -85,7 +85,7 @@ public class AbstractBinding {
 	}
 	
 	protected StateSpace getStateSpace(ITypeBinding type) {
-		return StateSpaceRepository.getInstance(crystal).getStateSpace(type);
+		return StateSpaceRepository.getInstance(annoDB).getStateSpace(type);
 	}
 	
 	public boolean isReentrant() {

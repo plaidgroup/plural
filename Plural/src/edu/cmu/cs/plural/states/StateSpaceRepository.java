@@ -82,9 +82,9 @@ public class StateSpaceRepository {
 	 * (and recognizing that a new Crystal run has begun).
 	 * @return the singleton instance of the state space repository.
 	 */
-	public static StateSpaceRepository getInstance(Crystal crystal) {
+	public static StateSpaceRepository getInstance(AnnotationDatabase annoDB) {
 		if(instance == null)
-			instance = new StateSpaceRepository(crystal);
+			instance = new StateSpaceRepository(annoDB);
 		return instance;
 	}
 
@@ -102,7 +102,9 @@ public class StateSpaceRepository {
 	private final Map<String, IInvocationSignature> signatures;
 	
 	/** Crystal object for accessing the annotation database. */
-	private final Crystal crystal;
+	//private final Crystal crystal;
+	
+	private final AnnotationDatabase annoDB;
 	
 	/** 
 	 * This field is used to detect a new Crystal run.
@@ -115,8 +117,8 @@ public class StateSpaceRepository {
 	 * @param crystal The Crystal instance, for retrieving the annotation database
 	 * (and recognizing that a new Crystal run has begun).
 	 */
-	private StateSpaceRepository(Crystal crystal) {
-		this.crystal = crystal;
+	private StateSpaceRepository(AnnotationDatabase annoDB) {
+		this.annoDB = annoDB;
 		spaces = new HashMap<String, StateSpaceImpl>();
 		signatures = new HashMap<String, IInvocationSignature>();
 	}
@@ -234,14 +236,14 @@ public class StateSpaceRepository {
 		
 		if(a == null)
 			return binding.isConstructor() ? 
-					new SimpleConstructorSignature(crystal, specBinding, binding.getDeclaringClass()) : 
-						new SimpleMethodSignature(crystal, specBinding, binding.getDeclaringClass());
+					new SimpleConstructorSignature(annoDB, specBinding, binding.getDeclaringClass()) : 
+						new SimpleMethodSignature(annoDB, specBinding, binding.getDeclaringClass());
 		else
 			return binding.isConstructor() ? 
-					new MultiCaseConstructorSignature(crystal, specBinding, binding.getDeclaringClass(), 
+					new MultiCaseConstructorSignature(annoDB, specBinding, binding.getDeclaringClass(), 
 							downcast((Object[]) a.getObject("value"), PermAnnotation.class))
 					:
-					new MultiCaseMethodSignature(crystal, specBinding, binding.getDeclaringClass(),
+					new MultiCaseMethodSignature(annoDB, specBinding, binding.getDeclaringClass(),
 							downcast((Object[]) a.getObject("value"), PermAnnotation.class));
 	}
 	
@@ -545,7 +547,7 @@ public class StateSpaceRepository {
 	 * @return The current Crystal annotation database.
 	 */
 	private AnnotationDatabase getAnnotationDB() {
-		AnnotationDatabase result = crystal.getAnnotationDatabase();
+		AnnotationDatabase result = annoDB;
 		if(cachedDB != result) {
 			cachedDB = result;
 			spaces.clear();
