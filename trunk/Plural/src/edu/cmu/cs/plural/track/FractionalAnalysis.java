@@ -98,7 +98,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	 * @return
 	 */
 	protected FractionalTransfer createNewFractionalTransfer() {
-		return new FractionalTransfer(crystal, this);
+		return new FractionalTransfer(analysisInput.getAnnoDB(), this);
 	}
 	
 	/**
@@ -150,7 +150,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	
 	@Override
 	public StateSpaceRepository getRepository() {
-		return StateSpaceRepository.getInstance(crystal);
+		return StateSpaceRepository.getInstance(analysisInput.getAnnoDB());
 	}
 
 	/* (non-Javadoc)
@@ -282,9 +282,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //				if(perms.isUnsatisfiable())
 				if(! after.checkConstraintsSatisfiable(arg))
 					// TODO better reporting
-					crystal.reportUserProblem(
+					reporter.reportUserProblem(
 							"" + e + " yields no suitable permission for surrounding call" + errorCtx, 
-							e, FractionalAnalysis.this);
+							e, FractionalAnalysis.this.getName());
 				
 //				checkState(before.get(node, arg), sig.getRequiredParameterStates(argIndex), arg, e);
 				reportIfError(
@@ -327,9 +327,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //				if(permsAfter.isUnsatisfiable())
 				if(! after.checkConstraintsSatisfiable(receiver))
 					// TODO better reporting
-					crystal.reportUserProblem(
+					reporter.reportUserProblem(
 							"" + receiver.getSourceString() + " carries no suitable permission" + errorCtx, 
-							node, FractionalAnalysis.this);
+							node, FractionalAnalysis.this.getName());
 				
 //				checkState(before.get(node, receiver), sig.getRequiredReceiverStates(), receiver, node);
 				reportIfError(
@@ -346,9 +346,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //				if(perms.isUnsatisfiable())
 				if(! after.checkConstraintsSatisfiable(arg))
 					// TODO better reporting
-					crystal.reportUserProblem(
+					reporter.reportUserProblem(
 							"" + e + " yields no suitable permission for surrounding call" + errorCtx, 
-							e, FractionalAnalysis.this);
+							e, FractionalAnalysis.this.getName());
 				
 //				checkState(before.get(node, arg), sig.getRequiredParameterStates(argIdx), arg, e);
 				reportIfError(
@@ -388,9 +388,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 					
 					if(! after.checkConstraintsSatisfiable(fa.getVariable(node.getArray())))
 						// TODO better reporting
-						crystal.reportUserProblem(
+						reporter.reportUserProblem(
 								"no suitable permission for assignment to " + node + errorCtx, 
-								node, FractionalAnalysis.this);
+								node, FractionalAnalysis.this.getName());
 				}
 			}
 			super.endVisit(node);
@@ -432,9 +432,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //				if(permsAfter.isUnsatisfiable())
 			if(! after.checkConstraintsSatisfiable(receiver))
 				// TODO better reporting
-				crystal.reportUserProblem(
+				reporter.reportUserProblem(
 						"this carries no suitable permission for constructor call" + errorCtx, 
-						node, FractionalAnalysis.this);
+						node, FractionalAnalysis.this.getName());
 			
 			reportIfError(
 					before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
@@ -448,9 +448,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //				if(perms.isUnsatisfiable())
 				if(! after.checkConstraintsSatisfiable(arg))
 					// TODO better reporting
-					crystal.reportUserProblem(
+					reporter.reportUserProblem(
 							"" + e + " yields no suitable permission for constructor call" + errorCtx, 
-							e, FractionalAnalysis.this);
+							e, FractionalAnalysis.this.getName());
 				
 //				checkState(before.get(node, arg), sig.getRequiredParameterStates(argIdx), arg, e);
 				reportIfError(
@@ -491,9 +491,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //				if(permsAfter.isUnsatisfiable())
 			if(! after.checkConstraintsSatisfiable(receiver))
 				// TODO better reporting
-				crystal.reportUserProblem(
+				reporter.reportUserProblem(
 						"super carries no suitable permission for super-constructor call" + errorCtx, 
-						node, FractionalAnalysis.this);
+						node, FractionalAnalysis.this.getName());
 			
 			reportIfError(
 					before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
@@ -507,9 +507,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //				if(perms.isUnsatisfiable())
 				if(! after.checkConstraintsSatisfiable(arg))
 					// TODO better reporting
-					crystal.reportUserProblem(
+					reporter.reportUserProblem(
 							"" + e + " yields no suitable permission for super-constructor call" + errorCtx, 
-							e, FractionalAnalysis.this);
+							e, FractionalAnalysis.this.getName());
 				
 //				checkState(before.get(node, arg), sig.getRequiredParameterStates(argIdx), arg, e);
 				reportIfError(
@@ -534,7 +534,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		 */
 		protected void reportIfError(String errorOrNull, ASTNode node) {
 			if(errorOrNull != null)
-				crystal.reportUserProblem(errorOrNull + errorCtx, node, FractionalAnalysis.this);
+				reporter.reportUserProblem(errorOrNull + errorCtx, node, FractionalAnalysis.this.getName());
 		}
 
 	} // END FractionalChecker

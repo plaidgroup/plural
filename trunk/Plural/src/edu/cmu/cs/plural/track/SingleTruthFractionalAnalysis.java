@@ -61,6 +61,7 @@ import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
 import edu.cmu.cs.crystal.BooleanLabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.ThisVariable;
@@ -98,7 +99,7 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 	 * @return
 	 */
 	protected SingleTruthFractionalTransfer createNewFractionalTransfer() {
-		return new SingleTruthFractionalTransfer(crystal, this);
+		return new SingleTruthFractionalTransfer(getAnnoDB(), this);
 	}
 	
 	/**
@@ -140,7 +141,11 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 	
 	@Override
 	public StateSpaceRepository getRepository() {
-		return StateSpaceRepository.getInstance(crystal);
+		return StateSpaceRepository.getInstance(getAnnoDB());
+	}
+
+	private AnnotationDatabase getAnnoDB() {
+		return analysisInput.getAnnoDB();
 	}
 
 	/* (non-Javadoc)
@@ -189,14 +194,14 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 					
 					for(String needed : tf.getResultPostCondition().getStateInfo()) {
 						if(resultPerms.isInState(needed) == false)
-							crystal.reportUserProblem("Return value must be in state " + 
+							reporter.reportUserProblem("Return value must be in state " + 
 									needed + " but is in " + resultPerms.getStateInfo(),
-									node.getExpression(), SingleTruthFractionalAnalysis.this);
+									node.getExpression(), SingleTruthFractionalAnalysis.this.getName());
 					}
 					
 					FractionalPermissions resultRemainder = resultPerms.splitOff(tf.getResultPostCondition());
 					if(resultRemainder.isUnsatisfiable())
-						crystal.reportUserProblem("Return value carries no suitable permission", node.getExpression(), SingleTruthFractionalAnalysis.this);
+						reporter.reportUserProblem("Return value carries no suitable permission", node.getExpression(), SingleTruthFractionalAnalysis.this.getName());
 				}
 			}
 
@@ -221,7 +226,7 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 				final FractionalPermissions perms = after.get(node, arg);
 				if(perms.isUnsatisfiable())
 					// TODO better reporting
-					crystal.reportUserProblem("" + e + " yields no suitable permission for surrounding call", e, SingleTruthFractionalAnalysis.this);
+					reporter.reportUserProblem("" + e + " yields no suitable permission for surrounding call", e, SingleTruthFractionalAnalysis.this.getName());
 				
 				checkStateOptions(before.get(node, arg), sig.getRequiredParameterStateOptions(argIndex), arg, e);
 				
@@ -255,7 +260,7 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 				final FractionalPermissions permsAfter = after.get(node, receiver);
 				if(permsAfter.isUnsatisfiable())
 					// TODO better reporting
-					crystal.reportUserProblem("" + receiver.getSourceString() + " carries no suitable permission", node, SingleTruthFractionalAnalysis.this);
+					reporter.reportUserProblem("" + receiver.getSourceString() + " carries no suitable permission", node, SingleTruthFractionalAnalysis.this.getName());
 				
 				checkStateOptions(before.get(node, receiver), sig.getRequiredReceiverStateOptions(), receiver, node);
 			}
@@ -268,7 +273,7 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 				FractionalPermissions perms = after.get(node, arg);
 				if(perms.isUnsatisfiable())
 					// TODO better reporting
-					crystal.reportUserProblem("" + e + " yields no suitable permission for surrounding call", e, SingleTruthFractionalAnalysis.this);
+					reporter.reportUserProblem("" + e + " yields no suitable permission for surrounding call", e, SingleTruthFractionalAnalysis.this.getName());
 				
 				checkStateOptions(before.get(node, arg), sig.getRequiredParameterStateOptions(argIdx), arg, e);
 				++argIdx;
@@ -296,7 +301,7 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 				if(store.getLeftHandSide().equals(node)) {
 					if(fa.getResultsAfter(store).get(node, fa.getVariable(node.getArray())).isUnsatisfiable())
 						// TODO better reporting
-						crystal.reportUserProblem("no suitable permission for assignment to " + node, node, SingleTruthFractionalAnalysis.this);
+						reporter.reportUserProblem("no suitable permission for assignment to " + node, node, SingleTruthFractionalAnalysis.this.getName());
 				}
 			}
 			super.endVisit(node);
@@ -344,13 +349,13 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 				for(String needed : tf.getParameterPostConditions().get(x).getStateInfo()) {
 					if(paramPerms.isInState(needed) == false)
-						crystal.reportUserProblem(x + " must return in state " + needed + " but is in " + paramPerms.getStateInfo(), node, SingleTruthFractionalAnalysis.this);
+						reporter.reportUserProblem(x + " must return in state " + needed + " but is in " + paramPerms.getStateInfo(), node, SingleTruthFractionalAnalysis.this.getName());
 				}
 
 				FractionalPermissions paramRemainder = paramPerms.splitOff(tf.getParameterPostConditions().get(x));
 
 				if(paramRemainder.isUnsatisfiable())
-					crystal.reportUserProblem(x + " returns no suitable permissions for post-condition", node, SingleTruthFractionalAnalysis.this);
+					reporter.reportUserProblem(x + " returns no suitable permissions for post-condition", node, SingleTruthFractionalAnalysis.this.getName());
 				
 				/*
 				 * Either way, the rest goes back into the lattice.
@@ -389,21 +394,21 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 			
 			if( packed_lattice == null ) {
 				if(needed_rcvr_states.isEmpty())
-					crystal.reportUserProblem("Could not pack receiver to any state " +
+					reporter.reportUserProblem("Could not pack receiver to any state " +
 							"due to insufficient field permissions",
-							node, SingleTruthFractionalAnalysis.this);					
+							node, SingleTruthFractionalAnalysis.this.getName());					
 				else
-					crystal.reportUserProblem("Could not pack receiver to post-condition states " +
+					reporter.reportUserProblem("Could not pack receiver to post-condition states " +
 							needed_rcvr_states + " due to insufficient field permissions",
-							node, SingleTruthFractionalAnalysis.this);	
+							node, SingleTruthFractionalAnalysis.this.getName());	
 				return curLattice;
 			}
 			else if(this_post_perm != null) {
 				FractionalPermissions remainder_perm = 
 					packed_lattice.get(this_loc).splitOff(this_post_perm);
 				if( remainder_perm.isUnsatisfiable() ) {
-					crystal.reportUserProblem("Receiver returns no suitable permissions for post-condition",
-							node, SingleTruthFractionalAnalysis.this);
+					reporter.reportUserProblem("Receiver returns no suitable permissions for post-condition",
+							node, SingleTruthFractionalAnalysis.this.getName());
 				}
 				packed_lattice.put(this_loc, remainder_perm);
 			}
@@ -449,8 +454,8 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 					PluralTupleLatticeElement l =
 						wrangleIntoPackedState(node, true_state, curLattice);
 					if( l == null ) {
-						crystal.reportUserProblem("On true branch of return, receiver is not in " +
-								true_state + " as is specified.", node, SingleTruthFractionalAnalysis.this);
+						reporter.reportUserProblem("On true branch of return, receiver is not in " +
+								true_state + " as is specified.", node, SingleTruthFractionalAnalysis.this.getName());
 					}
 					else {
 						curLattice = l;
@@ -465,8 +470,8 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 					curLattice = curLattice.mutableCopy();
 					PluralTupleLatticeElement l = wrangleIntoPackedState(node, false_state, curLattice);
 					if( l == null ) {
-						crystal.reportUserProblem("On false branch of return, receiver is not in " +
-								false_state + " as is specified.", node, SingleTruthFractionalAnalysis.this);					
+						reporter.reportUserProblem("On false branch of return, receiver is not in " +
+								false_state + " as is specified.", node, SingleTruthFractionalAnalysis.this.getName());					
 					}
 					else {
 						curLattice = l;
@@ -485,8 +490,8 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 					true_lattice = true_lattice.mutableCopy();
 					true_lattice = wrangleIntoPackedState(node, true_state, true_lattice);
 					if( true_lattice == null ) {
-						crystal.reportUserProblem("On true branch of return, receiver is not in " +
-								true_state + " as is specified.", node, SingleTruthFractionalAnalysis.this);
+						reporter.reportUserProblem("On true branch of return, receiver is not in " +
+								true_state + " as is specified.", node, SingleTruthFractionalAnalysis.this.getName());
 					}
 				}
 				
@@ -497,8 +502,8 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 					false_lattice = false_lattice.mutableCopy();
 					false_lattice = wrangleIntoPackedState(node, false_state, false_lattice);
 					if( false_lattice == null ) {
-						crystal.reportUserProblem("On false branch of return, receiver is not in " +
-								false_state + " as is specified.", node, SingleTruthFractionalAnalysis.this);					
+						reporter.reportUserProblem("On false branch of return, receiver is not in " +
+								false_state + " as is specified.", node, SingleTruthFractionalAnalysis.this.getName());					
 					}
 				}
 			}
@@ -740,7 +745,7 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 					logger.fine("Skipping pre-condition state test on " + needed + " for unpacked permission: " + perms);
 			}
 			else if(perms.isInState(needed) == false) { 
-				crystal.reportUserProblem("" + x.getSourceString() + " must be in state " + needed + " but is in " + perms.getStateInfo(), node, this);
+				reporter.reportUserProblem("" + x.getSourceString() + " must be in state " + needed + " but is in " + perms.getStateInfo(), node, this.getName());
 				return false;
 			}
 		}

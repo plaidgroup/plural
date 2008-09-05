@@ -113,8 +113,10 @@ public class FractionalTransfer extends
 	
 	private static final Logger log = Logger.getLogger(FractionalTransfer.class.getName());
 	
-	private Crystal crystal;
+	//private Crystal crystal;
 	private PermissionFactory pf = PermissionFactory.INSTANCE;
+	
+	private final AnnotationDatabase annoDB;
 	
 	/*
 	 * Post-condition stuff.
@@ -129,8 +131,8 @@ public class FractionalTransfer extends
 	
 	private final LivenessProxy liveness;
 	
-	public FractionalTransfer(Crystal crystal, FractionAnalysisContext context) {
-		this.crystal = crystal;
+	public FractionalTransfer(AnnotationDatabase annoDB, FractionAnalysisContext context) {
+		this.annoDB = annoDB;
 		this.context = context;
 		this.liveness = LivenessProxy.create();
 	}
@@ -184,14 +186,14 @@ public class FractionalTransfer extends
 				isConstructor ? 
 				TensorPluralTupleLE.createUnpackedLattice(
 					FractionalPermissions.createEmpty(), // use top (no permissions) as default
-					crystal.getAnnotationDatabase(),
+					getAnnoDB(),
 					context.getRepository(),
 					thisVar,
 					d)
 					:	
 				new TensorPluralTupleLE(
 					FractionalPermissions.createEmpty(), // use top (no permissions) as default
-					crystal.getAnnotationDatabase(),
+					getAnnoDB(),
 					context.getRepository());
 			
 			start.storeInitialAliasingInfo(d);
@@ -229,7 +231,7 @@ public class FractionalTransfer extends
 			// static method
 			thisVar = null;
 			start =	new TensorPluralTupleLE(FractionalPermissions.createEmpty(), // use top (no permissions) as default
-					crystal.getAnnotationDatabase(), context.getRepository());
+					getAnnoDB(), context.getRepository());
 			start.storeInitialAliasingInfo(d);
 		}
 		
@@ -257,7 +259,7 @@ public class FractionalTransfer extends
 //		resultPost = resultPermissions(methodBinding, false);
 		
 		PluralDisjunctiveLE startLE = PluralDisjunctiveLE.tuple(start,
-				crystal, getAnalysisContext(), thisVar, context);
+				getAnnoDB(), getAnalysisContext(), thisVar, context);
 		
 		if(isConstructor && !hasConstructorInvocation(d)) {
 			// TODO simulate default super constructor call
@@ -963,7 +965,7 @@ public class FractionalTransfer extends
 	}
 	
 	private AnnotationDatabase getAnnoDB() {
-		return crystal.getAnnotationDatabase();
+		return annoDB;
 	}
 
 	private StateSpace getStateSpace(ITypeBinding type) {

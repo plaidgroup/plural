@@ -44,6 +44,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.util.Pair;
 
@@ -58,9 +59,9 @@ class SimpleConstructorSignature extends AbstractSingleCaseSignature
 	
 	private final List<IConstructorCase> cases;
 
-	protected SimpleConstructorSignature(Crystal crystal, IMethodBinding binding,
+	protected SimpleConstructorSignature(AnnotationDatabase annoDB, IMethodBinding binding,
 			ITypeBinding staticallyInvokedType) {
-		super(crystal, binding, staticallyInvokedType);
+		super(annoDB, binding, staticallyInvokedType);
 		assert binding.isConstructor();
 		cases = Collections.<IConstructorCase>singletonList(this);
 	}

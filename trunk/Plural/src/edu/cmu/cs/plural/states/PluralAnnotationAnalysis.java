@@ -83,7 +83,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	}
 	
 	public StateSpaceRepository getRepository() {
-		return StateSpaceRepository.getInstance(crystal);
+		return StateSpaceRepository.getInstance(analysisInput.getAnnoDB());
 	}
 	
 	private class AnnotationVisitor extends ASTVisitor {
@@ -112,7 +112,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			for(Map.Entry<ICrystalAnnotation, Set<String>> p : problems.entrySet()) {
 				// TODO localize annotation that causes the problem
 				for(String desc : p.getValue()) {
-					crystal.reportUserProblem(desc, node, PluralAnnotationAnalysis.this);
+					reporter.reportUserProblem(desc, node, PluralAnnotationAnalysis.this.getName());
 				}
 			}
 				
@@ -120,11 +120,11 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			 * Get all errors of ClassStates annotations, and print them out.
 			 */
 			final List<Pair<ASTNode, String>> errors = 
-				PluralAnnotationAnalysis.checkClassStatesAnnot(crystal.getAnnotationDatabase(),
+				PluralAnnotationAnalysis.checkClassStatesAnnot(analysisInput.getAnnoDB(),
 						node);
 			for( Pair<ASTNode, String> error : errors ) {
-				crystal.reportUserProblem(error.snd(), error.fst(),
-						PluralAnnotationAnalysis.this);
+				reporter.reportUserProblem(error.snd(), error.fst(),
+						PluralAnnotationAnalysis.this.getName());
 			}
 			super.endVisit(node);
 		}
@@ -139,7 +139,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		public void endVisit(MarkerAnnotation node) {
 			// check that @Cases is not empty, i.e., prevent @Cases({ })
 			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName()))
-				crystal.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this);
+				reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
 			super.endVisit(node);
 		}
 
@@ -148,7 +148,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			// check that @Cases is not empty, i.e., prevent @Cases({ })
 			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) {
 				if(! checkValueArrayNonEmpty(node.resolveAnnotationBinding()))
-					crystal.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this);
+					reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
 			}
 			super.endVisit(node);
 		}
@@ -158,7 +158,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			// check that @Cases is not empty, i.e., prevent @Cases({ })
 			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) {
 				if(! checkValueArrayNonEmpty(node.resolveAnnotationBinding()))
-					crystal.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this);
+					reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
 			}
 			super.endVisit(node);
 		}
@@ -167,7 +167,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		public void endVisit(MethodDeclaration node) {
 			String ambiguity = checkAmbiguousSpecification(node.resolveBinding());
 			if(ambiguity != null)
-				crystal.reportUserProblem(ambiguity, node, PluralAnnotationAnalysis.this);
+				reporter.reportUserProblem(ambiguity, node, PluralAnnotationAnalysis.this.getName());
 			super.endVisit(node);
 		}
 
@@ -180,9 +180,9 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			// check at call sites in case the ambiguity happens in a method not currently checked 
 			String ambiguity = checkAmbiguousSpecification(node.resolveMethodBinding());
 			if(ambiguity != null)
-				crystal.reportUserProblem(ambiguity + ".  Provide specification in " + 
+				reporter.reportUserProblem(ambiguity + ".  Provide specification in " + 
 						node.resolveMethodBinding().getDeclaringClass().getName(), 
-						node, PluralAnnotationAnalysis.this);
+						node, PluralAnnotationAnalysis.this.getName());
 			super.endVisit(node);
 		}
 
@@ -191,9 +191,9 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			// check at call sites in case the ambiguity happens in a method not currently checked 
 			String ambiguity = checkAmbiguousSpecification(node.resolveMethodBinding());
 			if(ambiguity != null)
-				crystal.reportUserProblem(ambiguity + ".  Provide specification in " + 
+				reporter.reportUserProblem(ambiguity + ".  Provide specification in " + 
 						node.resolveMethodBinding().getDeclaringClass().getName(), 
-						node, PluralAnnotationAnalysis.this);
+						node, PluralAnnotationAnalysis.this.getName());
 			super.endVisit(node);
 		}
 

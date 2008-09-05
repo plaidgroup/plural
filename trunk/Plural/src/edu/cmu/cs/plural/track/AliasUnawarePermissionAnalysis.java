@@ -107,8 +107,7 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 	public void analyzeMethod(MethodDeclaration d) {
 		// create a transfer function object and pass it to a new FlowAnalysis
 		PermTransferFunction tf = new PermTransferFunction(d);
-		fa = new TACFlowAnalysis<TupleLatticeElement<Variable, Permissions>>(
-				crystal, tf);
+		fa = new TACFlowAnalysis<TupleLatticeElement<Variable, Permissions>>(tf);
 		
 		// must call getResultsAfter at least once on this method,
 		// or the analysis won't be run on this method
@@ -147,7 +146,7 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 	 * @param problem Problem description
 	 */
 	private void report(TACInstruction instr, String problem) {
-		crystal.reportUserProblem(problem, instr.getNode(), this);
+		reporter.reportUserProblem(problem, instr.getNode(), this.getName());
 	}
 	
 	/**
@@ -333,7 +332,7 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 		private SimplePermissionAnnotation fieldAnnotation(IVariableBinding field) {
 			SimplePermissionAnnotation result = null;
 			for(ICrystalAnnotation a : 
-				emptyForNull(crystal.getAnnotationDatabase().getAnnosForField(field))) {
+				emptyForNull(analysisInput.getAnnoDB().getAnnosForField(field))) {
 				result = SimplePermissionAnnotation.createPermissionIfPossible(field.getName(), a, StateSpace.SPACE_TOP);
 				if(result != null) {
 					// simulate capturing of permission during field assignment
@@ -446,10 +445,10 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 		 * @return
 		 */
 		private SimplePermissionAnnotation resultPermission(IMethodBinding binding) {
-			if(crystal.getAnnotationDatabase().getSummaryForMethod(binding) == null)
+			if(analysisInput.getAnnoDB().getSummaryForMethod(binding) == null)
 				return null;
 			for(ICrystalAnnotation a : 
-				emptyForNull(crystal.getAnnotationDatabase().getSummaryForMethod(binding).getReturn())) {
+				emptyForNull(analysisInput.getAnnoDB().getSummaryForMethod(binding).getReturn())) {
 				// by default, annotations on method itself are for receiver; 
 				SimplePermissionAnnotation anno = SimplePermissionAnnotation.createPermissionIfPossible("this", a, StateSpace.SPACE_TOP);
 				// permission for result must explicitly set 'var' parameter to "result"
@@ -467,10 +466,10 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 		 * @return
 		 */
 		private SimplePermissionAnnotation receiverPermission(IMethodBinding binding) {
-			if(crystal.getAnnotationDatabase().getSummaryForMethod(binding) == null)
+			if(analysisInput.getAnnoDB().getSummaryForMethod(binding) == null)
 				return null;
 			for(ICrystalAnnotation a : 
-				emptyForNull(crystal.getAnnotationDatabase().getSummaryForMethod(binding).getReturn())) {
+				emptyForNull(analysisInput.getAnnoDB().getSummaryForMethod(binding).getReturn())) {
 				SimplePermissionAnnotation anno = SimplePermissionAnnotation.createPermissionIfPossible("this", a, StateSpace.SPACE_TOP);
 				if(anno != null && anno.getVariable().equals("this"))
 					return anno;
@@ -487,16 +486,16 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 		 */
 		private List<SimplePermissionAnnotation> argumentPermissions(IMethodBinding binding, int argumentCount) {
 			ArrayList<SimplePermissionAnnotation> result = new ArrayList<SimplePermissionAnnotation>(argumentCount);
-			if(crystal.getAnnotationDatabase().getSummaryForMethod(binding) == null) {
+			if(analysisInput.getAnnoDB().getSummaryForMethod(binding) == null) {
 				for(int i = 0; i < argumentCount; i++)
 					result.add(null);
 				return result;
 			}
 			for(int i = 0; i < argumentCount; i++) {
-				String paramName = crystal.getAnnotationDatabase().getSummaryForMethod(binding).getParameterName(i);
+				String paramName = analysisInput.getAnnoDB().getSummaryForMethod(binding).getParameterName(i);
 				SimplePermissionAnnotation anno = null;
 				for(ICrystalAnnotation a : 
-					emptyForNull(crystal.getAnnotationDatabase().getSummaryForMethod(binding).getParameter(i))) {
+					emptyForNull(analysisInput.getAnnoDB().getSummaryForMethod(binding).getParameter(i))) {
 					anno = SimplePermissionAnnotation.createPermissionIfPossible(paramName, a, StateSpace.SPACE_TOP);
 					// TODO do we need to validate that it's the real parameter name?
 					if(anno != null) 

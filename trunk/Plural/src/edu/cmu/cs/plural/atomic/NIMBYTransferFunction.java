@@ -44,6 +44,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
@@ -87,8 +88,8 @@ public class NIMBYTransferFunction extends SingleTruthFractionalTransfer {
 
 	private IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
 
-	public NIMBYTransferFunction(Crystal crystal, FractionAnalysisContext context) {
-		super(crystal, context);
+	public NIMBYTransferFunction(AnnotationDatabase annoDB, FractionAnalysisContext context) {
+		super(annoDB, context);
 	}
 
 	/**

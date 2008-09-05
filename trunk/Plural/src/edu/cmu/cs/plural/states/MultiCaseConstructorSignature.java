@@ -44,6 +44,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 import edu.cmu.cs.plural.util.Pair;
@@ -64,15 +65,15 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
 	 * @param cases
 	 */
-	public MultiCaseConstructorSignature(Crystal crystal, IMethodBinding binding, 
+	public MultiCaseConstructorSignature(AnnotationDatabase annoDB, IMethodBinding binding, 
 			ITypeBinding staticallyInvokedType, PermAnnotation... cases) {
-		super(crystal, binding, staticallyInvokedType, cases);
+		super(annoDB, binding, staticallyInvokedType, cases);
 	}
 
 	@Override
-	protected IConstructorCase createCase(Crystal crystal,
+	protected IConstructorCase createCase(AnnotationDatabase annoDB,
 			IMethodBinding binding, PermAnnotation perm, ITypeBinding staticallyInvokedType) {
-		return new MultiConstructorCase(crystal, binding, staticallyInvokedType, perm);
+		return new MultiConstructorCase(annoDB, binding, staticallyInvokedType, perm);
 	}
 
 	@Override
@@ -110,9 +111,9 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 		 * @param perm
 		 */
 
-		public MultiConstructorCase(Crystal crystal, IMethodBinding binding, 
+		public MultiConstructorCase(AnnotationDatabase annoDB, IMethodBinding binding, 
 				ITypeBinding staticallyInvokedType, PermAnnotation perm) {
-			super(crystal, binding, staticallyInvokedType, perm);
+			super(annoDB, binding, staticallyInvokedType, perm);
 		}
 		
 		@Override

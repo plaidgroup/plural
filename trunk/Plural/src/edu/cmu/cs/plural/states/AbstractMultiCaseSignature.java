@@ -46,6 +46,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 
 /**
@@ -63,18 +64,18 @@ abstract class AbstractMultiCaseSignature<T extends IInvocationCase> extends Abs
 	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
 	 * @param cases
 	 */
-	protected AbstractMultiCaseSignature(Crystal crystal, IMethodBinding binding,
+	protected AbstractMultiCaseSignature(AnnotationDatabase annoDB, IMethodBinding binding,
 			ITypeBinding staticallyInvokedType, PermAnnotation... cases) {
-		super(crystal, binding, staticallyInvokedType);
+		super(annoDB, binding, staticallyInvokedType);
 		if(cases.length == 0)
 			throw new IllegalArgumentException("Must have at least one method case--use SimpleConstructorSignature for methods without specs.");
 		this.cases = new ArrayList<T>(cases.length);
 		for(PermAnnotation perm : cases) {
-			this.cases.add(createCase(crystal, binding, perm, staticallyInvokedType));
+			this.cases.add(createCase(annoDB, binding, perm, staticallyInvokedType));
 		}
 	}
 
-	abstract protected T createCase(Crystal crystal, IMethodBinding binding,
+	abstract protected T createCase(AnnotationDatabase annoDB, IMethodBinding binding,
 			PermAnnotation perm, ITypeBinding staticallyInvokedType);
 
 	/* (non-Javadoc)
