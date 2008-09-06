@@ -602,7 +602,9 @@ implements LatticeElement<FractionalPermissions> {
 	 */
 	@Deprecated
 	public List<String> getStateInfo() {
-		return getStateInfo(false);
+		List<String> result = getStateInfo(false);
+		result.addAll(getStateInfo(true));
+		return result;
 //		if(permissions == null)
 //			return Collections.emptyList();
 //		ArrayList<String> result = new ArrayList<String>(permissions.size());

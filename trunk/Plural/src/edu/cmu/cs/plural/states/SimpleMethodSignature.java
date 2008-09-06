@@ -178,7 +178,7 @@ class SimpleMethodSignature extends AbstractSingleCaseSignature implements
 			// coerce == true iff dynamically dispatched call site
 			// TODO could consider not coercing for final methods / final classes?
 			boolean coerce = !forAnalyzingBody && !isSuperCall && (binding.getModifiers() & Modifier.PRIVATE) == 0;
-			receiverPrePost = receiverPermissions(forAnalyzingBody, coerce);
+			receiverPrePost = receiverPermissions(forAnalyzingBody, coerce, false);
 		}
 		else
 			receiverPrePost = null;

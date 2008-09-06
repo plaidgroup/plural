@@ -777,6 +777,7 @@ class LinearOperations extends TACAnalysisHelper {
 			if(value.isRcvrPacked()) {
 				// do nothing for now--this may result in a pre-condition violation
 				// TODO try unpack and re-pack if receiver is in wrong state...
+				return wrangleIntoPackedStates(instr.getNode(), value, neededAnalyzedMethodReceiverState);
 			}
 			else {
 				StateSpace thisSpace = getStateSpace(getThisVar().resolveType());

@@ -119,7 +119,7 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 		@Override
 		public IConstructorCaseInstance createPermissions(boolean forAnalyzingBody, boolean isSuperCall) {
 			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> receiverPrePost =
-				receiverPermissions(forAnalyzingBody, preAndPostString, !forAnalyzingBody && !isSuperCall);
+				receiverPermissions(forAnalyzingBody, preAndPostString, !forAnalyzingBody && !isSuperCall, !forAnalyzingBody && !isSuperCall);
 			final int argCount = binding.getParameterTypes().length;
 			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost = 
 				new Pair[argCount];

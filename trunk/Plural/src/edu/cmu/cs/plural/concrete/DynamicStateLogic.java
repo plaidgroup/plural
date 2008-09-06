@@ -454,7 +454,12 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		if( this.isBottom() ) return this;
 		
 		DynamicStateLogic result = new DynamicStateLogic();
-		result.knownImplications.putAll(this.knownImplications);
+		// shallow map clone is unsafe because contained lists are mutable
+//		result.knownImplications.putAll(this.knownImplications);
+		for(Map.Entry<Aliasing, List<Implication>> impl : this.knownImplications.entrySet()) {
+			result.knownImplications.put(impl.getKey(), new LinkedList<Implication>(impl.getValue()));
+		}
+		
 		result.knownPredicates.putAll(this.knownPredicates);
 //		result.delayedImplications.putAll(this.delayedImplications);
 		return result;		
