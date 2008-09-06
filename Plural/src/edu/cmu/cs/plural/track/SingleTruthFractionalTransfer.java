@@ -1383,7 +1383,7 @@ public class SingleTruthFractionalTransfer extends
 			prePostFromAnnotations(space, 
 					CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding), namedFractions, frameAsVirtual);
 		
-		result = mergeWithParsedRcvrPermissions(result, binding, space, namedFractions, frameAsVirtual);
+		result = mergeWithParsedRcvrPermissions(result, binding, space, namedFractions);
 		if(binding.isConstructor())
 			result = Pair.create(null, result.snd());
 		return result;
@@ -1440,7 +1440,7 @@ public class SingleTruthFractionalTransfer extends
 	 */
 	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> mergeWithParsedRcvrPermissions(
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> preAndPost,
-			IMethodBinding binding, StateSpace space, boolean namedFractions, boolean frameAsVirtual) {
+			IMethodBinding binding, StateSpace space, boolean namedFractions) {
 		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
 		
 		if( preAndPostString == null ) {
@@ -1453,7 +1453,7 @@ public class SingleTruthFractionalTransfer extends
 			Pair<List<PermissionFromAnnotation>,
 			List<PermissionFromAnnotation>> prePostPerms = 
 				PermParser.parseReceiverPermissions(preAndPostString.fst(), preAndPostString.snd(),
-						space, namedFractions, frameAsVirtual);
+						space, namedFractions);
 			for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
 				prePerm = prePerm.combine(pre_p);
 			}

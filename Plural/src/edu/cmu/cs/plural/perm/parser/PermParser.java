@@ -211,13 +211,13 @@ public class PermParser {
 	 */
 	public static Pair<List<PermissionFromAnnotation>,
 	List<PermissionFromAnnotation>> parseReceiverPermissions(String pre, String post,
-			StateSpace rcvrSpace, boolean preIsNamed, boolean frameAsVirtual)
+			StateSpace rcvrSpace, boolean preIsNamed)
 	throws RecognitionException
 	{
 		Pair<ParsedParameterSummary, ParsedParameterSummary> summaries = 
 			paramParseHelper(pre, post);
-		return Pair.create(summaries.fst().getReceiverPermissions(rcvrSpace, preIsNamed, frameAsVirtual),
-				summaries.snd().getReceiverPermissions(rcvrSpace, !preIsNamed, frameAsVirtual));
+		return Pair.create(summaries.fst().getReceiverPermissions(rcvrSpace, preIsNamed),
+				summaries.snd().getReceiverPermissions(rcvrSpace, !preIsNamed));
 	}
 	
 	/**

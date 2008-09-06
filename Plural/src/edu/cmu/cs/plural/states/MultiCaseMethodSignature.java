@@ -155,7 +155,7 @@ public class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethod
  				// coerce == true iff dynamically dispatched call site
  				// TODO could consider not coercing for final methods / final classes?
 				boolean coerce = !forAnalyzingBody && !isSuperCall && (binding.getModifiers() & Modifier.PRIVATE) == 0;
-				receiverPrePost = receiverPermissions(forAnalyzingBody, preAndPostString, coerce);
+				receiverPrePost = receiverPermissions(forAnalyzingBody, preAndPostString, coerce, false);
  			}
 			else {
 				receiverPrePost = null;

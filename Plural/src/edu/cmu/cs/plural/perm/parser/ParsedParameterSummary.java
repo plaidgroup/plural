@@ -145,13 +145,13 @@ class ParsedParameterSummary {
 	 * PermissionFromAnnotation objects.
 	 */
 	public List<PermissionFromAnnotation> getReceiverPermissions(StateSpace space,
-			boolean namedFractions, boolean frameAsVirtual) {
+			boolean namedFractions) {
 		List<PermissionFromAnnotation> result = 
 			new ArrayList<PermissionFromAnnotation>(this.receiverAnnotations.size());
 		for( InfoHolder perm_info : this.receiverAnnotations ) {
 			PermissionFromAnnotation p = 
 				PermissionFactory.INSTANCE.createOrphan(space, perm_info.rootNode,
-						perm_info.permType, !frameAsVirtual && perm_info.isFramePermission, 
+						perm_info.permType, perm_info.isFramePermission, 
 						perm_info.stateInfo, namedFractions);
 			result.add(p);
 		}

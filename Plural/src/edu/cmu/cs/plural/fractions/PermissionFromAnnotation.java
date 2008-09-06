@@ -281,6 +281,18 @@ public class PermissionFromAnnotation extends FractionalPermission
 	}
 
 	/**
+	 * Returns the same permission but as virtual permission, if it isn't already.
+	 * @return
+	 */
+	public PermissionFromAnnotation asVirtual() {
+		if(!isFramePermission)
+			return this;
+		else
+			return new PermissionFromAnnotation(stateSpace, rootNode, fractions, mutable, 
+					false /* virtual */, stateInfo);
+	}
+
+	/**
 	 * This method relies on the permission being
 	 * generated from permission annotations.  It assumes that
 	 * variable / constant below fractions 

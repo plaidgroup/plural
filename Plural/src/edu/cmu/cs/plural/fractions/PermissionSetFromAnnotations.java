@@ -41,10 +41,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.util.Pair;
 
@@ -214,7 +212,7 @@ public class PermissionSetFromAnnotations extends
 
 	@Override
 	public String toString() {
-		return permissions + " with " + constraints;
+		return permissions + " frame " + framePermissions + " with " + constraints;
 	}
 
 	public boolean isReadOnly() {

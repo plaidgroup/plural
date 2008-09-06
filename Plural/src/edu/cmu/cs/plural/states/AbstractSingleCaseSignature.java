@@ -235,9 +235,9 @@ abstract class AbstractSingleCaseSignature extends AbstractBindingSignature
 	 * @param frameAsVirtual 
 	 */
 	protected Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> 
-	receiverPermissions(boolean namedFractions, boolean frameAsVirtual) {
+	receiverPermissions(boolean namedFractions, boolean frameAsVirtual, boolean ignoreVirtual) {
 		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
-		return receiverPermissions(namedFractions, preAndPostString, frameAsVirtual);
+		return receiverPermissions(namedFractions, preAndPostString, frameAsVirtual, ignoreVirtual);
 	}
 	
 	/**

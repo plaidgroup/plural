@@ -733,9 +733,15 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 								log.fine("Skipping state test on " + needed + " for unpacked permission: " + perms);
 						}
 						else if(perms.isInState(needed) == false) {
-							// only flag first unsatisfied state requirement
-							problems.add("" + x.getSourceString() + " must be in state " + needed + " but is in " + perms.getStateInfo());
-							continue next_set;
+							if(x.isUnqualifiedThis()) {
+								if(log.isLoggable(Level.FINE))
+									log.fine("Ignoring unsatisfied receiver state " + needed);
+							}
+							else {	
+								// only flag first unsatisfied state requirement
+								problems.add("" + x.getSourceString() + " must be in state " + needed + " but is in " + perms.getStateInfo());
+								continue next_set;
+							}
 						}
 					}
 					// required set fully satisfied --> succeed

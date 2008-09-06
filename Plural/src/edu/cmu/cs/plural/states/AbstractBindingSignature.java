@@ -104,14 +104,18 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	 */
 	protected Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> 
 	receiverPermissions(boolean namedFractions, Pair<String, String> preAndPostString, 
-			boolean frameAsVirtual) {
+			boolean frameAsVirtual, boolean ignoreVirtual) {
 		if(isStaticMethod(binding))
 			return null;
 		StateSpace space = getStateSpace(binding.getDeclaringClass());
 		Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> result = 
-			prePostFromAnnotations(space, CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding), namedFractions, frameAsVirtual);
+			prePostFromAnnotations(space, 
+					CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding), 
+					namedFractions, 
+					frameAsVirtual,
+					ignoreVirtual);
 		
-		result = mergeWithParsedRcvrPermissions(result, preAndPostString, space, namedFractions, frameAsVirtual);
+		result = mergeWithParsedRcvrPermissions(result, preAndPostString, space, namedFractions, frameAsVirtual, ignoreVirtual);
 //		if(binding.isConstructor())
 //			result = Pair.create(null, result.snd());
 		return result;
@@ -139,7 +143,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			prePostFromAnnotations(space, 
 				CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), 
 				namedFractions,
-				false);
+				false, false);
 		
 		result = mergeWithParsedParamPermissions(result, preAndPostString, space, paramIndex, namedFractions);
 		return result;
@@ -151,14 +155,17 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	 * @param namedFractions
 	 * @param frameAsVirtual This should only be used for receiver permissions 
 	 * at virtual method call sites.
+	 * @param ignoreVirtual Ignores virtual permissions, useful for constructor signatures.
 	 * @return
 	 */
 	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> prePostFromAnnotations(
 			StateSpace space, List<ParameterPermissionAnnotation> annos, boolean namedFractions, 
-			boolean frameAsVirtual) {
+			boolean frameAsVirtual, boolean ignoreVirtual) {
 		PermissionSetFromAnnotations pre = PermissionSetFromAnnotations.createEmpty(space);
 		PermissionSetFromAnnotations post = PermissionSetFromAnnotations.createEmpty(space);
 		for(ParameterPermissionAnnotation a : annos) {
+			if(!a.isFramePermission() && ignoreVirtual)
+				continue;
 			PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(
 					space, a.getRootNode(), a.getKind(), 
 					a.isFramePermission() && !frameAsVirtual, 
@@ -178,7 +185,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> mergeWithParsedRcvrPermissions(
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> preAndPost,
 			Pair<String, String> preAndPostString, StateSpace space, boolean namedFractions,
-			boolean frameAsVirtual) {
+			boolean frameAsVirtual, boolean ignoreVirtual) {
 //		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
 		
 		if( preAndPostString == null ) {
@@ -191,11 +198,19 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			Pair<List<PermissionFromAnnotation>,
 			List<PermissionFromAnnotation>> prePostPerms = 
 				PermParser.parseReceiverPermissions(preAndPostString.fst(), preAndPostString.snd(),
-						space, namedFractions, frameAsVirtual);
+						space, namedFractions);
 			for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
+				if(!pre_p.isFramePermission() && ignoreVirtual)
+					continue;
+				if(frameAsVirtual)
+					pre_p = pre_p.asVirtual();
 				prePerm = prePerm.combine(pre_p);
 			}
 			for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
+				if(!post_p.isFramePermission() && ignoreVirtual)
+					continue;
+				if(frameAsVirtual)
+					post_p = post_p.asVirtual();
 				postPerm = postPerm.combine(post_p);
 			}
 		} catch(RecognitionException re) {
