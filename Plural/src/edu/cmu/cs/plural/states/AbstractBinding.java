@@ -37,10 +37,11 @@
  */
 package edu.cmu.cs.plural.states;
 
+import java.lang.ref.WeakReference;
+
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
@@ -49,7 +50,12 @@ public class AbstractBinding {
 
 	protected final IMethodBinding binding;
 	private final ITypeBinding staticallyInvokedType;
-	protected final AnnotationDatabase annoDB;
+	
+	/** 
+	 * Weakly reference annoDB as to not interfere with its garbage-collection.
+	 * @see StateSpaceRepository
+	 */
+	protected final WeakReference<AnnotationDatabase> annoDB;
 	private final boolean reentrant;
 
 	/**
@@ -59,7 +65,8 @@ public class AbstractBinding {
 	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
 	 */
 	public AbstractBinding(AnnotationDatabase annoDB, IMethodBinding binding, ITypeBinding staticallyInvokedType) {
-		this.annoDB = annoDB;
+		assert annoDB != null;
+		this.annoDB = new WeakReference<AnnotationDatabase>(annoDB);
 		this.binding = binding;
 		this.staticallyInvokedType = staticallyInvokedType;
 		// determine reentrancy from @NonReentrant annotation of invoked type
@@ -77,7 +84,9 @@ public class AbstractBinding {
 	}
 
 	protected AnnotationDatabase getAnnoDB() {
-		return annoDB;
+		AnnotationDatabase result = annoDB.get();
+		assert result != null : "Annotation database was unexpectedly garbage-collected";
+		return result;
 	}
 
 	protected AnnotationSummary getMethodSummary() {
@@ -85,7 +94,7 @@ public class AbstractBinding {
 	}
 	
 	protected StateSpace getStateSpace(ITypeBinding type) {
-		return StateSpaceRepository.getInstance(annoDB).getStateSpace(type);
+		return StateSpaceRepository.getInstance(getAnnoDB()).getStateSpace(type);
 	}
 	
 	public boolean isReentrant() {
