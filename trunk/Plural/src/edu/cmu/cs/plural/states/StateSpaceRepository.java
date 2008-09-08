@@ -37,6 +37,7 @@
  */
 package edu.cmu.cs.plural.states;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,12 +45,12 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
@@ -70,8 +71,12 @@ import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
  */
 public class StateSpaceRepository {
 	
-	/** Singleton instance. */
-	private static StateSpaceRepository instance;
+	/** 
+	 * Instances for in-flight annotation databases. Should be garbage-collected
+	 * when annotation databases are no longer in use, but this <b>requires that all
+	 * back-references to annotation database be weak.</b> */
+	private static Map<AnnotationDatabase, StateSpaceRepository> instances =
+		new WeakHashMap<AnnotationDatabase, StateSpaceRepository>();
 	
 	/**
 	 * Returns the singleton instance of the state space repository.
@@ -83,9 +88,15 @@ public class StateSpaceRepository {
 	 * @return the singleton instance of the state space repository.
 	 */
 	public static StateSpaceRepository getInstance(AnnotationDatabase annoDB) {
-		if(instance == null)
-			instance = new StateSpaceRepository(annoDB);
-		return instance;
+		StateSpaceRepository instance;
+		synchronized(instances) {
+			instance = instances.get(annoDB);
+			if(instance == null) {
+				instance = new StateSpaceRepository(annoDB);
+				instances.put(annoDB, instance);
+			}
+			return instance;
+		}
 	}
 
 	/** 
@@ -101,24 +112,16 @@ public class StateSpaceRepository {
 	 */
 	private final Map<String, IInvocationSignature> signatures;
 	
-	/** Crystal object for accessing the annotation database. */
-	//private final Crystal crystal;
-	
-	private final AnnotationDatabase annoDB;
-	
-	/** 
-	 * This field is used to detect a new Crystal run.
-	 * @see #getAnnotationDB() 
-	 */
-	private AnnotationDatabase cachedDB;
+	/** Annotation database used for building state spaces and signatures. */
+	private final WeakReference<AnnotationDatabase> annoDB;
 	
 	/**
 	 * Private constructor for singleton.
-	 * @param crystal The Crystal instance, for retrieving the annotation database
-	 * (and recognizing that a new Crystal run has begun).
+	 * @param annoDB Annotation database used for building state spaces and signatures.
 	 */
 	private StateSpaceRepository(AnnotationDatabase annoDB) {
-		this.annoDB = annoDB;
+		assert annoDB != null;
+		this.annoDB = new WeakReference<AnnotationDatabase>(annoDB);
 		spaces = new HashMap<String, StateSpaceImpl>();
 		signatures = new HashMap<String, IInvocationSignature>();
 	}
@@ -232,18 +235,19 @@ public class StateSpaceRepository {
 	private IInvocationSignature createSignature(
 			IMethodBinding binding) {
 		IMethodBinding specBinding = findSpecificationMethod(binding);
-		ICrystalAnnotation a = getAnnotationDB().getSummaryForMethod(specBinding).getReturn("edu.cmu.cs.plural.annot.Cases");
+		final AnnotationDatabase adb = getAnnotationDB();
+		ICrystalAnnotation a = adb.getSummaryForMethod(specBinding).getReturn("edu.cmu.cs.plural.annot.Cases");
 		
 		if(a == null)
 			return binding.isConstructor() ? 
-					new SimpleConstructorSignature(annoDB, specBinding, binding.getDeclaringClass()) : 
-						new SimpleMethodSignature(annoDB, specBinding, binding.getDeclaringClass());
+					new SimpleConstructorSignature(adb, specBinding, binding.getDeclaringClass()) : 
+						new SimpleMethodSignature(adb, specBinding, binding.getDeclaringClass());
 		else
 			return binding.isConstructor() ? 
-					new MultiCaseConstructorSignature(annoDB, specBinding, binding.getDeclaringClass(), 
+					new MultiCaseConstructorSignature(adb, specBinding, binding.getDeclaringClass(), 
 							downcast((Object[]) a.getObject("value"), PermAnnotation.class))
 					:
-					new MultiCaseMethodSignature(annoDB, specBinding, binding.getDeclaringClass(),
+					new MultiCaseMethodSignature(adb, specBinding, binding.getDeclaringClass(),
 							downcast((Object[]) a.getObject("value"), PermAnnotation.class));
 	}
 	
@@ -539,20 +543,12 @@ public class StateSpaceRepository {
 	}
 
 	/**
-	 * Returns the annotation database and detects if a new Crystal run was
-	 * started.  If a new run was started, the maps {@link #spaces} and 
-	 * {@link #signatures} are cleared
-	 * in order to avoid stale state spaces for types (and signatures for methods) that 
-	 * were modified since the last run of Crystal.
-	 * @return The current Crystal annotation database.
+	 * Returns the annotation database.
+	 * @return The Crystal annotation database used by this repository.
 	 */
 	private AnnotationDatabase getAnnotationDB() {
-		AnnotationDatabase result = annoDB;
-		if(cachedDB != result) {
-			cachedDB = result;
-			spaces.clear();
-			signatures.clear();
-		}
+		AnnotationDatabase result = annoDB.get();
+		assert result != null : "Annotation database was unexpectedly garbage-collected";
 		return result;
 	}
 
@@ -565,7 +561,6 @@ public class StateSpaceRepository {
 	 * @see #getAnnotationDB()
 	 */
 	private Map<String, StateSpaceImpl> getSpaces() {
-		getAnnotationDB();
 		return spaces;
 	}
 
@@ -578,7 +573,6 @@ public class StateSpaceRepository {
 	 * @see #getAnnotationDB()
 	 */
 	private Map<String, IInvocationSignature> getSignatures() {
-		getAnnotationDB();
 		return signatures;
 	}
 
