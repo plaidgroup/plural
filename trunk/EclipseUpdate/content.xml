@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?metadataRepository class='org.eclipse.equinox.internal.p2.metadata.repository.LocalMetadataRepository' version='1.0.0'?>
-<repository name='Plural Object Protocol Checker' type='org.eclipse.equinox.internal.p2.metadata.repository.LocalMetadataRepository' version='1'>
+<repository name='file:/C:/Documents and Settings/kbierhof/My Documents/workspace/PluralEclipseUpdate/ - metadata' type='org.eclipse.equinox.internal.p2.metadata.repository.LocalMetadataRepository' version='1'>
   <properties size='2'>
     <property name='p2.compressed' value='false'/>
-    <property name='p2.timestamp' value='1221000997422'/>
+    <property name='p2.timestamp' value='1221001798161'/>
   </properties>
   <references size='2'>
     <repository url='http://pluralism.googlecode.com/svn/trunk/EclipseUpdate/' type='1' options='0'/>
@@ -43,7 +43,7 @@
         <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='0.0.0'/>
         <required namespace='osgi.bundle' name='org.eclipse.core.resources' range='0.0.0'/>
         <required namespace='osgi.bundle' name='org.eclipse.jface.text' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='edu.cmu.cs.crystal' range='3.3.1'/>
+        <required namespace='osgi.bundle' name='edu.cmu.cs.crystal' range='0.0.0'/>
         <required namespace='osgi.bundle' name='org.junit4' range='0.0.0'/>
       </requires>
       <artifacts size='1'>
@@ -53,7 +53,7 @@
       <touchpointData size='1'>
         <instructions size='2'>
           <instruction key='manifest'>
-            Bundle-ManifestVersion: 2&#xA;Export-Package: edu.cmu.cs.plural.alias,edu.cmu.cs.plural.atomic,edu.cmu.cs.plural.fractions,edu.cmu.cs.plural.fractions.elim,edu.cmu.cs.plural.linear,edu.cmu.cs.plural.main,edu.cmu.cs.plural.perm,edu.cmu.cs.plural.perm.parser,edu.cmu.cs.plural.states,edu.cmu.cs.plural.states.annowrappers,edu.cmu.cs.plural.track,edu.cmu.cs.plural.util,org.antlr.runtime,org.antlr.runtime.debug,org.antlr.runtime.misc,org.antlr.runtime.tree&#xA;Bundle-RequiredExecutionEnvironment: JavaSE-1.6&#xA;Eclipse-RegisterBuddy: edu.cmu.cs.crystal&#xA;Require-Bundle: org.eclipse.ui,org.eclipse.core.runtime,org.eclipse.jdt.core,org.eclipse.ui.console,org.eclipse.core.resources,org.eclipse.jface.text,edu.cmu.cs.crystal;bundle-version=&quot;3.3.1&quot;,org.junit4&#xA;Bundle-Activator: edu.cmu.cs.plural.main.PluralPlugin&#xA;Bundle-Name: Plural Plug-in&#xA;Bundle-Version: 1.0.1&#xA;Bundle-SymbolicName: edu.cmu.cs.plural;singleton:=true&#xA;Bundle-ClassPath: edu.cmu.cs.plural/,antlr-3.0.1/lib/antlr-runtime-3.0.1.jar&#xA;Manifest-Version: 1.0&#xA;Eclipse-LazyStart: true&#xA;
+            Bundle-ManifestVersion: 2&#xA;Export-Package: edu.cmu.cs.plural.alias,edu.cmu.cs.plural.atomic,edu.cmu.cs.plural.fractions,edu.cmu.cs.plural.fractions.elim,edu.cmu.cs.plural.linear,edu.cmu.cs.plural.main,edu.cmu.cs.plural.perm,edu.cmu.cs.plural.perm.parser,edu.cmu.cs.plural.states,edu.cmu.cs.plural.states.annowrappers,edu.cmu.cs.plural.track,edu.cmu.cs.plural.util,org.antlr.runtime,org.antlr.runtime.debug,org.antlr.runtime.misc,org.antlr.runtime.tree&#xA;Bundle-RequiredExecutionEnvironment: JavaSE-1.6&#xA;Eclipse-RegisterBuddy: edu.cmu.cs.crystal&#xA;Require-Bundle: org.eclipse.ui,org.eclipse.core.runtime,org.eclipse.jdt.core,org.eclipse.ui.console,org.eclipse.core.resources,org.eclipse.jface.text,edu.cmu.cs.crystal,org.junit4&#xA;Bundle-Activator: edu.cmu.cs.plural.main.PluralPlugin&#xA;Bundle-Name: Plural Plug-in&#xA;Bundle-Version: 1.0.1&#xA;Bundle-SymbolicName: edu.cmu.cs.plural;singleton:=true&#xA;Bundle-ClassPath: edu.cmu.cs.plural/,antlr-3.0.1/lib/antlr-runtime-3.0.1.jar&#xA;Manifest-Version: 1.0&#xA;Eclipse-LazyStart: true&#xA;
           </instruction>
           <instruction key='zipped'>
             true
