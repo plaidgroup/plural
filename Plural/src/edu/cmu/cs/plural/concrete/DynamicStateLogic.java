@@ -38,6 +38,7 @@
 package edu.cmu.cs.plural.concrete;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -55,6 +56,9 @@ import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.linear.PermissionImplication;
 import edu.cmu.cs.plural.perm.parser.ParamInfoHolder;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
+import edu.cmu.cs.plural.util.ConsList;
+import edu.cmu.cs.plural.util.Lambda;
+import edu.cmu.cs.plural.util.Lambda2;
 import edu.cmu.cs.plural.util.Pair;
 
 /**
@@ -90,7 +94,7 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 	/*
 	 * Implications about variable states known to hold.
 	 */
-	final private Map<Aliasing, List<Implication>> knownImplications;
+	final private Map<Aliasing, ConsList<Implication>> knownImplications;
 	
 //	final private Map<Aliasing, List<DelayedImplication>> delayedImplications;
 		
@@ -101,12 +105,12 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 	
 	public DynamicStateLogic() {
 		this.knownPredicates = new WeakHashMap<Aliasing, VariablePredicate>();
-		this.knownImplications = new WeakHashMap<Aliasing, List<Implication>>();
+		this.knownImplications = new WeakHashMap<Aliasing, ConsList<Implication>>();
 //		this.delayedImplications = new WeakHashMap<Aliasing, List<DelayedImplication>>();
 	}
 	
 	private DynamicStateLogic(Map<Aliasing, VariablePredicate> kp,
-			                 Map<Aliasing, List<Implication>> ki) {
+			                 Map<Aliasing, ConsList<Implication>> ki) {
 		this.knownPredicates = kp;
 		this.knownImplications = ki;
 //		this.delayedImplications = di;
@@ -225,7 +229,7 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 	
 	public List<ImplicationResult> solveFilteredVariables(PluralTupleLatticeElement value, AliasingFilter liveness) {
 		List<ImplicationResult> result = new LinkedList<ImplicationResult>();
-		for(Map.Entry<Aliasing, List<Implication>> impls : knownImplications.entrySet()) {
+		for(Map.Entry<Aliasing, ConsList<Implication>> impls : knownImplications.entrySet()) {
 			if(liveness.isConsidered(impls.getKey())) {
 				for(Implication impl : impls.getValue()) {
 					if(impl.supportsMatch()) {
@@ -431,38 +435,35 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		this.addImplication(v_1, impl);
 	}
 	
+	/**
+	 * Adds a new implication to the set where the given object location is
+	 * the target of the antecedent.
+	 */
 	public void addImplication(Aliasing ant, Implication impl) {
 		if( this.knownImplications.containsKey(ant) ) {
-			this.knownImplications.get(ant).add(impl);
+			ConsList<Implication> new_val = this.knownImplications.get(ant).cons(impl);
+			this.knownImplications.put(ant, new_val);
 		}
 		else {
-			List<Implication> l = new LinkedList<Implication>();
-			l.add(impl);
-			this.knownImplications.put(ant, l);
+			this.knownImplications.put(ant, ConsList.singleton(impl));
 		}
-	}
+	} 
 
 	public DynamicStateLogic copy() {
 		return this.freeze();
 	}
 
 	public DynamicStateLogic mutableCopy() {
-		/*
-		 * Don't really have a good idea of what to do here.
-		 * Maybe I should try it first w/o this line.
-		 */
+		// Don't really have a good idea of what to do here.
+		// Maybe I should try it first w/o this line.
 		if( this.isBottom() ) return this;
 		
-		DynamicStateLogic result = new DynamicStateLogic();
-		// shallow map clone is unsafe because contained lists are mutable
-//		result.knownImplications.putAll(this.knownImplications);
-		for(Map.Entry<Aliasing, List<Implication>> impl : this.knownImplications.entrySet()) {
-			result.knownImplications.put(impl.getKey(), new LinkedList<Implication>(impl.getValue()));
-		}
-		
-		result.knownPredicates.putAll(this.knownPredicates);
-//		result.delayedImplications.putAll(this.delayedImplications);
-		return result;		
+		// Create new maps with contents of old ones. Old values are immutable, so
+		// shallow copy is good enough.
+		Map<Aliasing,VariablePredicate> vps = new HashMap<Aliasing,VariablePredicate>(this.knownPredicates);
+		Map<Aliasing, ConsList<Implication>> imps = new HashMap<Aliasing, ConsList<Implication>>(this.knownImplications);
+
+		return new DynamicStateLogic(vps, imps);
 	}
 	
 	public DynamicStateLogic freeze() {
@@ -493,10 +494,10 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 			result.knownPredicates.put(entry.getKey(), entry.getValue());
 		}
 		
-		Set<Map.Entry<Aliasing, List<Implication>>> impl_intersection =
-			new HashSet<Map.Entry<Aliasing, List<Implication>>>(this.knownImplications.entrySet());
+		Set<Map.Entry<Aliasing, ConsList<Implication>>> impl_intersection =
+			new HashSet<Map.Entry<Aliasing, ConsList<Implication>>>(this.knownImplications.entrySet());
 		impl_intersection.retainAll(other.knownImplications.entrySet());
-		for( Map.Entry<Aliasing, List<Implication>> entry : impl_intersection ) {
+		for( Map.Entry<Aliasing, ConsList<Implication>> entry : impl_intersection ) {
 			result.knownImplications.put(entry.getKey(), entry.getValue());
 		}
 		
@@ -586,8 +587,7 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 			this.delayedImplications == null*/;
 	}
 
-	void addPredicates(
-			Set<Pair<Aliasing, ? extends VariablePredicate>> preds) {
+	void addPredicates(Set<Pair<Aliasing, ? extends VariablePredicate>> preds) {
 		if( frozen ) 
 			throw new IllegalStateException("Cannot change frozen object. Get a mutable copy to do this.");
 		
@@ -605,12 +605,20 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		}
 	}
 	
+	/**
+	 * Remove one of the given implication with the given object location as its
+	 * antecedent.
+	 */
 	public void removeImplication(Aliasing var, Implication impl) {
 		if( frozen ) 
 			throw new IllegalStateException("Cannot change frozen object. Get a mutable copy to do this.");
 		
-		List<Implication> is = knownImplications.get(var);
-		if(is != null) is.remove(impl);
+		ConsList<Implication> is = knownImplications.get(var);
+		
+		// We only remove one copy of the implication, because an
+		// implication is a linear fact.
+		if( is != null )
+			knownImplications.put(var, is.removeElementOnce(impl));
 	}
 
 	public boolean isKnownImplication(Aliasing v, Implication impl) {
@@ -646,27 +654,51 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 	}
 
 	/**
-	 * 
+	 * Remove temporary state information for all of the implications
+	 * contained by this DynamicStateLogic object.
 	 */
 	public void forgetTemporaryStateInImplications() {
 		if( frozen ) 
 			throw new IllegalStateException("Cannot change frozen object. Get a mutable copy to do this.");
 
-		for(Map.Entry<Aliasing, List<Implication>> impls : knownImplications.entrySet()) {
-			// explicit iterator to avoid concurrent modification...
-			ListIterator<Implication> it = impls.getValue().listIterator();
-			while(it.hasNext()) {
-				Implication impl = it.next();
-				if(impl.hasTemporaryState()) {
-					impl = impl.createCopyWithoutTemporaryState();
-					if(impl == null)
-						// drop implication entirely
-						it.remove();
-					else
-						// replace problematic implication with sanitized one
-						it.set(impl);
-				}
-			}
+		List<Pair<Aliasing, ConsList<Implication>>> new_entries = new LinkedList<Pair<Aliasing, ConsList<Implication>>>();
+		
+		for(Map.Entry<Aliasing, ConsList<Implication>> impls : knownImplications.entrySet()) {
+			ConsList<Implication> cur_list = impls.getValue();
+			
+			// Fold over the old list, creating a new list with fewer implications or
+			// with implications that have no temporary state information.
+			ConsList<Implication> new_list;
+			new_list = cur_list.foldl(
+					new Lambda2<Implication, ConsList<Implication>, ConsList<Implication>>(){
+						@Override
+						public ConsList<Implication> call(Implication i1,
+								ConsList<Implication> i2) {
+							if( i1.hasTemporaryState() ) {
+								i1 = i1.createCopyWithoutTemporaryState();
+								if( i1 == null )
+									// Drop implication entirely
+									return i2;
+								else
+									// replace problematic implication with sanitized 
+									return i2.cons(i1);
+							}
+							else {
+								// Implication is fine.
+								return i2.cons(i1);
+							}
+						}}, 
+					ConsList.<Implication>empty());
+			
+			// Use the old list as long as the new list and the old list are
+			// the same. This gives us some additional sharing.
+			new_list = new_list.equals(cur_list) ? cur_list : new_list;
+			new_entries.add(Pair.create(impls.getKey(), new_list));
+		}
+		
+		// Update the map by putting the new alias/list pairs back in.
+		for( Pair<Aliasing, ConsList<Implication>> new_entry : new_entries ) {
+			knownImplications.put(new_entry.fst(), new_entry.snd());
 		}
 	}
 
