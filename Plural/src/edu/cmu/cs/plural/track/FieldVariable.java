@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2007, 2008 by Kevin Bierhoff and Nels E. Beckman
+ * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
  *

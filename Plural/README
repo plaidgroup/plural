@@ -2,6 +2,9 @@ Plural
 
 Sound Modular Typestate Checking for Java
 
+Copyright (C) 2007, 2008 Carnegie Mellon University and others
+
+Primary developers:
 Kevin Bierhoff, kevin dot bierhoff at cs dot cmu dot edu 
 Nels E. Beckman, nbeckman at cs dot cmu dot edu
 
