@@ -2,7 +2,7 @@
 <feature
       id="edu.cmu.cs.plural.feature"
       label="Plural"
-      version="1.0.0"
+      version="1.0.1"
       plugin="edu.cmu.cs.plural">
 
    <description url="http://code.google.com/p/pluralism/">
@@ -10,7 +10,7 @@
    </description>
 
    <copyright url="http://code.google.com/p/pluralism/">
-      Copyright (C) 2007, 2008 by Kevin Bierhoff and Nels E. Beckman
+      Copyright (C) 2007, 2008 Carnegie Mellon University and others.
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-2.0.html">
@@ -50,7 +50,7 @@ Copyright 2008 by Carnegie Mellon University.
       <import plugin="org.eclipse.ui.console"/>
       <import plugin="org.eclipse.core.resources"/>
       <import plugin="org.eclipse.jface.text"/>
-      <import plugin="edu.cmu.cs.crystal" version="3.3.0" match="greaterOrEqual"/>
+      <import plugin="edu.cmu.cs.crystal" version="3.3.1" match="greaterOrEqual"/>
       <import plugin="org.junit4"/>
    </requires>
 
@@ -58,7 +58,7 @@ Copyright 2008 by Carnegie Mellon University.
          id="edu.cmu.cs.plural"
          download-size="0"
          install-size="0"
-         version="1.0.0"/>
+         version="1.0.1"/>
 
    <data
          id="COPYING"
