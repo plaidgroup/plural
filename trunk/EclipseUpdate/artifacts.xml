@@ -3,7 +3,7 @@
 <repository name='Plural Object Protocol Checker - artifacts' type='org.eclipse.equinox.p2.artifact.repository.simpleRepository' version='1'>
   <properties size='2'>
     <property name='p2.compressed' value='false'/>
-    <property name='p2.timestamp' value='1220993306161'/>
+    <property name='p2.timestamp' value='1220998254186'/>
   </properties>
   <mappings size='3'>
     <rule filter='(&amp; (classifier=osgi.bundle))' output='${repoUrl}/plugins/${id}_${version}.jar'/>
@@ -23,17 +23,17 @@
         <property name='download.size' value='8494'/>
       </properties>
     </artifact>
-    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.1'>
-      <properties size='3'>
-        <property name='artifact.size' value='700579'/>
-        <property name='download.size' value='700579'/>
-        <property name='download.contentType' value='application/zip'/>
-      </properties>
-    </artifact>
     <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.0'>
       <properties size='3'>
         <property name='artifact.size' value='688756'/>
         <property name='download.size' value='688756'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.1'>
+      <properties size='3'>
+        <property name='artifact.size' value='700567'/>
+        <property name='download.size' value='700567'/>
         <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
