@@ -2,8 +2,7 @@
 <feature
       id="edu.cmu.cs.plural.feature"
       label="Plural"
-      version="1.0.1"
-      plugin="edu.cmu.cs.plural">
+      version="1.0.1">
 
    <description url="http://code.google.com/p/pluralism/">
       Modular object protocol checking for Java.
@@ -40,6 +39,7 @@ Copyright 2008 by Carnegie Mellon University.
 
    <url>
       <update label="Plural update site" url="http://pluralism.googlecode.com/svn/trunk/EclipseUpdate/"/>
+      <discovery label="Plural update site" url="http://pluralism.googlecode.com/svn/trunk/EclipseUpdate/"/>
       <discovery label="Crystal update site" url="http://crystalsaf.googlecode.com/svn/trunk/EclipseUpdate/"/>
    </url>
 
