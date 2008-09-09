@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?metadataRepository class='org.eclipse.equinox.internal.p2.metadata.repository.LocalMetadataRepository' version='1.0.0'?>
-<repository name='Plural Object Protocol Checker - metadata' type='org.eclipse.equinox.internal.p2.metadata.repository.LocalMetadataRepository' version='1'>
+<repository name='Plural Object Protocol Checker' type='org.eclipse.equinox.internal.p2.metadata.repository.LocalMetadataRepository' version='1'>
   <properties size='2'>
     <property name='p2.compressed' value='false'/>
-    <property name='p2.timestamp' value='1220990057230'/>
+    <property name='p2.timestamp' value='1220992315890'/>
   </properties>
   <references size='2'>
     <repository url='http://pluralism.googlecode.com/svn/trunk/EclipseUpdate/' type='1' options='0'/>
