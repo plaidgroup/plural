@@ -2,9 +2,8 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Plural Plug-in
 Bundle-SymbolicName: edu.cmu.cs.plural;singleton:=true
-Bundle-Version: 1.0.0
+Bundle-Version: 1.0.1
 Bundle-Activator: edu.cmu.cs.plural.main.PluralPlugin
-Bundle-Vendor: Kevin Bierhoff
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.jdt.core,
