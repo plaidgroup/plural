@@ -3,65 +3,13 @@
 <repository name='Plural Object Protocol Checker' type='org.eclipse.equinox.internal.p2.metadata.repository.LocalMetadataRepository' version='1'>
   <properties size='2'>
     <property name='p2.compressed' value='false'/>
-    <property name='p2.timestamp' value='1220998254202'/>
+    <property name='p2.timestamp' value='1221000997422'/>
   </properties>
   <references size='2'>
     <repository url='http://pluralism.googlecode.com/svn/trunk/EclipseUpdate/' type='1' options='0'/>
     <repository url='http://pluralism.googlecode.com/svn/trunk/EclipseUpdate/' type='0' options='0'/>
   </references>
-  <units size='11'>
-    <unit id='edu.cmu.cs.plural' version='1.0.0'>
-      <update id='edu.cmu.cs.plural' range='[0.0.0,1.0.0)' severity='0'/>
-      <properties size='2'>
-        <property name='org.eclipse.equinox.p2.name' value='Plural Plug-in'/>
-        <property name='org.eclipse.equinox.p2.provider' value='Kevin Bierhoff'/>
-      </properties>
-      <provides size='19'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='edu.cmu.cs.plural' version='1.0.0'/>
-        <provided namespace='osgi.bundle' name='edu.cmu.cs.plural' version='1.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.alias' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.atomic' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.fractions' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.fractions.elim' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.linear' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.main' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.perm' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.perm.parser' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.states' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.states.annowrappers' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.track' version='0.0.0'/>
-        <provided namespace='java.package' name='edu.cmu.cs.plural.util' version='0.0.0'/>
-        <provided namespace='java.package' name='org.antlr.runtime' version='0.0.0'/>
-        <provided namespace='java.package' name='org.antlr.runtime.debug' version='0.0.0'/>
-        <provided namespace='java.package' name='org.antlr.runtime.misc' version='0.0.0'/>
-        <provided namespace='java.package' name='org.antlr.runtime.tree' version='0.0.0'/>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
-      </provides>
-      <requires size='8'>
-        <required namespace='osgi.bundle' name='org.eclipse.ui' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.core.runtime' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.jdt.core' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.ui.console' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.core.resources' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='org.eclipse.jface.text' range='0.0.0'/>
-        <required namespace='osgi.bundle' name='edu.cmu.cs.crystal' range='3.3.0'/>
-        <required namespace='java.package' name='org.junit' range='4.1.0'/>
-      </requires>
-      <artifacts size='1'>
-        <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.0'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='2'>
-          <instruction key='manifest'>
-            Bundle-Name: Plural Plug-in&#xA;Bundle-ClassPath: edu.cmu.cs.plural/,antlr-3.0.1/lib/antlr-runtime-3.0.1.jar&#xA;Bundle-Version: 1.0.0&#xA;Eclipse-LazyStart: true&#xA;Import-Package: org.junit;version=&quot;4.1.0&quot;&#xA;Bundle-Activator: edu.cmu.cs.plural.main.PluralPlugin&#xA;Bundle-Vendor: Kevin Bierhoff&#xA;Require-Bundle: org.eclipse.ui,org.eclipse.core.runtime,org.eclipse.jdt.core,org.eclipse.ui.console,org.eclipse.core.resources,org.eclipse.jface.text,edu.cmu.cs.crystal;bundle-version=&quot;3.3.0&quot;&#xA;Eclipse-RegisterBuddy: edu.cmu.cs.crystal&#xA;Export-Package: edu.cmu.cs.plural.alias,edu.cmu.cs.plural.atomic,edu.cmu.cs.plural.fractions,edu.cmu.cs.plural.fractions.elim,edu.cmu.cs.plural.linear,edu.cmu.cs.plural.main,edu.cmu.cs.plural.perm,edu.cmu.cs.plural.perm.parser,edu.cmu.cs.plural.states,edu.cmu.cs.plural.states.annowrappers,edu.cmu.cs.plural.track,edu.cmu.cs.plural.util,org.antlr.runtime,org.antlr.runtime.debug,org.antlr.runtime.misc,org.antlr.runtime.tree&#xA;Bundle-SymbolicName: edu.cmu.cs.plural;singleton:=true&#xA;Manifest-Version: 1.0&#xA;Bundle-ManifestVersion: 2&#xA;Bundle-RequiredExecutionEnvironment: JavaSE-1.6&#xA;
-          </instruction>
-          <instruction key='zipped'>
-            true
-          </instruction>
-        </instructions>
-      </touchpointData>
-    </unit>
+  <units size='8'>
     <unit id='edu.cmu.cs.plural' version='1.0.1'>
       <update id='edu.cmu.cs.plural' range='[0.0.0,1.0.1)' severity='0'/>
       <properties size='1'>
@@ -259,50 +207,12 @@
         </instructions>
       </touchpointData>
     </unit>
-    <unit id='edu.cmu.cs.plural.feature.feature.group' version='1.0.0' singleton='false'>
-      <update id='edu.cmu.cs.plural.feature.feature.group' range='[0.0.0,1.0.0)' severity='0'/>
-      <properties size='4'>
-        <property name='org.eclipse.equinox.p2.name' value='Plural'/>
-        <property name='org.eclipse.equinox.p2.description' value='Modular object protocol checking for Java.'/>
-        <property name='org.eclipse.equinox.p2.description.url' value='http://code.google.com/p/pluralism/'/>
-        <property name='org.eclipse.equinox.p2.type.group' value='true'/>
-      </properties>
-      <provides size='1'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='edu.cmu.cs.plural.feature.feature.group' version='1.0.0'/>
-      </provides>
-      <requires size='10'>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.core.runtime' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.jdt.core' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.ui.console' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.core.resources' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.eclipse.jface.text' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='edu.cmu.cs.crystal' range='3.3.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='org.junit4' range='0.0.0'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='edu.cmu.cs.plural' range='[1.0.0,1.0.0]'/>
-        <required namespace='org.eclipse.equinox.p2.iu' name='edu.cmu.cs.plural.feature.feature.jar' range='[1.0.0,1.0.0]'>
-          <filter>
-            (org.eclipse.update.install.features=true)
-          </filter>
-        </required>
-      </requires>
-      <touchpoint id='null' version='0.0.0'/>
-      <licenses size='1'>
-        <license url='http://www.gnu.org/licenses/gpl-2.0.html'>
-          BY CLICKING ON THE “ACCEPT” OR “CONTINUE” BUTTON, YOU “LICENSEE”&#xA;REPRESENT AND WARRANT THAT YOU FULLY UNDERSTAND AND AGREE TO&#xA;COMPLY WITH ALL OF THE FOLLOWING TERMS AND CONDITIONS, AND THAT&#xA;FAILURE TO ABIDE BY THESE TERMS AND CONDITIONS MAY RESULT IN&#xA;LEGAL ACTION AGAINST YOU “LICENSEE”.  IF YOU “LICENSEE” HAVE&#xA;ANY QUESTIONS AS TO THESE TERMS AND CONDITIONS, WE ENCOURAGE&#xA;YOU “LICENSEE” TO SEEK INDEPENDENT COUNSEL PRIOR TO CLICKING&#xA;ON THE “ACCEPT” OR “CONTINUE” BUTTON.&#xA;&#xA;These terms and conditions constitute a legally binding agreement&#xA;(“Agreement”) between (a) you, the “Licensee”, and (b) Carnegie&#xA;Mellon University (“Carnegie Mellon”).&#xA;&#xA;This software is available under a dual license agreement. To&#xA;download under the GPL v2 license (http://www.gnu.org/licenses/gpl-2.0.html),&#xA;please click here.&#xA;&#xA;To obtain this software under a commercial license, please contact&#xA;the Carnegie Mellon University Center for Technology Transfer&#xA;at innovation@cmu.edu.&#xA;&#xA;Copyright 2008 by Carnegie Mellon University.
-        </license>
-      </licenses>
-      <copyright url='http://code.google.com/p/pluralism/'>
-        Copyright (C) 2007, 2008 by Kevin Bierhoff and Nels E. Beckman
-      </copyright>
-    </unit>
     <unit id='edu.cmu.cs.plural.feature.feature.jar' version='1.0.1'>
       <update id='edu.cmu.cs.plural.feature.feature.jar' range='[0.0.0,1.0.1)' severity='0'/>
-      <properties size='4'>
+      <properties size='3'>
         <property name='org.eclipse.equinox.p2.name' value='Plural'/>
         <property name='org.eclipse.equinox.p2.description' value='Modular object protocol checking for Java.'/>
         <property name='org.eclipse.equinox.p2.description.url' value='http://code.google.com/p/pluralism/'/>
-        <property name='org.eclipse.update.feature.plugin' value='edu.cmu.cs.plural'/>
       </properties>
       <provides size='3'>
         <provided namespace='org.eclipse.equinox.p2.iu' name='edu.cmu.cs.plural.feature.feature.jar' version='1.0.1'/>
@@ -453,42 +363,6 @@
         <provided namespace='java.package' name='org.xml.sax.helpers' version='0.0.0'/>
       </provides>
       <touchpoint id='org.eclipse.equinox.p2.native' version='1.0.0'/>
-    </unit>
-    <unit id='edu.cmu.cs.plural.feature.feature.jar' version='1.0.0'>
-      <update id='edu.cmu.cs.plural.feature.feature.jar' range='[0.0.0,1.0.0)' severity='0'/>
-      <properties size='4'>
-        <property name='org.eclipse.equinox.p2.name' value='Plural'/>
-        <property name='org.eclipse.equinox.p2.description' value='Modular object protocol checking for Java.'/>
-        <property name='org.eclipse.equinox.p2.description.url' value='http://code.google.com/p/pluralism/'/>
-        <property name='org.eclipse.update.feature.plugin' value='edu.cmu.cs.plural'/>
-      </properties>
-      <provides size='3'>
-        <provided namespace='org.eclipse.equinox.p2.iu' name='edu.cmu.cs.plural.feature.feature.jar' version='1.0.0'/>
-        <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='feature' version='1.0.0'/>
-        <provided namespace='org.eclipse.update.feature' name='edu.cmu.cs.plural.feature' version='1.0.0'/>
-      </provides>
-      <filter>
-        (org.eclipse.update.install.features=true)
-      </filter>
-      <artifacts size='1'>
-        <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.0'/>
-      </artifacts>
-      <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
-      <touchpointData size='1'>
-        <instructions size='1'>
-          <instruction key='zipped'>
-            true
-          </instruction>
-        </instructions>
-      </touchpointData>
-      <licenses size='1'>
-        <license url='http://www.gnu.org/licenses/gpl-2.0.html'>
-          BY CLICKING ON THE “ACCEPT” OR “CONTINUE” BUTTON, YOU “LICENSEE”&#xA;REPRESENT AND WARRANT THAT YOU FULLY UNDERSTAND AND AGREE TO&#xA;COMPLY WITH ALL OF THE FOLLOWING TERMS AND CONDITIONS, AND THAT&#xA;FAILURE TO ABIDE BY THESE TERMS AND CONDITIONS MAY RESULT IN&#xA;LEGAL ACTION AGAINST YOU “LICENSEE”.  IF YOU “LICENSEE” HAVE&#xA;ANY QUESTIONS AS TO THESE TERMS AND CONDITIONS, WE ENCOURAGE&#xA;YOU “LICENSEE” TO SEEK INDEPENDENT COUNSEL PRIOR TO CLICKING&#xA;ON THE “ACCEPT” OR “CONTINUE” BUTTON.&#xA;&#xA;These terms and conditions constitute a legally binding agreement&#xA;(“Agreement”) between (a) you, the “Licensee”, and (b) Carnegie&#xA;Mellon University (“Carnegie Mellon”).&#xA;&#xA;This software is available under a dual license agreement. To&#xA;download under the GPL v2 license (http://www.gnu.org/licenses/gpl-2.0.html),&#xA;please click here.&#xA;&#xA;To obtain this software under a commercial license, please contact&#xA;the Carnegie Mellon University Center for Technology Transfer&#xA;at innovation@cmu.edu.&#xA;&#xA;Copyright 2008 by Carnegie Mellon University.
-        </license>
-      </licenses>
-      <copyright url='http://code.google.com/p/pluralism/'>
-        Copyright (C) 2007, 2008 by Kevin Bierhoff and Nels E. Beckman
-      </copyright>
     </unit>
   </units>
 </repository>
