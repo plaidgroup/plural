@@ -10,9 +10,9 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.console,
  org.eclipse.core.resources,
  org.eclipse.jface.text,
- edu.cmu.cs.crystal;bundle-version="3.3.1"
+ edu.cmu.cs.crystal;bundle-version="3.3.1",
+ org.junit4
 Eclipse-LazyStart: true
-Import-Package: org.junit;version="4.1.0"
 Bundle-ClassPath: edu.cmu.cs.plural/,
  antlr-3.0.1/lib/antlr-runtime-3.0.1.jar
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
