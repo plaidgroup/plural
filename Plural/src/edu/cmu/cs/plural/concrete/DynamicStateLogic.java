@@ -61,6 +61,8 @@ import edu.cmu.cs.plural.util.Lambda;
 import edu.cmu.cs.plural.util.Lambda2;
 import edu.cmu.cs.plural.util.Pair;
 
+import static edu.cmu.cs.plural.util.ConsList.cons;
+
 /**
  * This type is in charge of keeping track of facts about variables and state
  * implications and then eliminating implications when the time is right.
@@ -441,7 +443,7 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 	 */
 	public void addImplication(Aliasing ant, Implication impl) {
 		if( this.knownImplications.containsKey(ant) ) {
-			ConsList<Implication> new_val = this.knownImplications.get(ant).cons(impl);
+			ConsList<Implication> new_val = cons(impl, this.knownImplications.get(ant)); 
 			this.knownImplications.put(ant, new_val);
 		}
 		else {
@@ -681,11 +683,11 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 									return i2;
 								else
 									// replace problematic implication with sanitized 
-									return i2.cons(i1);
+									return cons(i1, i2);
 							}
 							else {
 								// Implication is fine.
-								return i2.cons(i1);
+								return cons(i1, i2);
 							}
 						}}, 
 					ConsList.<Implication>empty());
