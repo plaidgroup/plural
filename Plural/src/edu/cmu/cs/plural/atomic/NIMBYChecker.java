@@ -42,15 +42,9 @@ import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.FieldAccess;
 
 import edu.cmu.cs.crystal.internal.Utilities;
-import edu.cmu.cs.plural.fractions.Fraction;
-import edu.cmu.cs.plural.fractions.FractionConstraint;
-import edu.cmu.cs.plural.fractions.FractionalPermission;
-import edu.cmu.cs.plural.fractions.FractionalPermissions;
-import edu.cmu.cs.plural.states.StateSpace;
+import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionalAnalysis;
 import edu.cmu.cs.plural.track.FractionalTransfer;
-import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
-import edu.cmu.cs.plural.track.SingleTruthFractionalTransfer;
 
 /**
  * Not In My Back Yard:
@@ -87,65 +81,51 @@ public class NIMBYChecker extends FractionalAnalysis {
 		 * Are we treating FULL permissions as thread-shared permissions? Should
 		 * be set to true for weak atomicity semantics.
 		 */
-		private static final boolean fullCountsAsThreadShared = true;
+		private static final boolean FULL_PERMISSION_MUST_UNPACK_IN_ATOMIC = true;
 
 		/**
 		 * This is really bad for performance reasons. I am already doing this
 		 * exact same analysis on the same methods inside of NIMBYTransferFunction.
 		 */
 		private final IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
-		
-		private boolean didUnpackOccurHere(ASTNode node) {
-			return Utilities.nyi();
-		}
 
+		/**
+		 * Is the given node inside the lexical scope of an atomic block?
+		 */
+		private boolean isNodeInsideAtomic(ASTNode node) {
+			return isInAtomicAnalysis.isInAtomicBlock(node);
+		}
+		
 		/**
 		 * Report an error to the user if we are not inside an atomic block and the
 		 * permission that we just unpacked at this node is thread-shared.
 		 */
-		private void assertInAtomicIfTShared(ASTNode node) {	
-//			final PluralTupleLatticeElement lattice =
-//				NIMBYChecker.this.getFa().getResultsAfter(node);
-//			
-//			FractionalPermissions this_perm = lattice.get(node, 
-//					getTf().getAnalysisContext().getThisVariable());
-//			FractionalPermission unpacked_perm = this_perm.getUnpackedPermission();
-//			/*
-//			 * Is permission thread-shared?
-//			 */
-//			Fraction belowF = unpacked_perm.getFractions().getBelowFraction();
-//			if(unpacked_perm.isReadOnly()) {
-//				if(this_perm.getConstraints().testConstraint(
-//						FractionConstraint.createEquality(belowF, Fraction.zero())) == false)
-//					// unpacked permission cannot be pure -> must be immutable
-//						return;
-//			}
-//			else {
-//				Fraction aliveF = unpacked_perm.getFractions().get(StateSpace.STATE_ALIVE);
-//				if(this_perm.getConstraints().testConstraint(
-//						FractionConstraint.createLessThan(aliveF, Fraction.one())) == false)
-//					// unpacked permission must be unique
-//					return;
-//				if(!fullCountsAsThreadShared && this_perm.getConstraints().testConstraint(
-//						FractionConstraint.createLessThan(belowF, Fraction.one())) == false) {
-//					// unpacked permission must be full, and we don't worry about that
-//					return;
-//				}
-//			}
-//			/*
-//			 * Are we in an atomic block?
-//			 */
-//			if( !isInAtomicAnalysis.isInAtomicBlock(node) ) {
-//				crystal.reportUserProblem(
-//						"Thread-shared permission is being unpacked outside of an atomic block. " +
-//						"Put this (and possibly other) statement(s) inside atomic!",
-//						node, NIMBYChecker.this);
-//			}
+		private void assertInAtomicIfTShared(ASTNode node) {
+			// Are we outside of atomic?
+			if( !isNodeInsideAtomic(node) ) {
+				// Are we unpacked after this statement?
+				PluralDisjunctiveLE lattice = NIMBYChecker.this.getFa().getResultsAfter(node);
+				if( lattice.isRcvrUnpackedInAnyDisjunct() ) {
+					// Is receiver permission Share/Pure/(Full && FULL_PERMISSION_MUST_UNPACK_IN_ATOMIC)?
+					if( FULL_PERMISSION_MUST_UNPACK_IN_ATOMIC ) {
+						if( lattice.isRcvrFullSharePureInAnyDisjunct() ) {
+							String err = "Receiver is unpacked outside of atomic block, but doesn't have Unique or Immutable permission.";
+							reporter.reportUserProblem(err, 
+									                   node, 
+									                   NIMBYChecker.this.getName());
+						}
+					}
+					else {
+						Utilities.nyi();
+					}
+				}
+			}
 		}
 		
 		/*
-		 * Override possible unpacking nodes.
+		 * TODO: We should override every node.
 		 */
+		
 		@Override
 		public void endVisit(Assignment node) {
 			super.endVisit(node);

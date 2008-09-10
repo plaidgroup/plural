@@ -1125,7 +1125,7 @@ class LinearOperations extends TACAnalysisHelper {
 					result.dispatch(new DescendingVisitor() {
 
 						@Override
-						public boolean tupleModification(
+						public Boolean tuple(
 								TensorPluralTupleLE tuple) {
 							if(tuple.isRcvrPacked())
 								// may not have actually unpacked
