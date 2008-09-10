@@ -68,7 +68,9 @@ import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
+import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
+import edu.cmu.cs.plural.track.FractionalTransfer;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.track.SingleTruthFractionalTransfer;
 import edu.cmu.cs.plural.util.ExtendedIterator;
@@ -80,334 +82,185 @@ import edu.cmu.cs.plural.util.ExtendedIterator;
  * FractionalTransfer function, but forgets information in strategic places.
  * I wanted to delegate, but instead I had to extend...
  * 
- * @author Nels Beckman
+ * @author Nels E. Beckman
  * @date Mar 4, 2008
  *
  */
-public class NIMBYTransferFunction extends SingleTruthFractionalTransfer {
+public class NIMBYTransferFunction extends FractionalTransfer {
 
 	private IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
 
 	public NIMBYTransferFunction(AnnotationDatabase annoDB, FractionAnalysisContext context) {
 		super(annoDB, context);
 	}
-
-	/**
-	 * 'Forgets' state information (rootState? stateInfo? Unknown at this point...) for
-	 * permissions in the given lattice and returns the resulting lattice without modifying
-	 * the original lattice.
-	 * 
-	 * @param lattice Source lattice, from which permissions should be forgotten.
-	 * @param isFullShared Does FULL count as a shared permission? Necessary for weak atomicity.
-	 * @return A copy of the given lattice without state information for thread-shared permissions.
-	 */
-	private PluralTupleLatticeElement forgetSharedPermissions(PluralTupleLatticeElement lattice, ASTNode n) {
-		PluralTupleLatticeElement result = lattice.mutableCopy();
-
-		/*
-		 * Loop through all variables that should be reset if they are shared.
-		 */
-		for( ExtendedIterator<FractionalPermissions> it = result.tupleInfoIterator(); it.hasNext(); ) {
-			/*
-			 * For each permission for this var, see what type it is.
-			 */
-			FractionalPermissions var_perms = it.next();
-			/*
-			 * FOR THE TIME-BEING, WE ARE JUST FORGETTING THE STATE-INFO, BUT IF
-			 * STATE GUARANTEES ARE GUARANTEED WITH PURE OR SHARE SOMEHOW, THEY
-			 * SHOULD BE FORGOTTEN TOO.
-			 */
-			var_perms = var_perms.forgetTemporaryStateInfo();
-			it.replace(var_perms);
-			
-//			for( FractionalPermission var_perm : var_perms.getPermissions() ) {
-//				/*
-//				 * Forget if thread-shared.
-//				 */
-//				if( var_perm.isShare() || 
-//						var_perm.isPure() ) {
-//					final FractionalPermission new_var_perm = var_perm.forgetStateInfo();
-//					var_perms = var_perms.splitOff(var_perm);
-//					var_perms = var_perms.mergeIn(new_var_perm);
-//
-//					result.put(var, var_perms);
-//				}
-//			}
-		}
-
-		return result.storeCurrentAliasingInfo(n);
-	}
-
-	/**
-	 * A more efficient version of forgetSharedPermissions if you already know which variables
-	 * could have changed since the last 'forgetting.' See
-	 * {@link NIMBYTransferFunction#forgetSharedPermissions(PluralTupleLatticeElement, boolean)} 
-	 * @param lattice
-	 * @param candidateVars
-	 * @return
-	 */
-	private PluralTupleLatticeElement forgetSharedPermissions(
-			PluralTupleLatticeElement lattice,
-			TACInstruction instr,
-			Variable... candidateVars) {
-		PluralTupleLatticeElement result = lattice.mutableCopy();
-
-		/*
-		 * Loop through all variables that should be reset if they are shared.
-		 */
-		for( Variable var : candidateVars ) {
-			/*
-			 * For each permission for this var, see what type it is.
-			 */
-			FractionalPermissions var_perms = result.get(instr, var);
-			/*
-			 * FOR THE TIME-BEING, WE ARE JUST FORGETTING THE STATE-INFO, BUT IF
-			 * STATE GUARANTEES ARE GUARANTEED WITH PURE OR SHARE SOMEHOW, THEY
-			 * SHOULD BE FORGOTTEN TOO.
-			 */
-			var_perms = var_perms.forgetTemporaryStateInfo();
-			result.put(instr, var, var_perms);
-			
-//			for( FractionalPermission var_perm : var_perms.getPermissions() ) {
-//				/*
-//				 * Forget if thread-shared.
-//				 */
-//				if( var_perm.isShare() || 
-//						var_perm.isPure() ) {
-//					final FractionalPermission new_var_perm = var_perm.forgetStateInfo();
-//					var_perms = var_perms.splitOff(var_perm);
-//					var_perms = var_perms.mergeIn(new_var_perm);
-//
-//					result.put(var, var_perms);
-//				}
-//			}
-		}
-
-		return result;
-	}
-
-	/**
-	 * Helper method, gets aliasing locations when given an array of variables.
-	 */
-	private Aliasing[] getVariableLocations(PluralTupleLatticeElement lattice,
-			ASTNode curNode, Variable... vars) {
-		Aliasing[] result = new Aliasing[vars.length];
-
-		for( int i = 0; i<vars.length; ) {
-			result[i] = lattice.getLocationsAfter(curNode, vars[i]);
-		}
-		return result;
-	}
-
-	/**
-	 * Another helper method.
-	 */
-	private IResult<PluralTupleLatticeElement> forgetSharedPermissions(
-			IResult<PluralTupleLatticeElement> transfer_result, List<ILabel> labels, ASTNode n) {
-		/*
-		 * I have no real default... How do I do this?
-		 */
-		LabeledResult<PluralTupleLatticeElement> result = LabeledResult.createResult(labels, null);
+	
+	private IResult<PluralDisjunctiveLE> forgetSharedPermissions(
+			IResult<PluralDisjunctiveLE> transfer_result, List<ILabel> labels,
+			PluralDisjunctiveLE value, ASTNode node) {
+		// Is there a better default? Could we get the default from the old one?
+		LabeledResult<PluralDisjunctiveLE> result = LabeledResult.createResult(labels, null);
 		for( ILabel label : labels ) {
-			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), n));
+			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), node));
 		}
 		return result;
 	}
 
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			ArrayInitInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
+	private IResult<PluralDisjunctiveLE> forgetIfNotInAtomic(
+			ASTNode node, List<ILabel> labels,
+			PluralDisjunctiveLE value, IResult<PluralDisjunctiveLE> result) {
+		if( !this.isInAtomicAnalysis.isInAtomicBlock(node) ) {
+			result = this.forgetSharedPermissions(result, labels, value, node);
 		}
 		return result;
 	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(BinaryOperation binop,
-			List<ILabel> labels, PluralTupleLatticeElement value) {
-
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(binop, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(binop.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, binop.getNode());
-		}
-		return result;
+	
+	private PluralDisjunctiveLE forgetSharedPermissions(PluralDisjunctiveLE lattice, ASTNode node) {
+		return lattice.forgetShareAndPureStates();
 	}
 
 	@Override
-	public IResult<PluralTupleLatticeElement> transfer(CastInstruction instr,
-			List<ILabel> labels, PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
+	public IResult<PluralDisjunctiveLE> transfer(ArrayInitInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
 	}
 
 	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
+	public IResult<PluralDisjunctiveLE> transfer(BinaryOperation binop,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(binop, labels, value);
+		
+		return forgetIfNotInAtomic(binop.getNode(), labels, value, result);
+	}
+
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(CastInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(
 			ConstructorCallInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
+			PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(CopyInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(DotClassInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(InstanceofInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(LoadArrayInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(LoadFieldInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(LoadLiteralInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(MethodCallInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(NewArrayInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(NewObjectInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
 	}
 
 	@Override
-	public IResult<PluralTupleLatticeElement> transfer(CopyInstruction instr,
-			List<ILabel> labels, PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
-	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			DotClassInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
-	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			InstanceofInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
-	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			LoadArrayInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
-	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			LoadFieldInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
-	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			LoadLiteralInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
-	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			MethodCallInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
-	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			NewArrayInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-
-		IResult<PluralTupleLatticeElement> result = super.transfer(instr, labels, value);
-
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(instr.getNode()) ) {
-			result = this.forgetSharedPermissions(result, labels, instr.getNode());
-		}
-		return result;
-	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			NewObjectInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-		return super.transfer(instr, labels, value);
-	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
+	public IResult<PluralDisjunctiveLE> transfer(
 			SourceVariableDeclaration instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-		return super.transfer(instr, labels, value);
+			PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+	}
+	
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(SourceVariableRead instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
 	}
 
 	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			SourceVariableRead instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-		return super.transfer(instr, labels, value);
+	public IResult<PluralDisjunctiveLE> transfer(StoreArrayInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
 	}
 
 	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			StoreArrayInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-		return super.transfer(instr, labels, value);
+	public IResult<PluralDisjunctiveLE> transfer(StoreFieldInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
 	}
 
 	@Override
-	public IResult<PluralTupleLatticeElement> transfer(
-			StoreFieldInstruction instr, List<ILabel> labels,
-			PluralTupleLatticeElement value) {
-		return super.transfer(instr, labels, value);
+	public IResult<PluralDisjunctiveLE> transfer(UnaryOperation unop,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(unop, labels, value);
+		
+		return forgetIfNotInAtomic(unop.getNode(), labels, value, result);
 	}
-
-	@Override
-	public IResult<PluralTupleLatticeElement> transfer(UnaryOperation unop,
-			List<ILabel> labels, PluralTupleLatticeElement value) {
-		return super.transfer(unop, labels, value);
-	}
-
-
 }

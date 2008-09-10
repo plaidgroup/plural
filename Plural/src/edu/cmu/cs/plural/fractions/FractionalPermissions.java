@@ -510,29 +510,15 @@ implements LatticeElement<FractionalPermissions> {
 	 * Forgets state information for permissions known to be "share" or "pure".
 	 * @return
 	 */
-	public FractionalPermissions forgetTemporaryStateInfo() {
+	public FractionalPermissions forgetShareAndPureStates() {
 		if(isBottom())
 			return this;
 		List<FractionalPermission> newPs = 
-			PermissionSet.forgetTemporaryStateInfo(permissions, constraints);
+			PermissionSet.forgetShareAndPureStates(permissions, constraints);
 		List<FractionalPermission> newFramePs = 
-			PermissionSet.forgetTemporaryStateInfo(framePermissions, constraints);
+			PermissionSet.forgetShareAndPureStates(framePermissions, constraints);
 		
-//		List<FractionalPermission> newPs = 
-//			new ArrayList<FractionalPermission>(permissions.size());
-//		FractionAssignment assignment = constraints.simplify();
-//		for(FractionalPermission p : permissions) {
-//			if((p.isReadOnly() == false) && (assignment.isOne(p.getFractions().getBelowFraction()) == false))
-//				// share
-//				// TODO what if below fraction may or may not be one?
-//				p = p.forgetStateInfo();
-//			else if(p.isReadOnly() && assignment.isZero(p.getFractions().getBelowFraction()))
-//				// pure
-//				// TODO what if below fraction may or may not be zero?
-//				p = p.forgetStateInfo();
-//			newPs.add(p);
-//		}
-		// constraints unchanged
+		// original constraints unchanged
 		return createPermissions(newPs, newFramePs, constraints);
 	}
 

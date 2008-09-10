@@ -45,6 +45,9 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 /**
+ * Intended for the case where you need to prove something in 
+ * one context, of several.
+ * 
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */

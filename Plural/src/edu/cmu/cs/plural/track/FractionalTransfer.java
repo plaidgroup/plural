@@ -105,6 +105,8 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
 import edu.cmu.cs.plural.util.Pair;
 
 /**
+ * The transfer function for the PLURAL analysis.
+ * 
  * @author Kevin Bierhoff
  * @author Nels Beckman
  */

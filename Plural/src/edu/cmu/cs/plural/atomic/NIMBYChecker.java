@@ -41,13 +41,15 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.FieldAccess;
 
+import edu.cmu.cs.crystal.internal.Utilities;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionConstraint;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.states.StateSpace;
+import edu.cmu.cs.plural.track.FractionalAnalysis;
+import edu.cmu.cs.plural.track.FractionalTransfer;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
-import edu.cmu.cs.plural.track.SingleTruthFractionalAnalysis;
 import edu.cmu.cs.plural.track.SingleTruthFractionalTransfer;
 
 /**
@@ -58,13 +60,13 @@ import edu.cmu.cs.plural.track.SingleTruthFractionalTransfer;
  * @date Mar 4, 2008
  *
  */
-public class NIMBYChecker extends SingleTruthFractionalAnalysis {
+public class NIMBYChecker extends FractionalAnalysis {
 
 	/*
 	 * Override the FACTORY method to return our specific transfer function.
 	 */
 	@Override
-	protected SingleTruthFractionalTransfer createNewFractionalTransfer() {
+	protected FractionalTransfer createNewFractionalTransfer() {
 		return new NIMBYTransferFunction(analysisInput.getAnnoDB(), this);
 	}
 	
@@ -94,9 +96,7 @@ public class NIMBYChecker extends SingleTruthFractionalAnalysis {
 		private final IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
 		
 		private boolean didUnpackOccurHere(ASTNode node) {
-			return 
-			    NIMBYChecker.this.getFa().getResultsBefore(node).isRcvrPacked() &&
-			   !NIMBYChecker.this.getFa().getResultsAfter(node).isRcvrPacked();
+			return Utilities.nyi();
 		}
 
 		/**

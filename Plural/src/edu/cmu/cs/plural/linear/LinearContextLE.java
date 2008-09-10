@@ -43,6 +43,8 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 /**
+ * {@code LinearContextLE} wraps a {@code TensorPluralTupleLE}.
+ * 
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */

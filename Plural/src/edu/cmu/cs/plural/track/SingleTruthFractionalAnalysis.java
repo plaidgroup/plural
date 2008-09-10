@@ -81,7 +81,11 @@ import edu.cmu.cs.plural.util.SimpleMap;
 /**
  * @author Nels Beckman
  * @author Kevin Bierhoff
+ * @deprecated This analysis no longer works. It is only around for reference
+ *             purposes.
+ * @see edu.cmu.cs.plural.track.FractionalAnalysis
  */
+@Deprecated
 public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis 
 		implements FractionAnalysisContext {
 	
