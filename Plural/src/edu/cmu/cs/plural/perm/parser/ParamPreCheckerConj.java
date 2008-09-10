@@ -44,6 +44,7 @@ import java.util.logging.Logger;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.linear.PredicateChecker;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.util.SimpleMap;
 
@@ -51,7 +52,7 @@ import edu.cmu.cs.plural.util.SimpleMap;
  * @author Kevin Bierhoff
  * @since 7/28/2008
  */
-public class ParamPreCheckerConj extends AbstractParamVisitor implements AccessPredVisitor<Boolean> {
+public class ParamPreCheckerConj extends AbstractParamVisitor implements AccessPredVisitor<Boolean>, PredicateChecker {
 	
 	private static final Logger log = Logger.getLogger(ParamPreCheckerConj.class.getName());
 	
@@ -69,7 +70,7 @@ public class ParamPreCheckerConj extends AbstractParamVisitor implements AccessP
 		this.resultParams = new LinkedHashMap<String, PermissionSetFromAnnotations>(resultParamInstantiations.size());
 	}
 	
-	public boolean applyPrecondition(SimpleMap<String, Aliasing> vars, SplitOffTuple callback) {
+	public boolean splitOffPredicate(SimpleMap<String, Aliasing> vars, SplitOffTuple callback) {
 
 		/*
 		 * 1. check concrete predicates

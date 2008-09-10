@@ -45,6 +45,7 @@ import java.util.logging.Logger;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.linear.PredicateMerger;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.util.Pair;
 import edu.cmu.cs.plural.util.SimpleMap;
@@ -53,7 +54,7 @@ import edu.cmu.cs.plural.util.SimpleMap;
  * @author Kevin Bierhoff
  * @since 7/28/2008
  */
-public class ParamPostMergerConj extends AbstractParamVisitor implements AccessPredVisitor<Boolean> {
+public class ParamPostMergerConj extends AbstractParamVisitor implements AccessPredVisitor<Boolean>, PredicateMerger {
 	
 	private static final Logger log = Logger.getLogger(ParamPostMergerConj.class.getName());
 	
@@ -74,7 +75,7 @@ public class ParamPostMergerConj extends AbstractParamVisitor implements AccessP
 		super(perms, spaces, frameToVirtual, true /* named fractions */);
 	}
 	
-	public void applyPostcondition(SimpleMap<String, Aliasing> vars, MergeIntoTuple callback) {
+	public void mergeInPredicate(SimpleMap<String, Aliasing> vars, MergeIntoTuple callback) {
 		
 		/*
 		 * 1. merge in permissions
