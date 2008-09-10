@@ -38,6 +38,7 @@
 package edu.cmu.cs.plural.fractions.elim;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -79,7 +80,7 @@ public class VariableElimination {
 	private long timeout = 10000;
 	
 	public Set<NormalizedFractionConstraint> eliminateVariables(
-			Set<FractionConstraint> constraints,
+			Collection<FractionConstraint> constraints,
 			FractionAssignment a) throws TimeoutException {
 		this.assignment = a;
 		this.groundRelations = new LinkedHashSet<NormalizedFractionConstraint>();
@@ -201,7 +202,7 @@ public class VariableElimination {
 	}
 
 	private Set<NormalizedFractionConstraint> normalizeConstraints(
-			Set<FractionConstraint> constraints) {
+			Collection<FractionConstraint> constraints) {
 		final Set<NormalizedFractionConstraint> result = new HashSet<NormalizedFractionConstraint>();
 		
 		final FractionConstraintVisitor<Boolean> cv = new FractionConstraintVisitor<Boolean>() {
