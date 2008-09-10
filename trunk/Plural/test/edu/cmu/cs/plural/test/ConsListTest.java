@@ -44,6 +44,8 @@ import java.util.Iterator;
 import org.junit.Test;
 
 import edu.cmu.cs.plural.util.ConsList;
+import static edu.cmu.cs.plural.util.ConsList.cons;
+import static edu.cmu.cs.plural.util.ConsList.list;
 import edu.cmu.cs.plural.util.Lambda2;
 
 public class ConsListTest {
@@ -71,9 +73,9 @@ public class ConsListTest {
 	public void testCons() {
 		ConsList<Integer> l = ConsList.singleton(1);
 		
-		l = l.cons(2);
-		l = l.cons(3);
-		l = l.cons(4);
+		l = cons(2, l);
+		l = cons(3, l);
+		l = cons(4, l);
 		
 		assertEquals(l.size(), 4);
 		assertFalse(l.isEmpty());
@@ -83,7 +85,7 @@ public class ConsListTest {
 	@Test
 	public void testTl() {
 		ConsList<Integer> l = ConsList.singleton(1);
-		ConsList<Integer> l2 = l.cons(2);
+		ConsList<Integer> l2 = cons(2, l);
 		
 		assertEquals(l, l2.tl());
 		assertEquals(l2.tl().size(), 1);
@@ -95,17 +97,17 @@ public class ConsListTest {
 		assertTrue(l.removeElement(1).isEmpty());
 		assertEquals(l.removeElement(1).size(),0);
 		
-		l = l.cons(2);
-		l = l.cons(3);
-		l = l.cons(1);
-		l = l.cons(1);
+		l = cons(2, l);
+		l = cons(3, l);
+		l = cons(1, l);
+		l = cons(1, l);
 		l = l.removeElement(1);
 		assertEquals(l.size(), 2);
 	}
 
 	@Test
 	public void testIterator() {
-		ConsList<Integer> l = ConsList.<Integer>empty().cons(1).cons(2).cons(3).cons(4).cons(5);
+		ConsList<Integer> l = ConsList.list(5,4,3,2,1);
 		
 		Iterator<Integer> iter = l.iterator();
 		
@@ -129,7 +131,7 @@ public class ConsListTest {
 
 	@Test
 	public void testFoldl() {
-		ConsList<Integer> l = ConsList.<Integer>empty().cons(1).cons(2).cons(3).cons(4).cons(5);
+		ConsList<Integer> l = list(5,4,3,2,1);
 		
 		Integer result =
 		l.foldl(new Lambda2<Integer,Integer,Integer>(){
@@ -138,5 +140,29 @@ public class ConsListTest {
 				return i1 + i2;
 			}}, 0);
 		assertEquals(result, 15);
+	}
+	
+	@Test
+	public void testList() {
+		ConsList<Integer> l = list(1,2,3,4,5);
+		
+		Iterator<Integer> iter = l.iterator();
+		
+		assertTrue(iter.hasNext());
+		assertEquals(iter.next(), 1);
+		
+		assertTrue(iter.hasNext());
+		assertEquals(iter.next(), 2);
+		
+		assertTrue(iter.hasNext());
+		assertEquals(iter.next(), 3);
+		
+		assertTrue(iter.hasNext());
+		assertEquals(iter.next(), 4);
+		
+		assertTrue(iter.hasNext());
+		assertEquals(iter.next(), 5);
+		
+		assertFalse(iter.hasNext());
 	}
 }

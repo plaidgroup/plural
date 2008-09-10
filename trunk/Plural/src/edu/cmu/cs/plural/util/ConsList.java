@@ -82,11 +82,28 @@ public abstract class ConsList<T> implements List<T> {
 	}
 	
 	/**
-	 * Create a new list from this list with {@code hd} at
-	 * the front.
+	 * Create a {@code ConsList} with the given elements.
 	 */
-	public ConsList<T> cons(T hd) {
-		return new Nonempty<T>(hd, this);
+	public static <T> ConsList<T> list(T... ts) {
+		if( ts.length == 0 ) 
+			return empty();
+		else if( ts.length == 1 )
+			return singleton(ts[0]);
+		else {
+			ConsList<T> cur_list = empty();
+			for( int i = ts.length - 1; i >= 0; i-- ) {
+				cur_list = cons(ts[i], cur_list);
+			}
+			return cur_list;
+		}
+	}
+	
+	/**
+	 * Create a new {@code ConsList} with {@code hd} as the
+	 * first element and {@code tl} as the rest of the list.
+	 */
+	public static <T> ConsList<T> cons(T hd, ConsList<T> tl) {
+		return new Nonempty<T>(hd, tl);
 	}
 	
 	/**
@@ -111,7 +128,7 @@ public abstract class ConsList<T> implements List<T> {
 			return this.tl().removeElement(t);
 		}
 		else {
-			return this.tl().removeElement(t).cons(hd());
+			return cons(hd(), this.tl().removeElement(t));
 		}
 	}
 	
@@ -127,7 +144,7 @@ public abstract class ConsList<T> implements List<T> {
 			return this.tl();
 		}
 		else {
-			return this.tl().removeElementOnce(t).cons(hd());
+			return cons(hd(), this.tl().removeElementOnce(t));
 		}
 	}
 	
@@ -143,7 +160,7 @@ public abstract class ConsList<T> implements List<T> {
 		}
 		else {
 			O new_hd = lam.call(this.hd());
-			return this.tl().map(lam).cons(new_hd);
+			return cons(new_hd, this.tl().map(lam));
 		}
 	}
 	
@@ -160,7 +177,7 @@ public abstract class ConsList<T> implements List<T> {
 		else {
 			T hd = this.hd();
 			if( lam.call(hd) )
-				return this.tl().filter(lam).cons(hd);
+				return cons(hd, this.tl().filter(lam));
 			else
 				return this.tl().filter(lam);
 		}
@@ -338,7 +355,7 @@ public abstract class ConsList<T> implements List<T> {
 			return this.tl().subList(fromIndex - 1, toIndex - 1);
 		}
 		else {
-			return this.tl().subList(0, toIndex - 1).cons(hd());
+			return cons(hd(), this.tl().subList(0, toIndex - 1));
 		}
 	}
 	
