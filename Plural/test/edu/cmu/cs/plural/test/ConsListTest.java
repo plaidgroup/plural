@@ -165,4 +165,11 @@ public class ConsListTest {
 		
 		assertFalse(iter.hasNext());
 	}
+	
+	public void testContains() {
+		ConsList<Integer> l = list(4,5,6,7);
+		
+		assertTrue(l.contains(6));
+		assertFalse(l.contains(9));
+	}
 }

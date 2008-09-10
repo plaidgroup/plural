@@ -38,6 +38,7 @@
 package edu.cmu.cs.plural.fractions;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -51,6 +52,8 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import edu.cmu.cs.crystal.internal.Freezable;
 import edu.cmu.cs.plural.fractions.elim.VariableElimination;
 import edu.cmu.cs.plural.fractions.solver.SmtLibPrinter;
+import edu.cmu.cs.plural.util.ConsList;
+import static edu.cmu.cs.plural.util.ConsList.cons;
 
 /**
  * Collects sets of constraints on fractions and tests them for consistency.  To increase
@@ -81,7 +84,7 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	private static final Logger log = Logger.getLogger(FractionConstraints.class.getName());
 	
 	/** Constraint set.  This is what this class is all about. */
-	private Set<FractionConstraint> constraints;
+	private ConsList<FractionConstraint> constraints;
 	
 	/** 
 	 * Fraction variables used in the constraint.  We're currently making
@@ -119,7 +122,7 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	 * Creates an empty constraint set.
 	 */
 	public FractionConstraints() {
-		constraints = new LinkedHashSet<FractionConstraint>();
+		constraints = ConsList.empty();
 		variables = new LinkedHashSet<VariableFraction>();
 		constants = new LinkedHashSet<NamedFraction>();
 	}
@@ -132,9 +135,13 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	public FractionConstraints addConstraint(FractionConstraint newConstraint) {
 		if(frozen)
 			throw new IllegalStateException("Cannot modify frozen constraint set");
-		if(constraints.add(newConstraint) && consistent != null && consistent)
-			// once inconsistent, constraints cannot become consistent
+		
+		constraints = cons(newConstraint, constraints);
+		
+		// once inconsistent, constraints cannot become consistent
+		if(consistent != null && consistent)
 			consistent = null;
+		
 		return this;
 	}
 	
@@ -146,9 +153,13 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	public void addAll(FractionConstraints moreConstraints) {
 		if(frozen)
 			throw new IllegalStateException("Cannot modify frozen constraint set");
-		if(this.constraints.addAll(moreConstraints.constraints) && consistent != null && consistent)
+		
+		this.constraints = ConsList.concat(moreConstraints.constraints, this.constraints);
+		
+		if(consistent != null && consistent)
 			// once inconsistent, constraints cannot become consistent
 			consistent = null;
+		
 		this.variables.addAll(moreConstraints.variables);
 		this.constants.addAll(moreConstraints.constants);
 	}
@@ -157,8 +168,8 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	 * Returns an unmodifiable view of the constraint set.
 	 * @return An unmodifiable view of the constraint set.
 	 */
-	public Set<FractionConstraint> getConstraints() {
-		return Collections.unmodifiableSet(constraints);
+	public Collection<FractionConstraint> getConstraints() {
+		return constraints;
 	}
 
 	/**
@@ -241,7 +252,6 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	public FractionConstraints freeze() {
 		if(frozen == false) {
 			frozen = true;
-			constraints = Collections.unmodifiableSet(constraints);
 			variables = Collections.unmodifiableSet(variables);
 			constants = Collections.unmodifiableSet(constants);
 		}
@@ -250,7 +260,7 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 
 	public FractionConstraints mutableCopy() {
 		FractionConstraints result = new FractionConstraints();
-		result.constraints.addAll(this.constraints);
+		result.constraints = this.constraints;
 		result.variables.addAll(this.variables);
 		result.constants.addAll(this.constants);
 		result.consistent = consistent;
@@ -268,13 +278,14 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	 */
 	public FractionConstraints concat(FractionConstraints other) {
 		FractionConstraints result = new FractionConstraints();
-		result.constraints.addAll(this.constraints);
-		if(! result.constraints.addAll(other.constraints))
-			// other has no more constraints --> trust this
-			result.consistent = this.consistent;  
-		else if(other.constraints.containsAll(this.constraints))
-			// this has no more constraints -> trust other
-			result.consistent = other.consistent;
+		
+		// Just an optimization...
+		if( other.constraints == this.constraints )
+			result.constraints = this.constraints;
+		else
+			result.constraints = ConsList.concat(other.constraints, this.constraints);
+		
+		// TODO: Can we check that the consistency flag is still accurate?
 		result.variables.addAll(this.variables);
 		result.variables.addAll(other.variables);
 		result.constants.addAll(this.constants);

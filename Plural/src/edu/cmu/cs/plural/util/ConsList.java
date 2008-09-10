@@ -109,6 +109,18 @@ public abstract class ConsList<T> implements List<T> {
 	}
 	
 	/**
+	 * Concatenate the two given lists.
+	 */
+	public static <T> ConsList<T> concat(ConsList<T> front, ConsList<T> back) {
+		if( front.isEmpty() ) {
+			return back;
+		}
+		else {
+			return cons(front.hd(), concat(front.tl(), back));
+		}
+	}
+	
+	/**
 	 * Get the first element of this list.
 	 */
 	public abstract T hd();
@@ -359,11 +371,11 @@ public abstract class ConsList<T> implements List<T> {
 	}
 	
 	public final boolean contains(Object o) {
-		if( hd().equals(o) ) {
-			return true;
-		}
-		else if( this.isEmpty() ) {
+		if( this.isEmpty() ) {
 			return false;
+		}
+		else if( hd().equals(o) ) {
+			return true;
 		}
 		else {
 			return tl().contains(o);
