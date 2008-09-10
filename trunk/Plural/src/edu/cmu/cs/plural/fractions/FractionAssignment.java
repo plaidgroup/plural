@@ -72,11 +72,11 @@ public class FractionAssignment {
 		return result;
 	}
 
-	public void resetChangedFlag() {
+	void resetChangedFlag() {
 		changed = false;
 	}
 
-	public boolean isChanged() {
+	boolean isChanged() {
 		return changed;
 	}
 

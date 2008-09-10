@@ -62,6 +62,9 @@ import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
+import edu.cmu.cs.plural.fractions.Fraction;
+import edu.cmu.cs.plural.fractions.FractionConstraint;
+import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.states.IConstructorCaseInstance;
@@ -409,6 +412,57 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 				}
 				else {
 					return true;
+				}
+			}});
+		
+		return result.getValue().booleanValue();
+	}
+	
+	/**
+	 * Returns {@code true} if, in any branch of this lattice the
+	 * receiver has Full, Share, or Pure permission. (Expects the
+	 * receiver to be unpacked, but works either way.)
+	 */
+	public boolean isRcvrFullSharePureInAnyDisjunct() {
+		final Box<Boolean> result = Box.box(false);
+		le.dispatch(new DescendingVisitor(){
+			@Override
+			public Boolean tuple(TensorPluralTupleLE tuple) {
+				if( tuple.isRcvrPacked() ) return true;
+				
+				// Here we are getting the unpacked permission for the receiver.
+				Variable this_var = op.getThisVar();
+				Aliasing this_loc = tuple.getLocations(this_var);
+				FractionalPermissions frac_perms = tuple.get(this_loc);
+				FractionalPermission unpacked_perm = frac_perms.getUnpackedPermission();
+				
+				Fraction root_fraction = 
+					unpacked_perm.getFractions().get(unpacked_perm.getRootNode());
+				
+				if( !unpacked_perm.isReadOnly() ) {
+					// Test for unique-ity
+					FractionConstraint test = FractionConstraint.createEquality(root_fraction, Fraction.one()); 
+					if( frac_perms.getConstraints().testConstraint(test) ) {
+						// definitely unique! So we're done.
+						return true;
+					}
+				
+					// Must be Full or Share
+					result.setValue(true);
+					return false;
+				}
+				else {
+					// Pure or Imm?
+					Fraction below_frac = unpacked_perm.getFractions().getBelowFraction();
+					FractionConstraint test = FractionConstraint.createLessThan(Fraction.zero(), below_frac);
+					if( frac_perms.getConstraints().testConstraint(test) ) {
+						// We've got an immutable!
+						return true;
+					}
+					
+					// Must be Pure
+					result.setValue(true);
+					return false;
 				}
 			}});
 		
@@ -885,10 +939,5 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			}
 			
 		});
-	}
-
-	public boolean isRcvrFullSharePureInAnyDisjunct() {
-		// FIXME: Needs to be implemented right now.
-		return false;
 	}
 }
