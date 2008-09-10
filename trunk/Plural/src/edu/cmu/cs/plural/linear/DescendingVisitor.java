@@ -37,15 +37,14 @@
  */
 package edu.cmu.cs.plural.linear;
 
+/**
+ * A visitor that descends different elements of a disjunction. For
+ * all methods, returning true indicates that the visitor should
+ * continue visiting, while false indicates that it should not.
+ */
 abstract class DescendingVisitor extends DisjunctiveVisitor<Boolean> {
 
-	/**
-	 * @param tuple
-	 * 
-	 * @return <code>true</code> to continue traversing contexts,
-	 * <code>false</code> otherwise.
-	 */
-	public abstract boolean tupleModification(TensorPluralTupleLE tuple);
+	public abstract Boolean tuple(TensorPluralTupleLE tuple);
 
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#alt(edu.cmu.cs.plural.linear.ContextChoiceLE)
@@ -63,7 +62,7 @@ abstract class DescendingVisitor extends DisjunctiveVisitor<Boolean> {
 	 */
 	@Override
 	public Boolean context(LinearContextLE le) {
-		return tupleModification(le.getTuple());
+		return tuple(le.getTuple());
 	}
 
 	/* (non-Javadoc)

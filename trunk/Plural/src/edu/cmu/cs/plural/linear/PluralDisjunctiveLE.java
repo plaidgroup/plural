@@ -46,10 +46,10 @@ import java.util.logging.Logger;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.LatticeElement;
+import edu.cmu.cs.crystal.internal.Box;
 import edu.cmu.cs.crystal.internal.Freezable;
 import edu.cmu.cs.crystal.tac.ConstructorCallInstruction;
 import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
@@ -58,7 +58,6 @@ import edu.cmu.cs.crystal.tac.MethodCallInstruction;
 import edu.cmu.cs.crystal.tac.NewObjectInstruction;
 import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
-import edu.cmu.cs.crystal.tac.SuperVariable;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
@@ -222,7 +221,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public PluralDisjunctiveLE storeCurrentAliasingInfo(final ASTNode node) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				tuple.storeCurrentAliasingInfo(node);
 				return true;
 			}
@@ -237,7 +236,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void addTrueVarPredicate(final Variable x) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				tuple.addTrueVarPredicate(tuple.getLocations(x));
 				return true;
 			}
@@ -251,7 +250,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void addFalseVarPredicate(final Variable x) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				tuple.addFalseVarPredicate(tuple.getLocations(x));
 				return true;
 			}
@@ -266,7 +265,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void addEquality(final Variable x, final Variable y) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				tuple.addEquality(tuple.getLocations(x), tuple.getLocations(y));
 				return true;
 			}
@@ -281,7 +280,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void addInequality(final Variable x, final Variable y) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				tuple.addInequality(tuple.getLocations(x), tuple.getLocations(y));
 				return true;
 			}
@@ -295,7 +294,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void addNullVariable(final Variable x) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				tuple.addNullVariable(tuple.getLocations(x));
 				return true;
 			}
@@ -308,7 +307,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void addNonNullVariable(final Variable x) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				tuple.addNonNullVariable(tuple.getLocations(x));
 				return true;
 			}
@@ -324,7 +323,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			final String indicatedState) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				// slam the new permissions into every tuple
 				tuple.addTrueImplication(tuple.getLocations(ant), 
 						tuple.getLocations(indicatedVar), indicatedState);
@@ -342,7 +341,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			final String indicatedState) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				// slam the new permissions into every tuple
 				tuple.addFalseImplication(tuple.getLocations(ant), 
 						tuple.getLocations(indicatedVar), indicatedState);
@@ -363,7 +362,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		// and just call f.putResultIntoLattice on every tuple?
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				Aliasing[] as = tuple.getLocationsAfter(vs);
 				List<ImplicationResult> new_facts = tuple.solveWithHints(as);
 				for( ImplicationResult f : new_facts ) {
@@ -385,7 +384,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			final String info) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				// learn info in every tuple
 				FractionalPermissions perms = tuple.get(instr, x);
 				perms = perms.learnTemporaryStateInfo(info);
@@ -395,6 +394,27 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		});
 	}
 
+	/**
+	 * Returns {@code true} if, in any branch of this lattice, the
+	 * receiver is unpacked.
+	 */
+	public boolean isRcvrUnpackedInAnyDisjunct() {
+		final Box<Boolean> result = Box.box(false);
+		le.dispatch(new DescendingVisitor(){
+			@Override
+			public Boolean tuple(TensorPluralTupleLE tuple) {
+				if( !tuple.isRcvrPacked() ) {
+					result.setValue(true);
+					return false;	
+				}
+				else {
+					return true;
+				}
+			}});
+		
+		return result.getValue().booleanValue();
+	}
+	
 	/**
 	 * TODO figure out if contexts can differ in receiver packed / unpacked
 	 * @param rcvrVar
@@ -657,7 +677,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			final FractionalPermissions permissions) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				// slam the new permissions into every tuple
 				tuple.put(instr, x, permissions);
 				return true;
@@ -694,7 +714,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void prepareForArrayWrite(final StoreArrayInstruction instr) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				// make the array's permission modifiable in every tuple
 				FractionalPermissions permissions = tuple.get(instr, instr.getDestinationArray());
 				// make sure that we can write to the array
@@ -822,7 +842,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		le.dispatch(new DescendingVisitor() {
 
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				tuple.killDeadVariables(instr, liveness);
 				return true;
 			}
@@ -838,7 +858,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public PluralDisjunctiveLE forgetShareAndPureStates() {
 		le.dispatch(new DescendingVisitor() {
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				tuple.forgetShareAndPureStateInformation();
 				return true;
 			}
@@ -856,7 +876,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		le.dispatch(new DescendingVisitor() {
 
 			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
+			public Boolean tuple(TensorPluralTupleLE tuple) {
 				Aliasing a = tuple.getLocations(x);
 				FractionalPermissions p = tuple.get(a);
 				p.splitOff(perms);
@@ -865,5 +885,10 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			}
 			
 		});
+	}
+
+	public boolean isRcvrFullSharePureInAnyDisjunct() {
+		// FIXME: Needs to be implemented right now.
+		return false;
 	}
 }
