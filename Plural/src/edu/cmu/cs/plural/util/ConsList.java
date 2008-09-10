@@ -61,6 +61,7 @@ import edu.cmu.cs.plural.concrete.Implication;
  */
 public abstract class ConsList<T> implements List<T> {
 
+	@SuppressWarnings("unchecked")
 	private final static Empty EMPTY_CONS_LIST = new Empty();
 	
 	/*
@@ -70,6 +71,7 @@ public abstract class ConsList<T> implements List<T> {
 	/**
 	 * Create a new, empty list.
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T> ConsList<T> empty() {
 		return EMPTY_CONS_LIST;
 	}
@@ -120,7 +122,7 @@ public abstract class ConsList<T> implements List<T> {
 	 * Removes every element in the list where 
 	 * {@code hd().equals(t) == true}.
 	 */
-	public ConsList<T> removeElement(T t) {
+	public final ConsList<T> removeElement(T t) {
 		if( this.isEmpty() ) {
 			return this;
 		}
@@ -136,7 +138,7 @@ public abstract class ConsList<T> implements List<T> {
 	 * Removes the first element in the list where
 	 * {@code hd().equals(t) == true}.
 	 */
-	public ConsList<T> removeElementOnce(T t) {
+	public final ConsList<T> removeElementOnce(T t) {
 		if( this.isEmpty() ) {
 			return this;
 		}
@@ -154,7 +156,7 @@ public abstract class ConsList<T> implements List<T> {
 	 * every element of {@code this} list, returning a new list
 	 * of Os. 
 	 */
-	public <O> ConsList<O> map(Lambda<? super T, ? extends O> lam) {
+	public final <O> ConsList<O> map(Lambda<? super T, ? extends O> lam) {
 		if( this.isEmpty() ) {
 			return empty();
 		}
@@ -170,7 +172,7 @@ public abstract class ConsList<T> implements List<T> {
 	 * of {@code this} list, returning a new list that only contains
 	 * the elements for which the function call returned true.
 	 */
-	public ConsList<T> filter(Lambda<? super T,? extends Boolean> lam) {
+	public final ConsList<T> filter(Lambda<? super T,? extends Boolean> lam) {
 		if( this.isEmpty() ) {
 			return this;
 		}
@@ -186,7 +188,7 @@ public abstract class ConsList<T> implements List<T> {
 	/**
 	 * Fold over the elements of this list.
 	 */
-	public <O> O foldl(Lambda2<? super T,? super O,? extends O> lam, O o) {
+	public final <O> O foldl(Lambda2<? super T,? super O,? extends O> lam, O o) {
 		if( this.isEmpty() ) {
 			return o;
 		}
@@ -220,7 +222,7 @@ public abstract class ConsList<T> implements List<T> {
 	 * calling the {@code previous()} method is linear in the size
 	 * of the list.
 	 */
-	public ListIterator<T> listIterator(final int index) {
+	public final ListIterator<T> listIterator(final int index) {
 		if( index < 0 )
 			throw new IndexOutOfBoundsException();
 		
@@ -290,11 +292,11 @@ public abstract class ConsList<T> implements List<T> {
 	 * calling the {@code previous()} method is linear in the size
 	 * of the list.
 	 */
-	public ListIterator<T> listIterator() {
+	public final ListIterator<T> listIterator() {
 		return listIterator(0);
 	}
 	
-	public T get(int index) {
+	public final T get(int index) {
 		if( index == 0 ) {
 			return hd();
 		}
@@ -303,7 +305,7 @@ public abstract class ConsList<T> implements List<T> {
 		}
 	}
 
-	public Iterator<T> iterator() {
+	public final Iterator<T> iterator() {
 		return new Iterator<T>() {
 
 			private ConsList<T> cur_list = ConsList.this;
@@ -323,10 +325,7 @@ public abstract class ConsList<T> implements List<T> {
 			}};
 	}
 
-	public boolean containsAll(Collection<?> c) {
-		// Here's where I get lazy...
-		return (new ArrayList<T>(this)).containsAll(c);
-	}
+	public abstract boolean containsAll(Collection<?> c);
 	
 	/**
 	 * Will share the back of the list, if the sublist we are asking for
@@ -341,7 +340,7 @@ public abstract class ConsList<T> implements List<T> {
 		}
 	}
 	
-	public ConsList<T> subList(int fromIndex, int toIndex) {
+	public final ConsList<T> subList(int fromIndex, int toIndex) {
 		if( fromIndex < 0 || fromIndex > toIndex )
 			throw new IndexOutOfBoundsException();
 		
@@ -359,7 +358,7 @@ public abstract class ConsList<T> implements List<T> {
 		}
 	}
 	
-	public boolean contains(Object o) {
+	public final boolean contains(Object o) {
 		if( hd().equals(o) ) {
 			return true;
 		}
@@ -371,7 +370,7 @@ public abstract class ConsList<T> implements List<T> {
 		}
 	}
 
-	public Object[] toArray() {
+	public final Object[] toArray() {
 		Object[] result = new Object[this.size()];
 		
 		Iterator<T> iter = this.iterator();
@@ -389,7 +388,8 @@ public abstract class ConsList<T> implements List<T> {
 		return result;
 	}
 
-	public <S> S[] toArray(S[] a) {
+	@SuppressWarnings("unchecked")
+	public final <S> S[] toArray(S[] a) {
         if (a.length < this.size())
             a = (S[])java.lang.reflect.Array.newInstance(
                                 a.getClass().getComponentType(), size());
@@ -420,43 +420,43 @@ public abstract class ConsList<T> implements List<T> {
 				"ConsList is immutable and does not support this operation.");
 	}
 	
-	public void add(int index, T element) {
+	public final void add(int index, T element) {
 		impossible();
 	}
 
-	public boolean add(T e) {
+	public final boolean add(T e) {
 		return impossible();
 	}
 
-	public boolean addAll(Collection<? extends T> c) {
+	public final boolean addAll(Collection<? extends T> c) {
 		return impossible();
 	}
 
-	public boolean addAll(int index, Collection<? extends T> c) {
+	public final boolean addAll(int index, Collection<? extends T> c) {
 		return impossible();
 	}
 
-	public void clear() {
+	public final void clear() {
 		impossible();		
 	}
 	
-	public T remove(int index) {
+	public final T remove(int index) {
 		return impossible();
 	}
 
-	public boolean remove(Object o) {
+	public final boolean remove(Object o) {
 		return impossible();
 	}
 
-	public boolean removeAll(Collection<?> c) {
+	public final boolean removeAll(Collection<?> c) {
 		return impossible();
 	}
 
-	public boolean retainAll(Collection<?> c) {
+	public final boolean retainAll(Collection<?> c) {
 		return impossible();
 	}
 
-	public T set(int index, T element) {
+	public final T set(int index, T element) {
 		return impossible();
 	}
 }
@@ -509,6 +509,11 @@ final class Empty<T> extends ConsList<T> {
 	@Override
 	public String toString() {
 		return "Nil";
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		return c.isEmpty();
 	}
 }
 
@@ -592,6 +597,7 @@ final class Nonempty<T> extends ConsList<T> {
 		return result;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -614,5 +620,11 @@ final class Nonempty<T> extends ConsList<T> {
 		} else if (!tl.equals(other.tl))
 			return false;
 		return true;
+	}
+
+	@Override
+	public boolean containsAll(Collection<?> c) {
+		// Here's where I get lazy...
+		return (new ArrayList<T>(this)).containsAll(c);
 	}
 }
