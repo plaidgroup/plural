@@ -273,15 +273,11 @@ class PermissionSet {
 	}
 	
 	/**
-	 * Returns a list with permissions based on the given list but with state information
-	 * <i>forgotten</i> where necessary.  The returned list is either the given list or
-	 * a whole-new list.  The given list is not modified.
-	 * @param permissions
-	 * @param constraints
-	 * @return a list with permissions based on the given list but with state information
-	 * <i>forgotten</i> where necessary.
+	 * Forget stateInfo for permissions that either must be pure or must be share.
+	 * Returns a new list with those modified permissions, without changing the
+	 * original list.
 	 */
-	static List<FractionalPermission> forgetTemporaryStateInfo(List<FractionalPermission> permissions, FractionConstraints constraints) {
+	static List<FractionalPermission> forgetShareAndPureStates(List<FractionalPermission> permissions, FractionConstraints constraints) {
 		if(permissions.isEmpty())
 			// nothing to do
 			return permissions;

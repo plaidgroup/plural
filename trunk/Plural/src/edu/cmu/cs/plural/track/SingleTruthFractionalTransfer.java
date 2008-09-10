@@ -990,7 +990,7 @@ public class SingleTruthFractionalTransfer extends
 			PluralTupleLatticeElement value) {
 		for(ExtendedIterator<FractionalPermissions> it = value.tupleInfoIterator(); it.hasNext(); ) {
 			FractionalPermissions permissions = it.next();
-			permissions = permissions.forgetTemporaryStateInfo();
+			permissions = permissions.forgetShareAndPureStates();
 			it.replace(permissions);
 		}
 		return value;

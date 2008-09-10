@@ -1428,16 +1428,31 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	}
 
 	/**
-	 * 
+	 * Discard non-guaranteed state information for permissions of every type.
+	 * (Does this really forget for every permission type? Doesn't look like it.)
 	 */
 	public void forgetTemporaryStateInformation() {
 		for(ExtendedIterator<FractionalPermissions> it = tupleInfoIterator(); it.hasNext(); ) {
 			FractionalPermissions permissions = it.next();
-			permissions = permissions.forgetTemporaryStateInfo();
+			permissions = permissions.forgetShareAndPureStates();
 			it.replace(permissions);
 		}
 		
 		dynamicStateLogic.forgetTemporaryStateInImplications();
 	}
 
+	/**
+	 * Discard state information for share and pure permissions.
+	 */
+	public void forgetShareAndPureStateInformation() {
+		for(ExtendedIterator<FractionalPermissions> it = tupleInfoIterator(); it.hasNext(); ) {
+			FractionalPermissions permissions = it.next();
+			permissions = permissions.forgetShareAndPureStates();
+			it.replace(permissions);
+		}
+		
+		// TODO: Shall I make a share/pure version of this call?
+		// dynamicStateLogic.forgetTemporaryStateInImplications();
+	}
+	
 }

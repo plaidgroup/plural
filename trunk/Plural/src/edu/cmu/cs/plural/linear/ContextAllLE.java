@@ -45,6 +45,9 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 /**
+ * {@code ContextAllLE} is currently unused, but it's intended for the case where
+ * you need to prove something in all contexts.
+ * 
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */

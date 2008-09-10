@@ -712,6 +712,10 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	// Error checking methods
 	//
 
+	/**
+	 * Checks that the given variable is, in fact, in the states that are required
+	 * of it, also given.
+	 */
 	public String checkStates(final Variable x, final Set<Set<String>> requiredOptions) {
 		if(requiredOptions == null || requiredOptions.isEmpty()) 
 			return null;
@@ -827,6 +831,22 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	}
 
 	/**
+	 * Discards temporary state information for all permissions in every
+	 * disjunct of this lattice if that permission <i>must</i> be
+	 * {@code @Pure} or {@code @Share}.
+	 */
+	public PluralDisjunctiveLE forgetShareAndPureStates() {
+		le.dispatch(new DescendingVisitor() {
+			@Override
+			public boolean tupleModification(TensorPluralTupleLE tuple) {
+				tuple.forgetShareAndPureStateInformation();
+				return true;
+			}
+		});
+		return this;
+	}
+	
+	/**
 	 * @param x
 	 * @param perms
 	 * @return
@@ -846,5 +866,4 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			
 		});
 	}
-
 }

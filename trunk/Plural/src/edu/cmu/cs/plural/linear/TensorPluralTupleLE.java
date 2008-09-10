@@ -61,6 +61,9 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
+ * Modifies PluralTupleLatticeElement to take advantage of support for multiple
+ * contexts in DisjunctiveLE during packing and unpacking.
+ * 
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */

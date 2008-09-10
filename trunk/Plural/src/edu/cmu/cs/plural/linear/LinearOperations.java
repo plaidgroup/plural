@@ -530,7 +530,7 @@ class LinearOperations extends TACAnalysisHelper {
 		// packing may produce a choice of tuples
 		// need to do everything that follows for every tuple separately
 		result = result.dispatch(new RewritingVisitor() {
-
+			@Override
 			public DisjunctiveLE context(LinearContextLE le) {
 				if(finishCall(le.getTuple()))
 					return le;
@@ -542,7 +542,7 @@ class LinearOperations extends TACAnalysisHelper {
 			 * @param tuple
 			 * @return <code>false</code> if this tuple should be discarded.
 			 */
-			public boolean finishCall(TensorPluralTupleLE tuple) {
+			private boolean finishCall(TensorPluralTupleLE tuple) {
 				// remember borrowed this permission if relevant and actually borrowed
 				// have to wait with this until after packing...
 				Map<Aliasing, FractionalPermissions> borrowed_locs;

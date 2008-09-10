@@ -88,7 +88,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 	private FractionalTransfer tf;
 
-	private MethodDeclaration currentMethod;
 	private IInvocationCaseInstance analyzedCase;
 	
 	/**
@@ -128,13 +127,12 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		}
 		else {
 			// only analyze methods with code in them; skip abstract methods
-			currentMethod = d;
 			IInvocationSignature sig = getRepository().getSignature(d.resolveBinding());
 			
 			for(IInvocationCase c : sig.cases()) {
 				analyzedCase = c.createPermissions(true, false);
 				tf = createNewFractionalTransfer();
-				fa = new TACFlowAnalysis<PluralDisjunctiveLE>(tf);
+				fa = new TACFlowAnalysis<PluralDisjunctiveLE>(getTf());
 				
 				FractionalChecker checker = createASTWalker();
 				if(sig.cases().size() > 1)
@@ -234,9 +232,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //			if( node.getExpression() != null &&
 //				tf.getResultPostCondition() != null) {
 //				reportIfError(exit.checkPermissionIfNotNull(
-//						fa.getVariable(node.getExpression()), tf.getResultPostCondition()),
+//						getFa().getVariable(node.getExpression()), tf.getResultPostCondition()),
 //						node.getExpression());
-//				Aliasing return_value_loc = exit.getLocationsAfter(node, fa.getVariable(node.getExpression()));
+//				Aliasing return_value_loc = exit.getLocationsAfter(node, getFa().getVariable(node.getExpression()));
 //				// If the return value is not the value null, then it must fulfill its spec.
 //				if( !exit.isNull(return_value_loc) ) {
 //					FractionalPermissions resultPerms = exit.get(return_value_loc);
@@ -256,15 +254,15 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
-				logger.finest("" + fa.getResultsBefore(node));
+				logger.finest("" + getFa().getResultsBefore(node));
 				logger.finest("  " + node);
 			}
 		}
 
 		@Override
 		public void endVisit(ClassInstanceCreation node) {
-			final PluralDisjunctiveLE before = fa.getResultsBefore(node);
-			final PluralDisjunctiveLE after = fa.getResultsAfter(node);
+			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
 			
@@ -276,7 +274,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			// arguments
 			int argIndex = 0;
 			for(Expression e : (List<Expression>) node.arguments()) {
-				final Variable arg = fa.getVariable(e);
+				final Variable arg = getFa().getVariable(e);
 				
 //				final FractionalPermissions perms = after.get(node, arg);
 //				if(perms.isUnsatisfiable())
@@ -305,8 +303,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 		@Override
 		public void endVisit(MethodInvocation node) {
-			final PluralDisjunctiveLE before = fa.getResultsBefore(node);
-			final PluralDisjunctiveLE after = fa.getResultsAfter(node);
+			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding methodBinding = node.resolveMethodBinding();
 			final IMethodSignature sig = getRepository().getMethodSignature(methodBinding);
 			
@@ -319,9 +317,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			if(sig.hasReceiver()) {
 				final Variable receiver;
 				if(node.getExpression() == null)
-					receiver = fa.getImplicitThisVariable(methodBinding);
+					receiver = getFa().getImplicitThisVariable(methodBinding);
 				else
-					receiver = fa.getVariable(node.getExpression());
+					receiver = getFa().getVariable(node.getExpression());
 				
 //				final FractionalPermissions permsAfter = after.get(node, receiver);
 //				if(permsAfter.isUnsatisfiable())
@@ -341,7 +339,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			// arguments
 			int argIdx = 0;
 			for(Expression e : (List<Expression>) node.arguments()) {
-				Variable arg = fa.getVariable(e);
+				Variable arg = getFa().getVariable(e);
 //				FractionalPermissions perms = after.get(node, arg);
 //				if(perms.isUnsatisfiable())
 				if(! after.checkConstraintsSatisfiable(arg))
@@ -378,15 +376,15 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			if(checkArrays  && node.getParent() instanceof Assignment) {
 				Assignment store = (Assignment) node.getParent();
 				if(store.getLeftHandSide().equals(node)) {
-					final PluralDisjunctiveLE before = fa.getResultsBefore(store);
-					final PluralDisjunctiveLE after = fa.getResultsAfter(store);
+					final PluralDisjunctiveLE before = getFa().getResultsBefore(store);
+					final PluralDisjunctiveLE after = getFa().getResultsAfter(store);
 
 					if(FractionalAnalysis.isBottom(before, after, node)) {
 						super.endVisit(node);
 						return;
 					}
 					
-					if(! after.checkConstraintsSatisfiable(fa.getVariable(node.getArray())))
+					if(! after.checkConstraintsSatisfiable(getFa().getVariable(node.getArray())))
 						// TODO better reporting
 						reporter.reportUserProblem(
 								"no suitable permission for assignment to " + node + errorCtx, 
@@ -415,8 +413,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		 */
 		@Override
 		public void endVisit(ConstructorInvocation node) {
-			final PluralDisjunctiveLE before = fa.getResultsBefore(node);
-			final PluralDisjunctiveLE after = fa.getResultsAfter(node);
+			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
 			
@@ -426,7 +424,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			}
 			
 			// receiver
-			final Variable receiver = fa.getImplicitThisVariable(constructorBinding);
+			final Variable receiver = getFa().getImplicitThisVariable(constructorBinding);
 			
 //				final FractionalPermissions permsAfter = after.get(node, receiver);
 //				if(permsAfter.isUnsatisfiable())
@@ -443,7 +441,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			// arguments
 			int argIdx = 0;
 			for(Expression e : (List<Expression>) node.arguments()) {
-				Variable arg = fa.getVariable(e);
+				Variable arg = getFa().getVariable(e);
 //				FractionalPermissions perms = after.get(node, arg);
 //				if(perms.isUnsatisfiable())
 				if(! after.checkConstraintsSatisfiable(arg))
@@ -473,8 +471,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		 */
 		@Override
 		public void endVisit(SuperConstructorInvocation node) {
-			final PluralDisjunctiveLE before = fa.getResultsBefore(node);
-			final PluralDisjunctiveLE after = fa.getResultsAfter(node);
+			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
 			
@@ -485,7 +483,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			
 			// receiver
 			// TODO use "super" variable
-			final Variable receiver = fa.getImplicitThisVariable(constructorBinding);
+			final Variable receiver = getFa().getImplicitThisVariable(constructorBinding);
 			
 //				final FractionalPermissions permsAfter = after.get(node, receiver);
 //				if(permsAfter.isUnsatisfiable())
@@ -502,7 +500,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			// arguments
 			int argIdx = 0;
 			for(Expression e : (List<Expression>) node.arguments()) {
-				Variable arg = fa.getVariable(e);
+				Variable arg = getFa().getVariable(e);
 //				FractionalPermissions perms = after.get(node, arg);
 //				if(perms.isUnsatisfiable())
 				if(! after.checkConstraintsSatisfiable(arg))
