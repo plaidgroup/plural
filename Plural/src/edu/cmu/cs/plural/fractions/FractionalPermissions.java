@@ -297,7 +297,8 @@ implements LatticeElement<FractionalPermissions> {
 			if( this.unpackedPermission == null || other.unpackedPermission == null ) {
 				return false;
 			}
-			else if( 
+			else if(
+					!this.unpackedPermission.getRootNode().equals(other.unpackedPermission.getRootNode()) ||				
 					!this.unpackedPermission.atLeastAsPrecise(other.unpackedPermission, node, constraints) ||
 					!other.unpackedPermission.atLeastAsPrecise(this.unpackedPermission, node, constraints)) {
 				// unpacked permissions must be "equal"
