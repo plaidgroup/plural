@@ -38,7 +38,6 @@
 package edu.cmu.cs.plural.atomic;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.WeakHashMap;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -47,7 +46,9 @@ import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
+import edu.cmu.cs.crystal.internal.Option;
 import edu.cmu.cs.crystal.internal.Utilities;
+import edu.cmu.cs.plural.util.ConsList;
 
 /**
  * This analysis is a wrapper for a visitor that records whether or not a
@@ -68,7 +69,8 @@ public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis {
 	 * because we don't want to hold references to the AST forever, although likely
 	 * the map will be reset on a regular basis.
 	 */
-	private Map<ASTNode, Object> nodesInsideAtomic = new WeakHashMap<ASTNode, Object>(); 
+	private Map<ASTNode, Option<LabeledStatement>> nodesInsideAtomic = 
+		new WeakHashMap<ASTNode, Option<LabeledStatement>>(); 
 	/*
 	 * Methods we've previously analyzed. Again, a map posing as a set.
 	 */
@@ -99,12 +101,28 @@ public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis {
 	 * @return
 	 */
 	public boolean isInAtomicBlock(ASTNode node) {
-		assert(node != null);
-		
-		final MethodDeclaration methodDecl = Utilities.getMethodDeclaration(node);
-		this.analyzeMethod(methodDecl);
-		
-		return this.nodesInsideAtomic.containsKey(node);		
+		return inWhichAtomicBlock(node).isSome();
+	}
+	
+	/**
+	 * Which (if any) atomic block is the given node lexical contained
+	 * within?
+	 * @return {@code SOME(labeled_stmt)} if {@code node} is inside of
+	 * an atomic block. Otherwise {@code NONE}.
+	 */
+	public Option<LabeledStatement> inWhichAtomicBlock(ASTNode node) {
+		if( node == null ) {
+			return Option.none();
+		}
+		else {
+			final MethodDeclaration methodDecl = Utilities.getMethodDeclaration(node);
+			this.analyzeMethod(methodDecl);
+			
+			if( this.nodesInsideAtomic.containsKey(node) )
+				return this.nodesInsideAtomic.get(node);
+			else
+				return Option.none();
+		}
 	}
 	
 	@Override
@@ -121,17 +139,20 @@ public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis {
 		return labeledStmt.getLabel().getIdentifier().equals("atomic");
 	}
 	
+	/**
+	 * Code that will visit an ast recording which node is in which
+	 * atomic block. This code is designed based on the assumption
+	 * that atomic blocks cannot be lexically nested, which for the
+	 * time-being they cannot since Java labels cannot be lexically
+	 * nested.
+	 */
 	private class AtomicCheckVisitor extends ASTVisitor {
-
-		private int atomicDepth = 0; 
+		private Option<LabeledStatement> atomicBlock = Option.none();
 		
 		@Override
 		public boolean visit(LabeledStatement node) {
 			if( isAtomicBlock(node) ) {
-				/*
-				 * All children will be inside atomic.
-				 */
-				atomicDepth++;
+				atomicBlock = Option.some(node);
 			}
 			return true;
 		}
@@ -139,10 +160,7 @@ public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis {
 		@Override
 		public void endVisit(LabeledStatement node) {
 			if( isAtomicBlock(node) ) {
-				/*
-				 * Decrease depth of nesting.
-				 */
-				atomicDepth--;
+				atomicBlock = Option.none();
 			}
 		}
 
@@ -150,10 +168,10 @@ public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis {
 		public void preVisit(ASTNode node) {
 			/*
 			 * You are an atomic node if we are inside at least one atomic
-			 * block.
+			 * block. No entry for nodes that are not inside.
 			 */
-			if( this.atomicDepth > 0 ) {
-				IsInAtomicAnalysis.this.nodesInsideAtomic.put(node, null);
+			if( this.atomicBlock.isSome() ) {
+				IsInAtomicAnalysis.this.nodesInsideAtomic.put(node, this.atomicBlock);
 			}
 			super.preVisit(node);
 		}	

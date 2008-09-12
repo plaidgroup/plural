@@ -37,10 +37,17 @@
  */
 package edu.cmu.cs.plural.atomic;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.LabeledStatement;
+import org.eclipse.jdt.core.dom.ReturnStatement;
 
+import edu.cmu.cs.crystal.internal.Option;
 import edu.cmu.cs.crystal.internal.Utilities;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionalAnalysis;
@@ -89,43 +96,92 @@ public class NIMBYChecker extends FractionalAnalysis {
 		 */
 		private final IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
 
-		/**
-		 * Is the given node inside the lexical scope of an atomic block?
-		 */
-		private boolean isNodeInsideAtomic(ASTNode node) {
-			return isInAtomicAnalysis.isInAtomicBlock(node);
-		}
+		
+		private final Set<ASTNode> previouslyReportedErrorNodes = new HashSet<ASTNode>();
 		
 		/**
 		 * Report an error to the user if we are not inside an atomic block and the
 		 * permission that we just unpacked at this node is thread-shared.
 		 */
 		private void assertInAtomicIfTShared(ASTNode node) {
-			// Are we outside of atomic?
-			if( !isNodeInsideAtomic(node) ) {
-				// Are we unpacked after this statement?
-				PluralDisjunctiveLE lattice = NIMBYChecker.this.getFa().getResultsAfter(node);
-				if( lattice.isRcvrUnpackedInAnyDisjunct() ) {
-					// Is receiver permission Share/Pure/(Full && FULL_PERMISSION_MUST_UNPACK_IN_ATOMIC)?
-					if( FULL_PERMISSION_MUST_UNPACK_IN_ATOMIC ) {
+			// Are we unpacked after this statement?
+			PluralDisjunctiveLE lattice = NIMBYChecker.this.getFa().getResultsAfter(node);
+
+			// There are lots of 'expressions' and 'statements' that are not actually inside
+			// of code...
+			if( lattice.isBottom() ) return;
+
+			if( lattice.isRcvrUnpackedInAnyDisjunct() ) {
+				// For now we only worry about weak atomicity
+				if( FULL_PERMISSION_MUST_UNPACK_IN_ATOMIC ) {
+					List<ASTNode> nodes_where_unpacked = lattice.whereWasRcvrUnpacked();
+
+					// We require that this node be in the same atomic block as the
+					// one where it was packed. inSameAtomic also asserts that nodes
+					// are in any atomic block at all.
+					if( !inSameAtomicBlock(node, nodes_where_unpacked) &&
+						!previouslyReportedErrorNodes.containsAll(nodes_where_unpacked) ) {
+
+						// Is receiver permission Share/Pure/Full?
 						if( lattice.isRcvrFullSharePureInAnyDisjunct() ) {
+							
+							previouslyReportedErrorNodes.add(node);
+							previouslyReportedErrorNodes.addAll(nodes_where_unpacked);
+							
 							String err = "Receiver is unpacked outside of atomic block, but doesn't have Unique or Immutable permission.";
 							reporter.reportUserProblem(err, 
-									                   node, 
-									                   NIMBYChecker.this.getName());
+									node, 
+									NIMBYChecker.this.getName());
 						}
 					}
-					else {
-						Utilities.nyi();
-					}
+				}
+				else {
+					// TODO: Strong atomicity
+					Utilities.nyi();
 				}
 			}
 		}
-		
-		/*
-		 * TODO: We should override every node.
+
+		/**
+		 * Is the given {@code node} in the same atomic block as <i>every</i>
+		 * node in the list, {@code nodes_where_unpacked}?
+		 * 
+		 * It must be true that {@code node} is inside an atomic block. All
+		 * {@code nodes} must be inside atomic blocks as well.
 		 */
-		
+		private boolean inSameAtomicBlock(ASTNode node, List<ASTNode> nodes) {
+			Option<LabeledStatement> node_a_block = this.isInAtomicAnalysis.inWhichAtomicBlock(node);
+			
+			// False if this node is not inside an atomic block
+			if( node_a_block.isNone() )
+				return false;
+			
+			for( ASTNode other_node : nodes ) {
+				Option<LabeledStatement> other_node_a_block = 
+					this.isInAtomicAnalysis.inWhichAtomicBlock(other_node);
+				
+				// False if any other node is not inside an atomic block
+				if( other_node_a_block.isNone() ) 
+					return false;
+				
+				// False if this node and that node are inside different atomic blocks
+				if( !node_a_block.unwrap().equals(other_node_a_block.unwrap()) )
+					return false;
+			}
+			
+			return true;
+		}
+
+		/*
+		 * TODO: We should override every important node.
+		 */
+
+		@Override
+		public void endVisit(FieldAccess node) {
+			super.endVisit(node);
+			assertInAtomicIfTShared(node);
+		}
+
 		@Override
 		public void endVisit(Assignment node) {
 			super.endVisit(node);
@@ -133,9 +189,25 @@ public class NIMBYChecker extends FractionalAnalysis {
 		}
 
 		@Override
-		public void endVisit(FieldAccess node) {
+		public void endVisit(ReturnStatement node) {
 			super.endVisit(node);
 			assertInAtomicIfTShared(node);
 		}
+		
+//		public void endVisit(SimpleName node) {
+//			super.endVisit(node);
+//			IBinding name_binding = node.resolveBinding();
+//			
+//			if( name_binding == null ) return;
+//			
+//			if( name_binding.getKind() == IBinding.VARIABLE ) {
+//				IVariableBinding var_bind = (IVariableBinding)name_binding;
+//				if( var_bind.isField() ) {
+//					// Note that this will check for every field! Not just
+//					// the fields we care about.
+//					assertInAtomicIfTShared(node);
+//				}
+//			}
+//		}
 	}
 }

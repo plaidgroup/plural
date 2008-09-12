@@ -176,14 +176,14 @@ public interface PluralLatticeElement {
 	 * invariant. Takes no action if receiver is already unpacked. Needs a
 	 * state space repository so that it can create field permissions with
 	 * legitimate state spaces.
-	 * 
+	 * @param nodeWhereUnpacked TODO
 	 * @param ThisVariable The receiver variable.
 	 * @param StateSpaceRepository Gives us the possible states for a field type.
 	 * @param ASTNode Node that will be used for BEFORE aliasing results. 
 	 */
 	public boolean unpackReceiver(Variable rcvrVar,
-			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
-			String rcvrRoot, String assignedField);
+			ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
+			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField);
 
 //	public boolean maybeFieldAccess(TACInstruction<?> instr, Variable x);
 //

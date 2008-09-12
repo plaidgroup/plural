@@ -142,29 +142,31 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	// Call for no unpacked var.
 	public PluralTupleLatticeElement(FractionalPermissions b, AnnotationDatabase adb,
 			StateSpaceRepository stateRepo) {
-		this(b, adb, stateRepo, null);
+		this(b, adb, stateRepo, null, null);
 	}
 	
 	// Call for an unpacked var, and a new DynamicStateLogic.
 	protected PluralTupleLatticeElement(FractionalPermissions b, AnnotationDatabase adb,
-			StateSpaceRepository stateRepo, Variable unpackedVar) {
+			StateSpaceRepository stateRepo, Variable unpackedVar, ASTNode nodeWhereUnpacked) {
 		this.tupleLatticeElement = AliasAwareTupleLE.create(adb, b);
 		this.dynamicStateLogic = new DynamicStateLogic();
 		this.annotationDB = adb;
 		this.isFrozen = false;
 		this.unpackedVar = unpackedVar;
+		this.nodeWhereUnpacked = nodeWhereUnpacked;
 		this.stateRepo = stateRepo;
 	}
 
 	// Call to specify everything.
 	protected PluralTupleLatticeElement(AliasAwareTupleLE<FractionalPermissions> a, 
-			AnnotationDatabase adb, StateSpaceRepository stateRepo, Variable unpackedVar, 
-			DynamicStateLogic dsl) {
+			AnnotationDatabase adb, StateSpaceRepository stateRepo, Variable unpackedVar,
+			ASTNode nodeWhereUnpacked, DynamicStateLogic dsl) {
 		this.tupleLatticeElement = a;
 		this.dynamicStateLogic = dsl;
 		this.annotationDB = adb;
 		this.isFrozen = false;
 		this.unpackedVar = unpackedVar;
+		this.nodeWhereUnpacked = nodeWhereUnpacked;
 		this.stateRepo = stateRepo;
 	}
 	
@@ -184,15 +186,15 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			StateSpaceRepository rep, ThisVariable thisVar, MethodDeclaration decl) {
 		// This seems to violate the mostly-functional spirit of this class, but
 		// I am not sure how else to do this.
-		PluralTupleLatticeElement tuple = new PluralTupleLatticeElement(fps, adb, rep, thisVar);
+		PluralTupleLatticeElement tuple = new PluralTupleLatticeElement(fps, adb, rep, thisVar, decl);
 		return tuple;
 	}
 	
 	protected PluralTupleLatticeElement create(
 			AliasAwareTupleLE<FractionalPermissions> a, AnnotationDatabase adb,
-			StateSpaceRepository stateRepo, Variable unpackedVar,
+			StateSpaceRepository stateRepo, Variable unpackedVar, ASTNode nodeWhereUnpacked,
 			DynamicStateLogic dsl) {
-		return new PluralTupleLatticeElement(a, adb, stateRepo, unpackedVar,
+		return new PluralTupleLatticeElement(a, adb, stateRepo, unpackedVar, nodeWhereUnpacked,
 				dsl);
 	}
 
@@ -515,7 +517,8 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			throw new IllegalStateException("Unhandled case");
 						
 		PluralTupleLatticeElement copy = 
-			create(this_copy.tupleLatticeElement.join(other.tupleLatticeElement, node), this_copy.annotationDB, this_copy.stateRepo, this_copy.unpackedVar,
+			create(this_copy.tupleLatticeElement.join(other.tupleLatticeElement, node), this_copy.annotationDB, this_copy.stateRepo, 
+					this_copy.unpackedVar, this.nodeWhereUnpacked,
 				this_copy.dynamicStateLogic.join(other.dynamicStateLogic, node));
 		// Needed because of our invariant that mostRecentAliasInfo is never null at joins/freezes.
 		copy.mostRecentAliasInfo = this.mostRecentAliasInfo.join(other.mostRecentAliasInfo, node);
@@ -564,7 +567,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	}
 
 	public PluralTupleLatticeElement bottom() {
-		return create(this.tupleLatticeElement.bottom(), this.annotationDB, this.stateRepo, null, this.dynamicStateLogic.bottom());
+		return create(this.tupleLatticeElement.bottom(), this.annotationDB, this.stateRepo, null, null, this.dynamicStateLogic.bottom());
 	}
 
 	public ExtendedIterator<FractionalPermissions> tupleInfoIterator() {
@@ -578,8 +581,8 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	public PluralTupleLatticeElement mutableCopy() {
 		AliasAwareTupleLE<FractionalPermissions> aatle = tupleLatticeElement.mutableCopy();
 		DynamicStateLogic dsl = this.dynamicStateLogic.mutableCopy();
-		return create(aatle, this.annotationDB, this.stateRepo, this.unpackedVar,
-				dsl);
+		return create(aatle, this.annotationDB, this.stateRepo, this.unpackedVar, 
+				this.nodeWhereUnpacked,	dsl);
 	}
 
 	public Aliasing getLocationsAfter(ASTNode n, Variable x) {
@@ -614,6 +617,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 * BEGIN PACKING MANAGER
 	 */
 	private Variable unpackedVar = null;
+	private ASTNode nodeWhereUnpacked = null;
 
 	/**
 	 * Is the object receiver ('this') currently packed?
@@ -622,6 +626,16 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		return this.unpackedVar == null;
 	}
 
+	/**
+	 * At which node was the receiver unpacked?
+	 */
+	public ASTNode getNodeWhereUnpacked() {
+		if( nodeWhereUnpacked == null ) {
+			throw new IllegalStateException("Can't call this method unless unpacked.");
+		}
+		return nodeWhereUnpacked;
+	}
+	
 	/**
 	 * Pack the receiver to the given state with suitable defaults for the
 	 * rest of the permission details.
@@ -715,21 +729,6 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			unpackedVar = null;
 			return false;
 		}
-//		List<Variable> null_fields = 
-//			ConcreteAnnotationUtils.getFieldsThatMustBeNull(rcvrVar.resolveType(), new_rcvr_perm, stateRepo, annotationDB);
-//		for( Variable null_field : null_fields ) {
-//			Aliasing loc = locs.get(null_field);
-//			if( !this.dynamicStateLogic.isNull(loc) ) {
-//				// Sad path exit. A field that needed to be null could not
-//				// be guaranteed null.
-//				if(log.isLoggable(Level.FINE))
-//					log.fine("Field " + null_field + " needs to be null at packing location.");
-//				
-//				this.put(rcvrLoc, rcvr_perms.invalidPack());
-//				unpackedVar = null;
-//				return false;
-//			}
-//		}
 		
 		// 3. pack the receiver permissions object, put new results back in.
 		rcvr_perms = rcvr_perms.pack(desiredState);
@@ -737,65 +736,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		unpackedVar = null;
 		return true;
 	}
-
-	/**
-	 * This method removes permissions from the given list that both must be null or are
-	 * allowed to be null and happen to be at the moment. This is a MODIFYING operation.
-	 * 
-	 * The resulting list of permissions is the one that really needs to be checked.
-	 * 
-	 * @param field_perms The original invariant permissions before filtering.
-	 * @param cur_node
-	 * @param this_type
-	 * @param new_rcvr_perm
-	 * @return The filtered results.
-	 */
-//	private <P extends AbstractFractionalPermission> List<Pair<Variable, P>> filterOutNullPermissions(
-//			List<Pair<Variable, P>> field_perms,
-//			SimpleMap<Variable, Aliasing> locs, ITypeBinding this_type,
-//			FractionalPermission this_perm, StateSpaceRepository stateRepo) {
-//		/*
-//		 * Get variables that must be null
-//		 */
-//		List<Variable> to_removes =
-//			ConcreteAnnotationUtils.getFieldsThatMustBeNull(this_type, this_perm, stateRepo, annotationDB);
-//		List<Pair<Variable, P>> result = 
-//			new ArrayList<Pair<Variable, P>>(field_perms.size());
-//		
-//		/*
-//		 * Get variables that cannot be null, so we can find ones that are allowed to
-//		 * be null.
-//		 */
-//		List<Variable> non_null_vars = 
-//		     ConcreteAnnotationUtils.getFieldsThatMustBeNonNull(this_type, this_perm, stateRepo, annotationDB);
-//		
-//		/*
-//		 * Now remove those variables.
-//		 */
-//		for( Pair<Variable, P> pair : field_perms ) {
-//			if( to_removes.contains(pair.fst()) ) {
-//				// Don't add it!
-//				continue;
-//			}
-//			else {
-//				/*
-//				 * Now, if variable is not in non_null_vars and we know it is null,
-//				 * that means it status is 'maybe null,' and we can remove it.
-//				 */
-//				if( !non_null_vars.contains(pair.fst()) ) {
-//					Aliasing maybe_null_loc = locs.get(pair.fst());
-//					if( this.dynamicStateLogic.isNull(maybe_null_loc) ) {
-//						// Don't add it!
-//						continue;
-//					}
-//				}
-//			}
-//			result.add(pair);
-//		}
-//		
-//		return result;
-//	}
-
+	
 	/**
 	 * This method will attempt to pack the receiver to a suitably 'good' permission/state,
 	 * for some definition of good.<br>
@@ -950,15 +891,15 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 * state space repository so that it can create field permissions with
 	 * legitimate state spaces.  If the receiver has no permissions, this
 	 * method won't actually unpack but still return <code>true</code>
-	 * 
 	 * @param ThisVariable The receiver variable.
 	 * @param StateSpaceRepository Gives us the possible states for a field type.
 	 * @param ASTNode Node that will be used for BEFORE aliasing results.
+	 * 
 	 * @return <code>false</code> if we tried to unpack an impossible state, <code>true</code>
 	 * otherwise. 
 	 */
-	public boolean unpackReceiver(Variable rcvrVar, final StateSpaceRepository stateRepo,
-					final SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField){
+	public boolean unpackReceiver(Variable rcvrVar, ASTNode nodeWhereUnpacked,
+					final StateSpaceRepository stateRepo, final SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField){
 		if( isFrozen )
 			throw new IllegalStateException("Object is frozen.");
 
@@ -994,6 +935,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		// 2.) Add resulting receiver permission.
 		this.put(rcvrLoc, this_perms);
 		this.unpackedVar = rcvrVar;
+		this.nodeWhereUnpacked = nodeWhereUnpacked;
 
 		// 3.) Get invariants based on the unpacked portion of the rcvr permission.
 		FractionalPermission unpacked_perm = this_perms.getUnpackedPermission();

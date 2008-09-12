@@ -599,8 +599,8 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 						/*
 						 * We have to try to unpack and pack to the correct state.
 						 */
-						value.unpackReceiver(this_var, getRepository(),
-								loc_map, unpack_state, null);
+						value.unpackReceiver(this_var, node,
+								getRepository(), loc_map, unpack_state, null);
 						boolean packed =
 							value.packReceiver(tf.getAnalysisContext().getThisVariable(),
 									getRepository(), loc_map, states);
