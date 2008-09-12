@@ -485,14 +485,14 @@ public class SingleTruthFractionalTransfer extends
 			}
 			
 //			unpacking_root = StateSpace.STATE_ALIVE;
-			value.unpackReceiver(thisVar, context.getRepository(),
+			value.unpackReceiver(thisVar, instr.getNode(),
+					context.getRepository(),
 					new SimpleMap<Variable,Aliasing>() {
 						@Override
 						public Aliasing get(Variable key) {
 							return value.getLocationsAfter(instr.getNode(), key);
-						}},
-					unpacking_root, 
-					isAssignment ? instr.getFieldName() : null);
+						}}, 
+					unpacking_root, isAssignment ? instr.getFieldName() : null);
 		}
 		return value;
 	}

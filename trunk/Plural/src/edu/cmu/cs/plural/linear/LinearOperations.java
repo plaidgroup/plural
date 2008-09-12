@@ -1215,14 +1215,14 @@ class LinearOperations extends TACAnalysisHelper {
 //			}
 			
 //			unpacking_root = StateSpace.STATE_ALIVE;
-		return value.fancyUnpackReceiver(thisVar, getRepository(),
+		return value.fancyUnpackReceiver(thisVar, instr.getNode(),
+				getRepository(),
 				new SimpleMap<Variable,Aliasing>() {
 					@Override
 					public Aliasing get(Variable key) {
 						return value.getLocations(key);
-					}},
-				unpacking_root, 
-				isAssignment ? instr.getFieldName() : null);
+					}}, 
+				unpacking_root, isAssignment ? instr.getFieldName() : null);
 	}
 	
 	//
@@ -1644,8 +1644,8 @@ class LinearOperations extends TACAnalysisHelper {
 			 * We have to try to unpack and pack to the correct states.
 			 */
 			DisjunctiveLE unpacked = 
-			value.fancyUnpackReceiver(this_var, getRepository(),
-					loc_map, unpack_state, null /* no assigned field */);
+			value.fancyUnpackReceiver(this_var, node,
+					getRepository(), loc_map, unpack_state, null /* no assigned field */);
 
 			// find the states we need to re-pack to
 			final Set<String> packToStates = AbstractFractionalPermission.cleanStateInfo(

@@ -38,6 +38,7 @@
 package edu.cmu.cs.plural.linear;
 
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -413,9 +414,28 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 				else {
 					return true;
 				}
-			}});
+			}
+		});
 		
 		return result.getValue().booleanValue();
+	}
+	
+	/**
+	 * Returns a list of ASTNodes where the receiver was unpacked,
+	 * one for every element in the disjunction.
+	 */
+	public List<ASTNode> whereWasRcvrUnpacked() {
+		final List<ASTNode> result = new LinkedList<ASTNode>();
+		le.dispatch(new DescendingVisitor(){
+			@Override
+			public Boolean tuple(TensorPluralTupleLE tuple) {
+				if( !tuple.isRcvrPacked() ) {
+					result.add(tuple.getNodeWhereUnpacked());
+				}
+				return true;
+			}
+		});
+		return result;
 	}
 	
 	/**
@@ -472,20 +492,21 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	/**
 	 * TODO figure out if contexts can differ in receiver packed / unpacked
 	 * @param rcvrVar
+	 * @param nodeWhereUnpacked TODO
 	 * @param stateRepo
 	 * @param locs
 	 * @param desiredRoot
 	 * @param assignedField
 	 */
 	public void unpackReceiver(final ThisVariable rcvrVar,
-			final StateSpaceRepository stateRepo,
-			final SimpleMap<Variable, Aliasing> locs, final String desiredRoot,
-			final String assignedField) {
+			final ASTNode nodeWhereUnpacked,
+			final StateSpaceRepository stateRepo, final SimpleMap<Variable, Aliasing> locs,
+			final String desiredRoot, final String assignedField) {
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
 			public DisjunctiveLE context(LinearContextLE le) {
 				if(le.getTuple().isRcvrPacked()) {
-					return le.getTuple().fancyUnpackReceiver(rcvrVar, stateRepo, locs, desiredRoot, assignedField);
+					return le.getTuple().fancyUnpackReceiver(rcvrVar, nodeWhereUnpacked, stateRepo, locs, desiredRoot, assignedField);
 				}
 				// else ?
 				return le;

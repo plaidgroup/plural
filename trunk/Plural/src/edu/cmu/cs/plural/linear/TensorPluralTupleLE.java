@@ -85,10 +85,11 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	public static TensorPluralTupleLE createUnpackedLattice(
 			FractionalPermissions fps,
 			AnnotationDatabase adb,
-			StateSpaceRepository rep, ThisVariable thisVar, MethodDeclaration decl) {
+			StateSpaceRepository rep, ThisVariable thisVar, 
+			MethodDeclaration decl) {
 		// This seems to violate the mostly-functional spirit of this class, but
 		// I am not sure how else to do this.
-		TensorPluralTupleLE tuple = new TensorPluralTupleLE(fps, adb, rep, thisVar);
+		TensorPluralTupleLE tuple = new TensorPluralTupleLE(fps, adb, rep, thisVar, decl);
 		return tuple;
 	}
 
@@ -97,29 +98,26 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	public TensorPluralTupleLE(FractionalPermissions b,
 			AnnotationDatabase adb, StateSpaceRepository stateRepo) {
 		super(b, adb, stateRepo);
-		// TODO Auto-generated constructor stub
 	}
 
 	protected TensorPluralTupleLE(AliasAwareTupleLE<FractionalPermissions> a,
 			AnnotationDatabase adb, StateSpaceRepository stateRepo,
-			Variable unpackedVar, DynamicStateLogic dsl) {
-		super(a, adb, stateRepo, unpackedVar, dsl);
-		// TODO Auto-generated constructor stub
+			Variable unpackedVar, ASTNode nodeWhereUnpacked, DynamicStateLogic dsl) {
+		super(a, adb, stateRepo, unpackedVar, nodeWhereUnpacked, dsl);
 	}
 
 	protected TensorPluralTupleLE(FractionalPermissions b,
 			AnnotationDatabase adb, StateSpaceRepository stateRepo,
-			Variable unpackedVar) {
-		super(b, adb, stateRepo, unpackedVar);
-		// TODO Auto-generated constructor stub
+			Variable unpackedVar, ASTNode nodeWhereUnpacked) {
+		super(b, adb, stateRepo, unpackedVar, nodeWhereUnpacked);
 	}
 
 	@Override
 	protected TensorPluralTupleLE create(
 			AliasAwareTupleLE<FractionalPermissions> a, AnnotationDatabase adb,
 			StateSpaceRepository stateRepo, Variable unpackedVar,
-			DynamicStateLogic dsl) {
-		return new TensorPluralTupleLE(a, adb, stateRepo, unpackedVar, dsl);
+			ASTNode nodeWhereUnpacked, DynamicStateLogic dsl) {
+		return new TensorPluralTupleLE(a, adb, stateRepo, unpackedVar, nodeWhereUnpacked, dsl);
 	}
 
 	@Override
@@ -152,19 +150,18 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	}
 
 	/**
-	 * @deprecated Use {@link #fancyUnpackReceiver(Variable, StateSpaceRepository, SimpleMap, String, String)}.
+	 * @deprecated Use {@link #fancyUnpackReceiver(Variable, ASTNode, StateSpaceRepository, SimpleMap, String, String)}.
 	 */
 	@Override
 	public boolean unpackReceiver(Variable rcvrVar,
-			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
-			String rcvrRoot, String assignedField) {
-		return super.unpackReceiver(rcvrVar, stateRepo, locs, rcvrRoot, assignedField);
+			ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
+			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField) {
+		return super.unpackReceiver(rcvrVar, nodeWhereUnpacked, stateRepo, locs, rcvrRoot, assignedField);
 	}
 
-	private boolean unpackReceiverInternal(Variable rcvrVar,
-			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
-			String rcvrRoot, String assignedField) {
-		return super.unpackReceiver(rcvrVar, stateRepo, locs, rcvrRoot, assignedField);
+	private boolean unpackReceiverInternal(Variable rcvrVar, ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
+			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField) {
+		return super.unpackReceiver(rcvrVar, nodeWhereUnpacked, stateRepo, locs, rcvrRoot, assignedField);
 	}
 	
 //	/**
@@ -237,8 +234,9 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 
 	/**
 	 * This is the disjunctive version of 
-	 * {@link PluralTupleLatticeElement#unpackReceiver(Variable, StateSpaceRepository, SimpleMap, String, String)}.
+	 * {@link PluralTupleLatticeElement#unpackReceiver(Variable, ASTNode, StateSpaceRepository, SimpleMap, String, String)}.
 	 * @param rcvrVar
+	 * @param nodeWhereUnpacked TODO
 	 * @param stateRepo
 	 * @param locs
 	 * @param rcvrRoot
@@ -246,8 +244,8 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 * @return
 	 */
 	public DisjunctiveLE fancyUnpackReceiver(Variable rcvrVar,
-			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
-			String rcvrRoot, String assignedField) {
+			ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
+			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField) {
 		// this need not be unfrozen because we create mutable copies...
 
 		LinkedHashSet<DisjunctiveLE> resultElems = new LinkedHashSet<DisjunctiveLE>();
@@ -260,7 +258,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		if(rcvrPerms.getFramePermissions().isEmpty()) {
 			// no actual receiver permission --> call unpack anyway
 			// won't actually unpack but will populate fields
-			if(this.unpackReceiverInternal(rcvrVar, stateRepo, locs, rcvrRoot, assignedField))
+			if(this.unpackReceiverInternal(rcvrVar, nodeWhereUnpacked, stateRepo, locs, rcvrRoot, assignedField))
 				return ContextFactory.tensor(this);
 			else
 				return ContextFactory.falseContext();
@@ -312,7 +310,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 					
 					TensorPluralTupleLE elem = this.mutableCopy();
 					elem.storeIdenticalAliasInfo(this);
-					if(!elem.unpackReceiverInternal(rcvrVar, stateRepo, locs, try_node, assignedField))
+					if(!elem.unpackReceiverInternal(rcvrVar, nodeWhereUnpacked, stateRepo, locs, try_node, assignedField))
 						// tried to unpack to a state with FALSE invariant
 						// this should not be possible, so we fail conservatively 
 						return ContextChoiceLE.falseContext();
