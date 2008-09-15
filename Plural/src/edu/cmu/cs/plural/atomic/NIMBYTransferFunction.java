@@ -47,6 +47,7 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
+import edu.cmu.cs.crystal.internal.Utilities;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.BinaryOperation;
 import edu.cmu.cs.crystal.tac.CastInstruction;
@@ -108,6 +109,13 @@ public class NIMBYTransferFunction extends FractionalTransfer {
 	private IResult<PluralDisjunctiveLE> forgetIfNotInAtomic(
 			ASTNode node, List<ILabel> labels,
 			PluralDisjunctiveLE value, IResult<PluralDisjunctiveLE> result) {
+		
+		// If a node is outside of a method decl, say because it's a field
+		// initializer, we just kind of want to leave it alone.
+		if( Utilities.getMethodDeclaration(node) == null ) {
+			return result;
+		}
+		
 		if( !this.isInAtomicAnalysis.isInAtomicBlock(node) ) {
 			result = this.forgetSharedPermissions(result, labels, value, node);
 		}
@@ -227,9 +235,9 @@ public class NIMBYTransferFunction extends FractionalTransfer {
 	public IResult<PluralDisjunctiveLE> transfer(
 			SourceVariableDeclaration instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
-		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		// I specifically do not do anyting here, since this is not
+		// an expression.
+		return super.transfer(instr, labels, value);
 	}
 	
 	@Override

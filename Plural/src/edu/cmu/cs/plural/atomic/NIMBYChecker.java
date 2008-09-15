@@ -108,8 +108,8 @@ public class NIMBYChecker extends FractionalAnalysis {
 			PluralDisjunctiveLE lattice = NIMBYChecker.this.getFa().getResultsAfter(node);
 
 			// There are lots of 'expressions' and 'statements' that are not actually inside
-			// of code...
-			if( lattice.isBottom() ) return;
+			// of code... Also, there are real expressions that are just not inside of methods.
+			if( lattice.isBottom() || Utilities.getMethodDeclaration(node) == null) return;
 
 			if( lattice.isRcvrUnpackedInAnyDisjunct() ) {
 				// For now we only worry about weak atomicity

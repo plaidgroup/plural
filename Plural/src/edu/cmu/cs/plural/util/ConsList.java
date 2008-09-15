@@ -596,7 +596,7 @@ final class Nonempty<T> extends ConsList<T> {
 
 	@Override
 	public String toString() {
-		return this.hd().toString() + "::" + this.tl().toString();
+		return "(" + this.hd().toString() + ")::" + this.tl().toString();
 	}
 
 	@Override

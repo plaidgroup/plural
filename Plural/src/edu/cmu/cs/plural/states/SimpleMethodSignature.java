@@ -189,7 +189,7 @@ class SimpleMethodSignature extends AbstractSingleCaseSignature implements
 			argPrePost[arg] = parameterPermissions(arg, forAnalyzingBody);
 		}
 		final PermissionSetFromAnnotations resultPost = 
-			resultPermissions(forAnalyzingBody);
+			resultPermissions(!forAnalyzingBody);
 		return new IMethodCaseInstance() {
 
 			@Override
