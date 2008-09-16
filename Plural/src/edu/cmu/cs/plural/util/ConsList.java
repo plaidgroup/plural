@@ -44,8 +44,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
-import edu.cmu.cs.plural.concrete.Implication;
-
 /**
  * An immutable cons list. Because this list cannot be modified, many
  * lists can share the same elements. Many operations must traverse, 
