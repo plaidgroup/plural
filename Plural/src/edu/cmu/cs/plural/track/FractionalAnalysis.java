@@ -89,7 +89,13 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	private FractionalTransfer tf;
 
 	private IInvocationCaseInstance analyzedCase;
+
 	
+	
+	public FractionalAnalysis() {
+		super();
+	}
+
 	/**
 	 * Factory method to allow subclasses to return a different subclass of
 	 * FractionalTransfer. This method should ALWAYS be used for initializing
@@ -97,7 +103,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	 * @return
 	 */
 	protected FractionalTransfer createNewFractionalTransfer() {
-		return new FractionalTransfer(analysisInput.getAnnoDB(), this);
+		return new FractionalTransfer(analysisInput, this);
 	}
 	
 	/**
@@ -132,7 +138,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			for(IInvocationCase c : sig.cases()) {
 				analyzedCase = c.createPermissions(true, false);
 				tf = createNewFractionalTransfer();
-				fa = new TACFlowAnalysis<PluralDisjunctiveLE>(getTf());
+				fa = new TACFlowAnalysis<PluralDisjunctiveLE>(getTf(),
+						this.analysisInput.getComUnitTACs().unwrap());
 				
 				FractionalChecker checker = createASTWalker();
 				if(sig.cases().size() > 1)

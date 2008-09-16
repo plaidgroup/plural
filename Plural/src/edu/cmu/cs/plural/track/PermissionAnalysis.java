@@ -108,7 +108,8 @@ public class PermissionAnalysis extends AbstractCrystalMethodAnalysis {
 	public void analyzeMethod(MethodDeclaration d) {
 		// create a transfer function object and pass it to a new FlowAnalysis
 		PermTransferFunction tf = new PermTransferFunction(d);
-		fa = new BranchSensitiveTACAnalysis<DisjointSetTuple<Variable, Permissions>>(tf);
+		fa = new BranchSensitiveTACAnalysis<DisjointSetTuple<Variable, Permissions>>(tf, 
+				this.analysisInput.getComUnitTACs().unwrap());
 		
 		// must call getResultsAfter at least once on this method,
 		// or the analysis won't be run on this method

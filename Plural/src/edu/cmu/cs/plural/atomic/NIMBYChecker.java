@@ -68,7 +68,7 @@ public class NIMBYChecker extends FractionalAnalysis {
 	 */
 	@Override
 	protected FractionalTransfer createNewFractionalTransfer() {
-		return new NIMBYTransferFunction(analysisInput.getAnnoDB(), this);
+		return new NIMBYTransferFunction(analysisInput, this);
 	}
 	
 	@Override

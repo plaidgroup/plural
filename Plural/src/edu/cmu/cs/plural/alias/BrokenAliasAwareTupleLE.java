@@ -47,6 +47,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
@@ -118,13 +119,13 @@ public class BrokenAliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	 * @param <LE>
 	 * @return
 	 */
-	public static <LE extends LatticeElement<LE>> BrokenAliasAwareTupleLE<LE> create() {
+	public static <LE extends LatticeElement<LE>> BrokenAliasAwareTupleLE<LE> create(final IAnalysisInput input) {
 		return new BrokenAliasAwareTupleLE<LE>(new TupleCallback<LE>() {
 			public LE defaultResult(Aliasing a) {
 				throw new IllegalStateException(
 						"Information for unknown alias set requested.");
 			}
-		});
+		}, input);
 	}
 
 	/**
@@ -135,12 +136,12 @@ public class BrokenAliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	 * @return
 	 */
 	public static <LE extends LatticeElement<LE>> BrokenAliasAwareTupleLE<LE> create(
-			final LE bottom) {
+			final LE bottom, final IAnalysisInput input) {
 		return new BrokenAliasAwareTupleLE<LE>(new TupleCallback<LE>() {
 			public LE defaultResult(Aliasing a) {
 				return bottom;
 			}
-		});
+		}, input);
 	}
 
 	/**
@@ -202,11 +203,12 @@ public class BrokenAliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	 * 
 	 * @param callback
 	 */
-	public BrokenAliasAwareTupleLE(TupleCallback<LE> callback) {
+	public BrokenAliasAwareTupleLE(TupleCallback<LE> callback, IAnalysisInput input) {
 		Map<IVariableBinding, Variable> receiverFields = new HashMap<IVariableBinding, Variable>();
 		this.aliasing = new TACFlowAnalysis<AliasingLE>(
 				// pass modifiable map into LocalAliasTransfer
-				new LocalAliasTransfer(null, receiverFields));
+				new LocalAliasTransfer(null, receiverFields), 
+				input.getComUnitTACs().unwrap());
 		this.info = new HashMap<Aliasing, LE>();
 		this.checked = new HashSet<Aliasing>();
 		this.callback = callback;

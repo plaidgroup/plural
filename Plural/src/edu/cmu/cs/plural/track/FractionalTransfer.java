@@ -56,6 +56,7 @@ import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 
 import edu.cmu.cs.crystal.BooleanLabel;
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
@@ -118,7 +119,7 @@ public class FractionalTransfer extends
 	//private Crystal crystal;
 	private PermissionFactory pf = PermissionFactory.INSTANCE;
 	
-	private final AnnotationDatabase annoDB;
+	private final IAnalysisInput input;
 	
 	/*
 	 * Post-condition stuff.
@@ -133,10 +134,10 @@ public class FractionalTransfer extends
 	
 	private final LivenessProxy liveness;
 	
-	public FractionalTransfer(AnnotationDatabase annoDB, FractionAnalysisContext context) {
-		this.annoDB = annoDB;
+	public FractionalTransfer(IAnalysisInput input, FractionAnalysisContext context) {
+		this.input = input;
 		this.context = context;
-		this.liveness = LivenessProxy.create();
+		this.liveness = LivenessProxy.create(input);
 	}
 
 	public Map<Aliasing, PermissionSetFromAnnotations> getParameterPostConditions() {
@@ -188,14 +189,14 @@ public class FractionalTransfer extends
 				isConstructor ? 
 				TensorPluralTupleLE.createUnpackedLattice(
 					FractionalPermissions.createEmpty(), // use top (no permissions) as default
-					getAnnoDB(),
+					input,
 					context.getRepository(),
 					thisVar,
 					d)
 					:	
 				new TensorPluralTupleLE(
 					FractionalPermissions.createEmpty(), // use top (no permissions) as default
-					getAnnoDB(),
+					input,
 					context.getRepository());
 			
 			start.storeInitialAliasingInfo(d);
@@ -233,7 +234,7 @@ public class FractionalTransfer extends
 			// static method
 			thisVar = null;
 			start =	new TensorPluralTupleLE(FractionalPermissions.createEmpty(), // use top (no permissions) as default
-					getAnnoDB(), context.getRepository());
+					input, context.getRepository());
 			start.storeInitialAliasingInfo(d);
 		}
 		
@@ -967,7 +968,7 @@ public class FractionalTransfer extends
 	}
 	
 	private AnnotationDatabase getAnnoDB() {
-		return annoDB;
+		return input.getAnnoDB();
 	}
 
 	private StateSpace getStateSpace(ITypeBinding type) {

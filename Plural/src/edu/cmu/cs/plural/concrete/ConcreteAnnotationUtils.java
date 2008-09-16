@@ -174,14 +174,10 @@ public class ConcreteAnnotationUtils {
 
 					if( applies ) {
 						String perm_string = decl.getInv();
-						try {
-							result.addAll(mustBeNull ? 
-									PermParser.parseMustBeNullFromString(perm_string, vars) :
-										PermParser.parseMustNotBeNullFromString(perm_string, vars));
-						} catch(RecognitionException re) {
-							if(log.isLoggable(Level.WARNING))
-								log.warning("Permission parse error: " + re.toString());
-						}
+
+						result.addAll(mustBeNull ? 
+								PermParser.parseMustBeNullFromString(perm_string, vars) :
+								PermParser.parseMustNotBeNullFromString(perm_string, vars));
 					}
 				}
 			}
@@ -295,13 +291,9 @@ public class ConcreteAnnotationUtils {
 			String perm_string, PluralTupleLatticeElement tuple, String assignedField,
 			SimpleMap<String, Aliasing> vars) {
 		final ConcreteVisitor v = new ConcreteVisitor(vars, assignedField);
-		try {
-			PermParser.accept(perm_string, v);
-		} 
-		catch(RecognitionException re) {
-			if(log.isLoggable(Level.WARNING))
-				log.warning("Permission parse error: " + re.toString());
-		}
+		
+		PermParser.accept(perm_string, v);
+			
 		for(Pair<Aliasing, ? extends VariablePredicate> p : v.preds) {
 			p.snd().putIntoLattice(tuple);
 		}
@@ -322,27 +314,21 @@ public class ConcreteAnnotationUtils {
 			String perm_string, PluralTupleLatticeElement value,
 			SimpleMap<String, Aliasing> vars) {
 		final ConcreteVisitor v = new ConcreteVisitor(vars, null /* no assigned field */);
-		try {
-			PermParser.accept(perm_string, v);
-			
-			// check predicates
-			for(Pair<Aliasing, ? extends VariablePredicate> p : v.preds) {
-				if(p.snd().isSatisfied(value) == false)
-					return p.snd().toString();
-			}
-			
-			// check implications
-			for(Pair<Aliasing, ? extends Implication> p : v.impls) {
-				if(p.snd().isSatisfied(value) == false)
-					return p.snd().toString();
-			}
-		} 
-		catch(RecognitionException re) {
-			if(log.isLoggable(Level.WARNING))
-				log.warning("Permission parse error: " + re.toString());
+		PermParser.accept(perm_string, v);
+
+		// check predicates
+		for(Pair<Aliasing, ? extends VariablePredicate> p : v.preds) {
+			if(p.snd().isSatisfied(value) == false)
+				return p.snd().toString();
 		}
-		
-		// success (modulo parsing problems)!
+
+		// check implications
+		for(Pair<Aliasing, ? extends Implication> p : v.impls) {
+			if(p.snd().isSatisfied(value) == false)
+				return p.snd().toString();
+		}
+
+		// success
 		return null;
 	}
 	

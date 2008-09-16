@@ -42,6 +42,7 @@ package edu.cmu.cs.plural.perm.parser;
 
 import edu.cmu.cs.plural.perm.parser.*;
 import edu.cmu.cs.plural.fractions.Fraction;
+import edu.cmu.cs.plural.concrete.PluralParseError;
 import java.util.LinkedList;
 }
 
@@ -64,6 +65,11 @@ package edu.cmu.cs.plural.perm.parser;
         } catch (RecognitionException e)  {
             e.printStackTrace();
         }
+    }
+    @Override
+    public void displayRecognitionError(String[] tokenNames,
+                                        RecognitionException e) {
+        throw new PluralParseError(e);
     }
     
     private static AccessPred treeOfConjList(List<AccessPred> list) {

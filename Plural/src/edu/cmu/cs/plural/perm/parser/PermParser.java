@@ -47,7 +47,9 @@ import org.antlr.runtime.RecognitionException;
 
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.internal.Option;
 import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.plural.concrete.PluralParseError;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.util.Pair;
@@ -63,21 +65,23 @@ import edu.cmu.cs.plural.util.SimpleMap;
 public class PermParser {
 	// Thread-local because static fields are bad for concurrency!
 	// Plus it's just caching so there's no reason to be particularly worried.
-	private static ThreadLocal<Pair<String, TopLevelPred>> cachedResult = new ThreadLocal<Pair<String, TopLevelPred>>() {
-		private Pair<String, TopLevelPred> cachedResult = Pair.create("", null);
+	private static ThreadLocal<Option<Pair<String, TopLevelPred>>> cachedResult = new ThreadLocal<Option<Pair<String, TopLevelPred>>>() {
+		private Option<Pair<String, TopLevelPred>> cachedResult = Option.none(); 
+			
 		@Override
-		public Pair<String, TopLevelPred> get() {
+		public Option<Pair<String, TopLevelPred>> get() {
 			return this.cachedResult;
 		}
 		@Override
-		public void set(Pair<String, TopLevelPred> value) {
+		public void set(Option<Pair<String, TopLevelPred>> value) {
 			this.cachedResult = value;
 		}
 	};
 	
-	private static TopLevelPred parse(String str) throws RecognitionException {
-		if( cachedResult.get().fst().equals(str) ) {
-			return cachedResult.get().snd();
+	private static Option<TopLevelPred> parse(String str) {
+		if( cachedResult.get().isSome() && 
+			cachedResult.get().unwrap().fst().equals(str) ) {
+			return Option.some(cachedResult.get().unwrap().snd());
 		}
 		else {
 			AccessPredLexer lex = new AccessPredLexer(new ANTLRStringStream(str));
@@ -85,20 +89,62 @@ public class PermParser {
 
 			AccessPredParser parser = new AccessPredParser(tokens);
 
-			TopLevelPred parsed_pred = parser.start();
+			TopLevelPred parsed_pred = null;
+			try {
+				parsed_pred = parser.start();
+			} catch(RecognitionException re) {
+				// As far as I can tell, this is never thrown.
+				return Option.none();
+			} catch(PluralParseError ppe) {
+				return Option.none();
+			}
+			
+			if( parsed_pred == null ) {
+				return Option.none();
+			}
+			
 			/*
 			 * Update cache.
 			 */			
-			cachedResult.set(Pair.create(str, parsed_pred));
-			return parsed_pred;
+			cachedResult.set(Option.some(Pair.create(str, parsed_pred)));
+			return Option.some(parsed_pred);
 		}
 	}
 	
-	public static <T> T accept(String perm_string, AccessPredVisitor<T> visitor) throws RecognitionException {
-		TopLevelPred parsed_pred = parse(perm_string);
-		if(parsed_pred == null || parsed_pred instanceof TopLevelPred.Impossible)
+	/**
+	 * Does the given string parse?
+	 */
+	public static boolean willParse(String str) {
+		return parse(str).isSome();
+	}
+	
+	/**
+	 * Attempts to parse the given string. If parsing succeeds,
+	 * returns NONE. Otherwise, returns the parse error.
+	 */
+	public static Option<String> getParseError(String str) {
+		try {
+			// Just parse that string!
+			AccessPredLexer lex = new AccessPredLexer(new ANTLRStringStream(str));
+			CommonTokenStream tokens = new CommonTokenStream(lex);
+
+			AccessPredParser parser = new AccessPredParser(tokens);
+			parser.start();
+		} catch(RecognitionException re) {
+			// As far as I can tell, this is never thrown.
+			return Option.some("\"" + str + "\" did not parse.");
+		} catch(PluralParseError ppe) {
+			return Option.some("\"" + str + "\" did not parse.");
+		}
+		
+		return Option.none();
+	}
+	
+	public static <T> T accept(String perm_string, AccessPredVisitor<T> visitor) {
+		Option<TopLevelPred> parsed_pred = parse(perm_string);
+		if(parsed_pred.isNone() || parsed_pred.unwrap() instanceof TopLevelPred.Impossible)
 			return null;
-		return ((AccessPred) parsed_pred).accept(visitor);
+		return ((AccessPred) parsed_pred.unwrap()).accept(visitor);
 	}
 	
 	/**
@@ -108,17 +154,16 @@ public class PermParser {
 	 * 
 	 * @param perm_string
 	 * @return A list of variable/permission pairs.
-	 * @throws RecognitionException on a parser error.
 	 */
 	public static List<Pair<String, PermissionFromAnnotation>> 
 	parsePermissionsFromString(String perm_string, SimpleMap<String,StateSpace> stateInfos,
-			boolean createNamedVariables) throws RecognitionException  {
+			boolean createNamedVariables) {
 
-		TopLevelPred parsed_pred = parse(perm_string);
+		Option<TopLevelPred> parsed_pred = parse(perm_string);
         return 
-        	(parsed_pred == null || parsed_pred instanceof TopLevelPred.Impossible ? 
+        	(parsed_pred.isNone() || parsed_pred.unwrap() instanceof TopLevelPred.Impossible ? 
         		Collections.<Pair<String, PermissionFromAnnotation>>emptyList() :
-        		((AccessPred) parsed_pred).accept(new FieldFPVisitorConj(stateInfos, createNamedVariables)));
+        		((AccessPred) parsed_pred.unwrap()).accept(new FieldFPVisitorConj(stateInfos, createNamedVariables)));
 	}
 	
 	/**
@@ -132,14 +177,13 @@ public class PermParser {
 	 * @return
 	 */
 	public static List<Variable>
-	parseMustBeNullFromString(String perm_string, SimpleMap<String,Variable> vars) 
-	throws RecognitionException {
+	parseMustBeNullFromString(String perm_string, SimpleMap<String,Variable> vars) {
 		
-		TopLevelPred parsed_pred = parse(perm_string);
+		Option<TopLevelPred> parsed_pred = parse(perm_string);
 		return 
-			(parsed_pred == null || parsed_pred instanceof TopLevelPred.Impossible ?
+			(parsed_pred.isNone() || parsed_pred.unwrap() instanceof TopLevelPred.Impossible ?
 					Collections.<Variable>emptyList() :
-					((AccessPred) parsed_pred).accept(new NullVisitorConj(true, vars)));
+					((AccessPred) parsed_pred.unwrap()).accept(new NullVisitorConj(true, vars)));
 	}
 	
 	/**
@@ -151,17 +195,15 @@ public class PermParser {
 	 * @param perm_string
 	 * @param vars
 	 * @return
-	 * @throws RecognitionException
 	 */
 	public static List<Variable>
-	parseMustNotBeNullFromString(String perm_string, SimpleMap<String,Variable> vars) 
-	throws RecognitionException {
+	parseMustNotBeNullFromString(String perm_string, SimpleMap<String,Variable> vars) {
 
-		TopLevelPred parsed_pred = parse(perm_string);
+		Option<TopLevelPred> parsed_pred = parse(perm_string);
 		return 
-			(parsed_pred == null || parsed_pred instanceof TopLevelPred.Impossible ?
+			(parsed_pred.isNone() || parsed_pred.unwrap() instanceof TopLevelPred.Impossible ?
 					Collections.<Variable>emptyList() :
-					((AccessPred) parsed_pred).accept(new NullVisitorConj(false, vars)));
+					((AccessPred) parsed_pred.unwrap()).accept(new NullVisitorConj(false, vars)));
 	}
 	
 	/**
@@ -177,14 +219,13 @@ public class PermParser {
 	 * @throws RecognitionException If there is a parsing error.
 	 */
 	public static List<Pair<String, String>>
-	parseStateInfoFromString(String perm_string)
-	throws RecognitionException {
+	parseStateInfoFromString(String perm_string) {
 		
-		TopLevelPred parsed_pred = parse(perm_string);
+		Option<TopLevelPred> parsed_pred = parse(perm_string);
 		return
-			(parsed_pred == null || parsed_pred instanceof TopLevelPred.Impossible ?
+			(parsed_pred.isNone() || parsed_pred.unwrap() instanceof TopLevelPred.Impossible ?
 					Collections.<Pair<String,String>>emptyList() :
-					((AccessPred) parsed_pred).accept(new StateInfoVisitorConj()));
+					((AccessPred) parsed_pred.unwrap()).accept(new StateInfoVisitorConj()));
 	}
 	
 	/**
@@ -194,12 +235,12 @@ public class PermParser {
 	 *                    annotation.
 	 * @return <code>true</code> if the given string parses to {@link TopLevelPred.Impossible},
 	 * <code>false</code> otherwise.
-	 * @throws RecognitionException If there is a parsing error.
 	 */
-	public static boolean parseImpossibleFromString(String perm_string) 
-	throws RecognitionException {
-		TopLevelPred parsed_pred = parse(perm_string);
-		return parsed_pred == null ? false : parsed_pred instanceof TopLevelPred.Impossible;
+	public static boolean parseImpossibleFromString(String perm_string) {
+		Option<TopLevelPred> parsed_pred = parse(perm_string);
+		return parsed_pred.isNone() ? 
+			false : 
+			parsed_pred.unwrap() instanceof TopLevelPred.Impossible;
 	}
 
 	/**
@@ -211,9 +252,7 @@ public class PermParser {
 	 */
 	public static Pair<List<PermissionFromAnnotation>,
 	List<PermissionFromAnnotation>> parseReceiverPermissions(String pre, String post,
-			StateSpace rcvrSpace, boolean preIsNamed)
-	throws RecognitionException
-	{
+			StateSpace rcvrSpace, boolean preIsNamed) {
 		Pair<ParsedParameterSummary, ParsedParameterSummary> summaries = 
 			paramParseHelper(pre, post);
 		return Pair.create(summaries.fst().getReceiverPermissions(rcvrSpace, preIsNamed),
@@ -229,9 +268,7 @@ public class PermParser {
 	 */
 	public static Pair<List<PermissionFromAnnotation>, List<PermissionFromAnnotation>> 
 	parseParameterPermissions(String pre, String post, StateSpace space, 
-			int paramIndex, boolean preIsNamed) 
-	throws RecognitionException		
-	{
+			int paramIndex, boolean preIsNamed) {
 		Pair<ParsedParameterSummary, ParsedParameterSummary> summaries = 
 			paramParseHelper(pre, post);
 		return Pair.create(summaries.fst().getParameterPermissions(space, paramIndex, preIsNamed),
@@ -242,8 +279,7 @@ public class PermParser {
 	 * pre and post string should not be too slow.
 	 */
 	public static List<PermissionFromAnnotation> parseResultPermissions(
-			String perm_string, StateSpace space, boolean namedFractions) 
-	throws RecognitionException {
+			String perm_string, StateSpace space, boolean namedFractions) {
 		Pair<ParsedParameterSummary, ParsedParameterSummary> summaries =
 			paramParseHelper("", perm_string);
 		return summaries.snd().getResultPermissions(space, namedFractions);
@@ -254,21 +290,21 @@ public class PermParser {
 	 */
 	private static Pair<String, ParsedParameterSummary> cachedPre = Pair.create("", new ParsedParameterSummary());
 	private static Pair<String, ParsedParameterSummary> cachedPost = Pair.create("", new ParsedParameterSummary());
+	
 	private static Pair<ParsedParameterSummary, ParsedParameterSummary>
-	paramParseHelper(String pre, String post)
-			throws RecognitionException {
+	paramParseHelper(String pre, String post) {
 		ParsedParameterSummary pre_summary;
 		ParsedParameterSummary post_summary;
 		if( cachedPre.fst().equals(pre) ) {
 			pre_summary = cachedPre.snd();
 		}
 		else {
-			TopLevelPred pre_pred = parse(pre);
-			pre_summary = pre_pred == null ? 
+			Option<TopLevelPred> pre_pred = parse(pre);
+			pre_summary = pre_pred.isNone() ? 
 					new ParsedParameterSummary() : 
-					(pre_pred instanceof TopLevelPred.Impossible ?
+					(pre_pred.unwrap() instanceof TopLevelPred.Impossible ?
 							new ParsedParameterSummary(true) :
-							((AccessPred) pre_pred).accept(new ParamFPVisitorConj()));
+							((AccessPred) pre_pred.unwrap()).accept(new ParamFPVisitorConj()));
 			cachedPre.setComponent1(pre);
 			cachedPre.setComponent2(pre_summary);
 		}
@@ -276,12 +312,12 @@ public class PermParser {
 			post_summary = cachedPost.snd();
 		}
 		else {
-			TopLevelPred post_pred = parse(post);
-			post_summary = post_pred == null ? 
+			Option<TopLevelPred> post_pred = parse(post);
+			post_summary = post_pred.isNone() ? 
 					new ParsedParameterSummary() : 
-					(post_pred instanceof TopLevelPred.Impossible ?
+					(post_pred.unwrap() instanceof TopLevelPred.Impossible ?
 							new ParsedParameterSummary(true) :
-							((AccessPred) post_pred).accept(new ParamFPVisitorConj()));
+							((AccessPred) post_pred.unwrap()).accept(new ParamFPVisitorConj()));
 		}
 		return Pair.create(pre_summary, post_summary);
 	}
@@ -303,7 +339,7 @@ public class PermParser {
 	}
 	
 	public static Pair<Set<String>, Set<String>> 
-	getParameterStateInfo(AnnotationSummary sum, int paramIndex) throws RecognitionException {
+	getParameterStateInfo(AnnotationSummary sum, int paramIndex) {
 		Pair<String, String> preAndPostString = getPermAnnotationStrings(sum);
 
 		if( preAndPostString == null ) {
@@ -315,7 +351,7 @@ public class PermParser {
 	}
 	
 	public static Pair<Set<String>, Set<String>> 
-	getParameterStateInfo(String pre, String post, int paramIndex) throws RecognitionException {
+	getParameterStateInfo(String pre, String post, int paramIndex) {
 		
 		Pair<ParsedParameterSummary, ParsedParameterSummary> summaries = 
 			paramParseHelper(pre, post);
@@ -327,10 +363,9 @@ public class PermParser {
 	 * For constructors, the pre-set is meaningless.
 	 * @param sum
 	 * @return
-	 * @throws RecognitionException
 	 */
 	public static Pair<Set<String>, Set<String>> 
-	getReceiverStateInfo(AnnotationSummary sum) throws RecognitionException {
+	getReceiverStateInfo(AnnotationSummary sum) {
 		Pair<String, String> preAndPostString = getPermAnnotationStrings(sum);
 		
 		if( preAndPostString == null ) {
@@ -345,10 +380,9 @@ public class PermParser {
 	 * For constructors, the pre-set is meaningless.
 	 * @param sum
 	 * @return
-	 * @throws RecognitionException
 	 */
 	public static Pair<Set<String>, Set<String>> 
-	getReceiverStateInfo(String pre, String post) throws RecognitionException {
+	getReceiverStateInfo(String pre, String post) {
 
 		Pair<ParsedParameterSummary, ParsedParameterSummary> summaries = 
 			paramParseHelper(pre, post);
@@ -360,10 +394,9 @@ public class PermParser {
 	 * For constructors, the pre-set is meaningless.
 	 * @param sum
 	 * @return
-	 * @throws RecognitionException
 	 */
 	public static Set<String> 
-	getResultStateInfo(AnnotationSummary sum) throws RecognitionException {
+	getResultStateInfo(AnnotationSummary sum) {
 		Pair<String, String> preAndPostString = getPermAnnotationStrings(sum);
 		
 		if( preAndPostString == null ) {
@@ -375,7 +408,7 @@ public class PermParser {
 	}
 		
 	public static Set<String> 
-	getResultStateInfo(String post) throws RecognitionException {
+	getResultStateInfo(String post) {
 
 		Pair<ParsedParameterSummary, ParsedParameterSummary> summaries = 
 			paramParseHelper("", post);

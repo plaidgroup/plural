@@ -113,13 +113,9 @@ abstract class AbstractSingleCaseSignature extends AbstractBindingSignature
 		}
 		
 		// required states from @Perm annotations
-		try {
-			Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(getMethodSummary(), paramIndex);
-			result.addAll(prePost.snd());
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotation.", e);
-		}
+		Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(getMethodSummary(), paramIndex);
+		result.addAll(prePost.snd());
+		
 		return result;
 	}
 
@@ -136,13 +132,9 @@ abstract class AbstractSingleCaseSignature extends AbstractBindingSignature
 		}
 		
 		// required states from @Perm annotations
-		try {
-			Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(getMethodSummary(), paramIndex);
-			result.addAll(prePost.fst());
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotation.", e);
-		}
+		Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(getMethodSummary(), paramIndex);
+		result.addAll(prePost.fst());
+
 		return result;
 	}
 	
@@ -157,12 +149,8 @@ abstract class AbstractSingleCaseSignature extends AbstractBindingSignature
 		}
 		
 		// required states from @Perm annotations
-		try {
-			result.addAll(PermParser.getReceiverStateInfo(getMethodSummary()).fst());
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotation.", e);
-		}
+		result.addAll(PermParser.getReceiverStateInfo(getMethodSummary()).fst());
+
 		return result;
 	}
 
@@ -179,12 +167,8 @@ abstract class AbstractSingleCaseSignature extends AbstractBindingSignature
 		}
 		
 		// required states from @Perm annotations
-		try {
-			result.addAll(PermParser.getReceiverStateInfo(getMethodSummary()).snd());
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotation.", e);
-		}
+		result.addAll(PermParser.getReceiverStateInfo(getMethodSummary()).snd());
+
 		return result;
 	}
 
@@ -220,12 +204,8 @@ abstract class AbstractSingleCaseSignature extends AbstractBindingSignature
 		}
 		
 		// required states from @Perm annotations
-		try {
-			result.addAll(PermParser.getResultStateInfo(getMethodSummary()));
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotation.", e);
-		}
+		result.addAll(PermParser.getResultStateInfo(getMethodSummary()));
+
 		return result;
 	}
 
