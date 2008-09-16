@@ -49,6 +49,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
@@ -104,8 +105,8 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	 * @param <LE>
 	 * @return
 	 */
-	public static <LE extends LatticeElement<LE>> AliasAwareTupleLE<LE> create(AnnotationDatabase adb) {
-		return new AliasAwareTupleLE<LE>(adb, new TupleCallback<LE>() {
+	public static <LE extends LatticeElement<LE>> AliasAwareTupleLE<LE> create(final IAnalysisInput input) {
+		return new AliasAwareTupleLE<LE>(input, new TupleCallback<LE>() {
 			public LE defaultResult(Aliasing a) {
 				throw new IllegalStateException(
 						"Information for unknown alias set requested.");
@@ -121,9 +122,9 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	 * @return
 	 */
 	public static <LE extends LatticeElement<LE>> AliasAwareTupleLE<LE> create(
-			AnnotationDatabase adb,
+			final IAnalysisInput input,
 			final LE bottom) {
-		return new AliasAwareTupleLE<LE>(adb, new TupleCallback<LE>() {
+		return new AliasAwareTupleLE<LE>(input, new TupleCallback<LE>() {
 			public LE defaultResult(Aliasing a) {
 				return bottom;
 			}
@@ -206,11 +207,12 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	 * 
 	 * @param callback
 	 */
-	public AliasAwareTupleLE(AnnotationDatabase adb, TupleCallback<LE> callback) {
+	public AliasAwareTupleLE(IAnalysisInput input, TupleCallback<LE> callback) {
 		Map<IVariableBinding, Variable> receiverFields = new HashMap<IVariableBinding, Variable>();
 		this.aliasing = new TACFlowAnalysis<AliasingLE>(
 				// pass modifiable map into LocalAliasTransfer
-				new LocalAliasTransfer(adb, receiverFields));
+				new LocalAliasTransfer(input.getAnnoDB(), receiverFields),
+				input.getComUnitTACs().unwrap());
 		this.info = new HashMap<ObjectLabel, LE>();
 		this.derivedCache = new HashMap<Aliasing, LE>();
 		this.callback = callback;

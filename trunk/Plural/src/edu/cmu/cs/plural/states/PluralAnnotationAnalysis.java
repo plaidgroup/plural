@@ -63,12 +63,17 @@ import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 import edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.internal.Option;
+import edu.cmu.cs.plural.perm.parser.PermParser;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateInvAnnotation;
 import edu.cmu.cs.plural.util.Pair;
 
 /**
+ * An analysis that examines user annotations to ensure that they have been
+ * constructed correctly.
+ * 
  * @author Kevin Bierhoff
  *
  */
@@ -149,6 +154,40 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) {
 				if(! checkValueArrayNonEmpty(node.resolveAnnotationBinding()))
 					reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
+			}
+			// Do the user's annotations actually parse correctly?
+			else if( "edu.cmu.cs.plural.annot.State".equals(node.resolveTypeBinding().getQualifiedName()) ) {
+				Option<Object> perm_ = getAnnotationParam(node.resolveAnnotationBinding(), "inv");
+				if( perm_.isSome() ) {
+					String perm = (String)perm_.unwrap();
+					Option<String> parse_error = PermParser.getParseError(perm);
+					if( parse_error.isSome() ) {
+						reporter.reportUserProblem("Parse error in annotation string: " + parse_error.unwrap(), 
+								node, PluralAnnotationAnalysis.this.getName());
+					}
+				}
+				
+			}
+			else if( "edu.cmu.cs.plural.annot.Perm".equals(node.resolveTypeBinding().getQualifiedName()) ) {
+				Option<Object> req_ = getAnnotationParam(node.resolveAnnotationBinding(), "requires");
+				Option<Object> ens_ = getAnnotationParam(node.resolveAnnotationBinding(), "ensures");
+				
+				if( req_.isSome() ) {
+					String perm = (String)req_.unwrap();
+					Option<String> parse_error = PermParser.getParseError(perm);
+					if( parse_error.isSome() ) {
+						reporter.reportUserProblem("Parse error in annotation string: " + parse_error.unwrap(), 
+								node, PluralAnnotationAnalysis.this.getName());
+					}
+				}
+				if( ens_.isSome() ) {
+					String perm = (String)ens_.unwrap();
+					Option<String> parse_error = PermParser.getParseError(perm);
+					if( parse_error.isSome() ) {
+						reporter.reportUserProblem("Parse error in annotation string: " + parse_error.unwrap(), 
+								node, PluralAnnotationAnalysis.this.getName());
+					}
+				}
 			}
 			super.endVisit(node);
 		}
@@ -270,6 +309,27 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	}
 
 	/**
+	 * Returns the value of the annotation parameter with the given name, or
+	 * NONE if it is not in the given annotation.
+	 */
+	private Option<Object> getAnnotationParam(IAnnotationBinding anno, String p_name) {
+		for(IMemberValuePairBinding p : anno.getAllMemberValuePairs()) {
+			if(p_name.equals(p.getName())) {
+				return Option.some(p.getValue());
+			}
+		}		
+		return Option.none();
+	}
+	
+	/**
+	 * Returns the value of the parameter named "value" for the given
+	 * annotation binding, or NONE if there is no key called "value."
+	 */
+	private Option<Object> getAnnotationValue(IAnnotationBinding anno) {
+		return getAnnotationParam(anno, "value");
+	}
+	
+	/**
 	 * Checks that the given annotation has a non-empty "value" array parameter.
 	 * @param casesAnnotation
 	 * @return <code>true</code> if the "value" array parameter is non-empty, 
@@ -277,16 +337,19 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	 */
 	private boolean checkValueArrayNonEmpty(
 			IAnnotationBinding casesAnnotation) {
-		for(IMemberValuePairBinding p : casesAnnotation.getAllMemberValuePairs()) {
-			if("value".equals(p.getName())) {
-				if(p.getValue() instanceof Object[]) {
-					return ((Object[]) p.getValue()).length > 0;
-				}
-				return true;  // single value is ok
-			}
+		
+		Option<Object> value_ = getAnnotationValue(casesAnnotation);
+		
+		if( value_.isNone() ) return false;
+		
+		Object value = value_.unwrap();
+		
+		if( value instanceof Object[] ) {
+			return ((Object[]) value).length > 0;
 		}
-		// empty annotation...
-		return false;
+		else {
+			return true;
+		}
 	}
 
 	/**

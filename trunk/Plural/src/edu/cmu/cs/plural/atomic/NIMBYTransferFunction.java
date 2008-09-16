@@ -42,6 +42,7 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
@@ -91,8 +92,8 @@ public class NIMBYTransferFunction extends FractionalTransfer {
 
 	private IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
 
-	public NIMBYTransferFunction(AnnotationDatabase annoDB, FractionAnalysisContext context) {
-		super(annoDB, context);
+	public NIMBYTransferFunction(IAnalysisInput input, FractionAnalysisContext context) {
+		super(input, context);
 	}
 	
 	private IResult<PluralDisjunctiveLE> forgetSharedPermissions(

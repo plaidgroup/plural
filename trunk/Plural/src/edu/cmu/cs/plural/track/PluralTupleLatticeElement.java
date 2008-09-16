@@ -55,6 +55,7 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
@@ -140,17 +141,17 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	private AliasingLE mostRecentAliasInfo = null;
 	
 	// Call for no unpacked var.
-	public PluralTupleLatticeElement(FractionalPermissions b, AnnotationDatabase adb,
+	public PluralTupleLatticeElement(FractionalPermissions b, IAnalysisInput input,
 			StateSpaceRepository stateRepo) {
-		this(b, adb, stateRepo, null, null);
+		this(b, input, stateRepo, null, null);
 	}
 	
 	// Call for an unpacked var, and a new DynamicStateLogic.
-	protected PluralTupleLatticeElement(FractionalPermissions b, AnnotationDatabase adb,
+	protected PluralTupleLatticeElement(FractionalPermissions b, IAnalysisInput input,
 			StateSpaceRepository stateRepo, Variable unpackedVar, ASTNode nodeWhereUnpacked) {
-		this.tupleLatticeElement = AliasAwareTupleLE.create(adb, b);
+		this.tupleLatticeElement = AliasAwareTupleLE.create(input, b);
 		this.dynamicStateLogic = new DynamicStateLogic();
-		this.annotationDB = adb;
+		this.annotationDB = input.getAnnoDB();
 		this.isFrozen = false;
 		this.unpackedVar = unpackedVar;
 		this.nodeWhereUnpacked = nodeWhereUnpacked;
@@ -182,11 +183,11 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 */
 	public static PluralTupleLatticeElement createConstructorLattice(
 			FractionalPermissions fps,
-			AnnotationDatabase adb,
+			IAnalysisInput input,
 			StateSpaceRepository rep, ThisVariable thisVar, MethodDeclaration decl) {
 		// This seems to violate the mostly-functional spirit of this class, but
 		// I am not sure how else to do this.
-		PluralTupleLatticeElement tuple = new PluralTupleLatticeElement(fps, adb, rep, thisVar, decl);
+		PluralTupleLatticeElement tuple = new PluralTupleLatticeElement(fps, input, rep, thisVar, decl);
 		return tuple;
 	}
 	
@@ -1157,27 +1158,23 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 					
 					if( applies ) {
 						String perm_str = decl.getInv();
-						try {
-							if(PermParser.parseImpossibleFromString(perm_str))
-								// FALSE invariant found --> quit
-								return null;
-							
-							SimpleMap<String, StateSpace> smap = new SimpleMap<String,StateSpace>() {
-								@Override
-								public StateSpace get(String key) {
-									if(key.equals("super"))
-										return stateRepo.getStateSpace(class_decl.getSuperclass());
-									return stateRepo.getStateSpace(fields.get(key).getType());
-								}
-							};
-						
-							name_perms.addAll(
-									PermParser.parsePermissionsFromString(perm_str, smap, isPreCondition));
-							state_infos.addAll(PermParser.parseStateInfoFromString(perm_str));
-						} catch(RecognitionException re) {
-							if(log.isLoggable(Level.WARNING))
-								log.warning("Permission parse error: " + re.toString());
-						}
+						if(PermParser.parseImpossibleFromString(perm_str))
+							// FALSE invariant found --> quit
+							return null;
+
+						SimpleMap<String, StateSpace> smap = new SimpleMap<String,StateSpace>() {
+							@Override
+							public StateSpace get(String key) {
+								if(key.equals("super"))
+									return stateRepo.getStateSpace(class_decl.getSuperclass());
+								return stateRepo.getStateSpace(fields.get(key).getType());
+							}
+						};
+
+						name_perms.addAll(
+								PermParser.parsePermissionsFromString(perm_str, smap, isPreCondition));
+						state_infos.addAll(PermParser.parseStateInfoFromString(perm_str));
+
 					}
 				}
 			}

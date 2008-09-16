@@ -39,6 +39,7 @@ package edu.cmu.cs.plural.alias;
 
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.live.LiveVariableLE;
 import edu.cmu.cs.crystal.analysis.live.LiveVariableTransferFunction;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
@@ -55,12 +56,13 @@ public class LivenessProxy {
 	
 	private final ITACFlowAnalysis<TupleLatticeElement<Variable, LiveVariableLE>> livenessAnalysis;
 	
-	public static LivenessProxy create() {
-		return new LivenessProxy();
+	public static LivenessProxy create(final IAnalysisInput input) {
+		return new LivenessProxy(input);
 	}
 	
-	private LivenessProxy() {
-		livenessAnalysis = new TACFlowAnalysis<TupleLatticeElement<Variable, LiveVariableLE>>(new LiveVariableTransferFunction());
+	private LivenessProxy(final IAnalysisInput input) {		
+		livenessAnalysis = 
+			new TACFlowAnalysis<TupleLatticeElement<Variable, LiveVariableLE>>(new LiveVariableTransferFunction(), input.getComUnitTACs().unwrap());
 	}
 	
 	public void switchToMethod(MethodDeclaration d) {

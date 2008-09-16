@@ -60,6 +60,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import edu.cmu.cs.crystal.BooleanLabel;
 import edu.cmu.cs.crystal.Crystal;
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
@@ -124,7 +125,7 @@ public class SingleTruthFractionalTransfer extends
 	
 	private static final Logger log = Logger.getLogger(SingleTruthFractionalTransfer.class.getName());
 	
-	private final AnnotationDatabase annoDB;
+	private final IAnalysisInput input;
 	private PermissionFactory pf = PermissionFactory.INSTANCE;
 	
 	/*
@@ -138,8 +139,8 @@ public class SingleTruthFractionalTransfer extends
 	
 	private ThisVariable thisVar; 
 	
-	public SingleTruthFractionalTransfer(AnnotationDatabase annoDB, FractionAnalysisContext context) {
-		this.annoDB = annoDB;
+	public SingleTruthFractionalTransfer(IAnalysisInput input, FractionAnalysisContext context) {
+		this.input = input;
 		this.context = context;
 	}
 
@@ -183,14 +184,14 @@ public class SingleTruthFractionalTransfer extends
 			start = isConstructor ? 
 				PluralTupleLatticeElement.createConstructorLattice(
 					FractionalPermissions.bottom(),
-					getAnnoDB(),
+					input,
 					context.getRepository(),
 					thisVar,
 					d)
 					:	
 				new PluralTupleLatticeElement(
 					FractionalPermissions.bottom(),
-					getAnnoDB(),
+					input,
 					context.getRepository());
 			
 			start.storeInitialAliasingInfo(d);
@@ -227,7 +228,7 @@ public class SingleTruthFractionalTransfer extends
 			// static method
 			thisVar = null;
 			start =	new PluralTupleLatticeElement(FractionalPermissions.bottom(),
-					getAnnoDB(), context.getRepository());
+					input, context.getRepository());
 			start.storeInitialAliasingInfo(d);
 		}
 		
@@ -1449,20 +1450,16 @@ public class SingleTruthFractionalTransfer extends
 			
 		PermissionSetFromAnnotations prePerm = preAndPost.fst();
 		PermissionSetFromAnnotations postPerm = preAndPost.snd();
-		try {
-			Pair<List<PermissionFromAnnotation>,
-			List<PermissionFromAnnotation>> prePostPerms = 
-				PermParser.parseReceiverPermissions(preAndPostString.fst(), preAndPostString.snd(),
-						space, namedFractions);
-			for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
-				prePerm = prePerm.combine(pre_p);
-			}
-			for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
-				postPerm = postPerm.combine(post_p);
-			}
-		} catch(RecognitionException re) {
-			if(log.isLoggable(Level.WARNING))
-				log.warning("Permission parameter parse error! " + re.toString());
+		
+		Pair<List<PermissionFromAnnotation>,
+		List<PermissionFromAnnotation>> prePostPerms = 
+			PermParser.parseReceiverPermissions(preAndPostString.fst(), preAndPostString.snd(),
+					space, namedFractions);
+		for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
+			prePerm = prePerm.combine(pre_p);
+		}
+		for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
+			postPerm = postPerm.combine(post_p);
 		}
 		return Pair.create(prePerm, postPerm);
 	}
@@ -1481,21 +1478,18 @@ public class SingleTruthFractionalTransfer extends
 			
 		PermissionSetFromAnnotations prePerm = preAndPost.fst();
 		PermissionSetFromAnnotations postPerm = preAndPost.snd();
-		try {
-			Pair<List<PermissionFromAnnotation>,
-			List<PermissionFromAnnotation>> prePostPerms = 
-				PermParser.parseParameterPermissions(preAndPostString.fst(), preAndPostString.snd(),
-						space, paramIndex, namedFractions);
-			for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
-				prePerm = prePerm.combine(pre_p);
-			}
-			for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
-				postPerm = postPerm.combine(post_p);
-			}
-		} catch(RecognitionException re) {
-			if(log.isLoggable(Level.WARNING))
-				log.warning("Permission parameter parse error! " + re.toString());
+		
+		Pair<List<PermissionFromAnnotation>,
+		List<PermissionFromAnnotation>> prePostPerms = 
+			PermParser.parseParameterPermissions(preAndPostString.fst(), preAndPostString.snd(),
+					space, paramIndex, namedFractions);
+		for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
+			prePerm = prePerm.combine(pre_p);
 		}
+		for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
+			postPerm = postPerm.combine(post_p);
+		}
+
 		return Pair.create(prePerm, postPerm);
 	}
 	/**
@@ -1511,17 +1505,13 @@ public class SingleTruthFractionalTransfer extends
 			return result;
 		}
 			
-		try {
-			List<PermissionFromAnnotation> postPerms = 
-				PermParser.parseResultPermissions(preAndPostString.snd(),
-						space, namedFractions);
-			for( PermissionFromAnnotation pre_p : postPerms ) {
-				result = result.combine(pre_p);
-			}
-		} catch(RecognitionException re) {
-			if(log.isLoggable(Level.WARNING))
-				log.warning("Permission parameter parse error! " + re.toString());
+		List<PermissionFromAnnotation> postPerms = 
+			PermParser.parseResultPermissions(preAndPostString.snd(),
+					space, namedFractions);
+		for( PermissionFromAnnotation pre_p : postPerms ) {
+			result = result.combine(pre_p);
 		}
+
 		return result;
 	}
 	
@@ -1544,7 +1534,7 @@ public class SingleTruthFractionalTransfer extends
 	}
 
 	private AnnotationDatabase getAnnoDB() {
-		return annoDB;
+		return input.getAnnoDB();
 	}
 
 	private StateSpace getStateSpace(ITypeBinding type) {

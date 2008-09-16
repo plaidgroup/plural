@@ -35,7 +35,7 @@
     without this exception; this exception also makes it possible to
     release a modified version which carries forward this exception.
 -->
-<project name="permission-parser" default="build" basedir=".">
+<project name="permission-parser" default="build" basedir="../">
 	<!-- directory for jar files -->
 	<property name="lib" location="${basedir}/antlr-3.0.1/lib"/>
 	

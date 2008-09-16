@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.tac.ThisVariable;
@@ -84,20 +85,20 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 */
 	public static TensorPluralTupleLE createUnpackedLattice(
 			FractionalPermissions fps,
-			AnnotationDatabase adb,
+			IAnalysisInput input,
 			StateSpaceRepository rep, ThisVariable thisVar, 
 			MethodDeclaration decl) {
 		// This seems to violate the mostly-functional spirit of this class, but
 		// I am not sure how else to do this.
-		TensorPluralTupleLE tuple = new TensorPluralTupleLE(fps, adb, rep, thisVar, decl);
+		TensorPluralTupleLE tuple = new TensorPluralTupleLE(fps, input, rep, thisVar, decl);
 		return tuple;
 	}
 
 	private Boolean unsatisfiable;
 	
 	public TensorPluralTupleLE(FractionalPermissions b,
-			AnnotationDatabase adb, StateSpaceRepository stateRepo) {
-		super(b, adb, stateRepo);
+			IAnalysisInput input, StateSpaceRepository stateRepo) {
+		super(b, input, stateRepo);
 	}
 
 	protected TensorPluralTupleLE(AliasAwareTupleLE<FractionalPermissions> a,
@@ -107,9 +108,9 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	}
 
 	protected TensorPluralTupleLE(FractionalPermissions b,
-			AnnotationDatabase adb, StateSpaceRepository stateRepo,
+			IAnalysisInput input, StateSpaceRepository stateRepo,
 			Variable unpackedVar, ASTNode nodeWhereUnpacked) {
-		super(b, adb, stateRepo, unpackedVar, nodeWhereUnpacked);
+		super(b, input, stateRepo, unpackedVar, nodeWhereUnpacked);
 	}
 
 	@Override

@@ -89,6 +89,10 @@ import edu.cmu.cs.plural.util.SimpleMap;
 public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis 
 		implements FractionAnalysisContext {
 	
+	public SingleTruthFractionalAnalysis() {
+		super();
+	}
+
 	private ITACFlowAnalysis<PluralTupleLatticeElement> fa;
 	private static Logger logger = Logger.getLogger(SingleTruthFractionalAnalysis.class.getName());
 
@@ -103,7 +107,7 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 	 * @return
 	 */
 	protected SingleTruthFractionalTransfer createNewFractionalTransfer() {
-		return new SingleTruthFractionalTransfer(getAnnoDB(), this);
+		return new SingleTruthFractionalTransfer(analysisInput, this);
 	}
 	
 	/**
@@ -135,7 +139,8 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 			// only analyze methods with code in them; skip abstract methods
 			currentMethod = d;
 			tf = createNewFractionalTransfer();
-			fa = new TACFlowAnalysis<PluralTupleLatticeElement>(tf);
+			fa = new TACFlowAnalysis<PluralTupleLatticeElement>(tf, 
+					this.analysisInput.getComUnitTACs().unwrap());
 			if(logger.isLoggable(Level.FINE))
 				logger.finer("Results for " + d.getName());
 			
@@ -444,7 +449,9 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 			 * dynamicStateTestLogic.
 			 */
 			Variable ret_var = 
-				EclipseTAC.getInstance(currentMethod).variable(node.getExpression());
+				//EclipseTAC.getMethodTAC(currentMethod).variable(node.getExpression());
+			analysisInput.getComUnitTACs().unwrap().getMethodTAC(currentMethod).variable(node.getExpression());
+			
 			Aliasing ret_loc = 
 				curLattice.getLocationsAfter(node, ret_var);
 			

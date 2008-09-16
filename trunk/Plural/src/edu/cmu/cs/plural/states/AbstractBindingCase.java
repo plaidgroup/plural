@@ -92,14 +92,9 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 		}
 		
 		// required states from @Perm annotations
-		try {
-			Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(
-					preAndPostString.fst(), preAndPostString.snd(), paramIndex);
-			result.addAll(prePost.snd());
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotations: " + preAndPostString, e);
-		}
+		Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(
+				preAndPostString.fst(), preAndPostString.snd(), paramIndex);
+		result.addAll(prePost.snd());
 		return result;
 	}
 
@@ -116,14 +111,9 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 		}
 		
 		// required states from @Perm annotations
-		try {
-			Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(
-					preAndPostString.fst(), preAndPostString.snd(), paramIndex);
-			result.addAll(prePost.fst());
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotations: " + preAndPostString, e);
-		}
+		Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(
+				preAndPostString.fst(), preAndPostString.snd(), paramIndex);
+		result.addAll(prePost.fst());
 		return result;
 	}
 	
@@ -144,12 +134,7 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 		}
 		
 		// required states from @Perm annotations
-		try {
-			result.addAll(PermParser.getResultStateInfo(preAndPostString.snd()));
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotation: " + preAndPostString.snd(), e);
-		}
+		result.addAll(PermParser.getResultStateInfo(preAndPostString.snd()));
 		return result;
 	}
 
@@ -166,13 +151,8 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 		}
 		
 		// required states from @Perm annotations
-		try {
-			result.addAll(PermParser.getReceiverStateInfo(
-					preAndPostString.fst(), preAndPostString.snd()).snd());
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotations: " + preAndPostString, e);
-		}
+		result.addAll(PermParser.getReceiverStateInfo(
+				preAndPostString.fst(), preAndPostString.snd()).snd());
 		return result;
 	}
 
@@ -187,13 +167,8 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 		}
 		
 		// required states from @Perm annotations
-		try {
-			result.addAll(PermParser.getReceiverStateInfo(
-					preAndPostString.fst(), preAndPostString.snd()).fst());
-		}
-		catch(RecognitionException e) {
-			log.log(Level.SEVERE, "Error parsing @Perm annotations: " + preAndPostString, e);
-		}
+		result.addAll(PermParser.getReceiverStateInfo(
+				preAndPostString.fst(), preAndPostString.snd()).fst());
 		return result;
 	}
 

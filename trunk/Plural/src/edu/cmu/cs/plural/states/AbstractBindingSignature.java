@@ -194,29 +194,26 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			
 		PermissionSetFromAnnotations prePerm = preAndPost.fst();
 		PermissionSetFromAnnotations postPerm = preAndPost.snd();
-		try {
-			Pair<List<PermissionFromAnnotation>,
-			List<PermissionFromAnnotation>> prePostPerms = 
-				PermParser.parseReceiverPermissions(preAndPostString.fst(), preAndPostString.snd(),
-						space, namedFractions);
-			for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
-				if(!pre_p.isFramePermission() && ignoreVirtual)
-					continue;
-				if(frameAsVirtual)
-					pre_p = pre_p.asVirtual();
-				prePerm = prePerm.combine(pre_p);
-			}
-			for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
-				if(!post_p.isFramePermission() && ignoreVirtual)
-					continue;
-				if(frameAsVirtual)
-					post_p = post_p.asVirtual();
-				postPerm = postPerm.combine(post_p);
-			}
-		} catch(RecognitionException re) {
-			if(log.isLoggable(Level.WARNING))
-				log.warning("Permission parameter parse error! " + re.toString());
+		
+		Pair<List<PermissionFromAnnotation>,
+		List<PermissionFromAnnotation>> prePostPerms = 
+			PermParser.parseReceiverPermissions(preAndPostString.fst(), preAndPostString.snd(),
+					space, namedFractions);
+		for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
+			if(!pre_p.isFramePermission() && ignoreVirtual)
+				continue;
+			if(frameAsVirtual)
+				pre_p = pre_p.asVirtual();
+			prePerm = prePerm.combine(pre_p);
 		}
+		for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
+			if(!post_p.isFramePermission() && ignoreVirtual)
+				continue;
+			if(frameAsVirtual)
+				post_p = post_p.asVirtual();
+			postPerm = postPerm.combine(post_p);
+		}		
+
 		return Pair.create(prePerm, postPerm);
 	}
 	/**
@@ -235,21 +232,18 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			
 		PermissionSetFromAnnotations prePerm = preAndPost.fst();
 		PermissionSetFromAnnotations postPerm = preAndPost.snd();
-		try {
-			Pair<List<PermissionFromAnnotation>,
-			List<PermissionFromAnnotation>> prePostPerms = 
-				PermParser.parseParameterPermissions(preAndPostString.fst(), preAndPostString.snd(),
-						space, paramIndex, namedFractions);
-			for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
-				prePerm = prePerm.combine(pre_p);
-			}
-			for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
-				postPerm = postPerm.combine(post_p);
-			}
-		} catch(RecognitionException re) {
-			if(log.isLoggable(Level.WARNING))
-				log.warning("Permission parameter parse error! " + re.toString());
+
+		Pair<List<PermissionFromAnnotation>,
+		List<PermissionFromAnnotation>> prePostPerms = 
+			PermParser.parseParameterPermissions(preAndPostString.fst(), preAndPostString.snd(),
+					space, paramIndex, namedFractions);
+		for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
+			prePerm = prePerm.combine(pre_p);
 		}
+		for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
+			postPerm = postPerm.combine(post_p);
+		}
+
 		return Pair.create(prePerm, postPerm);
 	}
 	/**
@@ -265,17 +259,13 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			return result;
 		}
 			
-		try {
-			List<PermissionFromAnnotation> postPerms = 
-				PermParser.parseResultPermissions(postString,
-						space, namedFractions);
-			for( PermissionFromAnnotation pre_p : postPerms ) {
-				result = result.combine(pre_p);
-			}
-		} catch(RecognitionException re) {
-			if(log.isLoggable(Level.WARNING))
-				log.warning("Permission parameter parse error! " + re.toString());
+		List<PermissionFromAnnotation> postPerms = 
+			PermParser.parseResultPermissions(postString,
+					space, namedFractions);
+		for( PermissionFromAnnotation pre_p : postPerms ) {
+			result = result.combine(pre_p);
 		}
+
 		return result;
 	}
 	
