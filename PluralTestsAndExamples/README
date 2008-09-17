@@ -1,0 +1,18 @@
+Plural Test Files and Examples
+
+These test files are released as part of the Plural project so that you can
+have some confidence that your install is working. They also serve as a
+series of examples which may help you learn how to use Plural.
+
+The test project is a Java project that will build in Eclipse. Unfortunately,
+it requires annotations from the PluralPermissions project (available separately)
+in order to build. These projects were separated because of licensing issues.
+(We didn't want to require your code to be free software just because it includes
+our annotations!) 
+
+In order to run the tests, this project must be placed in a separate workspace
+from the Plural workspace, assuming you are building from source. See the
+Crystal "Testing Your Analyses" instructions for information on how to run
+these tests. Those instructions can be found here:
+
+   http://code.google.com/p/crystalsaf/wiki/TestingYourAnalysis
