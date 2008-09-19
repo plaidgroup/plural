@@ -114,7 +114,27 @@ public abstract class ConsList<T> implements List<T> {
 			return back;
 		}
 		else {
-			return cons(front.hd(), concat(front.tl(), back));
+			
+			ConsList<T> elements_removed = empty();
+			
+			{
+				ConsList<T> cur_list = front;
+				while(! cur_list.isEmpty() ) {
+					elements_removed = cons(cur_list.hd(), elements_removed);
+					cur_list = cur_list.tl();
+				}
+			}
+			
+			ConsList<T> result = back;
+			
+			while(!elements_removed.isEmpty()) {
+				result = cons(elements_removed.hd(), result);
+				elements_removed = elements_removed.tl();
+			}
+			
+			return result;
+			
+			//return cons(front.hd(), concat(front.tl(), back));
 		}
 	}
 	
