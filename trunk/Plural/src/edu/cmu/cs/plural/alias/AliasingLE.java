@@ -55,10 +55,13 @@ import edu.cmu.cs.crystal.tac.Variable;
  * @author Kevin Bierhoff
  *
  */
-public class AliasingLE implements LatticeElement<AliasingLE>, Freezable<AliasingLE> {
+public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<AliasingLE> {
 	
 	private Map<Variable, AliasLE> locs;
 	private Map<ObjectLabel, Set<Variable>> refMap;
+	
+	/** Is this lattice element frozen? */
+	private boolean frozen = false;
 	
 	/**
 	 * Creates a bottom mapping.
@@ -108,6 +111,9 @@ public class AliasingLE implements LatticeElement<AliasingLE>, Freezable<Aliasin
 	}
 	
 	public AliasLE put(Variable key, AliasLE le) {
+		if( this.frozen )
+			throw new IllegalStateException("This lattice element is frozen!");
+		
 		if(isBottom())
 			throw new IllegalStateException();
 		if(key == null || le == null)
@@ -122,6 +128,9 @@ public class AliasingLE implements LatticeElement<AliasingLE>, Freezable<Aliasin
 	public void kill(Variable key) {
 		if(isBottom())
 			return;
+		if( this.frozen )
+			throw new IllegalStateException("This lattice element is frozen!");
+		
 		AliasLE result = locs.remove(key);
 		if(result != null)
 			removeRef(result, key);
@@ -132,6 +141,9 @@ public class AliasingLE implements LatticeElement<AliasingLE>, Freezable<Aliasin
 	 * @param key
 	 */
 	private void addRef(AliasLE le, Variable key) {
+		if( this.frozen )
+			throw new IllegalStateException("This lattice element is frozen!");
+		
 		for(ObjectLabel l : le.getLabels()) {
 			Set<Variable> vars = refMap.get(l);
 			if(vars == null) {
@@ -153,6 +165,9 @@ public class AliasingLE implements LatticeElement<AliasingLE>, Freezable<Aliasin
 	 * @param key
 	 */
 	private void removeRef(AliasLE result, Variable key) {
+		if( this.frozen )
+			throw new IllegalStateException("This lattice element is frozen!");
+		
 		for(ObjectLabel l : result.getLabels()) {
 			Set<Variable> vars = refMap.get(l);
 			if(vars != null && vars.contains(key)) {
@@ -267,10 +282,14 @@ public class AliasingLE implements LatticeElement<AliasingLE>, Freezable<Aliasin
 	}
 
 	public AliasingLE freeze() {
-		if(locs != null)
-			locs = Collections.unmodifiableMap(locs);
-		if(refMap != null)
-			refMap = Collections.unmodifiableMap(refMap);
+		if( !frozen ) {
+			if(locs != null)
+				locs = Collections.unmodifiableMap(locs);
+			if(refMap != null)
+				refMap = Collections.unmodifiableMap(refMap);
+		}
+		
+		frozen = true;
 		return this;
 	}
 

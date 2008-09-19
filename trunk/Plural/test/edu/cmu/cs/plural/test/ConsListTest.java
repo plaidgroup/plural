@@ -83,6 +83,15 @@ public class ConsListTest {
 	}
 
 	@Test
+	public void testConcat() {
+		ConsList<Integer> l = ConsList.list(1,2,3,4,5,6,7,8,9,10);
+		ConsList<Integer> front = ConsList.list(1,2,3,4,5);
+		ConsList<Integer> back = ConsList.list(6,7,8,9,10);
+		
+		assertEquals(l, ConsList.concat(front, back));
+	}
+	
+	@Test
 	public void testTl() {
 		ConsList<Integer> l = ConsList.singleton(1);
 		ConsList<Integer> l2 = cons(2, l);
