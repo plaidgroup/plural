@@ -52,7 +52,7 @@ import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
 
-@FailingTest(11)
+@FailingTest(6)  // 7 when reporting state and permission failures separately
 @UseAnalyses("FractionalAnalysis")
 @States({"available", "end"})
 @Param(name = "array", releasedFrom = "alive")
@@ -86,6 +86,9 @@ public class ArrayIterator<T> {
 	public static String concat(
 			@Full(requires="available") ArrayIterator<String> it1,
 			@Share(requires="available") ArrayIterator<String> it2) {
+		// errors here because 
+		// (1) it2's state switches to alive before being called
+		// (2) it2.next() needs a full instead of a share permission
 		return it1.next().concat(it2.next());
 	}
 	
@@ -135,19 +138,6 @@ public class ArrayIterator<T> {
 		while(it.hasNext()) {
 			System.out.println(it.next());
 		}
-	}
-
-	public static void dangerousIteratorUse() {
-		String[] strings = createArray();
-		ArrayIterator<String> it = 
-			new ArrayIterator<String>(strings);
-		while(it.hasNext()) {
-			concat(it, it); 
-			// error(s) around here because concat() needs full and share of it
-			System.out.println(it.next());
-		}
-		it.dispose();
-		strings[0] = "goodbye";
 	}
 
 	public static void cannotDispose() {

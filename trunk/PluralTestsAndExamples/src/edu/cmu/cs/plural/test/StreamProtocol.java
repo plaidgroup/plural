@@ -45,7 +45,7 @@ import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.States;
 
-@FailingTest(12)
+@FailingTest(7) // 12 when reporting state and permission failures separately
 @UseAnalyses("FractionalAnalysis")
 @States({"open", "closed"})
 public class StreamProtocol {
