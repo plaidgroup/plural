@@ -68,6 +68,7 @@ import edu.cmu.cs.plural.fractions.FractionConstraint;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.states.IConstructorCaseInstance;
 import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IMethodCaseInstance;
@@ -92,10 +93,17 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @return
 	 */
 	public static PluralDisjunctiveLE tuple(TensorPluralTupleLE start,
-			AnnotationDatabase annoDB, ITACAnalysisContext tacContext, ThisVariable thisVar,
-			FractionAnalysisContext fractContext) {
-		return new PluralDisjunctiveLE(ContextFactory.tensor(start),
-				new LinearOperations(annoDB, tacContext, thisVar, fractContext));
+			ITACAnalysisContext tacContext, FractionAnalysisContext fractContext) {
+		return createLE(ContextFactory.tensor(start), tacContext, fractContext);
+	}
+	
+	/**
+	 * @param start
+	 * @return
+	 */
+	public static PluralDisjunctiveLE createLE(DisjunctiveLE start,
+			ITACAnalysisContext tacContext, FractionAnalysisContext fractContext) {
+		return new PluralDisjunctiveLE(start, new LinearOperations(tacContext, fractContext));
 	}
 	
 	/**
@@ -126,11 +134,11 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @param reEntrant 
 	 */
 	private PluralDisjunctiveLE(DisjunctiveLE le, AnnotationDatabase annoDB, 
-			ITACAnalysisContext tacContext, ThisVariable thisVar, 
+			ITACAnalysisContext tacContext, 
 			FractionAnalysisContext fractContext) {
 		assert le != null;
 		this.le = le;
-		this.op = new LinearOperations(annoDB, tacContext, thisVar, fractContext);
+		this.op = new LinearOperations(tacContext, fractContext);
 	}
 
 	/**
@@ -561,11 +569,6 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 //			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost,
 //			final PermissionSetFromAnnotations resultPost
 			) {
-		final Variable rcvrInstance;
-		if(instr.isStaticMethodCall())
-			rcvrInstance = null;
-		else
-			rcvrInstance = instr.getReceiverOperand();
 		final List<IMethodCaseInstance> cases = sig.createPermissionsForCases(false, instr.isSuperCall());
 		assert ! cases.isEmpty();
 		final int caseCount = cases.size();
@@ -579,33 +582,20 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			@Override
 			public DisjunctiveLE context(LinearContextLE le) {
 				if(singleCase != null) {
-					return op.fancyHandleInvocation(instr, 
-							sig.getSpecifiedMethodBinding(),
+					return op.handleMethodCall(instr, 
 							le.getTuple(), // need not copy the tuple
-							rcvrInstance, 
-							rcvrInstance == null ? null : singleCase.getReceiverPermissions(), 
-							singleCase.getParameterPermissions(), 
-							instr.getTarget(),
-							singleCase.getEnsuredResultPermissions(), failFast,
-							singleCase.isReceiverBorrowed(), 
-							singleCase.areArgumentsBorrowed());
+							singleCase, 
+							failFast);
 				}
 				else {
 					Set<DisjunctiveLE> choices = new LinkedHashSet<DisjunctiveLE>(caseCount); 
 					for(IMethodCaseInstance prePost : cases) {
 						TensorPluralTupleLE context = le.getTuple().mutableCopy();
 						context.storeCurrentAliasingInfo(instr.getNode());
-						choices.add(op.fancyHandleInvocation(instr, 
-								sig.getSpecifiedMethodBinding(),
+						choices.add(op.handleMethodCall(instr, 
 								context, 
-								rcvrInstance, 
-								rcvrInstance == null ? null : prePost.getReceiverPermissions(), 
-								prePost.getParameterPermissions(), 
-								instr.getTarget(),
-								prePost.getEnsuredResultPermissions(), 
-								true /* fail fast */,
-								prePost.isReceiverBorrowed(),
-								prePost.areArgumentsBorrowed()));
+								prePost,
+								failFast));
 					}
 					return ContextFactory.choice(choices);
 				}
@@ -632,32 +622,20 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			@Override
 			public DisjunctiveLE context(LinearContextLE le) {
 				if(singleCase != null) {
-					return op.fancyHandleInvocation(instr,
-							sig.getSpecifiedMethodBinding(),
+					return op.handleNewObject(instr,
 							le.getTuple(), // need not copy the tuple
-							null, null, // no receiver
-							singleCase.getParameterPermissions(), 
-							instr.getTarget(),
-							singleCase.getEnsuredReceiverPermissions(), // treat receiver as target 
-							failFast,
-							false, // no receiver
-							singleCase.areArgumentsBorrowed());
+							singleCase, 
+							failFast);
 				}
 				else {
 					Set<DisjunctiveLE> choices = new LinkedHashSet<DisjunctiveLE>(caseCount); 
 					for(IConstructorCaseInstance prePost : cases) {
 						TensorPluralTupleLE context = le.getTuple().mutableCopy();
 						context.storeCurrentAliasingInfo(instr.getNode());
-						choices.add(op.fancyHandleInvocation(instr,
-								sig.getSpecifiedMethodBinding(),
+						choices.add(op.handleNewObject(instr,
 								context, 
-								null, null, 
-								prePost.getParameterPermissions(), 
-								instr.getTarget(),
-								prePost.getEnsuredReceiverPermissions(), // treat receiver as target 
-								true /* fail fast */,
-								false, // no receiver
-								prePost.areArgumentsBorrowed()));
+								prePost, 
+								failFast));
 					}
 					return ContextFactory.choice(choices);
 				}
@@ -668,7 +646,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void handleConstructorCall(
 			final ConstructorCallInstruction instr,
 			final IConstructorSignature sig) {
-		final List<IConstructorCaseInstance> cases = sig.createPermissionsForCases(false, instr.isSuperCall());
+		final List<IConstructorCaseInstance> cases = sig.createPermissionsForCases(false, true);
 		assert ! cases.isEmpty();
 		final IConstructorCaseInstance singleCase;
 		final int caseCount = cases.size();
@@ -681,32 +659,20 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			@Override
 			public DisjunctiveLE context(LinearContextLE le) {
 				if(singleCase != null) {
-					return op.fancyHandleInvocation(instr,
-							sig.getSpecifiedMethodBinding(),
+					return op.handleConstructorCall(instr,
 							le.getTuple(), // need not copy the tuple
-							instr.getConstructionObject(), // this or super
-							singleCase.getReceiverPermissions(),
-							singleCase.getParameterPermissions(),
-							null, null, // no target
-							failFast,
-							singleCase.isReceiverBorrowed(),
-							singleCase.areArgumentsBorrowed());
+							singleCase,
+							failFast);
 				}
 				else {
 					Set<DisjunctiveLE> choices = new LinkedHashSet<DisjunctiveLE>(cases.size()); 
 					for(IConstructorCaseInstance prePost : cases) {
 						TensorPluralTupleLE context = le.getTuple().mutableCopy();
 						context.storeCurrentAliasingInfo(instr.getNode());
-						choices.add(op.fancyHandleInvocation(instr,
-								sig.getSpecifiedMethodBinding(),
+						choices.add(op.handleConstructorCall(instr,
 								context, 
-								instr.getConstructionObject(), // this or super
-								prePost.getReceiverPermissions(),
-								prePost.getParameterPermissions(),
-								null, null, // no target
-								failFast,
-								prePost.isReceiverBorrowed(),
-								prePost.areArgumentsBorrowed()));
+								prePost,
+								failFast));
 					}
 					return ContextFactory.choice(choices);
 				}
@@ -872,6 +838,46 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		});
 	}
 	
+	public String checkRegularCallPrecondition(final ASTNode node,
+			final Variable receiver,
+			final List<Variable> arguments, final PredicateChecker pre) {
+		if(isBottom())
+			return null;
+		freeze(); // force-freeze before any checks
+		return le.dispatch(new ErrorReportingVisitor() {
+			@Override
+			public String checkTuple(TensorPluralTupleLE tuple) {
+				return op.checkCallPrecondition(
+						node, tuple, receiver, arguments, pre);
+			}
+		});
+	}
+	
+	/**
+	 * Like {@link #checkRegularCallPrecondition(ASTNode, Variable, List, PredicateChecker)}
+	 * but for calls on <code>super</code>.  Need to treat this special because
+	 * {@link ITACAnalysisContext#getSuperVariable()} is not available to the checker.
+	 * @param node
+	 * @param arguments
+	 * @param pre
+	 * @return
+	 */
+	public String checkSuperCallPrecondition(final ASTNode node,
+			final List<Variable> arguments, final PredicateChecker pre) {
+		if(isBottom())
+			return null;
+		freeze(); // force-freeze before any checks
+		return le.dispatch(new ErrorReportingVisitor() {
+			@Override
+			public String checkTuple(TensorPluralTupleLE tuple) {
+				return op.checkCallPrecondition(
+						node, tuple, 
+						op.getAnalysisContext().getSuperVariable(), // just stick it in 
+						arguments, pre);
+			}
+		});
+	}
+	
 	/**
 	 * 
 	 * @param node
@@ -882,19 +888,20 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * receiver state being tested.
 	 * @return
 	 */
-	public String checkPostConditions(
+	public String checkPostCondition(
 			final ASTNode node,
-			final Map<Aliasing, PermissionSetFromAnnotations> paramPost,
 			final Variable resultVar,
-			final PermissionSetFromAnnotations resultPost, 
+			final PredicateChecker post,
+			final SimpleMap<String, Aliasing> parameterVars,
 			final Map<Boolean, String> stateTests) {
 		if(isBottom())
 			return null;
+		freeze(); // force-freeze before any checks
 		return le.dispatch(new ErrorReportingVisitor() {
 			@Override
 			public String checkTuple(TensorPluralTupleLE tuple) {
-				return op.fancyCheckPostConditions(
-						node, tuple, paramPost, resultVar, resultPost, stateTests);
+				return op.checkPostCondition(
+						node, tuple, resultVar, post, parameterVars, stateTests);
 			}
 		});
 	}
@@ -961,4 +968,5 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			
 		});
 	}
+
 }

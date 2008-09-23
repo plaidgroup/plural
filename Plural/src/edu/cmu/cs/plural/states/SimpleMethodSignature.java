@@ -45,17 +45,22 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.pred.MethodPostcondition;
+import edu.cmu.cs.plural.pred.MethodPrecondition;
+import edu.cmu.cs.plural.pred.PredicateChecker;
+import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.util.Pair;
 
 /**
  * This class implements single-case method signatures by double-functioning
  * as the single method case.
  * @author Kevin Bierhoff
- *
+ * @deprecated Use MultiCaseMethodSignature instead
  */
+@Deprecated
 class SimpleMethodSignature extends AbstractSingleCaseSignature implements
 		IMethodSignature, IMethodCase {
 
@@ -172,12 +177,22 @@ class SimpleMethodSignature extends AbstractSingleCaseSignature implements
 	}
 
 	@Override
-	public IMethodCaseInstance createPermissions(boolean forAnalyzingBody, boolean isSuperCall) {
-		final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> receiverPrePost;
+	public IMethodCaseInstance createPermissions(final boolean forAnalyzingBody, boolean isSuperCall) {
+		boolean coerce;
 		if(hasReceiver()) {
 			// coerce == true iff dynamically dispatched call site
 			// TODO could consider not coercing for final methods / final classes?
-			boolean coerce = !forAnalyzingBody && !isSuperCall && (binding.getModifiers() & Modifier.PRIVATE) == 0;
+			coerce = !forAnalyzingBody && !isSuperCall && (binding.getModifiers() & Modifier.PRIVATE) == 0;
+		}
+		else
+			coerce = false;
+		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
+		final Pair<MethodPrecondition, MethodPostcondition> preAndPost = preAndPost(
+				forAnalyzingBody, preAndPostString, coerce, false);
+		
+		final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> receiverPrePost;
+
+		if(hasReceiver()) {
 			receiverPrePost = receiverPermissions(forAnalyzingBody, coerce, false);
 		}
 		else
@@ -254,6 +269,35 @@ class SimpleMethodSignature extends AbstractSingleCaseSignature implements
 			public boolean isReceiverBorrowed() {
 				// TODO Auto-generated method stub
 				return false;
+			}
+
+			@Override
+			public PredicateMerger getPostconditionMerger() {
+				assert ! forAnalyzingBody : "Did not request case instance for checking call site";
+				return preAndPost.snd();
+			}
+
+			@Override
+			public PredicateChecker getPreconditionChecker() {
+				assert ! forAnalyzingBody : "Did not request case instance for checking call site";
+				return preAndPost.fst();
+			}
+
+			@Override
+			public boolean isEffectFree() {
+				return preAndPost.fst().isReadOnly();
+			}
+
+			@Override
+			public PredicateChecker getPostconditionChecker() {
+				assert forAnalyzingBody : "Did not request case instance for analyzing body";
+				return preAndPost.snd();
+			}
+
+			@Override
+			public PredicateMerger getPreconditionMerger() {
+				assert forAnalyzingBody : "Did not request case instance for analyzing body";
+				return preAndPost.fst();
 			}
 
 		};

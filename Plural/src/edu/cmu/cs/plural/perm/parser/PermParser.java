@@ -38,19 +38,29 @@
 package edu.cmu.cs.plural.perm.parser;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 
+import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.internal.Option;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.concrete.PluralParseError;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
+import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.perm.parser.TopLevelPred.Impossible;
+import edu.cmu.cs.plural.pred.MethodPostcondition;
+import edu.cmu.cs.plural.pred.MethodPrecondition;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
+import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.util.Pair;
 import edu.cmu.cs.plural.util.SimpleMap;
@@ -285,6 +295,116 @@ public class PermParser {
 		return summaries.snd().getResultPermissions(space, namedFractions);
 	}
 	
+	/**
+	 * @tag todo.general -id="1969914" : remove need for manual coersion by keeping this and this!fr completely separate (affects AbstractParamVisitor.getRefPair as well)
+	 */
+	public static Pair<MethodPrecondition, MethodPostcondition> 
+	parseSignature(
+			Pair<String, String> preAndPostString,
+			boolean forAnalyzingBody,
+			boolean frameToVirtual, 
+			SimpleMap<String, StateSpace> spaces,
+			Map<String, String> capturedParams,
+			String capturing, Map<String, String> released, 
+			Map<String, PermissionSetFromAnnotations> prePerms,
+			Map<String, PermissionSetFromAnnotations> postPerms,
+			Set<String> notBorrowed) {
+		assert !forAnalyzingBody || !frameToVirtual;
+		
+		MethodPreconditionParser pre;
+		if(forAnalyzingBody) {
+			pre = MethodPreconditionParser.createPreconditionForAnalyzingBody(
+					prePerms, spaces, notBorrowed);
+		}
+		else {
+			pre = MethodPreconditionParser.createPreconditionForCallSite(
+					prePerms, spaces, frameToVirtual, notBorrowed);
+		}
+				
+		Option<TopLevelPred> pre_pred = parse(preAndPostString == null ? "" : preAndPostString.fst());
+		if(pre_pred.isSome()) {
+			if(pre_pred.unwrap() instanceof Impossible) {
+				return Pair.create(impossiblePre, impossiblePost);
+			}
+			else {
+				((AccessPred) pre_pred.unwrap()).accept(pre);
+			}
+		} // else true
+		
+		Map<String, ReleaseHolder> captured;
+		if(capturedParams.isEmpty()) {
+			captured = null;
+		}
+		else {
+			captured = new LinkedHashMap<String, ReleaseHolder>(capturedParams.size());
+			for(Map.Entry<String, String> p : capturedParams.entrySet()) {
+				String param = p.getKey();
+				if("this!fr".equals(param) && frameToVirtual)
+					// TODO remove this: coerce this!fr to this if needed
+					param = "this";
+				ParamInfoHolder h = pre.getParams().get(param);
+				if(h != null)
+					captured.put(p.getKey(), h.createReleaseHolder(p.getValue()));
+			}
+		}
+		
+		MethodPostconditionParser post;
+		if(forAnalyzingBody)
+			post = MethodPostconditionParser.createPostconditionForAnalyzingBody(
+					postPerms, captured, capturing, released, spaces);
+		else
+			post = MethodPostconditionParser.createPostconditionForCallSite(
+					postPerms, captured, capturing, released, spaces, frameToVirtual);
+		
+		Option<TopLevelPred> post_pred = parse(preAndPostString == null ? "" : preAndPostString.snd());
+		if(post_pred.isSome()) {
+			if(post_pred.unwrap() instanceof Impossible) {
+				return Pair.<MethodPrecondition, MethodPostcondition>create(pre, impossiblePost);
+			}
+			else {
+				((AccessPred) post_pred.unwrap()).accept(post);
+			}
+		} // else true
+		
+		return Pair.<MethodPrecondition, MethodPostcondition>create(pre, post);
+	}
+	
+	private static MethodPostcondition impossiblePost = new MethodPostcondition() {
+		@Override
+		public void mergeInPredicate(SimpleMap<String, Aliasing> vars,
+				MergeIntoTuple callback) {
+			callback.addVoid();
+		}
+
+		@Override
+		public boolean splitOffPredicate(SimpleMap<String, Aliasing> vars,
+				SplitOffTuple callback) {
+			// fail trivially, as void can't be proven
+			return false;
+		}
+	};
+	
+	private static MethodPrecondition impossiblePre = new MethodPrecondition() {
+		@Override
+		public boolean splitOffPredicate(SimpleMap<String, Aliasing> vars,
+				SplitOffTuple callback) {
+			// fail trivially, as void can't be proven
+			return false;
+		}
+
+		@Override
+		public boolean isReadOnly() {
+			return true;
+		}
+
+		@Override
+		public void mergeInPredicate(SimpleMap<String, Aliasing> vars,
+				MergeIntoTuple callback) {
+			callback.addVoid();
+		}
+	};
+
+
 	/**
 	 * Caching fields used for parameters.
 	 */

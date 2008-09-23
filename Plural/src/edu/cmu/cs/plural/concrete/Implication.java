@@ -53,7 +53,8 @@ public interface Implication extends Predicate {
 	
 	/**
 	 * Indicates that {@link #match(VariablePredicate)} can be called.
-	 * Use {@link #isSatisfied(PluralTupleLatticeElement value)} if
+	 * Call {@link #isSatisfied(PluralTupleLatticeElement value)} 
+	 * on the {@link #getAntecedant() antecedent} if
 	 * this method returns <code>false</code>
 	 * @return <code>true</code> if {@link #match(VariablePredicate)} can
 	 * be called on this implication, <code>false</code> otherwise.

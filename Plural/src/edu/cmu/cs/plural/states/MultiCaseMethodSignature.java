@@ -46,10 +46,13 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
+import edu.cmu.cs.plural.pred.MethodPostcondition;
+import edu.cmu.cs.plural.pred.MethodPrecondition;
+import edu.cmu.cs.plural.pred.PredicateChecker;
+import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.util.Pair;
 
 /**
@@ -58,7 +61,7 @@ import edu.cmu.cs.plural.util.Pair;
  * @since 4/30/2008
  * @see MultiCaseConstructorSignature
  */
-public class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
+class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 		implements IMethodSignature {
 
 	/**
@@ -73,6 +76,8 @@ public class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethod
 	@Override
 	protected IMethodCase createCase(AnnotationDatabase annoDB, IMethodBinding binding,
 			PermAnnotation perm, ITypeBinding staticallyInvokedType) {
+		if(perm == null)
+			return new MultiMethodCase(annoDB, binding, staticallyInvokedType);
 		return new MultiMethodCase(annoDB, binding, staticallyInvokedType, perm);
 	}
 
@@ -105,7 +110,7 @@ public class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethod
 			boolean forAnalyzingBody, boolean isSuperCall) {
 		List<IMethodCaseInstance> result = new ArrayList<IMethodCaseInstance>(cases().size());
 		for(IMethodCase c : cases()) {
-			result.add(c.createPermissions(forAnalyzingBody, false));
+			result.add(c.createPermissions(forAnalyzingBody, isSuperCall));
 		}
 		return result;
 	}
@@ -136,6 +141,11 @@ public class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethod
 	private class MultiMethodCase extends AbstractBindingCase implements
 	IMethodCase {
 
+		public MultiMethodCase(AnnotationDatabase annoDB,
+				IMethodBinding binding, ITypeBinding staticallyInvokedType) {
+			super(annoDB, binding, staticallyInvokedType);
+		}
+
 		public MultiMethodCase(AnnotationDatabase annoDB, IMethodBinding binding, ITypeBinding staticallyInvokedType, PermAnnotation perm) {
 			super(annoDB, binding, staticallyInvokedType, perm);
 		}
@@ -149,62 +159,62 @@ public class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethod
 		}
 		
 		@Override
-		public IMethodCaseInstance createPermissions(boolean forAnalyzingBody, boolean isSuperCall) {
-			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> receiverPrePost;
- 			if(hasReceiver()) {
- 				// coerce == true iff dynamically dispatched call site
- 				// TODO could consider not coercing for final methods / final classes?
-				boolean coerce = !forAnalyzingBody && !isSuperCall && (binding.getModifiers() & Modifier.PRIVATE) == 0;
-				receiverPrePost = receiverPermissions(forAnalyzingBody, preAndPostString, coerce, false);
- 			}
-			else {
-				receiverPrePost = null;
+		public IMethodCaseInstance createPermissions(final boolean forAnalyzingBody, boolean isSuperCall) {
+			boolean coerce;
+			if(hasReceiver()) {
+				// coerce == true iff dynamically dispatched call site
+				// TODO could consider not coercing for final methods / final classes?
+				coerce = !forAnalyzingBody && !isSuperCall && (binding.getModifiers() & Modifier.PRIVATE) == 0;
 			}
-			final int argCount = binding.getParameterTypes().length;
-			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost = 
-				new Pair[argCount];
-			for(int arg = 0; arg < argCount; arg++) {
-				argPrePost[arg] = parameterPermissions(arg, forAnalyzingBody, preAndPostString);
-			}
-			final PermissionSetFromAnnotations resultPost = 
-				resultPermissions(forAnalyzingBody, preAndPostString.snd());
+			else
+				coerce = false;
+			final Pair<MethodPrecondition,MethodPostcondition> preAndPost = 
+				preAndPost(forAnalyzingBody, preAndPostString, coerce, false);
+
+//			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> receiverPrePost;
+// 			if(hasReceiver()) {
+//				receiverPrePost = receiverPermissions(forAnalyzingBody, preAndPostString, coerce, false);
+// 			}
+//			else {
+//				receiverPrePost = null;
+//			}
+//			final int argCount = binding.getParameterTypes().length;
+//			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost = 
+//				new Pair[argCount];
+//			for(int arg = 0; arg < argCount; arg++) {
+//				argPrePost[arg] = parameterPermissions(arg, forAnalyzingBody, preAndPostString);
+//			}
+//			final PermissionSetFromAnnotations resultPost = 
+//				resultPermissions(forAnalyzingBody, preAndPostString.snd());
 			return new IMethodCaseInstance() {
 
 				@Override
-				public Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> getReceiverPermissions() {
-					return receiverPrePost;
-				}
-				
-				@Override
-				public Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] getParameterPermissions() {
-					return argPrePost;
-				}
-				
-				@Override
-				public PermissionSetFromAnnotations getEnsuredResultPermissions() {
-					return resultPost;
+				public PredicateMerger getPostconditionMerger() {
+					assert ! forAnalyzingBody : "Did not request case instance for checking call site";
+					return preAndPost.snd();
 				}
 
 				@Override
-				public PermissionSetFromAnnotations getRequiredReceiverPermissions() {
-					return receiverPrePost.fst();
+				public PredicateChecker getPreconditionChecker() {
+					assert ! forAnalyzingBody : "Did not request case instance for checking call site";
+					return preAndPost.fst();
 				}
 
 				@Override
-				public PermissionSetFromAnnotations getEnsuredParameterPermissions(
-						int paramIndex) {
-					return argPrePost[paramIndex].snd();
+				public boolean isEffectFree() {
+					return preAndPost.fst().isReadOnly();
 				}
 
 				@Override
-				public PermissionSetFromAnnotations getEnsuredReceiverPermissions() {
-					return receiverPrePost.snd();
+				public PredicateChecker getPostconditionChecker() {
+					assert forAnalyzingBody : "Did not request case instance for analyzing body";
+					return preAndPost.snd();
 				}
 
 				@Override
-				public PermissionSetFromAnnotations getRequiredParameterPermissions(
-						int paramIndex) {
-					return argPrePost[paramIndex].fst();
+				public PredicateMerger getPreconditionMerger() {
+					assert forAnalyzingBody : "Did not request case instance for analyzing body";
+					return preAndPost.fst();
 				}
 
 				@Override
@@ -223,15 +233,57 @@ public class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethod
 				}
 
 				@Override
+				public Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> getReceiverPermissions() {
+					throw new UnsupportedOperationException("Deprecated");
+//					return receiverPrePost;
+				}
+				
+				@Override
+				public Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] getParameterPermissions() {
+					throw new UnsupportedOperationException("Deprecated");
+//					return argPrePost;
+				}
+				
+				@Override
+				public PermissionSetFromAnnotations getEnsuredResultPermissions() {
+					throw new UnsupportedOperationException("Deprecated");
+//					return resultPost;
+				}
+
+				@Override
+				public PermissionSetFromAnnotations getRequiredReceiverPermissions() {
+					throw new UnsupportedOperationException("Deprecated");
+//					return receiverPrePost.fst();
+				}
+
+				@Override
+				public PermissionSetFromAnnotations getEnsuredParameterPermissions(
+						int paramIndex) {
+					throw new UnsupportedOperationException("Deprecated");
+//					return argPrePost[paramIndex].snd();
+				}
+
+				@Override
+				public PermissionSetFromAnnotations getEnsuredReceiverPermissions() {
+					throw new UnsupportedOperationException("Deprecated");
+//					return receiverPrePost.snd();
+				}
+
+				@Override
+				public PermissionSetFromAnnotations getRequiredParameterPermissions(
+						int paramIndex) {
+					throw new UnsupportedOperationException("Deprecated");
+//					return argPrePost[paramIndex].fst();
+				}
+
+				@Override
 				public boolean[] areArgumentsBorrowed() {
-					// TODO Auto-generated method stub
-					return new boolean[argPrePost.length];
+					throw new UnsupportedOperationException("Implement this.");
 				}
 
 				@Override
 				public boolean isReceiverBorrowed() {
-					// TODO Auto-generated method stub
-					return false;
+					throw new UnsupportedOperationException("Implement this.");
 				}
 
 			};

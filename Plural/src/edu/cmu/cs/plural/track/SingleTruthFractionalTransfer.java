@@ -50,7 +50,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.antlr.runtime.RecognitionException;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
@@ -59,13 +58,9 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import edu.cmu.cs.crystal.BooleanLabel;
-import edu.cmu.cs.crystal.Crystal;
-import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
-import edu.cmu.cs.crystal.annotations.AnnotationSummary;
-import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.flow.LabeledSingleResult;
@@ -125,7 +120,6 @@ public class SingleTruthFractionalTransfer extends
 	
 	private static final Logger log = Logger.getLogger(SingleTruthFractionalTransfer.class.getName());
 	
-	private final IAnalysisInput input;
 	private PermissionFactory pf = PermissionFactory.INSTANCE;
 	
 	/*
@@ -139,8 +133,7 @@ public class SingleTruthFractionalTransfer extends
 	
 	private ThisVariable thisVar; 
 	
-	public SingleTruthFractionalTransfer(IAnalysisInput input, FractionAnalysisContext context) {
-		this.input = input;
+	public SingleTruthFractionalTransfer(FractionAnalysisContext context) {
 		this.context = context;
 	}
 
@@ -184,15 +177,13 @@ public class SingleTruthFractionalTransfer extends
 			start = isConstructor ? 
 				PluralTupleLatticeElement.createConstructorLattice(
 					FractionalPermissions.bottom(),
-					input,
-					context.getRepository(),
+					context,
 					thisVar,
 					d)
 					:	
 				new PluralTupleLatticeElement(
 					FractionalPermissions.bottom(),
-					input,
-					context.getRepository());
+					context);
 			
 			start.storeInitialAliasingInfo(d);
 			Aliasing thisLocation =
@@ -228,7 +219,7 @@ public class SingleTruthFractionalTransfer extends
 			// static method
 			thisVar = null;
 			start =	new PluralTupleLatticeElement(FractionalPermissions.bottom(),
-					input, context.getRepository());
+					context);
 			start.storeInitialAliasingInfo(d);
 		}
 		
@@ -493,7 +484,8 @@ public class SingleTruthFractionalTransfer extends
 						public Aliasing get(Variable key) {
 							return value.getLocationsAfter(instr.getNode(), key);
 						}}, 
-					unpacking_root, isAssignment ? instr.getFieldName() : null);
+					unpacking_root, 
+					isAssignment ? instr.getFieldName() : null);
 		}
 		return value;
 	}
@@ -1534,7 +1526,7 @@ public class SingleTruthFractionalTransfer extends
 	}
 
 	private AnnotationDatabase getAnnoDB() {
-		return input.getAnnoDB();
+		return context.getAnnoDB();
 	}
 
 	private StateSpace getStateSpace(ITypeBinding type) {

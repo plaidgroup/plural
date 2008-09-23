@@ -122,6 +122,14 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 		return true;
 	}
 
+	/**
+	 * Returns <code>true</code> if there are no permissions in this set.
+	 * @return <code>true</code> if there are no permissions in this set, <code>false</code> otherwise.
+	 */
+	public boolean isEmpty() {
+		return permissions.isEmpty() && framePermissions.isEmpty();
+	}
+
 	public List<P> getPermissions() {
 		return permissions;
 	}

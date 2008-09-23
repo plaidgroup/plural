@@ -37,13 +37,14 @@
  */
 package edu.cmu.cs.plural.concrete;
 
+import static edu.cmu.cs.plural.util.ConsList.cons;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -53,15 +54,12 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.internal.Freezable;
 import edu.cmu.cs.crystal.tac.Variable;
-import edu.cmu.cs.plural.linear.PermissionImplication;
-import edu.cmu.cs.plural.perm.parser.ParamInfoHolder;
+import edu.cmu.cs.plural.linear.ReleasePermissionImplication;
+import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.util.ConsList;
-import edu.cmu.cs.plural.util.Lambda;
 import edu.cmu.cs.plural.util.Lambda2;
 import edu.cmu.cs.plural.util.Pair;
-
-import static edu.cmu.cs.plural.util.ConsList.cons;
 
 /**
  * This type is in charge of keeping track of facts about variables and state
@@ -637,22 +635,22 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 	 * @param paramLoc
 	 * @return
 	 */
-	public List<ParamInfoHolder> findImpliedParameter(Aliasing anteLoc,
+	public List<ReleaseHolder> findImpliedParameter(Aliasing anteLoc,
 			Aliasing paramLoc) {
-		List<ParamInfoHolder> result = null;
+		List<ReleaseHolder> result = null;
 		List<Implication> impls = knownImplications.get(anteLoc);
 		if(impls == null || impls.isEmpty())
 			return Collections.emptyList();
 		for(Implication impl : impls) {
-			if(impl instanceof PermissionImplication) {
-				List<ParamInfoHolder> l = ((PermissionImplication) impl).findImpliedParameter(paramLoc);
+			if(impl instanceof ReleasePermissionImplication) {
+				List<ReleaseHolder> l = ((ReleasePermissionImplication) impl).findImpliedParameter(paramLoc);
 				if(result == null)
 					result = l;
 				else
 					result.addAll(l);
 			}
 		}
-		return result == null ? Collections.<ParamInfoHolder>emptyList() : result;
+		return result == null ? Collections.<ReleaseHolder>emptyList() : result;
 	}
 
 	/**

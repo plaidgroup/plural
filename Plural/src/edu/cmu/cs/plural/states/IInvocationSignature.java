@@ -54,14 +54,20 @@ public abstract interface IInvocationSignature {
 	
 	/**
 	 * Returns the binding for the method whose specification is 
-	 * represented in this signature.  Note that this is not necessarily
+	 * represented in this method case.  Note that this is not necessarily
 	 * the method for which a signature was requested since the signature
 	 * could be inherited from an overridden method.
 	 * @return the binding for the method whose specification is 
-	 * represented in this signature.
+	 * represented in this method case.
+	 * @tag todo.general -id="1233908" : could take this method out and just use the one in IInvocationCase
 	 */
 	IMethodBinding getSpecifiedMethodBinding();
 	
+	/**
+	 * Returns the list of method cases in this signature.
+	 * This list is guaranteed to have at least 1 element and is read-only.
+	 * @return the list of method cases in this signature.
+	 */
 	List<? extends IInvocationCase> cases();
 	
 	/**

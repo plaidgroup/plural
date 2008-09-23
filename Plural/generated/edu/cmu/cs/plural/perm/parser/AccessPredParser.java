@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 D:\\workspace\\Plural\\permission-parser\\AccessPred.g 2008-09-15 18:52:06
+// $ANTLR 3.0.1 C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g 2008-09-22 17:56:52
 
 package edu.cmu.cs.plural.perm.parser;
 
@@ -42,7 +42,7 @@ public class AccessPredParser extends Parser {
         
 
     public String[] getTokenNames() { return tokenNames; }
-    public String getGrammarFileName() { return "D:\\workspace\\Plural\\permission-parser\\AccessPred.g"; }
+    public String getGrammarFileName() { return "C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g"; }
 
     
         /**
@@ -105,7 +105,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start start
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:116:1: start returns [TopLevelPred result] : (p= perm EOF | TRUE EOF | FALSE EOF | EOF );
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:116:1: start returns [TopLevelPred result] : (p= perm EOF | TRUE EOF | FALSE EOF | EOF );
     public final TopLevelPred start() throws RecognitionException {
         TopLevelPred result = null;
 
@@ -113,7 +113,7 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:117:2: (p= perm EOF | TRUE EOF | FALSE EOF | EOF )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:117:2: (p= perm EOF | TRUE EOF | FALSE EOF | EOF )
             int alt1=4;
             switch ( input.LA(1) ) {
             case ID:
@@ -174,7 +174,7 @@ public class AccessPredParser extends Parser {
 
             switch (alt1) {
                 case 1 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:117:4: p= perm EOF
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:117:4: p= perm EOF
                     {
                     pushFollow(FOLLOW_perm_in_start43);
                     p=perm();
@@ -186,7 +186,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:118:4: TRUE EOF
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:118:4: TRUE EOF
                     {
                     match(input,TRUE,FOLLOW_TRUE_in_start52); 
                     match(input,EOF,FOLLOW_EOF_in_start54); 
@@ -195,7 +195,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:119:4: FALSE EOF
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:119:4: FALSE EOF
                     {
                     match(input,FALSE,FOLLOW_FALSE_in_start61); 
                     match(input,EOF,FOLLOW_EOF_in_start63); 
@@ -204,7 +204,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:120:4: EOF
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:120:4: EOF
                     {
                     match(input,EOF,FOLLOW_EOF_in_start70); 
                      result = null; 
@@ -226,7 +226,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start access_pred
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:123:1: access_pred returns [AccessPred result] : (i1= ID '(' i2= ref_expr ')' | i1= ID '(' i2= ref_expr ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ')' | i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list );
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:123:1: access_pred returns [AccessPred result] : (i1= ID '(' i2= ref_expr ')' | i1= ID '(' i2= ref_expr ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ')' | i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list );
     public final AccessPred access_pred() throws RecognitionException {
         AccessPred result = null;
 
@@ -240,12 +240,12 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:124:2: (i1= ID '(' i2= ref_expr ')' | i1= ID '(' i2= ref_expr ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ')' | i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:124:2: (i1= ID '(' i2= ref_expr ')' | i1= ID '(' i2= ref_expr ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ')' | i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list )
             int alt2=6;
             alt2 = dfa2.predict(input);
             switch (alt2) {
                 case 1 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:124:4: i1= ID '(' i2= ref_expr ')'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:124:4: i1= ID '(' i2= ref_expr ')'
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred89); 
@@ -260,7 +260,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:126:4: i1= ID '(' i2= ref_expr ')' IN sl= state_list
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:126:4: i1= ID '(' i2= ref_expr ')' IN sl= state_list
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred110); 
@@ -280,7 +280,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:128:4: i1= ID '(' i2= ref_expr ',' i3= ID ')'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:128:4: i1= ID '(' i2= ref_expr ',' i3= ID ')'
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred137); 
@@ -298,7 +298,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:130:4: i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:130:4: i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred164); 
@@ -321,7 +321,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:132:4: i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:132:4: i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')'
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred196); 
@@ -344,7 +344,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 6 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:134:4: i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:134:4: i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred228); 
@@ -386,7 +386,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start implies
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:139:1: implies returns [AccessPred result] : ant= bin_expr IMPLIES cons= lowest ;
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:139:1: implies returns [AccessPred result] : ant= bin_expr IMPLIES cons= lowest ;
     public final AccessPred implies() throws RecognitionException {
         AccessPred result = null;
 
@@ -396,8 +396,8 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:140:2: (ant= bin_expr IMPLIES cons= lowest )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:140:4: ant= bin_expr IMPLIES cons= lowest
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:140:2: (ant= bin_expr IMPLIES cons= lowest )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:140:4: ant= bin_expr IMPLIES cons= lowest
             {
             pushFollow(FOLLOW_bin_expr_in_implies278);
             ant=bin_expr();
@@ -425,23 +425,26 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start state_only
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:143:1: state_only returns [AccessPred result] : ref= ID IN state= ID ;
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:143:1: state_only returns [AccessPred result] : ref= ref_expr IN state= ID ;
     public final AccessPred state_only() throws RecognitionException {
         AccessPred result = null;
 
-        Token ref=null;
         Token state=null;
+        RefExpr ref = null;
+
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:144:2: (ref= ID IN state= ID )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:144:4: ref= ID IN state= ID
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:144:2: (ref= ref_expr IN state= ID )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:144:4: ref= ref_expr IN state= ID
             {
-            ref=(Token)input.LT(1);
-            match(input,ID,FOLLOW_ID_in_state_only303); 
+            pushFollow(FOLLOW_ref_expr_in_state_only303);
+            ref=ref_expr();
+            _fsp--;
+
             match(input,IN,FOLLOW_IN_in_state_only305); 
             state=(Token)input.LT(1);
             match(input,ID,FOLLOW_ID_in_state_only309); 
-            result = new StateOnly(ref.getText(), state.getText());
+            result = new StateOnly(ref, state.getText());
 
             }
 
@@ -458,7 +461,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start bin_expr_ap
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:148:1: bin_expr_ap returns [AccessPred result] : e= bin_expr ;
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:148:1: bin_expr_ap returns [AccessPred result] : e= bin_expr ;
     public final AccessPred bin_expr_ap() throws RecognitionException {
         AccessPred result = null;
 
@@ -466,8 +469,8 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:149:2: (e= bin_expr )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:149:4: e= bin_expr
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:149:2: (e= bin_expr )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:149:4: e= bin_expr
             {
             pushFollow(FOLLOW_bin_expr_in_bin_expr_ap330);
             e=bin_expr();
@@ -490,7 +493,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start bin_expr
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:152:1: bin_expr returns [BinaryExpr result] : (e1= primary_expr DEQ e2= primary_expr | e1= primary_expr NEQ e2= primary_expr );
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:152:1: bin_expr returns [BinaryExpr result] : (e1= primary_expr DEQ e2= primary_expr | e1= primary_expr NEQ e2= primary_expr );
     public final BinaryExpr bin_expr() throws RecognitionException {
         BinaryExpr result = null;
 
@@ -500,7 +503,7 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:153:2: (e1= primary_expr DEQ e2= primary_expr | e1= primary_expr NEQ e2= primary_expr )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:153:2: (e1= primary_expr DEQ e2= primary_expr | e1= primary_expr NEQ e2= primary_expr )
             int alt3=2;
             switch ( input.LA(1) ) {
             case ID:
@@ -553,11 +556,11 @@ public class AccessPredParser extends Parser {
                 {
                 int LA3_3 = input.LA(2);
 
-                if ( (LA3_3==DEQ) ) {
-                    alt3=1;
-                }
-                else if ( (LA3_3==NEQ) ) {
+                if ( (LA3_3==NEQ) ) {
                     alt3=2;
+                }
+                else if ( (LA3_3==DEQ) ) {
+                    alt3=1;
                 }
                 else {
                     NoViableAltException nvae =
@@ -612,7 +615,7 @@ public class AccessPredParser extends Parser {
 
             switch (alt3) {
                 case 1 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:153:4: e1= primary_expr DEQ e2= primary_expr
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:153:4: e1= primary_expr DEQ e2= primary_expr
                     {
                     pushFollow(FOLLOW_primary_expr_in_bin_expr349);
                     e1=primary_expr();
@@ -628,7 +631,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:154:4: e1= primary_expr NEQ e2= primary_expr
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:154:4: e1= primary_expr NEQ e2= primary_expr
                     {
                     pushFollow(FOLLOW_primary_expr_in_bin_expr364);
                     e1=primary_expr();
@@ -658,7 +661,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start primary_expr
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:157:1: primary_expr returns [PrimaryExpr result] : (i= ID | '#' num= NUMBER | NULL | TRUE | FALSE );
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:157:1: primary_expr returns [PrimaryExpr result] : (i= ID | '#' num= NUMBER | NULL | TRUE | FALSE );
     public final PrimaryExpr primary_expr() throws RecognitionException {
         PrimaryExpr result = null;
 
@@ -666,7 +669,7 @@ public class AccessPredParser extends Parser {
         Token num=null;
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:158:2: (i= ID | '#' num= NUMBER | NULL | TRUE | FALSE )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:158:2: (i= ID | '#' num= NUMBER | NULL | TRUE | FALSE )
             int alt4=5;
             switch ( input.LA(1) ) {
             case ID:
@@ -703,7 +706,7 @@ public class AccessPredParser extends Parser {
 
             switch (alt4) {
                 case 1 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:158:4: i= ID
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:158:4: i= ID
                     {
                     i=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_primary_expr389); 
@@ -712,7 +715,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:159:4: '#' num= NUMBER
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:159:4: '#' num= NUMBER
                     {
                     match(input,24,FOLLOW_24_in_primary_expr397); 
                     num=(Token)input.LT(1);
@@ -722,7 +725,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:160:4: NULL
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:160:4: NULL
                     {
                     match(input,NULL,FOLLOW_NULL_in_primary_expr408); 
                     result = Null.getInstance();
@@ -730,7 +733,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:161:4: TRUE
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:161:4: TRUE
                     {
                     match(input,TRUE,FOLLOW_TRUE_in_primary_expr416); 
                     result = BoolLiteral.getTrueInstance();
@@ -738,7 +741,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:162:4: FALSE
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:162:4: FALSE
                     {
                     match(input,FALSE,FOLLOW_FALSE_in_primary_expr424); 
                     result = BoolLiteral.getFalseInstance();
@@ -760,7 +763,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start ref_expr
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:165:1: ref_expr returns [RefExpr result] : (i= ID | i= ID '!fr' | '#' num= NUMBER );
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:165:1: ref_expr returns [RefExpr result] : (i= ID | i= ID '!fr' | '#' num= NUMBER );
     public final RefExpr ref_expr() throws RecognitionException {
         RefExpr result = null;
 
@@ -768,7 +771,7 @@ public class AccessPredParser extends Parser {
         Token num=null;
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:166:2: (i= ID | i= ID '!fr' | '#' num= NUMBER )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:166:2: (i= ID | i= ID '!fr' | '#' num= NUMBER )
             int alt5=3;
             int LA5_0 = input.LA(1);
 
@@ -778,7 +781,7 @@ public class AccessPredParser extends Parser {
                 if ( (LA5_1==25) ) {
                     alt5=2;
                 }
-                else if ( ((LA5_1>=22 && LA5_1<=23)) ) {
+                else if ( (LA5_1==IN||(LA5_1>=22 && LA5_1<=23)) ) {
                     alt5=1;
                 }
                 else {
@@ -799,7 +802,7 @@ public class AccessPredParser extends Parser {
             }
             switch (alt5) {
                 case 1 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:166:4: i= ID
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:166:4: i= ID
                     {
                     i=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_ref_expr443); 
@@ -808,7 +811,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:167:4: i= ID '!fr'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:167:4: i= ID '!fr'
                     {
                     i=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_ref_expr452); 
@@ -818,7 +821,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:168:4: '#' num= NUMBER
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:168:4: '#' num= NUMBER
                     {
                     match(input,24,FOLLOW_24_in_ref_expr461); 
                     num=(Token)input.LT(1);
@@ -842,7 +845,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start perm
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:172:1: perm returns [AccessPred result] : (left= wither ) ( ALT right= wither )* ;
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:172:1: perm returns [AccessPred result] : (left= wither ) ( ALT right= wither )* ;
     public final AccessPred perm() throws RecognitionException {
         AccessPred result = null;
 
@@ -855,11 +858,11 @@ public class AccessPredParser extends Parser {
         List<AccessPred> temp = new ArrayList<AccessPred>();
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:179:2: ( (left= wither ) ( ALT right= wither )* )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:179:4: (left= wither ) ( ALT right= wither )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:179:2: ( (left= wither ) ( ALT right= wither )* )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:179:4: (left= wither ) ( ALT right= wither )*
             {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:179:4: (left= wither )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:179:5: left= wither
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:179:4: (left= wither )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:179:5: left= wither
             {
             pushFollow(FOLLOW_wither_in_perm497);
             left=wither();
@@ -869,7 +872,7 @@ public class AccessPredParser extends Parser {
 
             }
 
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:179:37: ( ALT right= wither )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:179:37: ( ALT right= wither )*
             loop6:
             do {
                 int alt6=2;
@@ -882,7 +885,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt6) {
             	case 1 :
-            	    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:179:38: ALT right= wither
+            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:179:38: ALT right= wither
             	    {
             	    match(input,ALT,FOLLOW_ALT_in_perm503); 
             	    pushFollow(FOLLOW_wither_in_perm507);
@@ -918,7 +921,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start wither
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:182:1: wither returns [AccessPred result] : (left= conjs ) ( WITH right= conjs )* ;
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:182:1: wither returns [AccessPred result] : (left= conjs ) ( WITH right= conjs )* ;
     public final AccessPred wither() throws RecognitionException {
         AccessPred result = null;
 
@@ -931,11 +934,11 @@ public class AccessPredParser extends Parser {
         List<AccessPred> temp = new ArrayList<AccessPred>();
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:189:2: ( (left= conjs ) ( WITH right= conjs )* )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:189:4: (left= conjs ) ( WITH right= conjs )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:189:2: ( (left= conjs ) ( WITH right= conjs )* )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:189:4: (left= conjs ) ( WITH right= conjs )*
             {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:189:4: (left= conjs )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:189:5: left= conjs
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:189:4: (left= conjs )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:189:5: left= conjs
             {
             pushFollow(FOLLOW_conjs_in_wither539);
             left=conjs();
@@ -945,7 +948,7 @@ public class AccessPredParser extends Parser {
 
             }
 
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:189:36: ( WITH right= conjs )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:189:36: ( WITH right= conjs )*
             loop7:
             do {
                 int alt7=2;
@@ -958,7 +961,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt7) {
             	case 1 :
-            	    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:189:37: WITH right= conjs
+            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:189:37: WITH right= conjs
             	    {
             	    match(input,WITH,FOLLOW_WITH_in_wither545); 
             	    pushFollow(FOLLOW_conjs_in_wither549);
@@ -994,7 +997,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start conjs
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:192:1: conjs returns [AccessPred result] : (left= lowest ) ( TENS right= lowest )* ;
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:192:1: conjs returns [AccessPred result] : (left= lowest ) ( TENS right= lowest )* ;
     public final AccessPred conjs() throws RecognitionException {
         AccessPred result = null;
 
@@ -1007,11 +1010,11 @@ public class AccessPredParser extends Parser {
         List<AccessPred> temp = new ArrayList<AccessPred>();
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:199:3: ( (left= lowest ) ( TENS right= lowest )* )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:199:5: (left= lowest ) ( TENS right= lowest )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:199:3: ( (left= lowest ) ( TENS right= lowest )* )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:199:5: (left= lowest ) ( TENS right= lowest )*
             {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:199:5: (left= lowest )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:199:6: left= lowest
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:199:5: (left= lowest )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:199:6: left= lowest
             {
             pushFollow(FOLLOW_lowest_in_conjs583);
             left=lowest();
@@ -1021,7 +1024,7 @@ public class AccessPredParser extends Parser {
 
             }
 
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:199:39: ( TENS right= lowest )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:199:39: ( TENS right= lowest )*
             loop8:
             do {
                 int alt8=2;
@@ -1034,7 +1037,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt8) {
             	case 1 :
-            	    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:199:40: TENS right= lowest
+            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:199:40: TENS right= lowest
             	    {
             	    match(input,TENS,FOLLOW_TENS_in_conjs589); 
             	    pushFollow(FOLLOW_lowest_in_conjs593);
@@ -1070,7 +1073,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start lowest
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );
     public final AccessPred lowest() throws RecognitionException {
         AccessPred result = null;
 
@@ -1084,7 +1087,7 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:203:2: (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:203:2: (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' )
             int alt9=5;
             switch ( input.LA(1) ) {
             case ID:
@@ -1096,6 +1099,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case IN:
+                case 25:
                     {
                     alt9=3;
                     }
@@ -1128,11 +1132,11 @@ public class AccessPredParser extends Parser {
                         if ( (LA9_13==NUMBER) ) {
                             int LA9_24 = input.LA(5);
 
-                            if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
-                                alt9=2;
-                            }
-                            else if ( (LA9_24==IMPLIES) ) {
+                            if ( (LA9_24==IMPLIES) ) {
                                 alt9=4;
+                            }
+                            else if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
+                                alt9=2;
                             }
                             else {
                                 NoViableAltException nvae =
@@ -1153,11 +1157,11 @@ public class AccessPredParser extends Parser {
                         {
                         int LA9_14 = input.LA(4);
 
-                        if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
-                            alt9=2;
-                        }
-                        else if ( (LA9_14==IMPLIES) ) {
+                        if ( (LA9_14==IMPLIES) ) {
                             alt9=4;
+                        }
+                        else if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
+                            alt9=2;
                         }
                         else {
                             NoViableAltException nvae =
@@ -1265,11 +1269,11 @@ public class AccessPredParser extends Parser {
                         {
                         int LA9_19 = input.LA(4);
 
-                        if ( (LA9_19==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
+                        if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
                             alt9=2;
+                        }
+                        else if ( (LA9_19==IMPLIES) ) {
+                            alt9=4;
                         }
                         else {
                             NoViableAltException nvae =
@@ -1338,9 +1342,9 @@ public class AccessPredParser extends Parser {
                 int LA9_2 = input.LA(2);
 
                 if ( (LA9_2==NUMBER) ) {
-                    int LA9_11 = input.LA(3);
-
-                    if ( (LA9_11==DEQ) ) {
+                    switch ( input.LA(3) ) {
+                    case DEQ:
+                        {
                         switch ( input.LA(4) ) {
                         case ID:
                             {
@@ -1392,11 +1396,11 @@ public class AccessPredParser extends Parser {
                             {
                             int LA9_19 = input.LA(5);
 
-                            if ( (LA9_19==IMPLIES) ) {
-                                alt9=4;
-                            }
-                            else if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
+                            if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
                                 alt9=2;
+                            }
+                            else if ( (LA9_19==IMPLIES) ) {
+                                alt9=4;
                             }
                             else {
                                 NoViableAltException nvae =
@@ -1449,8 +1453,10 @@ public class AccessPredParser extends Parser {
                             throw nvae;
                         }
 
-                    }
-                    else if ( (LA9_11==NEQ) ) {
+                        }
+                        break;
+                    case NEQ:
+                        {
                         switch ( input.LA(4) ) {
                         case ID:
                             {
@@ -1477,11 +1483,11 @@ public class AccessPredParser extends Parser {
                             if ( (LA9_13==NUMBER) ) {
                                 int LA9_24 = input.LA(6);
 
-                                if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
-                                    alt9=2;
-                                }
-                                else if ( (LA9_24==IMPLIES) ) {
+                                if ( (LA9_24==IMPLIES) ) {
                                     alt9=4;
+                                }
+                                else if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
+                                    alt9=2;
                                 }
                                 else {
                                     NoViableAltException nvae =
@@ -1502,11 +1508,11 @@ public class AccessPredParser extends Parser {
                             {
                             int LA9_14 = input.LA(5);
 
-                            if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
-                                alt9=2;
-                            }
-                            else if ( (LA9_14==IMPLIES) ) {
+                            if ( (LA9_14==IMPLIES) ) {
                                 alt9=4;
+                            }
+                            else if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
+                                alt9=2;
                             }
                             else {
                                 NoViableAltException nvae =
@@ -1559,13 +1565,20 @@ public class AccessPredParser extends Parser {
                             throw nvae;
                         }
 
-                    }
-                    else {
+                        }
+                        break;
+                    case IN:
+                        {
+                        alt9=3;
+                        }
+                        break;
+                    default:
                         NoViableAltException nvae =
                             new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 11, input);
 
                         throw nvae;
                     }
+
                 }
                 else {
                     NoViableAltException nvae =
@@ -1579,117 +1592,7 @@ public class AccessPredParser extends Parser {
                 {
                 int LA9_3 = input.LA(2);
 
-                if ( (LA9_3==NEQ) ) {
-                    switch ( input.LA(3) ) {
-                    case ID:
-                        {
-                        int LA9_12 = input.LA(4);
-
-                        if ( (LA9_12==EOF||(LA9_12>=ALT && LA9_12<=TENS)||LA9_12==22) ) {
-                            alt9=2;
-                        }
-                        else if ( (LA9_12==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 12, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case 24:
-                        {
-                        int LA9_13 = input.LA(4);
-
-                        if ( (LA9_13==NUMBER) ) {
-                            int LA9_24 = input.LA(5);
-
-                            if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
-                                alt9=2;
-                            }
-                            else if ( (LA9_24==IMPLIES) ) {
-                                alt9=4;
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 24, input);
-
-                                throw nvae;
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 13, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case NULL:
-                        {
-                        int LA9_14 = input.LA(4);
-
-                        if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
-                            alt9=2;
-                        }
-                        else if ( (LA9_14==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 14, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case TRUE:
-                        {
-                        int LA9_15 = input.LA(4);
-
-                        if ( (LA9_15==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_15==EOF||(LA9_15>=ALT && LA9_15<=TENS)||LA9_15==22) ) {
-                            alt9=2;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 15, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case FALSE:
-                        {
-                        int LA9_16 = input.LA(4);
-
-                        if ( (LA9_16==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_16==EOF||(LA9_16>=ALT && LA9_16<=TENS)||LA9_16==22) ) {
-                            alt9=2;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 16, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    default:
-                        NoViableAltException nvae =
-                            new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 9, input);
-
-                        throw nvae;
-                    }
-
-                }
-                else if ( (LA9_3==DEQ) ) {
+                if ( (LA9_3==DEQ) ) {
                     switch ( input.LA(3) ) {
                     case ID:
                         {
@@ -1741,11 +1644,11 @@ public class AccessPredParser extends Parser {
                         {
                         int LA9_19 = input.LA(4);
 
-                        if ( (LA9_19==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
+                        if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
                             alt9=2;
+                        }
+                        else if ( (LA9_19==IMPLIES) ) {
+                            alt9=4;
                         }
                         else {
                             NoViableAltException nvae =
@@ -1794,6 +1697,116 @@ public class AccessPredParser extends Parser {
                     default:
                         NoViableAltException nvae =
                             new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 10, input);
+
+                        throw nvae;
+                    }
+
+                }
+                else if ( (LA9_3==NEQ) ) {
+                    switch ( input.LA(3) ) {
+                    case ID:
+                        {
+                        int LA9_12 = input.LA(4);
+
+                        if ( (LA9_12==EOF||(LA9_12>=ALT && LA9_12<=TENS)||LA9_12==22) ) {
+                            alt9=2;
+                        }
+                        else if ( (LA9_12==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 12, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case 24:
+                        {
+                        int LA9_13 = input.LA(4);
+
+                        if ( (LA9_13==NUMBER) ) {
+                            int LA9_24 = input.LA(5);
+
+                            if ( (LA9_24==IMPLIES) ) {
+                                alt9=4;
+                            }
+                            else if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
+                                alt9=2;
+                            }
+                            else {
+                                NoViableAltException nvae =
+                                    new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 24, input);
+
+                                throw nvae;
+                            }
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 13, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case NULL:
+                        {
+                        int LA9_14 = input.LA(4);
+
+                        if ( (LA9_14==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
+                            alt9=2;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 14, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case TRUE:
+                        {
+                        int LA9_15 = input.LA(4);
+
+                        if ( (LA9_15==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else if ( (LA9_15==EOF||(LA9_15>=ALT && LA9_15<=TENS)||LA9_15==22) ) {
+                            alt9=2;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 15, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case FALSE:
+                        {
+                        int LA9_16 = input.LA(4);
+
+                        if ( (LA9_16==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else if ( (LA9_16==EOF||(LA9_16>=ALT && LA9_16<=TENS)||LA9_16==22) ) {
+                            alt9=2;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 16, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    default:
+                        NoViableAltException nvae =
+                            new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 9, input);
 
                         throw nvae;
                     }
@@ -1811,117 +1824,7 @@ public class AccessPredParser extends Parser {
                 {
                 int LA9_4 = input.LA(2);
 
-                if ( (LA9_4==NEQ) ) {
-                    switch ( input.LA(3) ) {
-                    case ID:
-                        {
-                        int LA9_12 = input.LA(4);
-
-                        if ( (LA9_12==EOF||(LA9_12>=ALT && LA9_12<=TENS)||LA9_12==22) ) {
-                            alt9=2;
-                        }
-                        else if ( (LA9_12==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 12, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case 24:
-                        {
-                        int LA9_13 = input.LA(4);
-
-                        if ( (LA9_13==NUMBER) ) {
-                            int LA9_24 = input.LA(5);
-
-                            if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
-                                alt9=2;
-                            }
-                            else if ( (LA9_24==IMPLIES) ) {
-                                alt9=4;
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 24, input);
-
-                                throw nvae;
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 13, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case NULL:
-                        {
-                        int LA9_14 = input.LA(4);
-
-                        if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
-                            alt9=2;
-                        }
-                        else if ( (LA9_14==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 14, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case TRUE:
-                        {
-                        int LA9_15 = input.LA(4);
-
-                        if ( (LA9_15==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_15==EOF||(LA9_15>=ALT && LA9_15<=TENS)||LA9_15==22) ) {
-                            alt9=2;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 15, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case FALSE:
-                        {
-                        int LA9_16 = input.LA(4);
-
-                        if ( (LA9_16==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_16==EOF||(LA9_16>=ALT && LA9_16<=TENS)||LA9_16==22) ) {
-                            alt9=2;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 16, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    default:
-                        NoViableAltException nvae =
-                            new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 9, input);
-
-                        throw nvae;
-                    }
-
-                }
-                else if ( (LA9_4==DEQ) ) {
+                if ( (LA9_4==DEQ) ) {
                     switch ( input.LA(3) ) {
                     case ID:
                         {
@@ -1973,11 +1876,11 @@ public class AccessPredParser extends Parser {
                         {
                         int LA9_19 = input.LA(4);
 
-                        if ( (LA9_19==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
+                        if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
                             alt9=2;
+                        }
+                        else if ( (LA9_19==IMPLIES) ) {
+                            alt9=4;
                         }
                         else {
                             NoViableAltException nvae =
@@ -2026,6 +1929,116 @@ public class AccessPredParser extends Parser {
                     default:
                         NoViableAltException nvae =
                             new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 10, input);
+
+                        throw nvae;
+                    }
+
+                }
+                else if ( (LA9_4==NEQ) ) {
+                    switch ( input.LA(3) ) {
+                    case ID:
+                        {
+                        int LA9_12 = input.LA(4);
+
+                        if ( (LA9_12==EOF||(LA9_12>=ALT && LA9_12<=TENS)||LA9_12==22) ) {
+                            alt9=2;
+                        }
+                        else if ( (LA9_12==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 12, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case 24:
+                        {
+                        int LA9_13 = input.LA(4);
+
+                        if ( (LA9_13==NUMBER) ) {
+                            int LA9_24 = input.LA(5);
+
+                            if ( (LA9_24==IMPLIES) ) {
+                                alt9=4;
+                            }
+                            else if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
+                                alt9=2;
+                            }
+                            else {
+                                NoViableAltException nvae =
+                                    new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 24, input);
+
+                                throw nvae;
+                            }
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 13, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case NULL:
+                        {
+                        int LA9_14 = input.LA(4);
+
+                        if ( (LA9_14==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
+                            alt9=2;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 14, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case TRUE:
+                        {
+                        int LA9_15 = input.LA(4);
+
+                        if ( (LA9_15==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else if ( (LA9_15==EOF||(LA9_15>=ALT && LA9_15<=TENS)||LA9_15==22) ) {
+                            alt9=2;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 15, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case FALSE:
+                        {
+                        int LA9_16 = input.LA(4);
+
+                        if ( (LA9_16==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else if ( (LA9_16==EOF||(LA9_16>=ALT && LA9_16<=TENS)||LA9_16==22) ) {
+                            alt9=2;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 16, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    default:
+                        NoViableAltException nvae =
+                            new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 9, input);
 
                         throw nvae;
                     }
@@ -2043,117 +2056,7 @@ public class AccessPredParser extends Parser {
                 {
                 int LA9_5 = input.LA(2);
 
-                if ( (LA9_5==NEQ) ) {
-                    switch ( input.LA(3) ) {
-                    case ID:
-                        {
-                        int LA9_12 = input.LA(4);
-
-                        if ( (LA9_12==EOF||(LA9_12>=ALT && LA9_12<=TENS)||LA9_12==22) ) {
-                            alt9=2;
-                        }
-                        else if ( (LA9_12==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 12, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case 24:
-                        {
-                        int LA9_13 = input.LA(4);
-
-                        if ( (LA9_13==NUMBER) ) {
-                            int LA9_24 = input.LA(5);
-
-                            if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
-                                alt9=2;
-                            }
-                            else if ( (LA9_24==IMPLIES) ) {
-                                alt9=4;
-                            }
-                            else {
-                                NoViableAltException nvae =
-                                    new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 24, input);
-
-                                throw nvae;
-                            }
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 13, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case NULL:
-                        {
-                        int LA9_14 = input.LA(4);
-
-                        if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
-                            alt9=2;
-                        }
-                        else if ( (LA9_14==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 14, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case TRUE:
-                        {
-                        int LA9_15 = input.LA(4);
-
-                        if ( (LA9_15==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_15==EOF||(LA9_15>=ALT && LA9_15<=TENS)||LA9_15==22) ) {
-                            alt9=2;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 15, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    case FALSE:
-                        {
-                        int LA9_16 = input.LA(4);
-
-                        if ( (LA9_16==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_16==EOF||(LA9_16>=ALT && LA9_16<=TENS)||LA9_16==22) ) {
-                            alt9=2;
-                        }
-                        else {
-                            NoViableAltException nvae =
-                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 16, input);
-
-                            throw nvae;
-                        }
-                        }
-                        break;
-                    default:
-                        NoViableAltException nvae =
-                            new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 9, input);
-
-                        throw nvae;
-                    }
-
-                }
-                else if ( (LA9_5==DEQ) ) {
+                if ( (LA9_5==DEQ) ) {
                     switch ( input.LA(3) ) {
                     case ID:
                         {
@@ -2205,11 +2108,11 @@ public class AccessPredParser extends Parser {
                         {
                         int LA9_19 = input.LA(4);
 
-                        if ( (LA9_19==IMPLIES) ) {
-                            alt9=4;
-                        }
-                        else if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
+                        if ( (LA9_19==EOF||(LA9_19>=ALT && LA9_19<=TENS)||LA9_19==22) ) {
                             alt9=2;
+                        }
+                        else if ( (LA9_19==IMPLIES) ) {
+                            alt9=4;
                         }
                         else {
                             NoViableAltException nvae =
@@ -2258,6 +2161,116 @@ public class AccessPredParser extends Parser {
                     default:
                         NoViableAltException nvae =
                             new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 10, input);
+
+                        throw nvae;
+                    }
+
+                }
+                else if ( (LA9_5==NEQ) ) {
+                    switch ( input.LA(3) ) {
+                    case ID:
+                        {
+                        int LA9_12 = input.LA(4);
+
+                        if ( (LA9_12==EOF||(LA9_12>=ALT && LA9_12<=TENS)||LA9_12==22) ) {
+                            alt9=2;
+                        }
+                        else if ( (LA9_12==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 12, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case 24:
+                        {
+                        int LA9_13 = input.LA(4);
+
+                        if ( (LA9_13==NUMBER) ) {
+                            int LA9_24 = input.LA(5);
+
+                            if ( (LA9_24==IMPLIES) ) {
+                                alt9=4;
+                            }
+                            else if ( (LA9_24==EOF||(LA9_24>=ALT && LA9_24<=TENS)||LA9_24==22) ) {
+                                alt9=2;
+                            }
+                            else {
+                                NoViableAltException nvae =
+                                    new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 24, input);
+
+                                throw nvae;
+                            }
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 13, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case NULL:
+                        {
+                        int LA9_14 = input.LA(4);
+
+                        if ( (LA9_14==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else if ( (LA9_14==EOF||(LA9_14>=ALT && LA9_14<=TENS)||LA9_14==22) ) {
+                            alt9=2;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 14, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case TRUE:
+                        {
+                        int LA9_15 = input.LA(4);
+
+                        if ( (LA9_15==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else if ( (LA9_15==EOF||(LA9_15>=ALT && LA9_15<=TENS)||LA9_15==22) ) {
+                            alt9=2;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 15, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    case FALSE:
+                        {
+                        int LA9_16 = input.LA(4);
+
+                        if ( (LA9_16==IMPLIES) ) {
+                            alt9=4;
+                        }
+                        else if ( (LA9_16==EOF||(LA9_16>=ALT && LA9_16<=TENS)||LA9_16==22) ) {
+                            alt9=2;
+                        }
+                        else {
+                            NoViableAltException nvae =
+                                new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 16, input);
+
+                            throw nvae;
+                        }
+                        }
+                        break;
+                    default:
+                        NoViableAltException nvae =
+                            new NoViableAltException("202:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );", 9, 9, input);
 
                         throw nvae;
                     }
@@ -2285,7 +2298,7 @@ public class AccessPredParser extends Parser {
 
             switch (alt9) {
                 case 1 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:203:4: r= access_pred
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:203:4: r= access_pred
                     {
                     pushFollow(FOLLOW_access_pred_in_lowest619);
                     r=access_pred();
@@ -2296,7 +2309,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:204:4: e= bin_expr_ap
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:204:4: e= bin_expr_ap
                     {
                     pushFollow(FOLLOW_bin_expr_ap_in_lowest628);
                     e=bin_expr_ap();
@@ -2307,7 +2320,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:205:10: s= state_only
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:205:10: s= state_only
                     {
                     pushFollow(FOLLOW_state_only_in_lowest643);
                     s=state_only();
@@ -2318,7 +2331,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:206:10: i= implies
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:206:10: i= implies
                     {
                     pushFollow(FOLLOW_implies_in_lowest658);
                     i=implies();
@@ -2329,7 +2342,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:207:4: '(' r= perm ')'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:207:4: '(' r= perm ')'
                     {
                     match(input,21,FOLLOW_21_in_lowest665); 
                     pushFollow(FOLLOW_perm_in_lowest669);
@@ -2356,7 +2369,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start fractions
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:211:1: fractions returns [TempFractionMap result] : n= ID '=' f= fract ( ',' m= ID '=' g= fract )* ;
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:211:1: fractions returns [TempFractionMap result] : n= ID '=' f= fract ( ',' m= ID '=' g= fract )* ;
     public final TempFractionMap fractions() throws RecognitionException {
         TempFractionMap result = null;
 
@@ -2371,8 +2384,8 @@ public class AccessPredParser extends Parser {
         result = new TempFractionMap();
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:215:2: (n= ID '=' f= fract ( ',' m= ID '=' g= fract )* )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:215:4: n= ID '=' f= fract ( ',' m= ID '=' g= fract )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:215:2: (n= ID '=' f= fract ( ',' m= ID '=' g= fract )* )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:215:4: n= ID '=' f= fract ( ',' m= ID '=' g= fract )*
             {
             n=(Token)input.LT(1);
             match(input,ID,FOLLOW_ID_in_fractions697); 
@@ -2382,7 +2395,7 @@ public class AccessPredParser extends Parser {
             _fsp--;
 
             result.put(n.getText(), f);
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:215:52: ( ',' m= ID '=' g= fract )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:215:52: ( ',' m= ID '=' g= fract )*
             loop10:
             do {
                 int alt10=2;
@@ -2395,7 +2408,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt10) {
             	case 1 :
-            	    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:215:53: ',' m= ID '=' g= fract
+            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:215:53: ',' m= ID '=' g= fract
             	    {
             	    match(input,23,FOLLOW_23_in_fractions708); 
             	    m=(Token)input.LT(1);
@@ -2431,7 +2444,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start fract
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:218:1: fract returns [Fraction result] : (p= NUMBER | p= NUMBER '/' q= NUMBER | i= ID );
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:218:1: fract returns [Fraction result] : (p= NUMBER | p= NUMBER '/' q= NUMBER | i= ID );
     public final Fraction fract() throws RecognitionException {
         Fraction result = null;
 
@@ -2440,7 +2453,7 @@ public class AccessPredParser extends Parser {
         Token i=null;
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:219:2: (p= NUMBER | p= NUMBER '/' q= NUMBER | i= ID )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:219:2: (p= NUMBER | p= NUMBER '/' q= NUMBER | i= ID )
             int alt11=3;
             int LA11_0 = input.LA(1);
 
@@ -2471,7 +2484,7 @@ public class AccessPredParser extends Parser {
             }
             switch (alt11) {
                 case 1 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:219:4: p= NUMBER
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:219:4: p= NUMBER
                     {
                     p=(Token)input.LT(1);
                     match(input,NUMBER,FOLLOW_NUMBER_in_fract740); 
@@ -2480,7 +2493,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:220:4: p= NUMBER '/' q= NUMBER
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:220:4: p= NUMBER '/' q= NUMBER
                     {
                     p=(Token)input.LT(1);
                     match(input,NUMBER,FOLLOW_NUMBER_in_fract752); 
@@ -2492,7 +2505,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:221:4: i= ID
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:221:4: i= ID
                     {
                     i=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_fract767); 
@@ -2515,7 +2528,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start state_list
-    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:224:1: state_list returns [List<String> result] : i= ID ( ',' j= ID )* ;
+    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:224:1: state_list returns [List<String> result] : i= ID ( ',' j= ID )* ;
     public final List<String> state_list() throws RecognitionException {
         List<String> result = null;
 
@@ -2526,13 +2539,13 @@ public class AccessPredParser extends Parser {
         result = new LinkedList<String>();
 
         try {
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:228:2: (i= ID ( ',' j= ID )* )
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:228:4: i= ID ( ',' j= ID )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:228:2: (i= ID ( ',' j= ID )* )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:228:4: i= ID ( ',' j= ID )*
             {
             i=(Token)input.LT(1);
             match(input,ID,FOLLOW_ID_in_state_list796); 
              result.add(i.getText()); 
-            // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:228:39: ( ',' j= ID )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:228:39: ( ',' j= ID )*
             loop12:
             do {
                 int alt12=2;
@@ -2545,7 +2558,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt12) {
             	case 1 :
-            	    // D:\\workspace\\Plural\\permission-parser\\AccessPred.g:228:40: ',' j= ID
+            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:228:40: ',' j= ID
             	    {
             	    match(input,23,FOLLOW_23_in_state_list801); 
             	    j=(Token)input.LT(1);
@@ -2714,7 +2727,7 @@ public class AccessPredParser extends Parser {
     public static final BitSet FOLLOW_bin_expr_in_implies278 = new BitSet(new long[]{0x0000000000000100L});
     public static final BitSet FOLLOW_IMPLIES_in_implies280 = new BitSet(new long[]{0x0000000001201070L});
     public static final BitSet FOLLOW_lowest_in_implies284 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_ID_in_state_only303 = new BitSet(new long[]{0x0000000000000080L});
+    public static final BitSet FOLLOW_ref_expr_in_state_only303 = new BitSet(new long[]{0x0000000000000080L});
     public static final BitSet FOLLOW_IN_in_state_only305 = new BitSet(new long[]{0x0000000000000040L});
     public static final BitSet FOLLOW_ID_in_state_only309 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_bin_expr_in_bin_expr_ap330 = new BitSet(new long[]{0x0000000000000002L});

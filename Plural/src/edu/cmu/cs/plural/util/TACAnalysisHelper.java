@@ -37,7 +37,6 @@
  */
 package edu.cmu.cs.plural.util;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
 import edu.cmu.cs.crystal.tac.ThisVariable;
@@ -50,29 +49,14 @@ public class TACAnalysisHelper {
 
 	private final ITACAnalysisContext context;
 	private final AnnotationDatabase annoDB;
-	private final ThisVariable thisVar;
 	
 	/**
-	 * Use this constructor for methods without <code>this</code>, i.e., static methods.
-	 * @param crystal
+	 * @param annoDB
 	 * @param ctx
 	 */
 	public TACAnalysisHelper(AnnotationDatabase annoDB, ITACAnalysisContext ctx) {
 		this.annoDB = annoDB;
 		this.context = ctx;
-		this.thisVar = null;
-	}
-
-	/**
-	 * Use this constructor for methods <code>this</code>, i.e., instance methods and constructors.
-	 * @param crystal
-	 * @param ctx
-	 * @param thisVar
-	 */
-	public TACAnalysisHelper(AnnotationDatabase annoDB, ITACAnalysisContext ctx, ThisVariable thisVar) {
-		this.annoDB = annoDB;
-		this.context = ctx;
-		this.thisVar = thisVar;
 	}
 
 	public ITACAnalysisContext getAnalysisContext() {
@@ -80,11 +64,11 @@ public class TACAnalysisHelper {
 	}
 	
 	public ThisVariable getThisVar() {
-		return thisVar;
+		return context.getThisVariable();
 	}
 	
 	public boolean inStaticMethod() {
-		return thisVar == null;
+		return getThisVar() == null;
 	}
 
 	public AnnotationDatabase getAnnoDB() {

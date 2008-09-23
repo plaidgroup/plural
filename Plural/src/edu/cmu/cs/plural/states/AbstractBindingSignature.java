@@ -37,7 +37,13 @@
  */
 package edu.cmu.cs.plural.states;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -46,8 +52,8 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.Modifier;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
@@ -55,8 +61,11 @@ import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.pred.MethodPostcondition;
+import edu.cmu.cs.plural.pred.MethodPrecondition;
 import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
 import edu.cmu.cs.plural.util.Pair;
+import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * @author Kevin Bierhoff
@@ -66,6 +75,9 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		implements IInvocationSignature {
 	
 	private static final Logger log = Logger.getLogger(AbstractBindingSignature.class.getName());
+	private Map<String, String> capturedParams;
+	private Map<String, String> releasedParams;
+	private Set<String> notReturned;
 	
 	/**
 	 * @param crystal
@@ -93,6 +105,167 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		throw new IllegalStateException("This is not a method signature: " + this);
 	}
 	
+	protected Pair<MethodPrecondition, MethodPostcondition> preAndPost(
+			boolean forAnalyzingBody, Pair<String, String> preAndPostString,
+			boolean frameAsVirtual, boolean noReceiverPre) {
+		final Map<String, StateSpace> spaces = new HashMap<String, StateSpace>();
+		Map<String, PermissionSetFromAnnotations> pre = 
+			new HashMap<String, PermissionSetFromAnnotations>();
+		Map<String, PermissionSetFromAnnotations> post = 
+			new HashMap<String, PermissionSetFromAnnotations>();
+		
+		/*
+		 * 1. receiver
+		 */
+		if(!isStaticMethod(binding)) {
+			StateSpace rcvr_space = getStateSpace(binding.getDeclaringClass());
+			spaces.put("this", rcvr_space);
+			if(!frameAsVirtual)
+				spaces.put("this!fr", rcvr_space);
+			
+			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> rcvr_borrowed = 
+				prePostFromAnnotations(rcvr_space, 
+						CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding), 
+						forAnalyzingBody, 
+						frameAsVirtual,
+						noReceiverPre);
+			
+			assert !frameAsVirtual || rcvr_borrowed.fst().getFramePermissions().isEmpty();
+			
+			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> rcvr_pre =
+				PermissionSetFromAnnotations.splitPermissionSets(rcvr_borrowed.fst());
+			if(!noReceiverPre) {
+				pre.put("this", rcvr_pre.fst());
+				if(!frameAsVirtual)
+					pre.put("this!fr", rcvr_pre.snd());
+			}
+			
+			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> rcvr_post =
+				PermissionSetFromAnnotations.splitPermissionSets(rcvr_borrowed.snd());
+			post.put("this", rcvr_post.fst());
+			if(!frameAsVirtual)
+				post.put("this!fr", rcvr_post.snd());
+			
+		}
+		
+		/*
+		 * 2. arguments
+		 */
+		for(int paramIndex = 0; paramIndex < binding.getParameterTypes().length; paramIndex++) {
+			String paramName = "#" + paramIndex;
+			StateSpace space = getStateSpace(binding.getParameterTypes()[paramIndex]);
+			spaces.put(paramName, space);
+			
+			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> param_borrowed = 
+				prePostFromAnnotations(space, 
+					CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), 
+					forAnalyzingBody,
+					false, false);
+			pre.put(paramName, param_borrowed.fst());
+			post.put(paramName, param_borrowed.snd());
+		}
+		
+		/*
+		 * 3. result
+		 */
+		String capturing;  // symbolic name for capturing object
+		// unfortunately this varies because it's "this" in constructors.
+		if(binding.isConstructor()) {
+			capturing = frameAsVirtual ? 
+					"this" /* for "new" */ : 
+						"this!fr" /* for super(...) or this(...) */;
+		}
+		else { // regular method
+			capturing = "result";
+			
+			StateSpace space = getStateSpace(binding.getReturnType());
+			spaces.put("result", space);
+			
+			PermissionSetFromAnnotations result = PermissionSetFromAnnotations.createEmpty(space);
+			for(ResultPermissionAnnotation a : CrystalPermissionAnnotation.resultAnnotations(getAnnoDB(), binding)) {
+				PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(space, a.getRootNode(), a.getKind(), a.isFramePermission(), a.getEnsures(), ! forAnalyzingBody);
+				result = result.combine(p);
+			}
+			post.put("result", result);
+		}
+		
+		return PermParser.parseSignature(
+				preAndPostString, forAnalyzingBody, frameAsVirtual, 
+				new SimpleMap<String, StateSpace>() {
+					@Override
+					public StateSpace get(String key) {
+						StateSpace result = spaces.get(key);
+						assert result != null : "Can't find state space for " + key;
+						return result;
+					}
+				},
+				getCapturedParams(), capturing, getReleasedParams(), pre, post, 
+				getNotReturned());
+	}
+
+	private Set<String> getNotReturned() {
+		if(notReturned == null)
+			initParamInfo();
+		return notReturned;
+	}
+
+	private Map<String, String> getReleasedParams() {
+		if(releasedParams == null) {
+			initParamInfo();
+		}
+		return releasedParams;
+	}
+
+	private Map<String, String> getCapturedParams() {
+		if(capturedParams == null) {
+			initParamInfo();
+		}
+		return capturedParams;
+	}
+
+	/**
+	 * Initializes the maps for captured and released parameters from the respective annotations.
+	 * @tag todo.general -id="1969913" : read capturing states from @Param annotations on classes
+	 */
+	private void initParamInfo() {
+		capturedParams = new LinkedHashMap<String, String>();
+		releasedParams = new LinkedHashMap<String, String>();
+		notReturned = new LinkedHashSet<String>();
+//		if(binding.isConstructor())
+//			notReturned.add("this!fr");
+		
+		// receiver
+		ICrystalAnnotation this_c = getAnnoDB().getSummaryForMethod(binding).getReturn("edu.cmu.cs.plural.annot.Param");
+		if(this_c != null) {
+			capturedParams.put("this!fr", StateSpace.STATE_ALIVE);
+		}
+		ICrystalAnnotation this_r = getAnnoDB().getSummaryForMethod(binding).getReturn("edu.cmu.cs.plural.annot.Release");
+		if(this_r != null) {
+			releasedParams.put("this!fr", (String) this_r.getObject("value"));
+		}
+		if(CrystalPermissionAnnotation.isReceiverNotBorrowed(getAnnoDB(), binding))
+			notReturned.add("this");
+		if(CrystalPermissionAnnotation.isReceiverFrameNotBorrowed(getAnnoDB(), binding))
+			notReturned.add("this!fr");
+		
+		// parameters
+		for(int i = 0; i < binding.getParameterTypes().length; i++) {
+			ICrystalAnnotation param_c = getAnnoDB().getSummaryForMethod(binding).getParameter(i, "edu.cmu.cs.plural.annot.Param");
+			if(param_c != null) {
+				capturedParams.put("#" + i, StateSpace.STATE_ALIVE);
+			}
+			ICrystalAnnotation param_r = getAnnoDB().getSummaryForMethod(binding).getParameter(i, "edu.cmu.cs.plural.annot.Release");
+			if(param_r != null) {
+				releasedParams.put("#" + i, (String) param_r.getObject("value"));
+			}
+			if(CrystalPermissionAnnotation.isParameterNotBorrowed(getAnnoDB(), binding, i))
+				notReturned.add("#" + i);
+		}
+		capturedParams = Collections.unmodifiableMap(capturedParams);
+		releasedParams = Collections.unmodifiableMap(releasedParams);
+		notReturned = Collections.unmodifiableSet(notReturned);
+	}
+
 	/**
 	 * Returns the pre and post condition permissions for the receiver of the
 	 * method call, given the method binding.
@@ -122,14 +295,9 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	}
 
 	private boolean isStaticMethod(IMethodBinding binding) {
-		return (binding.getModifiers() & Modifier.STATIC) == Modifier.STATIC;
+		return Modifier.isStatic(binding.getModifiers());
 	}
 
-//	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> 
-//	parameterPermissions(IMethodBinding binding, int paramIndex) {
-//		return this.parameterPermissions(binding, paramIndex, false);
-//	}
-	
 	/**
 	 * Returns the pre and post condition permissions for the paramIndex-th 
 	 * parameter of the binding method.

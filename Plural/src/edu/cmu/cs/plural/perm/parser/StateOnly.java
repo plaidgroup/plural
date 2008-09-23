@@ -50,11 +50,11 @@ package edu.cmu.cs.plural.perm.parser;
  */
 public class StateOnly implements AccessPred {
 
-	private final String var;
+	private final RefExpr var;
 	private final String stateInfo;
 	
-	public StateOnly(String var, String stateInfo) {
-		this.var = var;
+	public StateOnly(RefExpr ref, String stateInfo) {
+		this.var = ref;
 		this.stateInfo = stateInfo;
 	}
 	
@@ -63,7 +63,7 @@ public class StateOnly implements AccessPred {
 		return visitor.visit(this);
 	}
 
-	public String getVar() {
+	public RefExpr getVar() {
 		return this.var;
 	}
 

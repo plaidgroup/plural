@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -51,7 +50,6 @@ import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.flow.LatticeElement;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.util.Pair;
@@ -518,6 +516,18 @@ implements LatticeElement<FractionalPermissions> {
 			PermissionSet.forgetShareAndPureStates(permissions, constraints);
 		List<FractionalPermission> newFramePs = 
 			PermissionSet.forgetShareAndPureStates(framePermissions, constraints);
+		
+		// original constraints unchanged
+		return createPermissions(newPs, newFramePs, constraints);
+	}
+
+	public FractionalPermissions withoutStateInfo() {
+		if(isBottom())
+			return this;
+		List<FractionalPermission> newPs = 
+			PermissionSet.withoutStateInfo(permissions);
+		List<FractionalPermission> newFramePs = 
+			PermissionSet.withoutStateInfo(framePermissions);
 		
 		// original constraints unchanged
 		return createPermissions(newPs, newFramePs, constraints);
@@ -1038,6 +1048,18 @@ implements LatticeElement<FractionalPermissions> {
 		} else if (!unpackedPermission.equals(other.unpackedPermission))
 			return false;
 		return true;
+	}
+
+	/**
+	 * Replaces this permission set's constraints with the given ones but leaves
+	 * the actual permissions untouched.  Be very careful with this method
+	 * to make sure that constraints and permissions match.
+	 * @param constraints
+	 * @return
+	 */
+	public FractionalPermissions replaceConstraints(
+			FractionConstraints constraints) {
+		return createPermissions(permissions, framePermissions, constraints);
 	}
 
 //	/**

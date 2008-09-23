@@ -46,7 +46,6 @@ import org.antlr.runtime.RecognitionException;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
@@ -66,9 +65,23 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 	protected Pair<String, String> preAndPostString;
 	
 	/**
+	 * Creates a case without an @Perm annotation.
 	 * @param crystal
 	 * @param binding The binding that contains specs to be used
-	 * @param perm
+	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
+	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
+	 */
+	protected AbstractBindingCase(AnnotationDatabase annoDB, IMethodBinding binding, 
+			ITypeBinding staticallyInvokedType) {
+		super(annoDB, binding, staticallyInvokedType);
+		preAndPostString = Pair.create("", "");
+	}
+
+	/**
+	 * Creates a case for the given @Perm annotation
+	 * @param crystal
+	 * @param binding The binding that contains specs to be used
+	 * @param perm @Perm annotation
 	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
 	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
 	 */

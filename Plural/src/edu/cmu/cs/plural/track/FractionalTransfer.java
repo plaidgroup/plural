@@ -49,13 +49,10 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.Modifier;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 
 import edu.cmu.cs.crystal.BooleanLabel;
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
@@ -84,10 +81,8 @@ import edu.cmu.cs.crystal.tac.SourceVariableDeclaration;
 import edu.cmu.cs.crystal.tac.SourceVariableRead;
 import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
-import edu.cmu.cs.crystal.tac.SuperVariable;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.TempVariable;
-import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
 import edu.cmu.cs.crystal.tac.UnaryOperator;
 import edu.cmu.cs.crystal.tac.Variable;
@@ -96,14 +91,17 @@ import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.linear.DisjunctiveLE;
+import edu.cmu.cs.plural.linear.InitialLECreator;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
-import edu.cmu.cs.plural.linear.TensorPluralTupleLE;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
+import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IMethodSignature;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
 import edu.cmu.cs.plural.util.Pair;
+import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * The transfer function for the PLURAL analysis.
@@ -116,48 +114,53 @@ public class FractionalTransfer extends
 	
 	private static final Logger log = Logger.getLogger(FractionalTransfer.class.getName());
 	
-	//private Crystal crystal;
 	private PermissionFactory pf = PermissionFactory.INSTANCE;
 	
-	private final IAnalysisInput input;
+	private FractionAnalysisContext context;
+
+	/** Liveness information (another flow analysis...) */
+	private final LivenessProxy liveness;
 	
 	/*
 	 * Post-condition stuff.
 	 */
-	private Map<Aliasing, PermissionSetFromAnnotations> paramPost;
+//	private Map<Aliasing, PermissionSetFromAnnotations> paramPost;
 	private Map<Boolean, String> dynamicStateTest;
+
+	private SimpleMap<String, Aliasing> initialLocations;
 	
-	private PermissionSetFromAnnotations resultPost;
-	private FractionAnalysisContext context;
+//	private PermissionSetFromAnnotations resultPost;
 	
-	private ThisVariable thisVar;
-	
-	private final LivenessProxy liveness;
+//	private ThisVariable thisVar;
 	
 	public FractionalTransfer(IAnalysisInput input, FractionAnalysisContext context) {
-		this.input = input;
 		this.context = context;
 		this.liveness = LivenessProxy.create(input);
 	}
 
-	public Map<Aliasing, PermissionSetFromAnnotations> getParameterPostConditions() {
-		if(paramPost == null) throw new IllegalStateException("Must call getLattice() first--query any analysis results before calling this method");
-		return paramPost;
-	}
-	
-	/**
-	 * Returns the expected permissions for the method result, if any.
-	 * @return the expected permissions for the method result or <code>null</code> if there
-	 * is none (for constructors).
-	 */
-	public PermissionSetFromAnnotations getResultPostCondition() {
-		if(paramPost == null) throw new IllegalStateException("Must call getLattice() first--query any analysis results before calling this method");
-		return resultPost; 
-	}
+//	public Map<Aliasing, PermissionSetFromAnnotations> getParameterPostConditions() {
+//		if(paramPost == null) throw new IllegalStateException("Must call getLattice() first--query any analysis results before calling this method");
+//		return paramPost;
+//	}
+//	
+//	/**
+//	 * Returns the expected permissions for the method result, if any.
+//	 * @return the expected permissions for the method result or <code>null</code> if there
+//	 * is none (for constructors).
+//	 */
+//	public PermissionSetFromAnnotations getResultPostCondition() {
+//		if(paramPost == null) throw new IllegalStateException("Must call getLattice() first--query any analysis results before calling this method");
+//		return resultPost; 
+//	}
 	
 	Map<Boolean, String> getDynamicStateTest() {
 		if(dynamicStateTest == null) throw new IllegalStateException("Must call getLattice() first--query any analysis results before calling this method");	
 		return dynamicStateTest;
+	}
+	
+	public SimpleMap<String, Aliasing> getInitialLocations() {
+		if(initialLocations == null) throw new IllegalStateException("Must call getLattice() first--query any analysis results before calling this method");	
+		return initialLocations;
 	}
 	
 	/* 
@@ -168,103 +171,112 @@ public class FractionalTransfer extends
 	 * fields based on what the precondition state implies.
 	 */
 	public Lattice<PluralDisjunctiveLE> getLattice(MethodDeclaration d) {
-		final IMethodBinding methodBinding = d.resolveBinding();
-		
-		if(paramPost != null || dynamicStateTest != null)
+		if(initialLocations != null || dynamicStateTest != null)
 			throw new IllegalStateException("getLattice() called twice--must create a new instance of this class for every method being analyzed");
-		paramPost = new HashMap<Aliasing, PermissionSetFromAnnotations>();
-		dynamicStateTest = new HashMap<Boolean, String>(2);
 		
+//		final IMethodBinding methodBinding = d.resolveBinding();
+		
+//		if(paramPost != null || dynamicStateTest != null)
+//			throw new IllegalStateException("getLattice() called twice--must create a new instance of this class for every method being analyzed");
+//		paramPost = new HashMap<Aliasing, PermissionSetFromAnnotations>();
+
 		liveness.switchToMethod(d);
 		
-		TensorPluralTupleLE start;
-		boolean isConstructor = d.isConstructor();
-
-		// receiver permission--skip for static methods
-		if((d.getModifiers() & Modifier.STATIC) == 0) {
-			// instance method or constructor
-			thisVar = getAnalysisContext().getThisVariable();
-			// Get initial lattice, either constructor or regular method.
-			start = 
-				isConstructor ? 
-				TensorPluralTupleLE.createUnpackedLattice(
-					FractionalPermissions.createEmpty(), // use top (no permissions) as default
-					input,
-					context.getRepository(),
-					thisVar,
-					d)
-					:	
-				new TensorPluralTupleLE(
-					FractionalPermissions.createEmpty(), // use top (no permissions) as default
-					input,
-					context.getRepository());
-			
-			start.storeInitialAliasingInfo(d);
-			Aliasing thisLocation =
-				start.getStartLocations(thisVar, d);
-			
-			// get the declared pre-condition
-			PermissionSetFromAnnotations this_pre = context.getAnalyzedCase().getRequiredReceiverPermissions();
-			// pre-condition
-			if(isConstructor) { // constructor
-				// add an unpacked unique frame permission for alive
-				StateSpace thisSpace = getStateSpace(methodBinding.getDeclaringClass());
-				PermissionFromAnnotation thisFrame = 
-					pf.createUniqueOrphan(thisSpace, thisSpace.getRootState(), 
-							true /* frame permission */, thisSpace.getRootState());
-				// there shouldn't already be frame permissions
-				assert this_pre.getFramePermissions().isEmpty() :
-					"Specification error: a constructor cannot require frame permissions; instead, it starts out with an unpacked unique frame permission"; 
-				this_pre = this_pre.combine(thisFrame); 
-
-				FractionalPermissions this_initial = this_pre.toLatticeElement();
-				this_initial = this_initial.unpack(thisSpace.getRootState());
-				start.put(thisLocation, this_initial);
-			}
-			else { 
-				// regular instance method: just use declared pre-condition
-				start.put(thisLocation, this_pre.toLatticeElement());
-			}
-			
-			// post-condition
-			PermissionSetFromAnnotations thisPost = context.getAnalyzedCase().getEnsuredReceiverPermissions();
-			paramPost.put(thisLocation, thisPost);
-		}
-		else {
-			// static method
-			thisVar = null;
-			start =	new TensorPluralTupleLE(FractionalPermissions.createEmpty(), // use top (no permissions) as default
-					input, context.getRepository());
-			start.storeInitialAliasingInfo(d);
-		}
+		Pair<DisjunctiveLE, SimpleMap<String, Aliasing>> li = createLatticeInfo(d);
+		DisjunctiveLE start = li.fst();
+		// put location map in a field so it can be used for post-condition checking
+		this.initialLocations = li.snd(); 
 		
-		/*
-		 * Fill this.dynamicStateTest
-		 */
-		populateDynamicStateTest(d);
+		dynamicStateTest = new HashMap<Boolean, String>(2);
+		populateDynamicStateTest();
 		
-		// parameter permissions
-		int paramCount = d.parameters().size();
-		for(int param = 0; param < paramCount; param++) {
-			SingleVariableDeclaration paramDecl = (SingleVariableDeclaration) d.parameters().get(param);
-			SourceVariable paramVar = getAnalysisContext().getSourceVariable(paramDecl.resolveBinding());
-			Aliasing paramLocation = start.getLocationsAfter(paramDecl, paramVar);
-			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> prePost = 
-				context.getAnalyzedCase().getParameterPermissions()[param];
-//				parameterPermissions(methodBinding, param, true);
-			start.put(paramLocation, prePost.fst().toLatticeElement());
-			paramPost.put(paramLocation, prePost.snd());
-		}
-		
-		// populate expected result
-		if(isConstructor == false)
-			resultPost = context.getAnalyzedCase().getMethodCaseInstance().getEnsuredResultPermissions();
+		//		TensorPluralTupleLE start;
+//		boolean isConstructor = d.isConstructor();
+//
+//		// receiver permission--skip for static methods
+//		if((d.getModifiers() & Modifier.STATIC) == 0) {
+//			// instance method or constructor
+//			thisVar = getAnalysisContext().getThisVariable();
+//			// Get initial lattice, either constructor or regular method.
+//			start = 
+//				isConstructor ? 
+//				TensorPluralTupleLE.createUnpackedLattice(
+//					FractionalPermissions.createEmpty(), // use top (no permissions) as default
+//					getAnnoDB(),
+//					context.getRepository(),
+//					thisVar)
+//					:	
+//				new TensorPluralTupleLE(
+//					FractionalPermissions.createEmpty(), // use top (no permissions) as default
+//					getAnnoDB(),
+//					context.getRepository());
+//			
+//			start.storeInitialAliasingInfo(d);
+//			Aliasing thisLocation =
+//				start.getStartLocations(thisVar, d);
+//			
+//			// get the declared pre-condition
+//			PermissionSetFromAnnotations this_pre = context.getAnalyzedCase().getRequiredReceiverPermissions();
+//			// pre-condition
+//			if(isConstructor) { // constructor
+//				// add an unpacked unique frame permission for alive
+//				StateSpace thisSpace = getStateSpace(methodBinding.getDeclaringClass());
+//				PermissionFromAnnotation thisFrame = 
+//					pf.createUniqueOrphan(thisSpace, thisSpace.getRootState(), 
+//							true /* frame permission */, thisSpace.getRootState());
+//				// there shouldn't already be frame permissions
+//				assert this_pre.getFramePermissions().isEmpty() :
+//					"Specification error: a constructor cannot require frame permissions; instead, it starts out with an unpacked unique frame permission"; 
+//				this_pre = this_pre.combine(thisFrame); 
+//
+//				FractionalPermissions this_initial = this_pre.toLatticeElement();
+//				this_initial = this_initial.unpack(thisSpace.getRootState());
+//				start.put(thisLocation, this_initial);
+//			}
+//			else { 
+//				// regular instance method: just use declared pre-condition
+//				start.put(thisLocation, this_pre.toLatticeElement());
+//			}
+//			
+//			// post-condition
+//			PermissionSetFromAnnotations thisPost = context.getAnalyzedCase().getEnsuredReceiverPermissions();
+//			paramPost.put(thisLocation, thisPost);
+//		}
+//		else {
+//			// static method
+//			thisVar = null;
+//			start =	new TensorPluralTupleLE(FractionalPermissions.createEmpty(), // use top (no permissions) as default
+//					getAnnoDB(), context.getRepository());
+//			start.storeInitialAliasingInfo(d);
+//		}
+//		
+//		/*
+//		 * Fill this.dynamicStateTest
+//		 */
+//		populateDynamicStateTest();
+//		
+//		// parameter permissions
+//		int paramCount = d.parameters().size();
+//		for(int param = 0; param < paramCount; param++) {
+//			SingleVariableDeclaration paramDecl = (SingleVariableDeclaration) d.parameters().get(param);
+//			SourceVariable paramVar = getAnalysisContext().getSourceVariable(paramDecl.resolveBinding());
+//			Aliasing paramLocation = start.getLocationsAfter(paramDecl, paramVar);
+//			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> prePost = 
+//				context.getAnalyzedCase().getParameterPermissions()[param];
+////				parameterPermissions(methodBinding, param, true);
+//			start.put(paramLocation, prePost.fst().toLatticeElement());
+//			paramPost.put(paramLocation, prePost.snd());
+//		}
+//		
+//		// populate expected result
+//		if(isConstructor == false)
+//			resultPost = context.getAnalyzedCase().getMethodCaseInstance().getEnsuredResultPermissions();
 //		resultPost = resultPermissions(methodBinding, false);
 		
-		PluralDisjunctiveLE startLE = PluralDisjunctiveLE.tuple(start,
-				getAnnoDB(), getAnalysisContext(), thisVar, context);
+		PluralDisjunctiveLE startLE = PluralDisjunctiveLE.createLE(start,
+				getAnalysisContext(), context);
 		
-		if(isConstructor && !hasConstructorInvocation(d)) {
+		if(d.isConstructor() && !hasConstructorInvocation(d)) {
 			// TODO simulate default super constructor call
 			if(log.isLoggable(Level.FINE))
 				log.fine("Ignoring implicit super-constructor call");
@@ -274,17 +286,27 @@ public class FractionalTransfer extends
 				startLE, PluralDisjunctiveLE.bottom());
 	}
 
-	private void populateDynamicStateTest(MethodDeclaration d) {
+	private Pair<DisjunctiveLE, SimpleMap<String, Aliasing>> createLatticeInfo(MethodDeclaration decl) {
+		PredicateMerger pre = context.getAnalyzedCase().getPreconditionMerger();
+		if(context.getAnalyzedCase().isConstructorCaseInstance())
+			return InitialLECreator.createInitialConstructorLE(
+					pre, getAnalysisContext(), context, decl);
+		else
+			return InitialLECreator.createInitialMethodLE(
+					pre, getAnalysisContext(), context);
+	}
+
+	private void populateDynamicStateTest() {
 		/*
 		 * Set up the dynamic state test tracker, so we know what to test against
 		 * at the end of the method.
 		 */
 		IndicatesAnnotation true_annot = 
 			IndicatesAnnotation.getBooleanIndicatorOnReceiverIfAny(
-					getAnnoDB().getSummaryForMethod(d.resolveBinding()), true);
+					getAnnoDB().getSummaryForMethod(getSpecificationBinding()), true);
 		IndicatesAnnotation false_annot =
 			IndicatesAnnotation.getBooleanIndicatorOnReceiverIfAny(
-					getAnnoDB().getSummaryForMethod(d.resolveBinding()), false);
+					getAnnoDB().getSummaryForMethod(getSpecificationBinding()), false);
 		
 		if( true_annot != null ) {
 			this.dynamicStateTest.put(Boolean.TRUE, true_annot.getIndicatedState());
@@ -294,6 +316,10 @@ public class FractionalTransfer extends
 		}
 	}
 	
+	private IMethodBinding getSpecificationBinding() {
+		return context.getAnalyzedCase().getInvocationCase().getSpecifiedMethodBinding();
+	}
+
 	private boolean hasConstructorInvocation(MethodDeclaration constructor) {
 		// the call to statements() will trigger a NPE if constructor has no body
 		// (which shouldn't ever happen if it's actually a constructor
@@ -594,7 +620,7 @@ public class FractionalTransfer extends
 	}
 
 	private boolean inStaticMethod() {
-		return thisVar == null;
+		return getAnalysisContext().getThisVariable() == null;
 	}
 
 	@Override
@@ -660,21 +686,21 @@ public class FractionalTransfer extends
 	private IResult<PluralDisjunctiveLE> dynamicStateTestHelper(
 			MethodCallInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
-
-//		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		
 		// Well we know afterwards that the receiver is not null!
-//		Aliasing rcvr_loc = value.getLocationsAfter(instr.getNode(), instr.getReceiverOperand());
 		Variable rcvr_loc = instr.getReceiverOperand();
 		value.addNonNullVariable(rcvr_loc);
-		
+
+		// find the method binding that actually carries the spec for the invoked method
+		final IMethodBinding invokedBinding = context.getRepository().getSignature(instr.resolveBinding()).getSpecifiedMethodBinding();
+	
+		// find @TrueIndicates / @FalseIndicates annos
 		IndicatesAnnotation true_result = 
 			IndicatesAnnotation.getBooleanIndicatorOnReceiverIfAny(
-					getAnnoDB().getSummaryForMethod(instr.resolveBinding()),
+					getAnnoDB().getSummaryForMethod(invokedBinding),
 					true);
 		IndicatesAnnotation false_result = 
 			IndicatesAnnotation.getBooleanIndicatorOnReceiverIfAny(
-					getAnnoDB().getSummaryForMethod(instr.resolveBinding()),
+					getAnnoDB().getSummaryForMethod(invokedBinding),
 					false);
 		addIndicatedImplications(instr, value, rcvr_loc, true_result,
 				false_result);
@@ -684,11 +710,11 @@ public class FractionalTransfer extends
 		for(int arg = 0; arg < instr.getArgOperands().size(); arg++) {
 			IndicatesAnnotation arg_true = 
 				IndicatesAnnotation.getBooleanIndicatorIfAny(
-						getAnnoDB().getSummaryForMethod(instr.resolveBinding()),
+						getAnnoDB().getSummaryForMethod(invokedBinding),
 						arg, true);
 			IndicatesAnnotation arg_false = 
 				IndicatesAnnotation.getBooleanIndicatorIfAny(
-						getAnnoDB().getSummaryForMethod(instr.resolveBinding()),
+						getAnnoDB().getSummaryForMethod(invokedBinding),
 						arg, false);
 //			Aliasing arg_loc = value.getLocationsAfter(instr.getNode(), (Variable) instr.getArgOperands().get(arg));
 			Variable arg_loc = (Variable) instr.getArgOperands().get(arg);
@@ -698,43 +724,6 @@ public class FractionalTransfer extends
 		}
 		
 		return handleBooleanTest(instr, labels, value);
-		
-//		LabeledResult<PluralDisjunctiveLE> result = 
-//			LabeledResult.createResult(labels, value);
-//		//result.put(NormalLabel.getNormalLabel(), value, instr.getNode());
-//		
-//		/*
-//		 * Um, add TRUE/FALSE predicate for target. Normally not needed, but can't hurt.
-//		 * Only maybe needed for weird field stuff.
-//		 */
-//		if( labels.contains(BooleanLabel.getBooleanLabel(true)) ) {
-//			
-//		}
-//		
-//		/*
-//		 * Additionally, if we have boolean labels, we can just inject the new state
-//		 * right now.
-//		 */
-//		if( true_result != null && labels.contains(BooleanLabel.getBooleanLabel(true)) ) {
-//			PluralDisjunctiveLE br = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode()); // don't remove
-//			br.learnTemporaryStateInfo(instr, instr.getReceiverOperand(), true_result.getIndicatedState());
-//			br.addTrueVarPredicate(instr.getTarget());
-////			FractionalPermissions perms = br.get(instr, instr.getReceiverOperand());
-////			perms = perms.learnTemporaryStateInfo(true_result.getIndicatedState());
-////			br.put(instr, instr.getReceiverOperand(), perms);
-//			result.put(BooleanLabel.getBooleanLabel(true), br);
-//		}
-//		
-//		if( false_result != null && labels.contains(BooleanLabel.getBooleanLabel(false))) {
-//			PluralDisjunctiveLE br = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode()); // don't remove
-//			br.learnTemporaryStateInfo(instr, instr.getReceiverOperand(), false_result.getIndicatedState());
-//			br.addFalseVarPredicate(instr.getTarget());
-////			FractionalPermissions perms = br.get(instr, instr.getReceiverOperand());
-////			perms = perms.learnTemporaryStateInfo(false_result.getIndicatedState());
-////			br.put(instr, instr.getReceiverOperand(), perms);
-//			result.put(BooleanLabel.getBooleanLabel(false), br);			
-//		}
-//		return result;
 	}
 
 	/**
@@ -968,7 +957,7 @@ public class FractionalTransfer extends
 	}
 	
 	private AnnotationDatabase getAnnoDB() {
-		return input.getAnnoDB();
+		return context.getAnnoDB();
 	}
 
 	private StateSpace getStateSpace(ITypeBinding type) {

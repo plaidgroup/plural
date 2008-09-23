@@ -79,7 +79,7 @@ public class ParamReference implements RefExpr, PrimaryExpr {
 	 * @return the original string used to specify a parameter.
 	 */
 	String getParamString() {
-		return paramString;
+		return "#" + paramString;
 	}
 
 	@Override

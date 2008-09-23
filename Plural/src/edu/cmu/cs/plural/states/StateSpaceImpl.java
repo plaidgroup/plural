@@ -353,6 +353,28 @@ public class StateSpaceImpl implements StateSpace {
 	}
 
 	/**
+	 * This is a error recovery method that should be used sparingly.
+	 * Makes the given state a direct child of the {@link #getRootState() root node},
+	 * simulating a state that is not explicitly declared.
+	 * If the given state already exists, this call has no effect.
+	 * @param state
+	 */
+	void addAnonymousState(String state) {
+		// make known
+		if(parents.containsKey(state)) {
+			// already defined
+			return; // ignore--this is a error recovery anyway
+		}
+		parents.put(state, getRootState());
+		// make a state
+		if(statesMarked.containsKey(state)) {
+			// already a state (should be impossible)
+			return;
+		}
+		statesMarked.put(state, false /* conservative */);
+	}
+
+	/**
 	 * Sets the field map.
 	 * 
 	 * @param fieldMap
