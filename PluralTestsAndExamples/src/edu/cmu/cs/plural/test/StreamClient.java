@@ -42,7 +42,7 @@ import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Full;
 
-@FailingTest(12)
+@FailingTest(7) // 12 when reporting state and permission failures separately
 @UseAnalyses("FractionalAnalysis")
 public class StreamClient {
 
