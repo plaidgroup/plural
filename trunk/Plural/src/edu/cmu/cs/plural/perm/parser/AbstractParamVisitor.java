@@ -41,9 +41,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.pred.PredicateChecker;
+import edu.cmu.cs.plural.pred.PredicateMerger;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
+import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 import edu.cmu.cs.plural.util.Pair;
@@ -55,7 +60,8 @@ import edu.cmu.cs.plural.util.SimpleMap;
  * @author Kevin Bierhoff
  * @since 7/28/2008
  */
-public abstract class AbstractParamVisitor implements AccessPredVisitor<Boolean> {
+public abstract class AbstractParamVisitor 
+		implements AccessPredVisitor<Boolean>, PredicateChecker, PredicateMerger {
 
 	private static final Logger log = Logger.getLogger(AbstractParamVisitor.class.getName());
 
@@ -82,6 +88,171 @@ public abstract class AbstractParamVisitor implements AccessPredVisitor<Boolean>
 		this.frameToVirtual = frameToVirtual;
 		this.named = namedFractions;
 	}
+	
+	//
+	// PredicateChecker template
+	// 
+
+	@Override
+	public boolean splitOffPredicate(SimpleMap<String, Aliasing> vars, SplitOffTuple callback) {
+		
+		/*
+		 * 1. Before-checks in subclasses. 
+		 */
+		
+		if(! beforeChecks(vars, callback))
+			return false;
+		
+		/*
+		 * 2. check concrete predicates
+		 */
+		
+		for(Map.Entry<String, ParamInfoHolder> param : getParams().entrySet()) {
+			String paramName = param.getKey();
+			Aliasing var = vars.get(paramName);
+			final ParamInfoHolder h = param.getValue();
+			if(h.hasStateInfo() && ! callback.checkStateInfo(var, h.getStateInfos(), "this!fr".equals(paramName))) {
+				// TODO figure out whether we're checking frame or virtual states
+				return false;
+			}
+			if(h.hasNull() && ! callback.checkNull(var)) {
+				return false;
+			}
+			if(h.hasNonNull() && ! callback.checkNonNull(var)) {
+				return false;
+			}
+			if(h.hasTrue() && ! callback.checkTrue(var)) {
+				return false;
+			}
+			if(h.hasFalse() && ! callback.checkFalse(var)) {
+				return false;
+			}
+		}
+		
+		/*
+		 * 3. split off permissions
+		 */
+		
+		for(Map.Entry<String, ParamInfoHolder> param : getParams().entrySet()) {
+			Aliasing var = vars.get(param.getKey());
+			if(! callback.splitOffPermission(var, param.getValue().getPerms()))
+				return false;
+		}
+		
+		/*
+		 * 4. additional checks in subclasses.
+		 */
+		
+		if(! finishSplit(vars, callback))
+			return false;
+		
+		/*
+		 * 5. post-processing (e.g., packing before call)
+		 */
+		
+		return callback.finishSplit();
+		
+	}
+	
+	/** 
+	 * Override this method to do something before {@link #splitOffPredicate(SimpleMap, SplitOffTuple)}
+	 * starts its dirty work.  By default, this method returns <code>true</code>.
+	 * @param vars
+	 * @param callback
+	 * @return <code>true</code> if checking should proceed, <code>false</code>
+	 * otherwise.
+	 */
+	protected boolean beforeChecks(SimpleMap<String, Aliasing> vars,
+			SplitOffTuple callback) {
+		return true;
+	}
+	
+	/**
+	 * Override this method to do additional checks after the default ones.
+	 * By default, this method returns <code>true</code>.
+	 * @param callback 
+	 * @param vars 
+	 * @return <code>true</code> if checking should continue, <code>false</code>
+	 * otherwise.
+	 */
+	protected boolean finishSplit(SimpleMap<String, Aliasing> vars, SplitOffTuple callback) {
+		return true;
+	}
+
+	//
+	// PredicateMerger template
+	//
+
+	public void mergeInPredicate(SimpleMap<String, Aliasing> vars, MergeIntoTuple callback) {
+		
+		/*
+		 * 1. Pre-processing in subclasses.
+		 */
+		
+		beforeMerge(vars, callback);
+		
+		/*
+		 * 2. merge in permissions
+		 */
+		for(Map.Entry<String, ParamInfoHolder> param : getParams().entrySet()) {
+			Aliasing var = vars.get(param.getKey());
+			callback.mergeInPermission(var, param.getValue().getPerms());
+		}
+		
+		/*
+		 * 3. add concrete predicates
+		 */
+		for(Map.Entry<String, ParamInfoHolder> param : getParams().entrySet()) {
+			Aliasing var = vars.get(param.getKey());
+			final ParamInfoHolder h = param.getValue();
+			if(h.hasStateInfo())
+				callback.addStateInfo(var, h.getStateInfos(), false);
+			if(h.hasNull())
+				callback.addNull(var);
+			if(h.hasNonNull())
+				callback.addNonNull(var);
+			if(h.hasTrue())
+				callback.addTrue(var);
+			if(h.hasFalse())
+				callback.addFalse(var);
+		}
+		
+		/*
+		 * 4. additional processing in subclasses.
+		 */
+		finishMerge(vars, callback);
+	
+		/*
+		 * 5. finish post-condition
+		 */
+		callback.finishMerge();
+	}
+
+	/**
+	 * Override this method to do additional stuff after
+	 * the standard merge operations were executed.  By default, this
+	 * method does nothing.
+	 * @param vars
+	 * @param callback
+	 */
+	protected void finishMerge(SimpleMap<String, Aliasing> vars,
+			MergeIntoTuple callback) {
+	}
+	
+	/**
+	 * Override this method to do additional stuff after
+	 * the standard merge operations were executed.  By default,
+	 * this method does nothing.
+	 * @param vars
+	 * @param callback
+	 */
+	protected void beforeMerge(SimpleMap<String, Aliasing> vars,
+			MergeIntoTuple callback) {
+	}
+
+	//
+	// Predicate visitor
+	//
 
 	@Override
 	public Boolean visit(TempPermission perm) {
@@ -100,14 +271,18 @@ public abstract class AbstractParamVisitor implements AccessPredVisitor<Boolean>
 
 	/**
 	 * @param ref
-	 * @return
+	 * @return Pair (parameter name, frame permission) for the given ref.
 	 */
 	protected Pair<String, Boolean> getRefPair(RefExpr ref) {
 		String param;
 		boolean isFrame = false;
 		if(ref instanceof Identifier) {
 			param = ((Identifier) ref).getName();
+			// this flag decides whether a frame or virtual permission is created, so frameToVirtual matters
 			isFrame = !isFrameToVirtual() && ((Identifier) ref).isFrame();
+			if(isFrame /*((Identifier) ref).isFrame()*/)
+				// TODO keep permissions declared for receiver frame and virtual separate, even if coerced
+				param = param + "!fr";
 		}
 		else if(ref instanceof ParamReference) {
 			param = ((ParamReference) ref).getParamString();
@@ -160,25 +335,109 @@ public abstract class AbstractParamVisitor implements AccessPredVisitor<Boolean>
 
 	@Override
 	public Boolean visit(BinaryExprAP binaryExpr) {
-		log.warning("Ignore: " + binaryExpr);
+		handleBinary(binaryExpr.getBinExpr());
 		return null;
+	}
+
+	private void handleBinary(BinaryExpr expr) {
+		boolean negate = expr instanceof NotEqualsExpr;
+		
+		Object e1 = mapPrimary(expr.getE1());
+		Object e2 = mapPrimary(expr.getE2());
+		
+		if(e1 == e2) {
+			if(negate)
+				log.warning("Ignore contradiction: " + expr);
+			// ignore trivial equality
+		}
+		else if(e1 == null && e2 instanceof String) {
+			equate(expr, (String) e2, e1, negate);
+		}
+		else if(e1 instanceof String) {
+			equate(expr, (String) e1, e2, negate);
+		}
+		else if(e2 instanceof Aliasing) {
+			equate(expr, (String) e2, e1, negate);
+		}
+		else {
+			log.warning("Ignore expression: " + expr);
+		}
+	}
+
+	private void equate(BinaryExpr expr, String x, Object other, boolean negate) {
+		ParamInfoHolder h = getInfoHolder(x);
+		if(other == null) {
+			h.addNull(negate);
+		}
+		else if(other instanceof Boolean) {
+			boolean b = (Boolean) other;
+			h.addBoolean(negate ? !b : b);
+		}
+		else if(other instanceof String) {
+			log.warning("Ignoring variable relation: " + expr);
+			// TODO support for relations between variables
+		}
+		else
+			throw new IllegalArgumentException("Don't know what to do: " + expr);
+	}
+
+	/**
+	 * Returns the corresponding primitive value for {@link Null} and
+	 * {@link BoolLiteral}s and an {@link Aliasing} object for {@link
+	 * Identifier}.
+	 * @param e
+	 * @return a pair of a boolean that is <code>true</code> if
+	 * the primary is to be ignored (because it corresponds to the assigned-to
+	 * field and the corresponding primitive value for {@link Null} and
+	 * {@link BoolLiteral}s and an {@link Aliasing} object for {@link
+	 * Identifier}s.
+	 */
+	private Object mapPrimary(PrimaryExpr e) {
+		return e.dispatch(new PrimaryExprVisitor<Object>() {
+
+			@Override
+			public Object visitBool(BoolLiteral bool) {
+				return bool.hasValue(true);
+			}
+
+			@Override
+			public Object visitId(Identifier id) {
+				if(id.isFrame())
+					log.warning("Frame referenece in primary not supported: " + id);
+				return id.getName();
+			}
+
+			@Override
+			public Object visitNull(Null nul) {
+				return null;
+			}
+
+			@Override
+			public Object visitParam(ParamReference paramReference) {
+				return paramReference.getParamString();
+			}
+			
+		});
 	}
 
 	@Override
 	public Boolean visit(EqualsExpr equalsExpr) {
-		log.warning("Ignore: " + equalsExpr);
+		handleBinary(equalsExpr);
 		return null;
+//		throw new IllegalStateException("Should be handled as BinaryExprAP");
 	}
 
 	@Override
 	public Boolean visit(NotEqualsExpr notEqualsExpr) {
-		log.warning("Ignore: " + notEqualsExpr);
+		handleBinary(notEqualsExpr);
 		return null;
+//		throw new IllegalStateException("Should be handled as BinaryExprAP");
 	}
 
 	@Override
 	public Boolean visit(StateOnly stateOnly) {
-		String param = stateOnly.getStateInfo();
+		Pair<String, Boolean> r = getRefPair(stateOnly.getVar());
+		String param = r.fst();
 		getInfoHolder(param).getStateInfos().add(stateOnly.getStateInfo());
 		return null;
 	}
@@ -237,6 +496,10 @@ public abstract class AbstractParamVisitor implements AccessPredVisitor<Boolean>
 	 */
 	protected SimpleMap<String, StateSpace> getSpaces() {
 		return spaces;
+	}
+
+	protected boolean isNamedFractions() {
+		return named;
 	}
 
 }

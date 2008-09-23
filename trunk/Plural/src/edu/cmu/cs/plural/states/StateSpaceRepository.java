@@ -236,19 +236,31 @@ public class StateSpaceRepository {
 			IMethodBinding binding) {
 		IMethodBinding specBinding = findSpecificationMethod(binding);
 		final AnnotationDatabase adb = getAnnotationDB();
-		ICrystalAnnotation a = adb.getSummaryForMethod(specBinding).getReturn("edu.cmu.cs.plural.annot.Cases");
+		ICrystalAnnotation cases = adb.getSummaryForMethod(specBinding).getReturn("edu.cmu.cs.plural.annot.Cases");
 		
-		if(a == null)
-			return binding.isConstructor() ? 
-					new SimpleConstructorSignature(adb, specBinding, binding.getDeclaringClass()) : 
-						new SimpleMethodSignature(adb, specBinding, binding.getDeclaringClass());
+		if(cases == null) {
+			ICrystalAnnotation perm = adb.getSummaryForMethod(specBinding).getReturn("edu.cmu.cs.plural.annot.Perm");
+			if(perm == null) {
+				// no @Perm
+				return binding.isConstructor() ? 
+						new MultiCaseConstructorSignature(adb, specBinding, binding.getDeclaringClass()) : 
+							new MultiCaseMethodSignature(adb, specBinding, binding.getDeclaringClass());
+			}
+			else {
+				// @Perm on method
+				return binding.isConstructor() ? 
+						new MultiCaseConstructorSignature(adb, specBinding, binding.getDeclaringClass(), (PermAnnotation) perm) : 
+							new MultiCaseMethodSignature(adb, specBinding, binding.getDeclaringClass(), (PermAnnotation) perm);
+			}
+		}
 		else
+			// @Cases on method
 			return binding.isConstructor() ? 
 					new MultiCaseConstructorSignature(adb, specBinding, binding.getDeclaringClass(), 
-							downcast((Object[]) a.getObject("value"), PermAnnotation.class))
+							downcast((Object[]) cases.getObject("value"), PermAnnotation.class))
 					:
 					new MultiCaseMethodSignature(adb, specBinding, binding.getDeclaringClass(),
-							downcast((Object[]) a.getObject("value"), PermAnnotation.class));
+							downcast((Object[]) cases.getObject("value"), PermAnnotation.class));
 	}
 	
 	/**
@@ -423,7 +435,7 @@ public class StateSpaceRepository {
 					}
 					annoProblems.add("Refined state unknown: " + refined);
 					// slam in unknown states...
-					result.addAnonymousDimension(new String[] { refined }, StateSpace.STATE_ALIVE, false);
+					result.addAnonymousState(refined);
 				}
 			}
 		}
@@ -437,6 +449,8 @@ public class StateSpaceRepository {
 				ClassStateDeclAnnotation csda = (ClassStateDeclAnnotation) a;
 				for(StateDeclAnnotation stateAnno : csda.getStates()) {
 					String state = stateAnno.getStateName();
+					if(! result.isKnown(state))
+						result.addAnonymousState(state);
 					for(StateInvAnnotation inv : stateAnno.getInvs()) {
 						String field = inv.getField();
 						String oldNode = fieldMap.get(field);

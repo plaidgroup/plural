@@ -526,7 +526,7 @@ public class ConcreteAnnotationUtils {
 
 				@Override
 				public Boolean visit(StateOnly stateOnly) {
-					Aliasing x = vars.get(stateOnly.getVar());
+					Aliasing x = vars.get(((Identifier) stateOnly.getVar()).getName());
 					result.add(p.fst());
 					if(truth)
 						impls.add(Pair.create(p.fst(), StateImplication.createTrueVarImplies(

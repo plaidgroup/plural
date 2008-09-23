@@ -35,64 +35,15 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
-
-import java.util.Set;
-
-import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.plural.concrete.Implication;
-import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.util.SimpleMap;
+package edu.cmu.cs.plural.pred;
 
 /**
+ * Intersection type to get around limitations of the Java type system.
  * 
  * @author Kevin Bierhoff
- * @since Sep 10, 2008
+ * @since Sep 17, 2008
  *
  */
-public interface PredicateMerger {
-
-	/**
-	 * Callback interface.
-	 * @author Kevin Bierhoff
-	 * @since Sep 10, 2008
-	 *
-	 */
-	public interface MergeIntoTuple {
-		/**
-		 * Add the given state info to the given object
-		 * @param var
-		 * @param stateInfos
-		 */
-		public void addStateInfo(Aliasing var, Set<String> stateInfos);
-
-		/**
-		 * Merge the given permission into the permissions for the given object.
-		 * @param var
-		 * @param perms
-		 */
-		public void mergeInPermission(Aliasing var, PermissionSetFromAnnotations perms);
-		
-		/**
-		 * Add the given implication for the given object.
-		 * @param var
-		 * @param implication
-		 */
-		public void addImplication(Aliasing var, Implication implication);
-
-		/**
-		 * Post-processing.
-		 */
-		public void finishMerge();
-	}
-	
-	/**
-	 * Call this method to merge this predicate.  This method can be called 
-	 * multiple times.
-	 * @param vars
-	 * @param callback
-	 */
-	public void mergeInPredicate(SimpleMap<String, Aliasing> vars,
-			MergeIntoTuple callback);
+public interface MethodPostcondition extends MethodPostconditionMerger, PredicateChecker {
 
 }

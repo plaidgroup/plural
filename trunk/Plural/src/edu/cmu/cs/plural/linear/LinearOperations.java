@@ -57,10 +57,12 @@ import org.eclipse.jdt.core.dom.Modifier;
 
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.tac.ConstructorCallInstruction;
 import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
+import edu.cmu.cs.crystal.tac.MethodCallInstruction;
+import edu.cmu.cs.crystal.tac.NewObjectInstruction;
 import edu.cmu.cs.crystal.tac.SuperVariable;
 import edu.cmu.cs.crystal.tac.TACFieldAccess;
 import edu.cmu.cs.crystal.tac.TACInstruction;
@@ -70,19 +72,20 @@ import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.alias.FrameLabel;
 import edu.cmu.cs.plural.alias.ParamVariable;
 import edu.cmu.cs.plural.concrete.ConcreteAnnotationUtils;
-import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.StateImplication;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionAssignment;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
-import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.linear.PredicateChecker.SplitOffTuple;
-import edu.cmu.cs.plural.linear.PredicateMerger.MergeIntoTuple;
-import edu.cmu.cs.plural.perm.parser.ParamInfoHolder;
-import edu.cmu.cs.plural.states.IInvocationSignature;
+import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
+import edu.cmu.cs.plural.pred.PredicateChecker;
+import edu.cmu.cs.plural.pred.PredicateMerger;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
+import edu.cmu.cs.plural.states.IConstructorCaseInstance;
+import edu.cmu.cs.plural.states.IInvocationCaseInstance;
+import edu.cmu.cs.plural.states.IMethodCaseInstance;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.track.FieldVariable;
@@ -104,10 +107,8 @@ class LinearOperations extends TACAnalysisHelper {
 	
 	private final boolean packBeforeCall;
 	
-	public LinearOperations(AnnotationDatabase annoDB, ITACAnalysisContext ctx,
-			ThisVariable thisVar,
-			FractionAnalysisContext fractContext) {
-		super(annoDB, ctx, thisVar);
+	public LinearOperations(ITACAnalysisContext ctx, FractionAnalysisContext fractContext) {
+		super(fractContext.getAnnoDB(), ctx);
 		this.fractContext = fractContext;
 		this.packBeforeCall = fractContext.getAnalyzedCase().getInvocationCase().isReentrant();
 	}
@@ -116,167 +117,207 @@ class LinearOperations extends TACAnalysisHelper {
 	// invocations (method calls, new)
 	//
 	
-	DisjunctiveLE handleInvocation(
-			final TACInvocation instr,
+	/**
+	 * Applies the given case of the given method call to the given tuple.
+	 * @param instr
+	 * @param value Must be mutable.
+	 * @param sigCase Must be an instance for checking the call.
+	 * @param failFast When <code>true</code>, unsatisfiable predicates are detected
+	 * and lead to {@link ContextFactory#falseContext() false}.  Otherwise, predicates
+	 * are not checked and permissions simply split.
+	 * @return The resulting context, possibly containing multiple tuples or
+	 * {@link ContextFactory#falseContext() false}.
+	 */
+	public DisjunctiveLE handleMethodCall(
+			MethodCallInstruction instr,
 			TensorPluralTupleLE value,
-			final Variable rcvrInstanceVar,
-			final Variable resultVar,
-			final boolean failFast) {
-
-		
-		
-		
-		return ContextFactory.tensor(value);
+			IMethodCaseInstance sigCase,
+			boolean failFast) {
+		// create parameter map suitable for method call
+		final SimpleMap<String, Aliasing> paramMap = createParameterMap(
+				instr, value, instr.getReceiverOperand(), instr.getTarget());
+		return handleInvocation(instr, value, sigCase, failFast, paramMap);
 	}
 	
-	class PreconditionHandler implements SplitOffTuple {
+	/**
+	 * Applies the given case of the given <code>new</code> instruction to the given tuple.
+	 * @param instr
+	 * @param value Must be mutable.
+	 * @param sigCase Must be an instance for checking the call.
+	 * @param failFast When <code>true</code>, unsatisfiable predicates are detected
+	 * and lead to {@link ContextFactory#falseContext() false}.  Otherwise, predicates
+	 * are not checked and permissions simply split.
+	 * @return The resulting context, possibly containing multiple tuples or
+	 * {@link ContextFactory#falseContext() false}.
+	 */
+	public DisjunctiveLE handleNewObject(
+			NewObjectInstruction instr,
+			TensorPluralTupleLE value,
+			IConstructorCaseInstance sigCase,
+			boolean failFast) {
+		// create parameter map suitable for "new"
+		final Aliasing target_loc = value.getLocationsAfter(instr, instr.getTarget());
+		final SimpleMap<String, Aliasing> paramMap = createParameterMap(
+				instr, value, 
+				target_loc, // target is receiver
+				target_loc, // target is receiver
+				null);	// no result
+		return handleInvocation(instr, value, sigCase, failFast, paramMap);
+	}
+
+	/**
+	 * Applies the given case of the given constructor call to the given tuple.
+	 * @param instr
+	 * @param value Must be mutable.
+	 * @param sigCase Must be an instance for checking the call.
+	 * @param failFast When <code>true</code>, unsatisfiable predicates are detected
+	 * and lead to {@link ContextFactory#falseContext() false}.  Otherwise, predicates
+	 * are not checked and permissions simply split.
+	 * @return The resulting context, possibly containing multiple tuples or
+	 * {@link ContextFactory#falseContext() false}.
+	 */
+	public DisjunctiveLE handleConstructorCall(
+			ConstructorCallInstruction instr,
+			TensorPluralTupleLE value,
+			IConstructorCaseInstance sigCase,
+			boolean failFast) {
+		// create parameter map suitable for constructor invocation
+		final SimpleMap<String, Aliasing> paramMap = createParameterMap(
+				instr, value, 
+				instr.getConstructionObject(),	 
+				null); // no result
+		return handleInvocation(instr, value, sigCase, failFast, paramMap);
+	}
+
+	/**
+	 * Applies the given case of the given invocation to the given tuple.
+	 * @param instr
+	 * @param value
+	 * @param sigCase
+	 * @param failFast
+	 * @param paramMap
+	 * @return The resulting context, possibly containing multiple tuples or
+	 * {@link ContextFactory#falseContext() false}.
+	 */
+	private DisjunctiveLE handleInvocation(final TACInvocation instr,
+			TensorPluralTupleLE value, final IInvocationCaseInstance sigCase,
+			boolean failFast, final SimpleMap<String, Aliasing> paramMap) {
+		// 1. split off pre-condition
+		PredicateChecker pre = sigCase.getPreconditionChecker();
+		Aliasing this_loc = value.getLocationsBefore(instr, getThisVar());
+		CallPreconditionHandler splitter = createSplitter(instr, value, this_loc, failFast);
+		if(! pre.splitOffPredicate(
+				paramMap, 
+				splitter))
+			return ContextFactory.falseContext();
 		
-		TensorPluralTupleLE value;
-		Aliasing this_loc;
-		TACInvocation instr;
-		private PermissionSetFromAnnotations splitFromThis = null;
-		private final Set<String> neededReceiverStates = new HashSet<String>();
-		private DisjunctiveLE result = null;
-
-		@Override
-		public boolean checkStateInfo(Aliasing var, Set<String> stateInfo) {
-			if(var.equals(this_loc)) {
-				neededReceiverStates.addAll(stateInfo);
-			}
-			return true;
-		}
-
-		@Override
-		public boolean splitOffPermission(Aliasing var,
-				PermissionSetFromAnnotations perms) {
-			if(var.equals(this_loc)) {
-				// defer...
-				assert splitFromThis == null;
-				splitFromThis = perms;
-				neededReceiverStates.addAll(perms.getStateInfo(true));
-				return true;
-			}
-			// not the surrounding method's receiver... just split
-			return splitOff(var, value, perms);
-		}
-
-		@Override
-		public boolean finishSplit() {
-			result = prepareAnalyzedMethodReceiverForCall(instr, value,
-					neededReceiverStates, !neededReceiverStates.isEmpty());
+		final Map<Aliasing, FractionalPermissions> borrowed = splitter.getBorrowed();
+		DisjunctiveLE result = splitter.getResult();
+		assert result != null;
+		
+		final PredicateMerger post = sigCase.getPostconditionMerger();
+		result = result.dispatch(new RewritingVisitor() {
 			
-			result = result.dispatch(new RewritingVisitor() {
-
-				@Override
-				public DisjunctiveLE context(LinearContextLE le) {
-					TensorPluralTupleLE tuple = le.getTuple();
-					if(splitOff(this_loc, tuple, splitFromThis))
-						return le;
-					else
-						return ContextFactory.falseContext();
+			@Override
+			public DisjunctiveLE context(LinearContextLE le) {
+				TensorPluralTupleLE tuple = le.getTuple();
+				
+				// 2. forget state information for remaining permissions
+				if(sigCase.isEffectFree() == false) {
+					tuple = forgetStateInfo(tuple);
+					tuple = forgetFieldPermissionsIfNeeded(tuple, getThisVar(), instr);
 				}
 				
-			});
-			
-			return ! ContextFactory.isFalseContext(result);
-		}
-		
-		protected boolean splitOff(Aliasing var, TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
-			// split off permission 
-			value = LinearOperations.splitOff(var, value, perms);
-			
-			return true;
-		}
-		
-	}
-	
-	class FailFastPreconditionHandler extends PreconditionHandler {
-
-		@Override
-		public boolean checkStateInfo(Aliasing var, Set<String> stateInfo) {
-			if(!super.checkStateInfo(var, stateInfo))
-				return false;
-			if(! var.equals(this_loc)) {
-				return value.get(var).isInStates(stateInfo);
+				// 3. merge in post-condition
+				DefaultPredicateMerger merger = new DefaultPredicateMerger(
+						instr, tuple/*, borrowed*/);
+				post.mergeInPredicate(paramMap, merger);
+				
+				if(merger.isVoid())
+					return ContextFactory.trueContext();
+				else
+					return le;
 			}
-			return true;
-		}
+		});
 		
-		@Override
-		protected boolean splitOff(Aliasing var, TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
-			if(!value.get(var).isInStates(perms.getStateInfoPair()))
-				return false;
-			
-			if(!super.splitOff(var, value, perms))
-				return false;
-			
-			return ! value.get(var).isUnsatisfiable();
-		}
+		return result;
 	}
-	
-	class PostconditionHandler implements MergeIntoTuple {
 
-		private TensorPluralTupleLE value;
-
-		@Override
-		public void addImplication(Aliasing var, Implication implication) {
-			value.addImplication(var, implication);
-		}
-
-		@Override
-		public void addStateInfo(Aliasing var, Set<String> stateInfo) {
-			if(!stateInfo.isEmpty()) {
-				FractionalPermissions perms = value.get(var);
-				for(String s : stateInfo)
-					perms = perms.learnTemporaryStateInfo(s);
-				value.put(var, perms);
-			}
-		}
-
-		@Override
-		public void mergeInPermission(Aliasing a,
-				PermissionSetFromAnnotations perms) {
-			value = mergeIn(a, value, perms);
-		}
-
-		@Override
-		public void finishMerge() {
-		}
-		
-	}
-	
-	
-	private SimpleMap<String, Pair<Aliasing, StateSpace>> createParameterMap(
+	/**
+	 * Creates a aliasing map for a invocation with the given receiver and
+	 * result variables for use in TAC-based transfer functions.
+	 * @param instr
+	 * @param value
+	 * @param receiver May be <code>null</code>.
+	 * @param result May be <code>null</code>.
+	 * @return a aliasing map for a invocation with the given receiver and
+	 * result variables.
+	 * @see #createNodeArgumentMap(ASTNode, TensorPluralTupleLE, Variable, List)
+	 * creating AST-based maps for checkers
+	 * @see #handleMethodCall(MethodCallInstruction, TensorPluralTupleLE, IMethodCaseInstance, boolean)
+	 * @see #handleConstructorCall(ConstructorCallInstruction, TensorPluralTupleLE, IConstructorCaseInstance, boolean)
+	 */
+	private SimpleMap<String, Aliasing> createParameterMap(
 			final TACInvocation instr,
 			TensorPluralTupleLE value,
 			Variable receiver, Variable result) {
-		final IMethodBinding binding = instr.resolveBinding();
-		final Map<String, Pair<Aliasing, StateSpace>> known = new HashMap<String, Pair<Aliasing, StateSpace>>();
+		Aliasing virt_loc = null;
+		Aliasing frame_loc = null;
+		Aliasing result_loc = null;
 		if(receiver != null) {
-			Aliasing loc;
-			if(receiver.isUnqualifiedSuper()) 
-				loc = value.getLocationsBefore(instr, getThisVar());
-			else
-				loc = value.getLocationsBefore(instr, receiver);
-			
-			known.put("this", Pair.create(loc, getStateSpace(receiver.resolveType())));
+			if(receiver.isUnqualifiedSuper()) {
+				virt_loc = value.getLocationsBefore(instr, getThisVar());
+				frame_loc = getFrameAliasing(receiver);
+			}
+			else {
+				virt_loc = value.getLocationsBefore(instr, receiver);
+				frame_loc = value.getLocationsBefore(instr, receiver);
+			}
 		}
 		if(result != null) {
-			known.put("result", Pair.create(value.getLocationsAfter(instr.getNode(), result),
-					// binding's return type may be a subtype of the result var's
-					getStateSpace(binding.getReturnType())));
+			result_loc = value.getLocationsAfter(instr, result);
+		}
+		return createParameterMap(instr, value, virt_loc, frame_loc, result_loc);
+	}
+
+	/**
+	 * Creates a aliasing map for a invocation with the given locations for
+	 * the receiver and result.
+	 * @param instr
+	 * @param value
+	 * @param rcvrVirtual May be <code>null</code>.
+	 * @param rcvrFrame May be <code>null</code>.
+	 * @param result May be <code>null</code>.
+	 * @return a aliasing map for a invocation with the given locations for
+	 * the receiver and result.
+	 * @see #handleNewObject(NewObjectInstruction, TensorPluralTupleLE, IConstructorCaseInstance, boolean)
+	 * @see #createParameterMap(TACInvocation, TensorPluralTupleLE, Variable, Variable)
+	 */
+	private SimpleMap<String, Aliasing> createParameterMap(
+			final TACInvocation instr,
+			TensorPluralTupleLE value,
+			Aliasing rcvrVirtual, Aliasing rcvrFrame, Aliasing result) {
+		final Map<String, Aliasing> known = new HashMap<String, Aliasing>();
+		if(rcvrVirtual != null) {
+			known.put("this", rcvrVirtual);
+		}
+		if(rcvrFrame != null) {
+			known.put("this!fr", rcvrFrame);
+		}
+		if(result != null) {
+			known.put("result", result);
 		}
 		int arg = 0;
 		for(Variable x : instr.getArgOperands()) {
 			Aliasing loc = value.getLocationsBefore(instr, x);
-			known.put("#" + arg++, Pair.create(loc, getStateSpace(x.resolveType())));
+			known.put("#" + arg++, loc);
 		}
 		
-		return new SimpleMap<String, Pair<Aliasing, StateSpace>>() {
+		return new SimpleMap<String, Aliasing>() {
 
 			@Override
-			public Pair<Aliasing, StateSpace> get(String key) {
-				Pair<Aliasing, StateSpace> result = known.get(key);
+			public Aliasing get(String key) {
+				Aliasing result = known.get(key);
 				if(result != null)
 					return result;
 				throw new IllegalArgumentException("Unknown parameter: " + key + " for call " + instr);
@@ -285,6 +326,149 @@ class LinearOperations extends TACAnalysisHelper {
 		};
 	}
 
+	/**
+	 * Creates a suitable pre-condition handler depending on <code>failFast</code>
+	 * @param instr
+	 * @param value
+	 * @param this_loc
+	 * @param failFast
+	 * @return A {@link CallPreconditionHandler} instance if <code>failFast</code> is
+	 * <code>true</code>; a {@link LazyPreconditionHandler} otherwise.
+	 * @see #handleInvocation(TACInvocation, TensorPluralTupleLE, IMethodCaseInstance, boolean, SimpleMap)  
+	 */
+	private CallPreconditionHandler createSplitter(
+			final TACInvocation instr, TensorPluralTupleLE value,
+			final Aliasing this_loc, boolean failFast) {
+		return failFast ? new CallPreconditionHandler(instr, value, this_loc) :
+					new LazyPreconditionHandler(instr, value, this_loc);
+	}
+	
+	/**
+	 * Callbacks for checking and splitting a call pre-condition off a tuple as part of a
+	 * transfer function.  The checker methods return <code>false</code> when a check
+	 * fails.  Defined as inner class because it uses instance methods
+	 * of {@link LinearOperations}.
+	 * @author Kevin Bierhoff
+	 * @since Sep 15, 2008
+	 * @see LazyPreconditionHandler
+	 * @see LinearOperations#handleInvocation(TACInvocation, TensorPluralTupleLE, IInvocationCaseInstance, boolean, SimpleMap)
+	 */
+	class CallPreconditionHandler extends AbstractPredicateChecker implements SplitOffTuple {
+
+		private DisjunctiveLE result = null;
+		private Map<Aliasing, FractionalPermissions> borrowed = null;
+
+		public CallPreconditionHandler(TACInvocation instr,
+				TensorPluralTupleLE value, Aliasing thisLoc) {
+			super(instr, value, thisLoc);
+		}
+
+		public CallPreconditionHandler(ASTNode node,
+				TensorPluralTupleLE value, Aliasing thisLoc) {
+			super(node, value, thisLoc);
+		}
+
+		public Map<Aliasing, FractionalPermissions> getBorrowed() {
+			return borrowed != null ? borrowed : 
+				Collections.<Aliasing, FractionalPermissions>emptyMap();
+		}
+
+		public DisjunctiveLE getResult() {
+			return result;
+		}
+
+		@Override
+		public void announceBorrowed(Set<Aliasing> borrowedVars) {
+			// TODO fix problems with borrowing and comment in code below
+//			assert borrowed == null;
+//			borrowed = new LinkedHashMap<Aliasing, FractionalPermissions>(borrowedVars.size());
+//			for(Aliasing var : borrowedVars) {
+//				borrowed.put(var, value.get(var).withoutStateInfo());
+//			}
+		}
+
+		@Override
+		public boolean finishSplit() {
+			result = prepareAnalyzedMethodReceiverForCall(node, value,
+					getNeededReceiverStates(), !getNeededReceiverStates().isEmpty());
+			
+			result = result.dispatch(new RewritingVisitor() {
+
+				@Override
+				public DisjunctiveLE context(LinearContextLE le) {
+					// TODO use receiver frame permissions after packing (i.e., here) for borrowing
+					TensorPluralTupleLE tuple = le.getTuple();
+					for(PermissionSetFromAnnotations pa : getSplitFromThis()) {
+						if(! splitOffInternal(this_loc, tuple, pa))
+							return ContextFactory.falseContext();
+					}
+					return le;
+				}
+				
+			});
+			
+			return ! ContextFactory.isFalseContext(result);
+		}
+		
+	}
+	
+	/**
+	 * Callbacks for splitting permissions in a call pre-condition off a tuple as part of a
+	 * transfer function.  Unlike its superclass, the checker methods in this class do not 
+	 * actually check anything. 
+	 * Defined as inner class because it uses instance methods
+	 * of {@link LinearOperations}.
+	 * @author Kevin Bierhoff
+	 * @since Sep 15, 2008
+	 * @see CallPreconditionHandler
+	 */
+	class LazyPreconditionHandler extends CallPreconditionHandler implements SplitOffTuple {
+		
+		public LazyPreconditionHandler(TACInvocation instr,
+				TensorPluralTupleLE value, Aliasing thisLoc) {
+			super(instr, value, thisLoc);
+		}
+		
+		public LazyPreconditionHandler(ASTNode node,
+				TensorPluralTupleLE value, Aliasing thisLoc) {
+			super(node, value, thisLoc);
+		}
+		
+		protected boolean splitOffInternal(Aliasing var, TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
+			// split off permission 
+			value = LinearOperations.splitOff(var, value, perms);
+			
+			return true; // ignore checks
+		}
+
+		@Override
+		protected boolean checkStateInfoInternal(Aliasing var,
+				Set<String> stateInfo, boolean inFrame) {
+			return true;
+		}
+
+		@Override
+		public boolean checkFalse(Aliasing var) {
+			return true;  // ignore this check
+		}
+
+		@Override
+		public boolean checkNonNull(Aliasing var) {
+			return true;  // ignore this check
+		}
+
+		@Override
+		public boolean checkNull(Aliasing var) {
+			return true;  // ignore this check
+		}
+
+		@Override
+		public boolean checkTrue(Aliasing var) {
+			return true;  // ignore this check
+		}
+		
+	}
+	
 	/**
 	 * This method processes an invocation of some sort, i.e., regular method calls, 
 	 * object creation with <code>new</code>, and constructor calls
@@ -350,7 +534,8 @@ class LinearOperations extends TACAnalysisHelper {
 	 * different state information in the argument's post-condition).
 	 * @return The new lattice information after the invocation.
 	 * @tag todo.general -id="4564388" : remember borrowed "this" permission, but borrowed permissions back in instead of merging
-	 *
+	 * @deprecated Use {@link #handleInvocation(TACInvocation, TensorPluralTupleLE, IInvocationCaseInstance, boolean, SimpleMap)}
+	 * instead.
 	 */
 	public DisjunctiveLE fancyHandleInvocation(
 			final TACInvocation instr,
@@ -405,7 +590,7 @@ class LinearOperations extends TACAnalysisHelper {
 		
 		final Aliasing this_loc = value.getLocationsAfter(instr.getNode(), getThisVar());
 		
-		final List<Pair<Aliasing, ParamInfoHolder>> paramInfo = new LinkedList<Pair<Aliasing, ParamInfoHolder>>();
+		final List<Pair<Aliasing, ReleaseHolder>> paramInfo = new LinkedList<Pair<Aliasing, ReleaseHolder>>();
 
 		// 1.1 receiver
 		if(rcvrInstanceVar != null) {
@@ -444,8 +629,7 @@ class LinearOperations extends TACAnalysisHelper {
 			ICrystalAnnotation paramAnno = 
 				getAnnoDB().getSummaryForMethod(binding).getReturn("edu.cmu.cs.plural.annot.Param");
 			if(paramAnno != null) {
-				ParamInfoHolder param = new ParamInfoHolder();
-				param.setPerms(rcvrPrePost.fst());
+				ReleaseHolder param = new ReleaseHolder(rcvrPrePost.fst());
 				paramInfo.add(Pair.create(rcvr_loc, param));
 			}
 			
@@ -493,8 +677,7 @@ class LinearOperations extends TACAnalysisHelper {
 			ICrystalAnnotation paramAnno = 
 				getAnnoDB().getSummaryForMethod(binding).getParameter(arg, "edu.cmu.cs.plural.annot.Param");
 			if(paramAnno != null) {
-				ParamInfoHolder param = new ParamInfoHolder();
-				param.setPerms(pre);
+				ReleaseHolder param = new ReleaseHolder(pre);
 				paramInfo.add(Pair.create(x_loc, param));
 			}
 /*			
@@ -519,7 +702,7 @@ class LinearOperations extends TACAnalysisHelper {
 		// 1.4 Now we pack. If 'this' is the method call receiver or an arg,
 		//     we also split it off.
 		DisjunctiveLE result;
-		result = prepareAnalyzedMethodReceiverForCall(instr, value,
+		result = prepareAnalyzedMethodReceiverForCall(instr.getNode(), value,
 				neededAnalyzedMethodReceiverState, mustPack);
 		
 		// make a final copy for inner class
@@ -561,7 +744,7 @@ class LinearOperations extends TACAnalysisHelper {
 				for( Pair<Variable, PermissionSetFromAnnotations> pair : thisPermsToSplit ) {
 					if(pair.fst().isUnqualifiedSuper()) {
 						Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> virtualAndSuper =
-							splitPermissionSets(pair.snd());
+							PermissionSetFromAnnotations.splitPermissionSets(pair.snd());
 						Aliasing fr = getFrameAliasing(pair.fst());
 						// split off virtual permissions from "this"
 						if(failFast && !tuple.get(instr, getThisVar()).isInStates(virtualAndSuper.fst().getStateInfo(false), false))
@@ -608,7 +791,7 @@ class LinearOperations extends TACAnalysisHelper {
 					if(rcvrInstanceVar.isUnqualifiedSuper()) {
 						Aliasing a = getFrameAliasing(rcvrInstanceVar);
 						Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> virtualAndSuper =
-							splitPermissionSets(rcvrPrePost.snd());
+							PermissionSetFromAnnotations.splitPermissionSets(rcvrPrePost.snd());
 						if(borrowed_locs.get(this_loc) == null) {
 							// virtual permissions for "this"
 							tuple = mergeIn(instr, tuple, getThisVar(), virtualAndSuper.fst());
@@ -662,15 +845,15 @@ class LinearOperations extends TACAnalysisHelper {
 						// parameter not instantiated --> throw away released permission
 						break release;
 					
-					List<ParamInfoHolder> paramInfo = tuple.findImpliedParameter(rcvr_loc, loc);
+					List<ReleaseHolder> paramInfo = tuple.findImpliedParameter(rcvr_loc, loc);
 					
 //					PermissionSetFromAnnotations paramPerms = tuple.get(instr, rcvrInstanceVar).getParameterPermission(releasedParam);
 					if(paramInfo == null || paramInfo.isEmpty())
 						// no permission associated with parameter --> skip
 						break release;
 					
-					for(ParamInfoHolder p : paramInfo) {
-						p.putIntoLattice(tuple, loc);
+					for(ReleaseHolder p : paramInfo) {
+						p.putIntoLattice(tuple, loc, rcvr_loc, true);
 					}
 //					tuple.put(loc, tuple.get(loc).mergeIn(paramPerms));
 				}
@@ -695,7 +878,7 @@ class LinearOperations extends TACAnalysisHelper {
 	/**
 	 * Attempts, among other things, to pack the current method receiver before a call
 	 * occurs inside the method.
-	 * @param instr
+	 * @param node
 	 * @param value
 	 * @param modifiesAnalyzedMethodReceiverField
 	 * @param neededAnalyzedMethodReceiverState Receiver <i>frame</i> states needed in the called method's pre-condition 
@@ -703,7 +886,7 @@ class LinearOperations extends TACAnalysisHelper {
 	 * even if {@link #packBeforeCall} is <code>false</code>.
 	 */
 	private DisjunctiveLE prepareAnalyzedMethodReceiverForCall(
-			final TACInvocation instr,
+			final ASTNode node,
 			final TensorPluralTupleLE value,
 			Set<String> neededAnalyzedMethodReceiverState, boolean mustPack) {
 
@@ -734,10 +917,7 @@ class LinearOperations extends TACAnalysisHelper {
 				/*
 				 * Try the post-condition and the pre-condition as better guesses.
 				 */
-//				IMethodBinding this_method = this.getAnalysisContext().getAnalyzedMethod().resolveBinding();
-//				IInvocationSignature sig = getSignature(this_method);
-				
-				if(! mustPack && (! packBeforeCall || isUniqueUnpacked(value, instr, getThisVar())))
+				if(! mustPack && (! packBeforeCall || isUniqueUnpacked(value, node, getThisVar())))
 					// flag says we don't pack before calls (unless unpacked object is used in the call)
 					// this is probably because of @NonReentrant
 					return ContextFactory.tensor(value);
@@ -745,18 +925,16 @@ class LinearOperations extends TACAnalysisHelper {
 				List<String> states_to_try = new LinkedList<String>();
 				// TODO do we need this?  Add states of currently analyzed case, if any
 				// try post-condition states
-				states_to_try.addAll(fractContext.getAnalyzedCase().getEnsuredReceiverPermissions().getStateInfo(true));
+//				states_to_try.addAll(fractContext.getAnalyzedCase().getEnsuredReceiverPermissions().getStateInfo(true));
 				// throw in the pre-condition, for good measure
 //				if(! sig.isConstructorSignature())
 //					states_to_try.addAll(sig.getMethodSignature().getRequiredReceiverStateOptions());
 				result = value.fancyPackReceiverToBestGuess(getThisVar(), 
-//				boolean pack_worked = 
-//					value.packReceiverToBestGuess(this.getAnalysisContext().getThisVariable(),
 							getRepository(), 
 							new SimpleMap<Variable,Aliasing>() {
 								@Override
 								public Aliasing get(Variable key) {
-									return value.getLocationsAfter(instr.getNode(), key);
+									return value.getLocationsAfter(node, key);
 								}},
 							states_to_try.toArray(new String[states_to_try.size()])
 							);
@@ -765,7 +943,7 @@ class LinearOperations extends TACAnalysisHelper {
 					if(log.isLoggable(Level.FINE))
 						log.fine("Pack before method call, where we tried to pack to any state failed. " +
 								"\nLattice:\n" + value.toString() + 
-								"" + "\nMethod:"+instr.resolveBinding().getName());
+								"" + "\nNode:"+node);
 				}
 			}
 			// do nothing if receiver already packed
@@ -775,13 +953,13 @@ class LinearOperations extends TACAnalysisHelper {
 			if(value.isRcvrPacked()) {
 				// do nothing for now--this may result in a pre-condition violation
 				// TODO try unpack and re-pack if receiver is in wrong state...
-				return wrangleIntoPackedStates(instr.getNode(), value, neededAnalyzedMethodReceiverState);
+				return wrangleIntoPackedStates(node, value, neededAnalyzedMethodReceiverState);
 			}
 			else {
 				StateSpace thisSpace = getStateSpace(getThisVar().resolveType());
 				Set<String> cleanedNeededState = AbstractFractionalPermission.cleanStateInfo(
 						thisSpace, 
-						value.get(instr, getThisVar()).getUnpackedPermission().getRootNode(), 
+						value.get(node, getThisVar()).getUnpackedPermission().getRootNode(), 
 						neededAnalyzedMethodReceiverState, true);
 				boolean pack_worked = 
 					value.packReceiver(getThisVar(), 
@@ -789,7 +967,7 @@ class LinearOperations extends TACAnalysisHelper {
 						new SimpleMap<Variable, Aliasing>() {
 							@Override
 							public Aliasing get(Variable key) {
-								return value.getLocationsAfter(instr.getNode(), key);
+								return value.getLocationsAfter(node, key);
 							}},
 						cleanedNeededState);
 				if( !pack_worked ) {
@@ -798,7 +976,7 @@ class LinearOperations extends TACAnalysisHelper {
 								neededAnalyzedMethodReceiverState + 
 								")to failed. " +
 								"\nLattice:\n" + value.toString() + 
-								"" + "\nMethod:"+instr.resolveBinding().getName());
+								"" + "\nNode:"+node);
 				}
 			}
 			result = ContextFactory.tensor(value);
@@ -810,14 +988,14 @@ class LinearOperations extends TACAnalysisHelper {
 	/**
 	 * Determine if the unpacked permission of the given variable is unique.
 	 * @param value
-	 * @param instr
+	 * @param node
 	 * @param thisVar
 	 * @return <code>true</code> if the unpacked permission is guaranteed unique, 
 	 * <code>false</code> otherwise.
 	 */
 	private boolean isUniqueUnpacked(TensorPluralTupleLE value,
-			TACInvocation instr, Variable thisVar) {
-		FractionalPermission unp = value.get(instr, thisVar).getUnpackedPermission();
+			ASTNode node, Variable thisVar) {
+		FractionalPermission unp = value.get(node, thisVar).getUnpackedPermission();
 		if(unp == null) 
 			return false;
 		if(unp.getFractions().get(unp.getStateSpace().getRootState()).isOne())
@@ -831,13 +1009,6 @@ class LinearOperations extends TACAnalysisHelper {
 
 	private StateSpace getStateSpace(ITypeBinding type) {
 		return fractContext.getRepository().getStateSpace(type);
-	}
-
-	/**
-	 * @param method
-	 */
-	private IInvocationSignature getSignature(IMethodBinding method) {
-		return fractContext.getRepository().getSignature(method);
 	}
 
 	private boolean mayBeAnalyzedMethodReceiver(TensorPluralTupleLE value, 
@@ -870,7 +1041,7 @@ class LinearOperations extends TACAnalysisHelper {
 		FractionalPermissions this_perms = value.get(instr, thisVar);
 		FractionalPermission this_unp = this_perms.getUnpackedPermission();
 
-		if( this_unp != null && ( ! packBeforeCall || isUniqueUnpacked(value, instr, thisVar) ))
+		if( this_unp != null && ( ! packBeforeCall || isUniqueUnpacked(value, instr.getNode(), thisVar) ))
 			// thisVar is unpacked and either we're not packing or unique is unpacked
 			// --> no need to forget at all because fields are fully protected
 			return value;
@@ -992,12 +1163,12 @@ class LinearOperations extends TACAnalysisHelper {
 			TACInstruction instr,
 			TensorPluralTupleLE value,
 			Variable x, PermissionSetFromAnnotations newPerms,
-			List<Pair<Aliasing, ParamInfoHolder>> paramInfo) {
+			List<Pair<Aliasing, ReleaseHolder>> paramInfo) {
 		if(x == null) throw new NullPointerException("Null variable provided");
 		Aliasing var = value.getLocationsAfter(instr, x);
 		value.put(var, newPerms.toLatticeElement());
 		if(paramInfo != null && ! paramInfo.isEmpty())
-			value.addImplication(var, new PermissionImplication(new PermissionPredicate(var, newPerms), paramInfo));
+			value.addImplication(var, new ReleasePermissionImplication(new PermissionPredicate(var, newPerms), paramInfo));
 		return value;
 	}
 
@@ -1016,7 +1187,7 @@ class LinearOperations extends TACAnalysisHelper {
 //		return value;
 	}
 	
-	private static TensorPluralTupleLE mergeIn(
+	static TensorPluralTupleLE mergeIn(
 			Aliasing a,
 			TensorPluralTupleLE value,
 			PermissionSetFromAnnotations toMerge) {
@@ -1045,7 +1216,7 @@ class LinearOperations extends TACAnalysisHelper {
 		return value;
 	}
 	
-	private static TensorPluralTupleLE splitOff(
+	static TensorPluralTupleLE splitOff(
 			Aliasing a,
 			TensorPluralTupleLE value,
 			PermissionSetFromAnnotations toSplit) {
@@ -1060,29 +1231,17 @@ class LinearOperations extends TACAnalysisHelper {
 		return value;
 	}
 	
-	private static Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> splitPermissionSets(
-			PermissionSetFromAnnotations perms) {
-		PermissionSetFromAnnotations virt = PermissionSetFromAnnotations.createEmpty(perms.getStateSpace());
-		PermissionSetFromAnnotations frame = PermissionSetFromAnnotations.createEmpty(perms.getStateSpace());
-		for(PermissionFromAnnotation v : perms.getPermissions()) {
-			virt = virt.combine(v);
-		}
-		for(PermissionFromAnnotation f : perms.getFramePermissions()) {
-			frame = frame.combine(f);
-		}
-		return Pair.create(virt, frame);
-	}
-	
 	//
 	// field access
 	//
 
 	/**
+	 * Unpacks the given lattice for a field access, if not already unpacked.
 	 * @param value Initial lattice information
 	 * @param assignmentSource Variable used as the source of an assignment or
 	 * <code>null</code> for field reads.
 	 * @param instr
-	 * @return Possibly a disjunction of new lattice information
+	 * @return Possibly a disjunction of new lattice information.
 	 */
 	public DisjunctiveLE fancyUnpackForFieldAccess(
 			TensorPluralTupleLE value,
@@ -1215,20 +1374,434 @@ class LinearOperations extends TACAnalysisHelper {
 //			}
 			
 //			unpacking_root = StateSpace.STATE_ALIVE;
-		return value.fancyUnpackReceiver(thisVar, instr.getNode(),
+		return value.fancyUnpackReceiver(thisVar, instr.getNode(), 
 				getRepository(),
 				new SimpleMap<Variable,Aliasing>() {
 					@Override
 					public Aliasing get(Variable key) {
 						return value.getLocations(key);
-					}}, 
-				unpacking_root, isAssignment ? instr.getFieldName() : null);
+					}},
+				unpacking_root, 
+				isAssignment ? instr.getFieldName() : null);
 	}
 	
 	//
 	// Post-condition checks
 	//
+	
+	/**
+	 * Applies the given post-condition to the given tuple, assuming the given
+	 * variable as the method return value, and returns a string describing 
+	 * failing conditions, if any.  This method is meant to be called in a checker
+	 * routing following a flow analysis.
+	 * @param node
+	 * @param curLattice Readonly or mutable tuple, will not be changed.
+	 * @param resultVar Method return value or <code>null</code> for <code>void</code>
+	 * methods.
+	 * @param post The post-condition to be checked.
+	 * @param Map containing the original method parameter locations at method entry.
+	 * This <i>cannot</i> be inferred from the given tuple because parameter variables
+	 * can be re-assigned in the method body.
+	 * @param stateTests Map from Boolean indicator values to indicated states.
+	 * @return a string describing failing conditions or <code>null</code> if the
+	 * check was successful.
+	 */
+	public String checkPostCondition(ASTNode node, 
+			TensorPluralTupleLE curLattice,
+			Variable resultVar,
+			PredicateChecker post,
+			SimpleMap<String, Aliasing> parameterVars,
+			Map<Boolean, String> stateTests) {
+		// 0. determine receiver and result locations
+		Aliasing this_loc = inStaticMethod() ? null : parameterVars.get("this!fr");
 
+		Aliasing res_loc;
+		if(resultVar == null) {
+			res_loc = null;
+			assert stateTests.isEmpty(); // can't have state tests without result
+		}
+		else {
+			res_loc = curLattice.getLocationsAfter(node, resultVar);
+			assert res_loc != null; // make sure result location exists
+		}
+		final SimpleMap<String, Aliasing> vars = createPostMap(parameterVars, res_loc);
+		
+		// 1. Check every state test separately
+//		for(boolean result : stateTests.keySet()) {
+//			if(resultVar == null) 
+//				throw new IllegalArgumentException("No result given for state test: " + node);
+//			if(getThisVar() == null) {
+//				if(log.isLoggable(Level.WARNING))
+//					log.warning("Ignoring state test method without receiver: " + node);
+//				break;
+//			}
+//			
+//			if(result == true && curLattice.isBooleanFalse(res_loc))
+//				// skip state indicated with TRUE only if we know result is FALSE
+//				continue;
+//			if(result == false && curLattice.isBooleanTrue(res_loc))
+//				// skip state indicated with FALSE only if we know result is TRUE
+//				continue;
+//			
+//			final Map<Aliasing, StateImplication> indicated_states;
+//			indicated_states = Collections.singletonMap(this_loc, 
+//					ConcreteAnnotationUtils.createBooleanStateImpl(
+//							res_loc, result, this_loc,
+//							stateTests.get(result)));
+//			
+//			String checkTest = checkPostConditionOption(
+//					node, curLattice, paramPost, res_loc, resultPost, 
+//					indicated_states);
+//
+//			if(checkTest != null)
+//				return checkTest;
+//		}
+	
+		
+		// 2. Check without state tests
+		PredicateErrorReporter checks = new PredicateErrorReporter(true, // return checker 
+				node, curLattice, this_loc);
+		post.splitOffPredicate(vars, checks);
+		if(checks.hasErrors())
+			return checks.getErrors().iterator().next();
+		else
+			return null;
+	}
+	
+	/**
+	 * Creates a aliasing map for checking method post-conditions based on the
+	 * aliasing map for the method parameters and the given result value location.
+	 * @param parameterVars
+	 * @param resultLoc May be <code>null</code> for <code>void</code> methods.
+	 * @return a aliasing map for checking method post-conditions.
+	 * @see #checkPostCondition(ASTNode, TensorPluralTupleLE, Variable, PredicateChecker, SimpleMap, Map)
+	 */
+	private SimpleMap<String, Aliasing> createPostMap(
+			final SimpleMap<String, Aliasing> parameterVars, final Aliasing resultLoc) {
+		return new SimpleMap<String, Aliasing>() {
+			@Override
+			public Aliasing get(String key) {
+				if("result".equals(key)) {
+					return resultLoc;
+				}
+				return parameterVars.get(key);
+			}
+		};
+	}
+	
+	/**
+	 * Applies the given pre-condition to the given tuple with the given
+	 * receiver and argument variables and returns an error string describing
+	 * failing conditions, if any.  This method is meant to be called in a checker
+	 * routing following a flow analysis.
+	 * @param node
+	 * @param value Readonly or mutable tuple, will not be changed.
+	 * @param receiver
+	 * @param arguments
+	 * @param pre The pre-condition to be checked.
+	 * @return a string describing failing conditions or <code>null</code> if the
+	 * check was successful.
+	 */
+	public String checkCallPrecondition(ASTNode node,
+			TensorPluralTupleLE value,
+			Variable receiver,
+			List<Variable> arguments, PredicateChecker pre) {
+		Aliasing this_loc = value.getLocationsBefore(node, getThisVar());
+		PredicateErrorReporter checker = new PredicateErrorReporter(false, // pre-checker
+				node, value, this_loc);
+		pre.splitOffPredicate(createNodeArgumentMap(node, value, receiver, arguments), checker);
+		if(checker.hasErrors())
+			return ErrorReportingVisitor.errorString(checker.getErrors(), " and ");
+		else
+			return null;
+	}
+	
+	/**
+	 * Creates a aliasing map for checking call pre-conditions based on the
+	 * given receiver and argument variables.  
+	 * This method is similar to {@link #createParameterMap(TACInvocation, TensorPluralTupleLE, Variable, Variable)}
+	 * but uses a AST node for looking up locations in the tuple, making it suitable
+	 * for use in AST-based checker routines.
+	 * @param node
+	 * @param value
+	 * @param receiver The receiver variable or <code>null</code> for static methods.
+	 * @param arguments Actual method argument variables.
+	 * @return a aliasing map for checking method pre-conditions.
+	 * @see #checkCallPrecondition(ASTNode, TensorPluralTupleLE, Variable, List, PredicateChecker)
+	 */
+	private SimpleMap<String, Aliasing> createNodeArgumentMap(
+			ASTNode node, TensorPluralTupleLE value,
+			Variable receiver, List<Variable> arguments) {
+		Aliasing virt_loc = null;
+		Aliasing frame_loc = null;
+		if(receiver != null) {
+			if(receiver.isUnqualifiedSuper()) {
+				virt_loc = value.getLocationsBefore(node, getThisVar());
+				frame_loc = getFrameAliasing(receiver);
+			}
+			else {
+				virt_loc = value.getLocationsBefore(node, receiver);
+				frame_loc = value.getLocationsBefore(node, receiver);
+			}
+		}
+		return createNodeArgumentMap(node, value, virt_loc, frame_loc, arguments);
+	}
+
+	/**
+	 * Creates a aliasing map for checking call pre-conditions based on the
+	 * given receiver locations and argument variables.
+	 * Used internally by {@link #createNodeArgumentMap(ASTNode, TensorPluralTupleLE, Variable, List)}.  
+	 * This method is similar to {@link #createParameterMap(TACInvocation, TensorPluralTupleLE, Aliasing, Aliasing, Aliasing)}
+	 * but uses a AST node for looking up locations in the tuple, making it suitable
+	 * for use in AST-based checker routines.
+	 * @param node
+	 * @param value
+	 * @param thisVirt May be <code>null</code>
+	 * @param thisFrame May be <code>null</code>
+	 * @param arguments
+	 * @return a aliasing map for checking method pre-conditions.
+	 */
+	private SimpleMap<String, Aliasing> createNodeArgumentMap(final ASTNode node,
+			TensorPluralTupleLE value, Aliasing thisVirt, Aliasing thisFrame,
+			List<Variable> arguments) {
+		final Map<String, Aliasing> argMap = new HashMap<String, Aliasing>();
+		if(thisVirt != null)
+			argMap.put("this", thisVirt);
+		if(thisFrame != null)
+			argMap.put("this!fr", thisFrame);
+		for(int i = 0; i < arguments.size(); i++) {
+			argMap.put("#" + i, value.getLocationsBefore(node, arguments.get(i)));
+		}
+		return new SimpleMap<String, Aliasing>() {
+			@Override
+			public Aliasing get(String key) {
+				Aliasing result = argMap.get(key);
+				assert result != null : 
+					// tolerate null receiver aliasing for "new" pre-condition checking 
+					"Parameter unknown: " + key + " in " + node;
+				return result;
+			}
+		};
+	}
+
+	/**
+	 * Callbacks for generating human-readable error messages for violated predicates
+	 * as part of a code checker following a flow analysis.
+	 * This class can be used for checking call pre-conditions as well as
+	 * method body post-conditions.  Depending on which is checked,
+	 * different packing strategies are applied and the error messages are 
+	 * slightly different.
+	 * Defined as inner class because it uses instance methods
+	 * of {@link LinearOperations}.
+	 * @author Kevin Bierhoff
+	 * @since Sep 19, 2008
+	 * @see LinearOperations#checkCallPrecondition(ASTNode, TensorPluralTupleLE, Variable, List, PredicateChecker)
+	 * @see LinearOperations#checkPostCondition(ASTNode, TensorPluralTupleLE, Variable, PredicateChecker, SimpleMap, Map)
+	 */
+	class PredicateErrorReporter extends AbstractPredicateChecker {
+		
+		private final Set<String> errors = new LinkedHashSet<String>();
+		private final boolean isReturnCheck;
+		
+		/**
+		 * Creates a mutable copy of the given lattice as to not interfere
+		 * with existing results.
+		 * @param isReturnCheck <code>true</code> will check the predicate
+		 * as a post-condition of a method body; <code>false</code> will check
+		 * the predicate as a pre-condition of a method call.  
+		 * @param node
+		 * @param value
+		 * @param thisLoc
+		 */
+		public PredicateErrorReporter(boolean isReturnCheck, ASTNode node,
+				TensorPluralTupleLE value, Aliasing thisLoc) {
+			super(node, value.mutableCopy(), thisLoc);
+			this.isReturnCheck = isReturnCheck;
+		}
+		
+		/**
+		 * Indicates whether errors were found.
+		 * @return <code>true</code> if errors were found, <code>false</code> otherwise.
+		 */
+		public boolean hasErrors() {
+			return errors.isEmpty() == false;
+		}
+		
+		/**
+		 * Returns the list of errors found.
+		 * @return the list of errors found.
+		 */
+		public Set<String> getErrors() {
+			return Collections.unmodifiableSet(errors);
+		}
+
+		/**
+		 * Override this method to return a string describing the given location 
+		 * in error messages to the user.
+		 * @param var
+		 * @return a string describing the given location in error messages to the user.
+		 */
+		protected String getSourceString(Aliasing var) {
+			return var == null ? "NULL location" : var.toString();
+		}
+
+		@Override
+		public boolean finishSplit() {
+			if(this_loc == null) {
+				// no receiver
+				assert getNeededReceiverStates().isEmpty();
+				return true;
+			}
+			
+			DisjunctiveLE packed_lattice = isReturnCheck ?
+					// TODO combine wrangle and prepare
+					wrangleIntoPackedStates(node, value, getNeededReceiverStates()) :
+						prepareAnalyzedMethodReceiverForCall(node, value, 
+								getNeededReceiverStates(), ! getNeededReceiverStates().isEmpty());
+			
+			// fail right away if wrangling was unsuccessful
+			if( !hasErrors() /* only check this if previously no error */ && 
+					ContextFactory.isFalseContext(packed_lattice) ) {
+				if(getNeededReceiverStates().isEmpty())
+					errors.add("Could not pack receiver to any state " +
+							"due to insufficient field permissions " + (isReturnCheck ? "for return" : "for call"));					
+				else
+					errors.add("Could not pack receiver to states " +
+							getNeededReceiverStates() + " due to insufficient field permissions " +
+							(isReturnCheck ? "for return" : "for call"));
+				return false;
+			}
+
+			// check post-condition for each possible outcome
+			String error = packed_lattice.dispatch(new ErrorReportingVisitor() {
+
+				@Override
+				public String checkTuple(TensorPluralTupleLE tuple) {
+					for(PermissionSetFromAnnotations pa : getSplitFromThis()) {
+						if(pa.isEmpty())
+							continue;
+						if(!tuple.get(this_loc).isInStates(pa.getStateInfo(false), false)) {
+							return "After packing, receiver must be in state " + pa.getStateInfo(false) + " but is in " + value.get(this_loc).getStateInfo(false);
+						}
+						else if(!tuple.get(this_loc).isInStates(pa.getStateInfo(true), true)) {
+							return "After packing, receiver frame must be in state " + pa.getStateInfo(true) + " but is in " + value.get(this_loc).getStateInfo(true);
+						}
+						// keep going anyway....
+						
+						// split off permission 
+						tuple = LinearOperations.splitOff(this_loc, tuple, pa);
+						
+						if(tuple.get(this_loc).isUnsatisfiable()) {
+							// constraint failure
+							return "After packing, receiver must " + 
+								(isReturnCheck ? "return" : "have") + " permissions " + pa;
+						}
+					}
+					return null;
+				}
+				
+			});
+			if(error != null)
+				errors.add(error);
+			return hasErrors();
+		}
+		
+		@Override
+		public boolean splitOffPermission(Aliasing var,
+				PermissionSetFromAnnotations perms) {
+			boolean result = super.splitOffPermission(var, perms);
+			return true;
+		}
+
+		@Override
+		public boolean checkFalse(Aliasing var) {
+			boolean result = super.checkFalse(var);
+			if(! result)
+				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
+						" false: " + getSourceString(var));
+			return true;
+		}
+
+		@Override
+		public boolean checkNonNull(Aliasing var) {
+			boolean result = super.checkNonNull(var);
+			if(! result)
+				errors.add("Must not " + (isReturnCheck ? "return" : "be") + 
+						" null: " + getSourceString(var));
+			return true;
+		}
+
+		@Override
+		public boolean checkNull(Aliasing var) {
+			boolean result = super.checkNull(var);
+			if(! result)
+				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
+						" null: " + getSourceString(var));
+			return true;
+		}
+
+		@Override
+		public boolean checkStateInfo(Aliasing var, Set<String> stateInfo,
+				boolean inFrame) {
+			boolean result = super.checkStateInfo(var, stateInfo, inFrame);
+			if(! result) {
+				List<String> actual = value.get(var).getStateInfo(inFrame);
+				if(inFrame)
+					errors.add(getSourceString(var) + " frame must " + (isReturnCheck ? "return" : "be") + 
+						" in state(s) " + stateInfo + " but is in " + actual);
+				else
+					errors.add(getSourceString(var) + " must " + (isReturnCheck ? "return" : "be") + 
+						" in state(s) " + stateInfo + " but is in " + actual);
+			}
+			return true;
+		}
+
+		@Override
+		public boolean checkTrue(Aliasing var) {
+			boolean result = super.checkTrue(var);
+			if(! result)
+				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
+						" true: " + getSourceString(var));
+			return result;
+		}
+
+		@Override
+		protected boolean splitOffInternal(Aliasing var, TensorPluralTupleLE value,
+				PermissionSetFromAnnotations perms) {
+			if((var == null || var.getLabels().isEmpty()) && perms.isEmpty())
+				// this should be an empty permission set for results
+				// this happens when checking the post-condition of VOID methods
+				// or when checking the pre-condition of a "new" call (with the created object)
+				return true;
+			
+			if(!value.get(var).isInStates(perms.getStateInfo(false), false)) {
+				errors.add(getSourceString(var) + " must " + (isReturnCheck ? "return" : "be") + 
+						" in state " + perms.getStateInfo(false) + " but is in " + value.get(var).getStateInfo(false));
+			}
+			else if(!value.get(var).isInStates(perms.getStateInfo(true), true)) {
+				errors.add(getSourceString(var) + " frame must " + (isReturnCheck ? "return" : "be") + 
+						" in state " + perms.getStateInfo(true) + " but is in " + value.get(var).getStateInfo(true));
+			}
+			// keep going anyway....
+			
+			// split off permission 
+			value = LinearOperations.splitOff(var, value, perms);
+			
+			if(value.get(var).isUnsatisfiable()) {
+				// constraint failure
+				errors.add(getSourceString(var) + " must " + (isReturnCheck ? "return" : "have") + 
+						" permissions " + perms);
+			}
+			return true; // keep going....
+		}
+
+		@Override
+		public void announceBorrowed(Set<Aliasing> borrowedVars) {
+			// ignore
+		}
+
+	}
+	
 	/**
 	 * @param curLattice
 	 * @param paramPost
@@ -1237,6 +1810,7 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @param stateTests (possibly empty) map from return values to the 
 	 * receiver state being tested.
 	 * @return An error message or <code>null</code> if no errors were found.
+	 * @deprecated Use {@link LinearOperations#checkPostCondition(ASTNode, TensorPluralTupleLE, Variable, PredicateChecker, SimpleMap, Map)} instead.
 	 */
 	public String fancyCheckPostConditions(
 			final ASTNode node,
@@ -1533,20 +2107,6 @@ class LinearOperations extends TACAnalysisHelper {
 	
 	/**
 	 * When the receiver is in some dubious state, this method packs/unpacks the
-	 * lattice and tries to wrangle it into the given state.
-	 * @param node
-	 * @param state
-	 * @param value
-	 * @return <code>null</code> if we could not wrangle the receiver into the specified state, the resulting lattice otherwise.
-	 */
-	private DisjunctiveLE wrangleIntoPackedState(ASTNode node,
-			TensorPluralTupleLE value,
-			String state) {
-		return wrangleIntoPackedStates(node, value, Collections.singleton(state));
-	}
-	
-	/**
-	 * When the receiver is in some dubious state, this method packs/unpacks the
 	 * lattice and tries to wrangle it into the given set of states.
 	 * @param node
 	 * @param neededStates States needed for the receiver <i>frame</i>; wrangling cannot
@@ -1644,8 +2204,9 @@ class LinearOperations extends TACAnalysisHelper {
 			 * We have to try to unpack and pack to the correct states.
 			 */
 			DisjunctiveLE unpacked = 
-			value.fancyUnpackReceiver(this_var, node,
-					getRepository(), loc_map, unpack_state, null /* no assigned field */);
+			value.fancyUnpackReceiver(this_var, node, 
+					getRepository(),
+					loc_map, unpack_state, null /* no assigned field */);
 
 			// find the states we need to re-pack to
 			final Set<String> packToStates = AbstractFractionalPermission.cleanStateInfo(

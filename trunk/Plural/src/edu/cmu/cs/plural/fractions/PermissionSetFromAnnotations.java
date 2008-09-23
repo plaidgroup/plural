@@ -80,6 +80,19 @@ public class PermissionSetFromAnnotations extends
 				constraints);
 	}
 
+	public static Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> splitPermissionSets(
+			PermissionSetFromAnnotations perms) {
+		PermissionSetFromAnnotations virt = PermissionSetFromAnnotations.createEmpty(perms.getStateSpace());
+		PermissionSetFromAnnotations frame = PermissionSetFromAnnotations.createEmpty(perms.getStateSpace());
+		for(PermissionFromAnnotation v : perms.getPermissions()) {
+			virt = virt.combine(v);
+		}
+		for(PermissionFromAnnotation f : perms.getFramePermissions()) {
+			frame = frame.combine(f);
+		}
+		return Pair.create(virt, frame);
+	}
+	
 	private StateSpace stateSpace;
 	
 	protected PermissionSetFromAnnotations(StateSpace stateSpace) {
@@ -149,26 +162,6 @@ public class PermissionSetFromAnnotations extends
 		return new FractionalPermissions(permissions, framePermissions, constraints);
 	}
 
-	/**
-	 * Turns this permission set into a regular 
-	 * permission set with the given 
-	 * permission parameter that can be joined, split, and merged.
-	 * @return
-	 */
-//	public FractionalPermissions toLatticeElement(
-//			Map<String, Aliasing> parameters,
-//			Map<Aliasing, PermissionSetFromAnnotations> parameterPermissions) {
-//		return new FractionalPermissions(permissions, framePermissions, constraints, parameters, parameterPermissions, null);
-//	}
-
-	/**
-	 * Returns <code>true</code> if there are no permissions in this set.
-	 * @return <code>true</code> if there are no permissions in this set, <code>false</code> otherwise.
-	 */
-	public boolean isEmpty() {
-		return permissions.isEmpty() && framePermissions.isEmpty();
-	}
-
 	private PermissionSetFromAnnotations createPermissions(
 			List<PermissionFromAnnotation> newPermissions,
 			List<PermissionFromAnnotation> newFramePermissions,
@@ -215,12 +208,75 @@ public class PermissionSetFromAnnotations extends
 		return permissions + " frame " + framePermissions + " with " + constraints;
 	}
 
+	/**
+	 * Tests if this permission set consists only of 
+	 * {@link PermissionFromAnnotation#isReadOnly() read-only} permissions.
+	 * @return <code>true</code> if all permissions in this set are 
+	 * {@link PermissionFromAnnotation#isReadOnly() read-only}, <code>false</code>
+	 * otherwise
+	 */
 	public boolean isReadOnly() {
 		for(PermissionFromAnnotation p : permissions) {
 			if(p.isReadOnly() == false)
 				return false;
 		}
 		return true;
+	}
+
+	/**
+	 * Returns the permissions in this set with all state information except marker
+	 * and root states removed.
+	 * @return the permissions in this set with all state information except marker
+	 * and root states removed.
+	 */
+	public PermissionSetFromAnnotations withoutStateInfo() {
+		List<PermissionFromAnnotation> newPs = 
+			new ArrayList<PermissionFromAnnotation>(permissions.size());
+		for(PermissionFromAnnotation p : permissions) {
+			newPs.add(p.forgetStateInfo());
+		}
+		
+		List<PermissionFromAnnotation> newFramePs = 
+			new ArrayList<PermissionFromAnnotation>(framePermissions.size());
+		for(PermissionFromAnnotation p : framePermissions) {
+			newFramePs.add(p.forgetStateInfo());
+		}
+
+		return createPermissions(newPs, newFramePs, constraints);
+	}
+
+	public boolean hasShareOrPurePermissions() {
+		for(PermissionFromAnnotation p : permissions) {
+			if(p.isWeak())
+				return true;
+		}
+		for(PermissionFromAnnotation p : framePermissions) {
+			if(p.isWeak())
+				return true;
+		}
+		return false;
+	}
+
+	public PermissionSetFromAnnotations forgetShareAndPureStates() {
+		List<PermissionFromAnnotation> newPs = 
+			new ArrayList<PermissionFromAnnotation>(permissions.size());
+		for(PermissionFromAnnotation p : permissions) {
+			if(p.isWeak())
+				newPs.add(p.forgetStateInfo());
+			else
+				newPs.add(p);
+		}
+		
+		List<PermissionFromAnnotation> newFramePs = 
+			new ArrayList<PermissionFromAnnotation>(framePermissions.size());
+		for(PermissionFromAnnotation p : framePermissions) {
+			if(p.isWeak())
+				newFramePs.add(p.forgetStateInfo());
+			else
+				newFramePs.add(p);
+		}
+
+		return createPermissions(newPs, newFramePs, constraints);
 	}
 
 }

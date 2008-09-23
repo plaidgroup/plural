@@ -50,21 +50,25 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 public class PermissionPredicate implements VariablePredicate {
 	
 	private final Aliasing var;
-	private final PermissionSetFromAnnotations perm;
+	private final PermissionSetFromAnnotations perms;
 	
-	PermissionPredicate(Aliasing var, PermissionSetFromAnnotations perm) {
+	public PermissionPredicate(Aliasing var, PermissionSetFromAnnotations perm) {
 		this.var = var;
-		this.perm = perm;
+		this.perms = perm;
+	}
+	
+	public PermissionSetFromAnnotations getPerms() {
+		return perms;
 	}
 
 	@Override
 	public VariablePredicate createIdenticalPred(Aliasing other) {
-		return new PermissionPredicate(other, perm);
+		return new PermissionPredicate(other, perms);
 	}
 
 	@Override
 	public VariablePredicate createOppositePred(Aliasing other) {
-		throw new UnsupportedOperationException("Don't know how to negate permission: " + perm);
+		throw new UnsupportedOperationException("Don't know how to negate permission: " + perms);
 	}
 
 	@Override
@@ -94,16 +98,18 @@ public class PermissionPredicate implements VariablePredicate {
 
 	@Override
 	public boolean isUnsatisfiable(PluralTupleLatticeElement value) {
+		assert perms != null;
 		FractionalPermissions valuePs = value.get(var);
-		valuePs = valuePs.splitOff(perm);
+		valuePs = valuePs.splitOff(perms);
 		return valuePs.isUnsatisfiable();
 	}
 
 	@Override
 	public PluralTupleLatticeElement putIntoLattice(
 			PluralTupleLatticeElement value) {
+		assert perms != null;
 		FractionalPermissions valuePs = value.get(var);
-		valuePs = valuePs.mergeIn(perm);
+		valuePs = valuePs.mergeIn(perms);
 		value.put(var, valuePs);
 		return value;
 	}
@@ -131,9 +137,11 @@ public class PermissionPredicate implements VariablePredicate {
 	 * @param value
 	 */
 	public <P extends PluralTupleLatticeElement> P removeFromLattice(P value) {
-		FractionalPermissions valuePs = value.get(var);
-		valuePs = valuePs.splitOff(perm);
-		value.put(var, valuePs);
+		if(perms != null) {
+			FractionalPermissions valuePs = value.get(var);
+			valuePs = valuePs.splitOff(perms);
+			value.put(var, valuePs);
+		} // else nothing to remove
 		return value;
 	}
 
@@ -141,7 +149,7 @@ public class PermissionPredicate implements VariablePredicate {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((perm == null) ? 0 : perm.hashCode());
+		result = prime * result + ((perms == null) ? 0 : perms.hashCode());
 		result = prime * result + ((var == null) ? 0 : var.hashCode());
 		return result;
 	}
@@ -155,10 +163,10 @@ public class PermissionPredicate implements VariablePredicate {
 		if (getClass() != obj.getClass())
 			return false;
 		final PermissionPredicate other = (PermissionPredicate) obj;
-		if (perm == null) {
-			if (other.perm != null)
+		if (perms == null) {
+			if (other.perms != null)
 				return false;
-		} else if (!perm.equals(other.perm))
+		} else if (!perms.equals(other.perms))
 			return false;
 		if (var == null) {
 			if (other.var != null)

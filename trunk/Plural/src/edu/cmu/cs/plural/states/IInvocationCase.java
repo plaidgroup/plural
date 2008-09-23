@@ -39,6 +39,8 @@ package edu.cmu.cs.plural.states;
 
 import java.util.Set;
 
+import org.eclipse.jdt.core.dom.IMethodBinding;
+
 /**
  * @author Kevin Bierhoff
  * @since 4/28/2008
@@ -46,6 +48,16 @@ import java.util.Set;
  */
 public interface IInvocationCase {
 
+	/**
+	 * Returns the binding for the method whose specification is 
+	 * represented in this method case.  Note that this is not necessarily
+	 * the method for which a signature was requested since the signature
+	 * could be inherited from an overridden method.
+	 * @return the binding for the method whose specification is 
+	 * represented in this method case.
+	 */
+	IMethodBinding getSpecifiedMethodBinding();
+	
 	Set<String> getRequiredParameterStates(int paramIndex);
 
 	Set<String> getEnsuredParameterStates(int paramIndex);

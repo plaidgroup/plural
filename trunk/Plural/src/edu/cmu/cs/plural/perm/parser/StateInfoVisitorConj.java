@@ -104,7 +104,8 @@ public class StateInfoVisitorConj implements AccessPredVisitor<List<Pair<String,
 
 	@Override
 	public List<Pair<String, String>> visit(StateOnly stateOnly) {
-		return Collections.singletonList(Pair.create(stateOnly.getVar(), stateOnly.getStateInfo()));
+		String ref = ((Identifier) stateOnly.getVar()).getName();
+		return Collections.singletonList(Pair.create(ref, stateOnly.getStateInfo()));
 	}
 
 	@Override

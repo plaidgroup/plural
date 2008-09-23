@@ -38,7 +38,6 @@
 package edu.cmu.cs.plural.states;
 
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * @author Kevin Bierhoff

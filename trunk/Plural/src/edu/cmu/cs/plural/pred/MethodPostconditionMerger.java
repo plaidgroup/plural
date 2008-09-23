@@ -35,64 +35,14 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
-
-import java.util.Set;
-
-import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.util.SimpleMap;
+package edu.cmu.cs.plural.pred;
 
 /**
- * 
+ * Currently just a renaming of {@link PredicateMerger}.
  * @author Kevin Bierhoff
- * @since Sep 10, 2008
+ * @since Sep 12, 2008
  *
  */
-public interface PredicateChecker {
-
-	/**
-	 * Callback interface.
-	 * @author Kevin Bierhoff
-	 * @since Sep 10, 2008
-	 *
-	 */
-	public interface SplitOffTuple {
-		/**
-		 * Check that the given object is in the given states.
-		 * @param var 
-		 * @param stateInfos
-		 * @return <code>true</code> if checking should continue, 
-		 * <code>false</code> to fail the check.
-		 */
-		boolean checkStateInfo(Aliasing var, Set<String> stateInfos);
-
-		/**
-		 * Split the given permissions off the given object.
-		 * @param var
-		 * @param perms
-		 * @return <code>true</code> if checking should continue, 
-		 * <code>false</code> to fail the check.
-		 */
-		boolean splitOffPermission(Aliasing var, PermissionSetFromAnnotations perms);
-
-		/**
-		 * Post-processing, e.g., of delayed checks.
-		 * @return <code>true</code> if checking should continue, 
-		 * <code>false</code> to fail the check.
-		 */
-		boolean finishSplit();
-	}
-
-	/**
-	 * Call this method to check this predicate.  This check can be called multiple times.
-	 * @param vars
-	 * @param callback
-	 * @return <code>false</code> if the check failed,
-	 * <code>true</code> otherwise.
-	 * 
-	 */
-	public boolean splitOffPredicate(SimpleMap<String, Aliasing> vars,
-			SplitOffTuple callback);
+public interface MethodPostconditionMerger extends PredicateMerger {
 
 }

@@ -43,17 +43,22 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.pred.MethodPostcondition;
+import edu.cmu.cs.plural.pred.MethodPrecondition;
+import edu.cmu.cs.plural.pred.PredicateChecker;
+import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.util.Pair;
 
 /**
  * This class implements single-case constructor signatures by double-functioning
  * as the single constructor case.
  * @author Kevin Bierhoff
- *
+ * @deprecated Use MultiCaseConstructorSignature instead.
  */
+@Deprecated
 class SimpleConstructorSignature extends AbstractSingleCaseSignature
 		implements IConstructorSignature, IConstructorCase {
 	
@@ -110,9 +115,14 @@ class SimpleConstructorSignature extends AbstractSingleCaseSignature
 	//
 
 	@Override
-	public IConstructorCaseInstance createPermissions(boolean forAnalyzingBody, boolean isSuperCall) {
+	public IConstructorCaseInstance createPermissions(final boolean forAnalyzingBody, boolean isSuperCall) {
+		final boolean coerce = !forAnalyzingBody && !isSuperCall;
+		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
+		final Pair<MethodPrecondition, MethodPostcondition> preAndPost = preAndPost(
+				forAnalyzingBody, preAndPostString, coerce, coerce);
+
 		final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> receiverPrePost =
-			receiverPermissions(forAnalyzingBody, !forAnalyzingBody && !isSuperCall, !forAnalyzingBody && !isSuperCall);
+			receiverPermissions(forAnalyzingBody, coerce, coerce);
 		final int argCount = binding.getParameterTypes().length;
 		final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost = 
 			new Pair[argCount];
@@ -178,6 +188,35 @@ class SimpleConstructorSignature extends AbstractSingleCaseSignature
 			public boolean isReceiverBorrowed() {
 				// TODO Auto-generated method stub
 				return false;
+			}
+
+			@Override
+			public PredicateMerger getPostconditionMerger() {
+				assert ! forAnalyzingBody : "Did not request case instance for checking call site";
+				return preAndPost.snd();
+			}
+
+			@Override
+			public PredicateChecker getPreconditionChecker() {
+				assert ! forAnalyzingBody : "Did not request case instance for checking call site";
+				return preAndPost.fst();
+			}
+
+			@Override
+			public boolean isEffectFree() {
+				return preAndPost.fst().isReadOnly();
+			}
+
+			@Override
+			public PredicateChecker getPostconditionChecker() {
+				assert forAnalyzingBody : "Did not request case instance for analyzing body";
+				return preAndPost.snd();
+			}
+
+			@Override
+			public PredicateMerger getPreconditionMerger() {
+				assert forAnalyzingBody : "Did not request case instance for analyzing body";
+				return preAndPost.fst();
 			}
 
 		};

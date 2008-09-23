@@ -37,13 +37,16 @@
  */
 package edu.cmu.cs.plural.perm.parser;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.plural.concrete.VariablePredicate;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.linear.PermissionPredicate;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
@@ -52,7 +55,19 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
  */
 public class ParamInfoHolder {
 	
-	private enum Primitive { NULL, NONNULL, FALSE, TRUE, SEVERAL };
+	private enum Primitive { 
+		NULL, NONNULL, FALSE, TRUE, SEVERAL;
+		
+		public Primitive getOpposite() {
+			switch(this) {
+			case NULL: return NONNULL;
+			case NONNULL: return NULL;
+			case FALSE: return TRUE;
+			case TRUE: return FALSE;
+			default: return null;
+			}
+		}
+	};
 	
 	private PermissionSetFromAnnotations perms;
 	
@@ -74,6 +89,10 @@ public class ParamInfoHolder {
 		this.perms = perms;
 	}
 
+	public boolean hasStateInfo() {
+		return stateInfo != null && !stateInfo.isEmpty();
+	}
+
 	/**
 	 * @return the stateInfos
 	 */
@@ -91,87 +110,305 @@ public class ParamInfoHolder {
 			perms = perms.combine(pa);
 	}
 
-	/**
-	 * @param value
-	 * @param var
-	 */
-	public void putIntoLattice(PluralTupleLatticeElement value,
-			Aliasing var) {
-		assert var != null;
-		
-		if(prim != null) {
-			switch(prim) {
-			case NULL:
-				value.addNullVariable(var);
-				// null implies bottom permissions -> do nothing else
-				return;
-			case NONNULL:
-				value.addNonNullVariable(var);
-				break;
-			case TRUE:
-				value.addTrueVarPredicate(var);
-				break;
-			case FALSE:
-				value.addFalseVarPredicate(var);
-				break;
-			default:
-				// nothing
-			}
-		}
-		
-		FractionalPermissions ps = value.get(var);
-		ps = ps.mergeIn(perms);
-		
-		for(String s : stateInfo) {
-			// TODO learn all states at once
-			ps = ps.learnTemporaryStateInfo(s);
-		}
-		
-		value.put(var, ps);
-	}
-	
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((perms == null) ? 0 : perms.hashCode());
-		result = prime * result + ((prim == null) ? 0 : prim.hashCode());
-		result = prime * result
-				+ ((stateInfo == null) ? 0 : stateInfo.hashCode());
-		return result;
+	public void addNull(boolean nonnull) {
+		addPrim(nonnull ? Primitive.NONNULL : Primitive.NULL);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public void addBoolean(boolean b) {
+		addPrim(b ? Primitive.TRUE : Primitive.FALSE);
+	}
+	
+	protected void addPrim(Primitive primitive) {
+		if(prim == null)
+			prim = primitive;
+		else if(prim != primitive)
+			prim = Primitive.SEVERAL;
+		// else already set
+	}
+
+	public boolean hasNull() {
+		return Primitive.NULL == prim;
+	}
+
+	public boolean hasNonNull() {
+		return Primitive.NONNULL == prim;
+	}
+
+	public boolean hasTrue() {
+		return Primitive.TRUE == prim;
+	}
+
+	public boolean hasFalse() {
+		return Primitive.FALSE == prim;
+	}
+
+	ReleaseHolder createReleaseHolder(String releasedFromState) {
+		return new ReleaseHolder(perms, releasedFromState);
+	}
+	
+	public VariablePredicate createPredicate(Aliasing var) {
+		return createInfoPredicate(var);
+	}
+	
+	InfoHolderPredicate createInfoPredicate(Aliasing var) {
+		return new InfoHolderPredicate(perms, prim, stateInfo, var);
+	}
+	
+	static class InfoHolderPredicate extends PermissionPredicate 
+			implements VariablePredicate {
+
+		private final Set<String> stateInfo;
+		private final Primitive prim;
+		
+		
+		public InfoHolderPredicate(PermissionSetFromAnnotations perms,
+				Primitive prim, Set<String> stateInfo, Aliasing var) {
+			super(var, perms);
+			assert perms != null || prim != null || (stateInfo != null && !stateInfo.isEmpty()); 
+			this.prim = prim;
+			this.stateInfo = stateInfo == null ? 
+					// force the field to be non-null
+					Collections.<String>emptySet() : 
+						Collections.unmodifiableSet(stateInfo);
+		}
+
+		@Override
+		public InfoHolderPredicate createIdenticalPred(Aliasing other) {
+			return new InfoHolderPredicate(getPerms(), prim, stateInfo, other);
+		}
+
+		@Override
+		public InfoHolderPredicate createOppositePred(Aliasing other) {
+			return new InfoHolderPredicate(null, prim.getOpposite(), null, other);
+		}
+
+		@Override
+		public boolean denotesBooleanFalsehood() {
+			return prim == Primitive.FALSE && getPerms() == null && stateInfo.isEmpty();
+		}
+
+		@Override
+		public boolean denotesBooleanTruth() {
+			return prim == Primitive.TRUE && getPerms() == null && stateInfo.isEmpty();
+		}
+
+		@Override
+		public boolean denotesNonNullVariable() {
+			return prim == Primitive.NONNULL && getPerms() == null && stateInfo.isEmpty();
+		}
+
+		@Override
+		public boolean denotesNullVariable() {
+			return prim == Primitive.NULL && getPerms() == null && stateInfo.isEmpty();
+		}
+
+		@Override
+		public boolean isUnsatisfiable(PluralTupleLatticeElement value) {
+			if(prim != null) {
+				switch(prim) {
+				case NULL: 
+					if(value.isNonNull(getVariable())) 
+						return true;
+					break;
+				case NONNULL: 
+					if(value.isNull(getVariable())) 
+						return true;
+					break;
+				case TRUE: 
+					if(value.isBooleanFalse(getVariable())) 
+						return true;
+					break;
+				case FALSE: 
+					if(value.isBooleanTrue(getVariable())) 
+						return true;
+					break;
+				default: 
+					// nothing
+				}
+			}
+			
+			if(!stateInfo.isEmpty()) {
+				// TODO unsatisfiable state info??
+			}
+			
+			if(getPerms() != null) {
+				return super.isUnsatisfiable(value);
+			}
+			return false;
+		}
+
+		@Override
+		public PluralTupleLatticeElement putIntoLattice(
+				PluralTupleLatticeElement value) {
+			Aliasing var = getVariable();
+			assert var != null;
+			
+			if(prim != null) {
+				switch(prim) {
+				case NULL:
+					value.addNullVariable(var);
+					// null implies bottom permissions -> do nothing else
+					return value;
+				case NONNULL:
+					value.addNonNullVariable(var);
+					break;
+				case TRUE:
+					value.addTrueVarPredicate(var);
+					break;
+				case FALSE:
+					value.addFalseVarPredicate(var);
+					break;
+				default:
+					// nothing
+				}
+			}
+			
+			FractionalPermissions ps = value.get(var);
+			boolean changed = false;
+			if(getPerms() != null) {
+				changed = true;
+				ps = ps.mergeIn(getPerms());
+			}
+			
+			for(String s : stateInfo) {
+				changed = true;
+				// TODO learn all states at once
+				ps = ps.learnTemporaryStateInfo(s);
+			}
+			
+			if(changed)
+				value.put(var, ps);
+			
+			return value;
+		}
+		
+		@Override
+		public boolean isSatisfied(PluralTupleLatticeElement value) {
+			if(prim != null) {
+				switch(prim) {
+				case NULL: 
+					if(! value.isNull(getVariable())) 
+						return false;
+					break;
+				case NONNULL: 
+					if(! value.isNonNull(getVariable())) 
+						return false;
+					break;
+				case TRUE: 
+					if(! value.isBooleanTrue(getVariable())) 
+						return false;
+					break;
+				case FALSE: 
+					if(! value.isBooleanFalse(getVariable())) 
+						return false;
+					break;
+				default: 
+					// can't satisfy multiple at once
+					return false;
+				}
+			}
+			
+			if(!stateInfo.isEmpty()) {
+				FractionalPermissions ps = value.get(getVariable());
+				if(! ps.isInStates(stateInfo))
+					return false;
+			}
+			
+			if(getPerms() != null) {
+				return super.isSatisfied(value);
+			}
 			return true;
-		if (obj == null)
+		}
+
+		/**
+		 * @see edu.cmu.cs.plural.concrete.Implication#hasTemporaryState()
+		 * @return <code>true</code> if this predicate carries temporary state, 
+		 * <code>false</code> otherwise.
+		 */
+		public boolean hasTemporaryState() {
+			if(! stateInfo.isEmpty())
+				// count state info as temporary for now (see TODO in createCopyWithoutTemporaryState)
+				return true;
+			
+			if(getPerms() != null && getPerms().hasShareOrPurePermissions())
+				return true;
+			
 			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		final ParamInfoHolder other = (ParamInfoHolder) obj;
-		if (perms == null) {
-			if (other.perms != null)
+		}
+
+		/**
+		 * @see edu.cmu.cs.plural.concrete.Implication#createCopyWithoutTemporaryState()
+		 * @tag todo.general -id="1969915" : keep state info protected by full/unique/imm permissions in newPs
+		 *
+		 */
+		public InfoHolderPredicate createCopyWithoutTemporaryState() {
+			PermissionSetFromAnnotations newPs;
+			if(getPerms() != null && getPerms().hasShareOrPurePermissions())
+				newPs = getPerms().forgetShareAndPureStates();
+			else
+				newPs = getPerms();
+			
+			if((newPs == null || newPs.isEmpty()) && prim == null)
+				// ignore state info in this test 'cause it's dropped anyway
+				return null; // nothing left in this predicate
+			
+			return new InfoHolderPredicate(newPs, prim, null /* drop state info */, getVariable());
+		}
+		
+		@Override
+		public String toString() {
+			String result = null;
+			if(prim != null)
+				result = prim + "(" + getVariable() + ")";
+			if(stateInfo != null && !stateInfo.isEmpty()) {
+				if(result == null)
+					result = getVariable() + " IN " + stateInfo;
+				else
+					result+= " && " + getVariable() + " IN " + stateInfo;
+			}
+			if(getPerms() != null) {
+				if(result == null)
+					result = getVariable() + " : " + getPerms();
+				else
+					result+= " && " + getVariable() + " : " + getPerms();
+			}
+			if(result == null)
+				return "EMP"; // this shouldn't happen
+			return result;
+		}
+		
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = super.hashCode();
+			result = prime * result + ((prim == null) ? 0 : prim.hashCode());
+			result = prime * result
+					+ ((stateInfo == null) ? 0 : stateInfo.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (!super.equals(obj))
 				return false;
-		} else if (!perms.equals(other.perms))
-			return false;
-		if (prim == null) {
-			if (other.prim != null)
+			if (getClass() != obj.getClass())
 				return false;
-		} else if (!prim.equals(other.prim))
-			return false;
-		if (stateInfo == null) {
-			if (other.stateInfo != null)
+			InfoHolderPredicate other = (InfoHolderPredicate) obj;
+			if (prim == null) {
+				if (other.prim != null)
+					return false;
+			} else if (!prim.equals(other.prim))
 				return false;
-		} else if (!stateInfo.equals(other.stateInfo))
-			return false;
-		return true;
+			if (stateInfo == null) {
+				if (other.stateInfo != null)
+					return false;
+			} else if (!stateInfo.equals(other.stateInfo))
+				return false;
+			return true;
+		}
+
 	}
 
 }

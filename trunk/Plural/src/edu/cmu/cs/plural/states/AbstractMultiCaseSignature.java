@@ -38,6 +38,7 @@
 package edu.cmu.cs.plural.states;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -45,7 +46,6 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 
@@ -67,14 +67,25 @@ abstract class AbstractMultiCaseSignature<T extends IInvocationCase> extends Abs
 	protected AbstractMultiCaseSignature(AnnotationDatabase annoDB, IMethodBinding binding,
 			ITypeBinding staticallyInvokedType, PermAnnotation... cases) {
 		super(annoDB, binding, staticallyInvokedType);
-		if(cases.length == 0)
-			throw new IllegalArgumentException("Must have at least one method case--use SimpleConstructorSignature for methods without specs.");
-		this.cases = new ArrayList<T>(cases.length);
-		for(PermAnnotation perm : cases) {
-			this.cases.add(createCase(annoDB, binding, perm, staticallyInvokedType));
+		if(cases.length == 0) {
+			this.cases = Collections.singletonList(createCase(annoDB, binding, null, staticallyInvokedType));
+		}
+		else { 
+			this.cases = new ArrayList<T>(cases.length);
+			for(PermAnnotation perm : cases) {
+				this.cases.add(createCase(annoDB, binding, perm, staticallyInvokedType));
+			}
 		}
 	}
 
+	/**
+	 * Create a case for the given @Perm annotation (optional)
+	 * @param annoDB
+	 * @param binding
+	 * @param perm @Perm annotation or <code>null</code> if no such annotation is given.
+	 * @param staticallyInvokedType
+	 * @return
+	 */
 	abstract protected T createCase(AnnotationDatabase annoDB, IMethodBinding binding,
 			PermAnnotation perm, ITypeBinding staticallyInvokedType);
 

@@ -309,6 +309,35 @@ public class PermissionFromAnnotation extends FractionalPermission
 							Fraction.zero(), fractions.getBelowFraction()));
 	}
 
+	public PermissionKind getKind() {
+		if(isUnique())
+			return PermissionKind.UNIQUE;
+		if(isFull())
+			return PermissionKind.FULL;
+		if(isShare())
+			return PermissionKind.SHARE;
+		if(isImmutable())
+			return PermissionKind.IMMUTABLE;
+		if(isPure())
+			return PermissionKind.PURE;
+		throw new IllegalStateException("Not a valid permission: " + this);
+	}
+	
+	/**
+	 * Indicates whether this is a weak permission that forgets state information,
+	 * i.e., a {@link #isShare() share} or {@link #isPure() pure} permission.
+	 * @return <code>true</code> if this is a {@link #isShare() share} or {@link #isPure() pure} 
+	 * permission, <code>false</code> otherwise.
+	 */
+	public boolean isWeak() {
+		return isShare() || isPure();
+	}
+
+	@Override
+	public String toString() {
+		return getKind().toString() + "(" + rootNode + " " + fractions + ") in " + stateInfo;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */

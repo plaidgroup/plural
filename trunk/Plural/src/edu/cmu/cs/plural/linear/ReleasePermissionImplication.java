@@ -40,13 +40,11 @@ package edu.cmu.cs.plural.linear;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.jws.soap.SOAPBinding.ParameterStyle;
-
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
 import edu.cmu.cs.plural.concrete.VariablePredicate;
-import edu.cmu.cs.plural.perm.parser.ParamInfoHolder;
+import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.util.Pair;
 
@@ -54,19 +52,19 @@ import edu.cmu.cs.plural.util.Pair;
  * @author Kevin Bierhoff
  * @since 8/04/2008
  */
-public class PermissionImplication implements Implication {
+public class ReleasePermissionImplication implements Implication {
 	
 	private final PermissionPredicate ant;
-	private final List<Pair<Aliasing, ParamInfoHolder>> cons;
+	private final List<Pair<Aliasing, ReleaseHolder>> cons;
 	
-	public PermissionImplication(PermissionPredicate ant, List<Pair<Aliasing, ParamInfoHolder>> cons) {
+	public ReleasePermissionImplication(PermissionPredicate ant, List<Pair<Aliasing, ReleaseHolder>> cons) {
 		this.ant = ant;
 		this.cons = cons;
 	}
 
 	@Override
 	public Implication createCopyWithNewAntecedant(Aliasing other) {
-		return new PermissionImplication((PermissionPredicate) ant.createIdenticalPred(other), cons);
+		return new ReleasePermissionImplication((PermissionPredicate) ant.createIdenticalPred(other), cons);
 	}
 
 	@Override
@@ -97,9 +95,10 @@ public class PermissionImplication implements Implication {
 			public PluralTupleLatticeElement putResultIntoLattice(
 					PluralTupleLatticeElement value) {
 				ant.removeFromLattice(value);
-				value.removeImplication(ant.getVariable(), PermissionImplication.this);
-				for(Pair<Aliasing, ParamInfoHolder> c : cons) {
-					c.snd().putIntoLattice(value, c.fst());
+				final Aliasing capturing_var = ant.getVariable();
+				value.removeImplication(capturing_var, ReleasePermissionImplication.this);
+				for(Pair<Aliasing, ReleaseHolder> c : cons) {
+					c.snd().putIntoLattice(value, c.fst(), capturing_var, false);
 				}
 				return value;
 			}
@@ -135,7 +134,7 @@ public class PermissionImplication implements Implication {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		final PermissionImplication other = (PermissionImplication) obj;
+		final ReleasePermissionImplication other = (ReleasePermissionImplication) obj;
 		if (ant == null) {
 			if (other.ant != null)
 				return false;
@@ -153,9 +152,9 @@ public class PermissionImplication implements Implication {
 	 * @param paramLoc
 	 * @return
 	 */
-	public List<ParamInfoHolder> findImpliedParameter(Aliasing paramLoc) {
-		List<ParamInfoHolder> result = new LinkedList<ParamInfoHolder>();
-		for(Pair<Aliasing, ParamInfoHolder> c : cons) {
+	public List<ReleaseHolder> findImpliedParameter(Aliasing paramLoc) {
+		List<ReleaseHolder> result = new LinkedList<ReleaseHolder>();
+		for(Pair<Aliasing, ReleaseHolder> c : cons) {
 			if(c.fst().equals(paramLoc))
 				result.add(c.snd());
 		}
@@ -169,10 +168,6 @@ public class PermissionImplication implements Implication {
 
 	@Override
 	public boolean hasTemporaryState() {
-		for(Pair<Aliasing, ParamInfoHolder> param : cons) {
-			if(! param.snd().getStateInfos().isEmpty())
-				return true;
-		}
 		return false;
 	}
 

@@ -58,6 +58,7 @@ import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
+import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.util.SimpleMap;
 
@@ -85,40 +86,40 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 */
 	public static TensorPluralTupleLE createUnpackedLattice(
 			FractionalPermissions fps,
-			IAnalysisInput input,
-			StateSpaceRepository rep, ThisVariable thisVar, 
+			FractionAnalysisContext context,
+			ThisVariable thisVar, 
 			MethodDeclaration decl) {
 		// This seems to violate the mostly-functional spirit of this class, but
 		// I am not sure how else to do this.
-		TensorPluralTupleLE tuple = new TensorPluralTupleLE(fps, input, rep, thisVar, decl);
+		TensorPluralTupleLE tuple = new TensorPluralTupleLE(fps, context, thisVar, decl);
 		return tuple;
 	}
 
 	private Boolean unsatisfiable;
 	
 	public TensorPluralTupleLE(FractionalPermissions b,
-			IAnalysisInput input, StateSpaceRepository stateRepo) {
-		super(b, input, stateRepo);
+			FractionAnalysisContext context) {
+		super(b, context);
 	}
 
 	protected TensorPluralTupleLE(AliasAwareTupleLE<FractionalPermissions> a,
-			AnnotationDatabase adb, StateSpaceRepository stateRepo,
+			FractionAnalysisContext context,
 			Variable unpackedVar, ASTNode nodeWhereUnpacked, DynamicStateLogic dsl) {
-		super(a, adb, stateRepo, unpackedVar, nodeWhereUnpacked, dsl);
+		super(a, context, unpackedVar, nodeWhereUnpacked, dsl);
 	}
 
 	protected TensorPluralTupleLE(FractionalPermissions b,
-			IAnalysisInput input, StateSpaceRepository stateRepo,
+			FractionAnalysisContext context,
 			Variable unpackedVar, ASTNode nodeWhereUnpacked) {
-		super(b, input, stateRepo, unpackedVar, nodeWhereUnpacked);
+		super(b, context, unpackedVar, nodeWhereUnpacked);
 	}
 
 	@Override
 	protected TensorPluralTupleLE create(
-			AliasAwareTupleLE<FractionalPermissions> a, AnnotationDatabase adb,
-			StateSpaceRepository stateRepo, Variable unpackedVar,
+			AliasAwareTupleLE<FractionalPermissions> a, FractionAnalysisContext context, 
+			Variable unpackedVar,
 			ASTNode nodeWhereUnpacked, DynamicStateLogic dsl) {
-		return new TensorPluralTupleLE(a, adb, stateRepo, unpackedVar, nodeWhereUnpacked, dsl);
+		return new TensorPluralTupleLE(a, context, unpackedVar, nodeWhereUnpacked, dsl);
 	}
 
 	@Override

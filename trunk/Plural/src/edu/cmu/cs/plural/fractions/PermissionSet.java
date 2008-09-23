@@ -276,6 +276,7 @@ class PermissionSet {
 	 * Forget stateInfo for permissions that either must be pure or must be share.
 	 * Returns a new list with those modified permissions, without changing the
 	 * original list.
+	 * @see #withoutStateInfo(List)
 	 */
 	static List<FractionalPermission> forgetShareAndPureStates(List<FractionalPermission> permissions, FractionConstraints constraints) {
 		if(permissions.isEmpty())
@@ -376,6 +377,27 @@ class PermissionSet {
 		// nothing to combine with --> just add to the list
 		newPs.add(permission);
 		return true;
+	}
+
+	/**
+	 * Returns a list of permissions that is based on the given permissions but with
+	 * all state information removed.  The returned list may be the given list.
+	 * @param permissions
+	 * @return a list of permissions that is based on the given permissions but with
+	 * all state information removed.
+	 * @see #forgetShareAndPureStates(List, FractionConstraints)
+	 */
+	static List<FractionalPermission> withoutStateInfo(
+			List<FractionalPermission> permissions) {
+		if(permissions.isEmpty())
+			// nothing to do
+			return permissions;
+		
+		ArrayList<FractionalPermission> newPs = new ArrayList<FractionalPermission>(permissions.size());
+		for(FractionalPermission p : permissions) {
+			newPs.add(p.forgetStateInfo());
+		}
+		return newPs;
 	}
 	
 }

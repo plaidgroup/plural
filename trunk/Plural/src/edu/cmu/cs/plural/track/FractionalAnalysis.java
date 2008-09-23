@@ -36,7 +36,9 @@
  * release a modified version which carries forward this exception.
  */
 package edu.cmu.cs.plural.track;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,9 +61,12 @@ import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
+import edu.cmu.cs.crystal.internal.Option;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IInvocationCase;
@@ -90,8 +95,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 	private IInvocationCaseInstance analyzedCase;
 
-	
-	
 	public FractionalAnalysis() {
 		super();
 	}
@@ -122,9 +125,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		return tf;
 	}
 	
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis#analyzeMethod(org.eclipse.jdt.core.dom.MethodDeclaration)
-	 */
 	@Override
 	public void analyzeMethod(MethodDeclaration d) {
 		if(isAbstract(d)) {
@@ -154,13 +154,20 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	}	
 	
 	@Override
+	public AnnotationDatabase getAnnoDB() {
+		return analysisInput.getAnnoDB();
+	}
+	
+	@Override
+	public Option<CompilationUnitTACs> getComUnitTACs() {
+		return analysisInput.getComUnitTACs();
+	}
+
+	@Override
 	public StateSpaceRepository getRepository() {
 		return StateSpaceRepository.getInstance(analysisInput.getAnnoDB());
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.track.FractionAnalysisContext#getAnalyzedCase()
-	 */
 	@Override
 	public IInvocationCaseInstance getAnalyzedCase() {
 		return analyzedCase;
@@ -189,17 +196,13 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 				}
 				
 				reportIfError(
-						exit.checkPostConditions(block, 
-								getTf().getParameterPostConditions(), 
+						exit.checkPostCondition(block, 
 								null /* no result value */, 
-								getTf().getResultPostCondition(), 
+								FractionalAnalysis.this.getAnalyzedCase().getPostconditionChecker(),
+								getTf().getInitialLocations(), 
 								Collections.<Boolean, String>emptyMap()), 
 						block);
 
-				//				exit = checkParameterPostCondition(exit, block);
-				// check whether post-conditions for packing are validated
-//				exit = checkRecvrFieldsPostCondition(exit, block);
-				
 				// debug
 				if(logger.isLoggable(Level.FINEST))
 					logger.finest("exit: " + exit);
@@ -222,42 +225,12 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 			// check whether post-conditions for parameters are validated
 			reportIfError(
-					exit.checkPostConditions(node, 
-							getTf().getParameterPostConditions(), 
+					exit.checkPostCondition(node, 
 							resultVar, 
-							getTf().getResultPostCondition(), 
+							FractionalAnalysis.this.getAnalyzedCase().getPostconditionChecker(),
+							getTf().getInitialLocations(), 
 							getTf().getDynamicStateTest()), 
 					node);
-
-			
-//			exit = checkParameterPostCondition(exit, node);
-//			// check whether post-conditions for packing are validated
-//			exit = checkRecvrFieldsPostCondition(exit, node);
-//			// check accuracy of dynamic state test
-//			exit = checkDynamicStateTest(exit, node);
-//			// check whether post-condition for return value is validated
-//			if( node.getExpression() != null &&
-//				tf.getResultPostCondition() != null) {
-//				reportIfError(exit.checkPermissionIfNotNull(
-//						getFa().getVariable(node.getExpression()), tf.getResultPostCondition()),
-//						node.getExpression());
-//				Aliasing return_value_loc = exit.getLocationsAfter(node, getFa().getVariable(node.getExpression()));
-//				// If the return value is not the value null, then it must fulfill its spec.
-//				if( !exit.isNull(return_value_loc) ) {
-//					FractionalPermissions resultPerms = exit.get(return_value_loc);
-//					
-//					for(String needed : tf.getResultPostCondition().getStateInfo()) {
-//						if(resultPerms.isInState(needed) == false)
-//							crystal.reportUserProblem("Return value must be in state " + 
-//									needed + " but is in " + resultPerms.getStateInfo(),
-//									node.getExpression(), LinearChecker.this);
-//					}
-//					
-//					FractionalPermissions resultRemainder = resultPerms.splitOff(tf.getResultPostCondition());
-//					if(resultRemainder.isUnsatisfiable())
-//						crystal.reportUserProblem("Return value carries no suitable permission", node.getExpression(), LinearChecker.this);
-//				}
-//			}
 
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
@@ -269,41 +242,41 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		@Override
 		public void endVisit(ClassInstanceCreation node) {
 			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
-			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
+//			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
 			
-			if(FractionalAnalysis.isBottom(before, after, node)) {
+			if(FractionalAnalysis.isBottom(before, node)) {
 				super.endVisit(node);
 				return;
 			}
 			
+			checkCases(node, before, sig, null /* no receiver yet */, 
+					variables((List<Expression>) node.arguments()), false /* "new" */);
+			
 			// arguments
-			int argIndex = 0;
-			for(Expression e : (List<Expression>) node.arguments()) {
-				final Variable arg = getFa().getVariable(e);
-				
-//				final FractionalPermissions perms = after.get(node, arg);
-//				if(perms.isUnsatisfiable())
-				if(! after.checkConstraintsSatisfiable(arg))
-					// TODO better reporting
-					reporter.reportUserProblem(
-							"" + e + " yields no suitable permission for surrounding call" + errorCtx, 
-							e, FractionalAnalysis.this.getName());
-				
-//				checkState(before.get(node, arg), sig.getRequiredParameterStates(argIndex), arg, e);
-				reportIfError(
-						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIndex)),
-						e);
-				
-				++argIndex;
-			}
+//			int argIndex = 0;
+//			for(Expression e : (List<Expression>) node.arguments()) {
+//				final Variable arg = getFa().getVariable(e);
+//				
+//				if(! after.checkConstraintsSatisfiable(arg))
+//					// TODO better reporting
+//					reporter.reportUserProblem(
+//							"" + e + " yields no suitable permission for surrounding call" + errorCtx, 
+//							e, FractionalAnalysis.this.getName());
+//				
+//				reportIfError(
+//						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIndex)),
+//						e);
+//				
+//				++argIndex;
+//			}
 			
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
 				logger.finest(before.toString());
 				logger.finest("  " + node);
-				logger.finest(after.toString());
+//				logger.finest(after.toString());
 			}
 			super.endVisit(node);
 		}
@@ -311,69 +284,83 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		@Override
 		public void endVisit(MethodInvocation node) {
 			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
-			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
+//			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding methodBinding = node.resolveMethodBinding();
 			final IMethodSignature sig = getRepository().getMethodSignature(methodBinding);
 			
-			if(FractionalAnalysis.isBottom(before, after, node)) {
+			if(FractionalAnalysis.isBottom(before, node)) {
 				super.endVisit(node);
 				return;
 			}
 			
 			// receiver
+			final Variable receiver;
 			if(sig.hasReceiver()) {
-				final Variable receiver;
 				if(node.getExpression() == null)
 					receiver = getFa().getImplicitThisVariable(methodBinding);
 				else
 					receiver = getFa().getVariable(node.getExpression());
 				
-//				final FractionalPermissions permsAfter = after.get(node, receiver);
-//				if(permsAfter.isUnsatisfiable())
-				if(! after.checkConstraintsSatisfiable(receiver))
-					// TODO better reporting
-					reporter.reportUserProblem(
-							"" + receiver.getSourceString() + " carries no suitable permission" + errorCtx, 
-							node, FractionalAnalysis.this.getName());
-				
-//				checkState(before.get(node, receiver), sig.getRequiredReceiverStates(), receiver, node);
-				reportIfError(
-						before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
-						node);
+//				if(! after.checkConstraintsSatisfiable(receiver))
+//					// TODO better reporting
+//					reporter.reportUserProblem(
+//							"" + receiver.getSourceString() + " carries no suitable permission" + errorCtx, 
+//							node, FractionalAnalysis.this.getName());
+//				reportIfError(
+//						before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
+//						node);
 			}
-			// TODO what to do with static methods?
+			else
+				// static method
+				receiver = null;
 			
 			// arguments
-			int argIdx = 0;
-			for(Expression e : (List<Expression>) node.arguments()) {
-				Variable arg = getFa().getVariable(e);
-//				FractionalPermissions perms = after.get(node, arg);
-//				if(perms.isUnsatisfiable())
-				if(! after.checkConstraintsSatisfiable(arg))
-					// TODO better reporting
-					reporter.reportUserProblem(
-							"" + e + " yields no suitable permission for surrounding call" + errorCtx, 
-							e, FractionalAnalysis.this.getName());
-				
-//				checkState(before.get(node, arg), sig.getRequiredParameterStates(argIdx), arg, e);
-				reportIfError(
-						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIdx)),
-						e);
-				++argIdx;
-			}
+//			int argIdx = 0;
+//			for(Expression e : (List<Expression>) node.arguments()) {
+//				Variable arg = getFa().getVariable(e);
+//				if(! after.checkConstraintsSatisfiable(arg))
+//					// TODO better reporting
+//					reporter.reportUserProblem(
+//							"" + e + " yields no suitable permission for surrounding call" + errorCtx, 
+//							e, FractionalAnalysis.this.getName());
+//				
+//				reportIfError(
+//						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIdx)),
+//						e);
+//				++argIdx;
+//			}
 
+			checkCases(node, before, sig, receiver, 
+					variables((List<Expression>) node.arguments()), false /* dynamic dispatch or static method call */);
+			
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
 				logger.finest(before.toString());
 				logger.finest("  " + node);
-				logger.finest(after.toString());
+//				logger.finest(after.toString());
 			}
 			super.endVisit(node);
 		}
 
 		@Override
 		public void endVisit(SuperMethodInvocation node) {
-			// TODO Auto-generated method stub
+			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final IMethodBinding methodBinding = node.resolveMethodBinding();
+			final IMethodSignature sig = getRepository().getMethodSignature(methodBinding);
+			
+			if(FractionalAnalysis.isBottom(before, node)) {
+				super.endVisit(node);
+				return;
+			}
+			
+			checkCases(node, before, sig, null /* lattice fills in super */, 
+					variables((List<Expression>) node.arguments()), true /* static dispatch */);
+			
+			// debug
+			if(logger.isLoggable(Level.FINEST)) {
+				logger.finest(before.toString());
+				logger.finest("  " + node);
+			}
 			super.endVisit(node);
 		}
 
@@ -415,60 +402,55 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			return false;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.eclipse.jdt.core.dom.ASTVisitor#endVisit(org.eclipse.jdt.core.dom.ConstructorInvocation)
-		 */
 		@Override
 		public void endVisit(ConstructorInvocation node) {
 			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
-			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
+//			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
 			
-			if(FractionalAnalysis.isBottom(before, after, node)) {
+			if(FractionalAnalysis.isBottom(before, node)) {
 				super.endVisit(node);
 				return;
 			}
 			
-			// receiver
+			// receiver is always "this"  (super constructor call is different node type)
 			final Variable receiver = getFa().getImplicitThisVariable(constructorBinding);
 			
-//				final FractionalPermissions permsAfter = after.get(node, receiver);
-//				if(permsAfter.isUnsatisfiable())
-			if(! after.checkConstraintsSatisfiable(receiver))
-				// TODO better reporting
-				reporter.reportUserProblem(
-						"this carries no suitable permission for constructor call" + errorCtx, 
-						node, FractionalAnalysis.this.getName());
+			checkCases(node, before, sig, receiver, 
+					variables((List<Expression>) node.arguments()), true);
 			
-			reportIfError(
-					before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
-					node);
+			//			if(! after.checkConstraintsSatisfiable(receiver))
+//				// TODO better reporting
+//				reporter.reportUserProblem(
+//						"this carries no suitable permission for constructor call" + errorCtx, 
+//						node, FractionalAnalysis.this.getName());
+//			
+//			reportIfError(
+//					before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
+//					node);
 			
 			// arguments
-			int argIdx = 0;
-			for(Expression e : (List<Expression>) node.arguments()) {
-				Variable arg = getFa().getVariable(e);
-//				FractionalPermissions perms = after.get(node, arg);
-//				if(perms.isUnsatisfiable())
-				if(! after.checkConstraintsSatisfiable(arg))
-					// TODO better reporting
-					reporter.reportUserProblem(
-							"" + e + " yields no suitable permission for constructor call" + errorCtx, 
-							e, FractionalAnalysis.this.getName());
-				
-//				checkState(before.get(node, arg), sig.getRequiredParameterStates(argIdx), arg, e);
-				reportIfError(
-						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIdx)),
-						e);
-				++argIdx;
-			}
+//			int argIdx = 0;
+//			for(Expression e : (List<Expression>) node.arguments()) {
+//				Variable arg = getFa().getVariable(e);
+//				if(! after.checkConstraintsSatisfiable(arg))
+//					// TODO better reporting
+//					reporter.reportUserProblem(
+//							"" + e + " yields no suitable permission for constructor call" + errorCtx, 
+//							e, FractionalAnalysis.this.getName());
+//				
+//				reportIfError(
+//						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIdx)),
+//						e);
+//				++argIdx;
+//			}
 
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
 				logger.finest(before.toString());
 				logger.finest("  " + node);
-				logger.finest(after.toString());
+//				logger.finest(after.toString());
 			}
 			super.endVisit(node);
 		}
@@ -479,57 +461,101 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		@Override
 		public void endVisit(SuperConstructorInvocation node) {
 			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
-			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
+//			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
 			
-			if(FractionalAnalysis.isBottom(before, after, node)) {
+			if(FractionalAnalysis.isBottom(before, node)) {
 				super.endVisit(node);
 				return;
 			}
 			
+			checkCases(node, before, sig, null /* lattice fills in super variable */, 
+					variables((List<Expression>) node.arguments()), true /* static dispatch */);
+
 			// receiver
 			// TODO use "super" variable
-			final Variable receiver = getFa().getImplicitThisVariable(constructorBinding);
+//			final Variable receiver = getFa().getSuperVariable();
 			
-//				final FractionalPermissions permsAfter = after.get(node, receiver);
-//				if(permsAfter.isUnsatisfiable())
-			if(! after.checkConstraintsSatisfiable(receiver))
-				// TODO better reporting
-				reporter.reportUserProblem(
-						"super carries no suitable permission for super-constructor call" + errorCtx, 
-						node, FractionalAnalysis.this.getName());
-			
-			reportIfError(
-					before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
-					node);
+//			if(! after.checkConstraintsSatisfiable(receiver))
+//				// TODO better reporting
+//				reporter.reportUserProblem(
+//						"super carries no suitable permission for super-constructor call" + errorCtx, 
+//						node, FractionalAnalysis.this.getName());
+//			
+//			reportIfError(
+//					before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
+//					node);
 			
 			// arguments
-			int argIdx = 0;
-			for(Expression e : (List<Expression>) node.arguments()) {
-				Variable arg = getFa().getVariable(e);
-//				FractionalPermissions perms = after.get(node, arg);
-//				if(perms.isUnsatisfiable())
-				if(! after.checkConstraintsSatisfiable(arg))
-					// TODO better reporting
-					reporter.reportUserProblem(
-							"" + e + " yields no suitable permission for super-constructor call" + errorCtx, 
-							e, FractionalAnalysis.this.getName());
-				
-//				checkState(before.get(node, arg), sig.getRequiredParameterStates(argIdx), arg, e);
-				reportIfError(
-						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIdx)),
-						e);
-				++argIdx;
-			}
+//			int argIdx = 0;
+//			for(Expression e : (List<Expression>) node.arguments()) {
+//				Variable arg = getFa().getVariable(e);
+//				if(! after.checkConstraintsSatisfiable(arg))
+//					// TODO better reporting
+//					reporter.reportUserProblem(
+//							"" + e + " yields no suitable permission for super-constructor call" + errorCtx, 
+//							e, FractionalAnalysis.this.getName());
+//				
+//				reportIfError(
+//						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIdx)),
+//						e);
+//				++argIdx;
+//			}
 
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
 				logger.finest(before.toString());
 				logger.finest("  " + node);
-				logger.finest(after.toString());
+//				logger.finest(after.toString());
 			}
 			super.endVisit(node);
+		}
+
+		/**
+		 * @param node
+		 * @param before
+		 * @param sig
+		 * @param receiver <code>null</code> for <code>super</code> and static methods.
+		 * @param arguments
+		 * @param receiverIsStaticallyBound for methods that have a receiver, <code>true</code>
+		 * indicates that this is a statically dispatched call, ie. a call to <code>super</code>
+		 * or a constructor invocation on <code>this</code>, but <b>not</b> a object instantiation
+		 * with <code>new</code>.
+		 */
+		private void checkCases(ASTNode node,
+				final PluralDisjunctiveLE before, final IInvocationSignature sig,
+				final Variable receiver, List<Variable> arguments, boolean receiverIsStaticallyBound) {
+			List<String> errors = new LinkedList<String>();
+			for(IInvocationCaseInstance c : sig.createPermissionsForCases(false, receiverIsStaticallyBound)) {
+				String err;
+				if(receiver == null && receiverIsStaticallyBound)
+					err = before.checkSuperCallPrecondition(node, 
+							arguments,
+							c.getPreconditionChecker());
+				else
+					// any other call, including "new"
+					err = before.checkRegularCallPrecondition(node, 
+									receiver, arguments,
+									c.getPreconditionChecker());
+				if(err == null)
+					return;
+				errors.add(err);
+			}
+			if(errors.size() == 1)
+				reportIfError(errors.iterator().next(), node);
+			else if(errors.size() > 1)
+				reportIfError("One of: " + errors, node);
+		}
+
+		private List<Variable> variables(List<? extends ASTNode> nodes) {
+			if(nodes.isEmpty())
+				return Collections.emptyList();
+			ArrayList<Variable> result = new ArrayList<Variable>(nodes.size());
+			for(ASTNode node: nodes) {
+				result.add(getFa().getVariable(node));
+			}
+			return result;
 		}
 
 		/**
@@ -556,6 +582,16 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			logger.warning("Encountered bottom before node: " + node);
 		else if(after.isBottom())
 			logger.warning("Encountered bottom after node: " + node);
+		else 
+			return false;
+		return true;
+	}
+
+	private static boolean isBottom(
+			PluralDisjunctiveLE before,
+			ASTNode node) {
+		if(before.isBottom())
+			logger.warning("Encountered bottom before node: " + node);
 		else 
 			return false;
 		return true;

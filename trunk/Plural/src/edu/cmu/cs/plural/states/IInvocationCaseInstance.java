@@ -38,6 +38,8 @@
 package edu.cmu.cs.plural.states;
 
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.pred.PredicateChecker;
+import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.util.Pair;
 
 /**
@@ -67,5 +69,15 @@ public interface IInvocationCaseInstance {
 	IMethodCaseInstance getMethodCaseInstance();
 
 	IInvocationCase getInvocationCase();
+	
+	PredicateMerger getPreconditionMerger();
+	
+	PredicateChecker getPostconditionChecker();
+
+	PredicateChecker getPreconditionChecker();
+
+	PredicateMerger getPostconditionMerger();
+
+	boolean isEffectFree();
 
 }

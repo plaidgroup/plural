@@ -37,13 +37,18 @@
  */
 package edu.cmu.cs.plural.concrete;
 
+import java.util.List;
+
+import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
+
 
 /**
  * 
  * @author Kevin Bierhoff
  * @since 7/28/2008
  */
-public abstract class GenericImplication implements Implication {
+public class GenericImplication implements Implication {
 	
 	private VariablePredicate ant;
 
@@ -57,8 +62,56 @@ public abstract class GenericImplication implements Implication {
 	}
 
 	@Override
+	public Implication createCopyWithNewAntecedant(Aliasing other) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Implication createCopyWithOppositeAntecedant(Aliasing other) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Implication createCopyWithoutTemporaryState() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean hasTemporaryState() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public ImplicationResult result() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean supportsMatch() {
+		return false;
+	}
+
+	@Override
 	public boolean match(VariablePredicate pred) {
-		return pred.equals(ant);
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isSatisfied(PluralTupleLatticeElement value) {
+		final Aliasing anteVar = ant.getVariable();
+		if(value.isKnownImplication(anteVar, this))
+			return true;
+		
+		if(ant.isUnsatisfiable(value))
+			// antecedent is false --> implication trivially holds
+			return true;
+		
+		return true;
 	}
 
 }

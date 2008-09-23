@@ -86,6 +86,7 @@ import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.ParamInfoHolder;
 import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
@@ -126,9 +127,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 
 	final private DynamicStateLogic dynamicStateLogic;
 	final private AliasAwareTupleLE<FractionalPermissions> tupleLatticeElement;
-	final private AnnotationDatabase annotationDB;
-	
-	final private StateSpaceRepository stateRepo;
+	final private FractionAnalysisContext context;
 	
 	private static final Logger log = Logger.getLogger(FractionalTransfer.class.getName());
 	
@@ -140,35 +139,34 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	// Holds the most recent aliasing state of the world.
 	private AliasingLE mostRecentAliasInfo = null;
 	
-	// Call for no unpacked var.
-	public PluralTupleLatticeElement(FractionalPermissions b, IAnalysisInput input,
-			StateSpaceRepository stateRepo) {
-		this(b, input, stateRepo, null, null);
+	/** Call for no unpacked var. */
+	public PluralTupleLatticeElement(FractionalPermissions b, 
+			FractionAnalysisContext context) {
+		this(b, context, null, null);
 	}
 	
-	// Call for an unpacked var, and a new DynamicStateLogic.
-	protected PluralTupleLatticeElement(FractionalPermissions b, IAnalysisInput input,
-			StateSpaceRepository stateRepo, Variable unpackedVar, ASTNode nodeWhereUnpacked) {
-		this.tupleLatticeElement = AliasAwareTupleLE.create(input, b);
+	/** Call for an unpacked var, and a new DynamicStateLogic. */
+	protected PluralTupleLatticeElement(FractionalPermissions b, 
+			FractionAnalysisContext context,
+			Variable unpackedVar, ASTNode nodeWhereUnpacked) {
+		this.tupleLatticeElement = AliasAwareTupleLE.create(context, b);
 		this.dynamicStateLogic = new DynamicStateLogic();
-		this.annotationDB = input.getAnnoDB();
+		this.context = context;
 		this.isFrozen = false;
 		this.unpackedVar = unpackedVar;
 		this.nodeWhereUnpacked = nodeWhereUnpacked;
-		this.stateRepo = stateRepo;
 	}
 
-	// Call to specify everything.
+	/** Call to specify everything. */
 	protected PluralTupleLatticeElement(AliasAwareTupleLE<FractionalPermissions> a, 
-			AnnotationDatabase adb, StateSpaceRepository stateRepo, Variable unpackedVar,
+			FractionAnalysisContext context, Variable unpackedVar,
 			ASTNode nodeWhereUnpacked, DynamicStateLogic dsl) {
 		this.tupleLatticeElement = a;
 		this.dynamicStateLogic = dsl;
-		this.annotationDB = adb;
+		this.context = context;
 		this.isFrozen = false;
 		this.unpackedVar = unpackedVar;
 		this.nodeWhereUnpacked = nodeWhereUnpacked;
-		this.stateRepo = stateRepo;
 	}
 	
 	/**
@@ -183,20 +181,21 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 */
 	public static PluralTupleLatticeElement createConstructorLattice(
 			FractionalPermissions fps,
-			IAnalysisInput input,
-			StateSpaceRepository rep, ThisVariable thisVar, MethodDeclaration decl) {
+			FractionAnalysisContext context,
+			ThisVariable thisVar, MethodDeclaration decl) {
 		// This seems to violate the mostly-functional spirit of this class, but
 		// I am not sure how else to do this.
-		PluralTupleLatticeElement tuple = new PluralTupleLatticeElement(fps, input, rep, thisVar, decl);
+		PluralTupleLatticeElement tuple = new PluralTupleLatticeElement(
+				fps, context, thisVar, decl);
 		return tuple;
 	}
 	
 	protected PluralTupleLatticeElement create(
-			AliasAwareTupleLE<FractionalPermissions> a, AnnotationDatabase adb,
-			StateSpaceRepository stateRepo, Variable unpackedVar, ASTNode nodeWhereUnpacked,
+			AliasAwareTupleLE<FractionalPermissions> a, FractionAnalysisContext context,
+			Variable unpackedVar, ASTNode nodeWhereUnpacked,
 			DynamicStateLogic dsl) {
-		return new PluralTupleLatticeElement(a, adb, stateRepo, unpackedVar, nodeWhereUnpacked,
-				dsl);
+		return new PluralTupleLatticeElement(
+				a, context, unpackedVar, nodeWhereUnpacked, dsl);
 	}
 
 	public boolean isNull(Aliasing loc) {
@@ -282,7 +281,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 * @param loc
 	 * @return
 	 */
-	public List<ParamInfoHolder> findImpliedParameter(Aliasing anteLoc, Aliasing paramLoc) {
+	public List<ReleaseHolder> findImpliedParameter(Aliasing anteLoc, Aliasing paramLoc) {
 		return dynamicStateLogic.findImpliedParameter(anteLoc, paramLoc);
 	}
 
@@ -412,7 +411,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 					}
 					final AliasingLE first_locs = first.mostRecentAliasInfo;
 
-					if(first.packReceiverToBestGuess(first.getUnpackedVar(), first.stateRepo, 
+					if(first.packReceiverToBestGuess(first.getUnpackedVar(), first.getStateRepo(), 
 							new SimpleMap<Variable, Aliasing>() {
 						@Override
 						public Aliasing get(Variable key) {
@@ -438,7 +437,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 						}
 						final AliasingLE second_locs = second.mostRecentAliasInfo;
 						
-						second.packReceiverToBestGuess(second.getUnpackedVar(), second.stateRepo, 
+						second.packReceiverToBestGuess(second.getUnpackedVar(), second.getStateRepo(), 
 								new SimpleMap<Variable, Aliasing>() {
 							@Override
 							public Aliasing get(Variable key) {
@@ -475,7 +474,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 				other.mostRecentAliasInfo = locs;
 				
 				// create map for variable locations.
-				other.packReceiver(unpacked_var, other.stateRepo, 
+				other.packReceiver(unpacked_var, other.getStateRepo(), 
 						new SimpleMap<Variable,Aliasing>() {
 					@Override
 					public Aliasing get(Variable key) {
@@ -502,7 +501,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 				this_copy = this_copy.mutableCopy();   // Nels: do we really copy again???
 				
 				// create map for variable locations
-				this_copy.packReceiver(unpacked_var, this_copy.stateRepo,
+				this_copy.packReceiver(unpacked_var, this_copy.getStateRepo(),
 						new SimpleMap<Variable, Aliasing>() {
 					@Override
 					public Aliasing get(Variable key) {
@@ -518,7 +517,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			throw new IllegalStateException("Unhandled case");
 						
 		PluralTupleLatticeElement copy = 
-			create(this_copy.tupleLatticeElement.join(other.tupleLatticeElement, node), this_copy.annotationDB, this_copy.stateRepo, 
+			create(this_copy.tupleLatticeElement.join(other.tupleLatticeElement, node), this_copy.context, 
 					this_copy.unpackedVar, this.nodeWhereUnpacked,
 				this_copy.dynamicStateLogic.join(other.dynamicStateLogic, node));
 		// Needed because of our invariant that mostRecentAliasInfo is never null at joins/freezes.
@@ -568,7 +567,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	}
 
 	public PluralTupleLatticeElement bottom() {
-		return create(this.tupleLatticeElement.bottom(), this.annotationDB, this.stateRepo, null, null, this.dynamicStateLogic.bottom());
+		return create(this.tupleLatticeElement.bottom(), this.context, null, null, this.dynamicStateLogic.bottom());
 	}
 
 	public ExtendedIterator<FractionalPermissions> tupleInfoIterator() {
@@ -582,7 +581,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	public PluralTupleLatticeElement mutableCopy() {
 		AliasAwareTupleLE<FractionalPermissions> aatle = tupleLatticeElement.mutableCopy();
 		DynamicStateLogic dsl = this.dynamicStateLogic.mutableCopy();
-		return create(aatle, this.annotationDB, this.stateRepo, this.unpackedVar, 
+		return create(aatle, this.context, this.unpackedVar, 
 				this.nodeWhereUnpacked,	dsl);
 	}
 
@@ -720,7 +719,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		SimpleMap<String, Aliasing> vars = 
 			createFieldNameToAliasingMapping(locs, rcvr_type);
 		String error = ConcreteAnnotationUtils.checkConcreteFieldInvariants(
-				this, rcvr_type, new_rcvr_perm, vars, annotationDB);
+				this, rcvr_type, new_rcvr_perm, vars, getAnnotationDB());
 		if(error != null) {
 			// Sad path exit. A concrete invariant was violated
 			if(log.isLoggable(Level.FINE))
@@ -844,7 +843,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			SimpleMap<String, Aliasing> vars = 
 				createFieldNameToAliasingMapping(locs, rcvrVar.resolveType());
 			if(ConcreteAnnotationUtils.checkConcreteFieldInvariants(
-					this, rcvrVar.resolveType(), new_rcvr_perm, vars, annotationDB) != null) {
+					this, rcvrVar.resolveType(), new_rcvr_perm, vars, getAnnotationDB()) != null) {
 				// Sad path exit. A concrete invariant was violated
 				continue next_state;
 			}
@@ -892,10 +891,10 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 * state space repository so that it can create field permissions with
 	 * legitimate state spaces.  If the receiver has no permissions, this
 	 * method won't actually unpack but still return <code>true</code>
+	 * 
 	 * @param ThisVariable The receiver variable.
 	 * @param StateSpaceRepository Gives us the possible states for a field type.
 	 * @param ASTNode Node that will be used for BEFORE aliasing results.
-	 * 
 	 * @return <code>false</code> if we tried to unpack an impossible state, <code>true</code>
 	 * otherwise. 
 	 */
@@ -1009,7 +1008,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 				locs, class_decl);
 		
 		Set<Aliasing> hints = ConcreteAnnotationUtils.addConcreteFieldInvariants(
-				this, class_decl, assignedField, unpacked_perm, vars, annotationDB);
+				this, class_decl, assignedField, unpacked_perm, vars, getAnnotationDB());
 		if(!hints.isEmpty()) {
 			List<ImplicationResult> newStuff = dynamicStateLogic.solveWithHints(this, hints.toArray(new Aliasing[0]));
 			for(ImplicationResult continuation : newStuff) {
@@ -1138,7 +1137,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		List<Pair<String, String>> state_infos =
 			new ArrayList<Pair<String, String>>();
 		
-		for( ICrystalAnnotation csda : annotationDB.getAnnosForType(class_decl)) {
+		for( ICrystalAnnotation csda : getAnnotationDB().getAnnosForType(class_decl)) {
 			if( csda instanceof ClassStateDeclAnnotation ) {
 				final List<StateDeclAnnotation> decls = 
 					((ClassStateDeclAnnotation)csda).getStates();
@@ -1260,13 +1259,13 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	}
 
 	protected AnnotationDatabase getAnnotationDB() {
-		return annotationDB;
+		return context.getAnnoDB();
 	}
 
 	protected StateSpaceRepository getStateRepo() {
-		return stateRepo;
+		return context.getRepository();
 	}
-
+	
 	protected AliasingLE getMostRecentAliasInfo() {
 		return mostRecentAliasInfo;
 	}

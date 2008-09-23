@@ -37,6 +37,7 @@
  */
 package edu.cmu.cs.plural.track;
 
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.plural.states.IInvocationCaseInstance;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 
@@ -44,7 +45,7 @@ import edu.cmu.cs.plural.states.StateSpaceRepository;
  * @author Kevin Bierhoff
  *
  */
-public interface FractionAnalysisContext {
+public interface FractionAnalysisContext extends IAnalysisInput {
 	
 	public StateSpaceRepository getRepository();
 	

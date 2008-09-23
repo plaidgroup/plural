@@ -63,10 +63,11 @@ import edu.cmu.cs.crystal.BooleanLabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
+import edu.cmu.cs.crystal.internal.Option;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
-import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
+import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
@@ -107,7 +108,7 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 	 * @return
 	 */
 	protected SingleTruthFractionalTransfer createNewFractionalTransfer() {
-		return new SingleTruthFractionalTransfer(analysisInput, this);
+		return new SingleTruthFractionalTransfer(this);
 	}
 	
 	/**
@@ -153,13 +154,16 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 		return StateSpaceRepository.getInstance(getAnnoDB());
 	}
 
-	private AnnotationDatabase getAnnoDB() {
+	@Override
+	public Option<CompilationUnitTACs> getComUnitTACs() {
+		return analysisInput.getComUnitTACs();
+	}
+
+	@Override
+	public AnnotationDatabase getAnnoDB() {
 		return analysisInput.getAnnoDB();
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.track.FractionAnalysisContext#getAnalyzedCase()
-	 */
 	@Override
 	public IInvocationCaseInstance getAnalyzedCase() {
 		throw new UnsupportedOperationException("Not needed for now.");

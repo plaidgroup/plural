@@ -213,4 +213,29 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 		return result;
 	}
 
+	public static boolean isReceiverNotBorrowed(AnnotationDatabase annoDB, IMethodBinding binding) {
+		for(ParameterPermissionAnnotation a : receiverAnnotations(annoDB, binding)) {
+			if(! a.isFramePermission() && ! a.isReturned())
+				return true;
+		}
+		return false;
+	}
+
+	public static boolean isReceiverFrameNotBorrowed(AnnotationDatabase annoDB, IMethodBinding binding) {
+		for(ParameterPermissionAnnotation a : receiverAnnotations(annoDB, binding)) {
+			if(a.isFramePermission() && ! a.isReturned())
+				return true;
+		}
+		return false;
+	}
+
+	public static boolean isParameterNotBorrowed(AnnotationDatabase annoDB, 
+			IMethodBinding binding, int paramIndex) {		
+		for(ParameterPermissionAnnotation a : parameterAnnotations(annoDB, binding, paramIndex)) {
+			if(! a.isReturned())
+				return true;
+		}
+		return false;
+	}
+
 }

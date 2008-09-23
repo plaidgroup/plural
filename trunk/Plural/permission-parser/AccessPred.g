@@ -141,7 +141,7 @@ implies returns [AccessPred result]
 	;
 
 state_only returns [AccessPred result]
-	: ref=ID IN state=ID {$result = new StateOnly(ref.getText(), state.getText());}
+	: ref=ref_expr IN state=ID {$result = new StateOnly(ref, state.getText());}
 	;
 
 /* This expression type is for Java-like expressions, e.g., socket == null */
