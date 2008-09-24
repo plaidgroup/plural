@@ -37,30 +37,24 @@
  */
 package edu.cmu.cs.plural.perm.parser;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.plural.concrete.Implication;
-import edu.cmu.cs.plural.concrete.ImplicationResult;
-import edu.cmu.cs.plural.concrete.VariablePredicate;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.linear.PermissionPredicate;
 import edu.cmu.cs.plural.linear.ReleasePermissionImplication;
 import edu.cmu.cs.plural.perm.parser.ParamInfoHolder.InfoHolderPredicate;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.states.StateSpace;
-import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.util.Pair;
 import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
+ * This class is will parse and create permissions from @Perm annotations,
+ * from their 'ensures' fields.
+ * 
  * @author Kevin Bierhoff
  * @since 7/28/2008
  */
@@ -94,9 +88,6 @@ class MethodPostconditionParser extends AbstractParamVisitor
 				false /* variable fractions */);
 	}
 
-	private final Set<Pair<MethodPostconditionParser, MethodPostconditionParser>> impls = 
-		new LinkedHashSet<Pair<MethodPostconditionParser, MethodPostconditionParser>>();
-	
 	private final Map<String, ReleaseHolder> captured;
 	
 	private final Map<String, String> released;
@@ -167,15 +158,6 @@ class MethodPostconditionParser extends AbstractParamVisitor
 		}
 		
 		/*
-		 * declared implications
-		 */
-		for(Pair<MethodPostconditionParser, MethodPostconditionParser> impl : impls) {
-			InfoHolderPredicate ant = impl.fst().createPredicate(vars);
-			ParamImplication i = impl.snd().createImplication(ant, vars);
-			callback.addImplication(ant.getVariable(), i);
-		}
-		
-		/*
 		 * Explicitly released parameters
 		 */
 		if(released != null && ! released.isEmpty()) {
@@ -189,157 +171,8 @@ class MethodPostconditionParser extends AbstractParamVisitor
 	}
 
 	@Override
-	public Boolean visit(PermissionImplication permissionImplication) {
-		MethodPostconditionParser anteVisitor = new MethodPostconditionParser(
-				getSpaces(), isFrameToVirtual(), 
-				! isNamedFractions() /* negate for antecedent */);
-		MethodPostconditionParser consVisitor = new MethodPostconditionParser(
-				getSpaces(), isFrameToVirtual(), isNamedFractions());
-		permissionImplication.ant().accept(anteVisitor);
-		permissionImplication.cons().accept(consVisitor);
-		impls.add(Pair.create(anteVisitor, consVisitor));
-		return null;
-	}
-	
-	private InfoHolderPredicate createPredicate(SimpleMap<String, Aliasing> vars) {
-		assert impls.isEmpty();
-		assert getParams().size() == 1 : "Not a single antecedent: " + getParams().keySet();
-		Map.Entry<String, ParamInfoHolder> singleton = getParams().entrySet().iterator().next();
-		return singleton.getValue().createInfoPredicate(vars.get(singleton.getKey()));
-	}
-	
-	private ParamImplication createImplication(InfoHolderPredicate antecedant, SimpleMap<String, Aliasing> vars) {
-		assert impls.isEmpty();
-		ArrayList<InfoHolderPredicate> cons = new ArrayList<InfoHolderPredicate>(getParams().size());
-		for(Map.Entry<String, ParamInfoHolder> h : getParams().entrySet()) {
-			cons.add(h.getValue().createInfoPredicate(vars.get(h.getKey())));
-		}
-		return new ParamImplication(antecedant, cons);
-	}
-	
-	private static class ParamImplication implements Implication, ImplicationResult {
-		
-		private InfoHolderPredicate ant;
-		private List<InfoHolderPredicate> cons;
-
-		public ParamImplication(InfoHolderPredicate ant,
-				List<InfoHolderPredicate> cons) {
-			super();
-			this.ant = ant;
-			this.cons = Collections.unmodifiableList(cons);
-		}
-
-		@Override
-		public ParamImplication createCopyWithNewAntecedant(Aliasing other) {
-			return new ParamImplication(ant.createIdenticalPred(other), cons);
-		}
-
-		@Override
-		public ParamImplication createCopyWithOppositeAntecedant(Aliasing other) {
-			return new ParamImplication(ant.createOppositePred(other), cons);
-		}
-
-		@Override
-		public ParamImplication createCopyWithoutTemporaryState() {
-			List<InfoHolderPredicate> newPs = new LinkedList<InfoHolderPredicate>();
-			for(InfoHolderPredicate p : cons) {
-				p = p.createCopyWithoutTemporaryState();
-				if(p != null)
-					newPs.add(p);
-			}
-			if(newPs.isEmpty())
-				return null; // all dropped...
-			return new ParamImplication(ant, newPs);
-		}
-
-		@Override
-		public VariablePredicate getAntecedant() {
-			return ant;
-		}
-
-		@Override
-		public boolean hasTemporaryState() {
-			for(InfoHolderPredicate p : cons) {
-				if(p.hasTemporaryState())
-					return true;
-			}
-			return false;
-		}
-
-		@Override
-		public boolean match(VariablePredicate pred) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public ImplicationResult result() {
-			return this;
-		}
-
-		@Override
-		public boolean supportsMatch() {
-			return false;
-		}
-
-		@Override
-		public boolean isSatisfied(PluralTupleLatticeElement value) {
-			final Aliasing anteVar = ant.getVariable();
-			if(value.isKnownImplication(anteVar, this))
-				return true;
-			
-			if(ant.isUnsatisfiable(value))
-				// antecedent is false --> implication trivially holds
-				return true;
-			
-			for(InfoHolderPredicate p : cons) {
-				if(! p.isSatisfied(value))
-					return false;
-			}
-			return true;
-		}
-
-		@Override
-		public PluralTupleLatticeElement putResultIntoLattice(
-				PluralTupleLatticeElement value) {
-			ant.removeFromLattice(value);
-			value.removeImplication(ant.getVariable(), this);
-			for(InfoHolderPredicate p : cons) {
-				p.putIntoLattice(value);
-			}
-			return value;
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + ((ant == null) ? 0 : ant.hashCode());
-			result = prime * result + ((cons == null) ? 0 : cons.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			ParamImplication other = (ParamImplication) obj;
-			if (ant == null) {
-				if (other.ant != null)
-					return false;
-			} else if (!ant.equals(other.ant))
-				return false;
-			if (cons == null) {
-				if (other.cons != null)
-					return false;
-			} else if (!cons.equals(other.cons))
-				return false;
-			return true;
-		}
-		
+	protected AbstractParamVisitor createSubParser(boolean namedFraction) {
+		return new MethodPostconditionParser(getSpaces(),isFrameToVirtual(),namedFraction);
 	}
 
 }

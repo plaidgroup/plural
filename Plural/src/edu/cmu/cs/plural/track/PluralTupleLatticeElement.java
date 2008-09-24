@@ -907,20 +907,6 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			throw new IllegalStateException("Double unpack on the receiver. Not cool.");
 
 		final ITypeBinding class_decl = rcvrVar.resolveType();
-
-		// 0.) Initialize any BOTTOM fields
-		for(Variable f : getFieldVariables(class_decl)) {
-			final Aliasing field_loc = locs.get(f);
-			if(field_loc.getLabels().isEmpty())
-				log.warning("Encountered field with no locations: " + f);
-			else if(this.get(field_loc) == null || this.get(field_loc).isBottom())
-				this.put(field_loc, FractionalPermissions.createEmpty());
-		}
-		if(class_decl.getSuperclass() != null) {
-			Aliasing super_fr = getFrameAliasing(class_decl.getSuperclass());
-			if(this.get(super_fr) == null || this.get(super_fr).isBottom())
-				this.put(super_fr, FractionalPermissions.createEmpty());
-		}
 		
 		// 1.) Find out what state the receiver is in.
 		Aliasing rcvrLoc = locs.get(rcvrVar);
@@ -947,9 +933,6 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			return false;
 		}
 
-//		invs = this.filterOutNullPermissions(invs, locs, class_decl,
-//				unpacked_perm, stateRepo);
-		
 		boolean purify = this_perms.getUnpackedPermission().isReadOnly();
 		
 		// 4a.) Build field *permissions* from set of individual *permission*s.
