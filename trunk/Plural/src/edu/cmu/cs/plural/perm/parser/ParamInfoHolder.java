@@ -50,6 +50,11 @@ import edu.cmu.cs.plural.linear.PermissionPredicate;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
+ * Stores all the information that you find out about a param, meaning
+ * a method argument or a field. It stores permissions, stateInfo,
+ * and null-ness, true, and falseness. These will be created and
+ * populated by the visitor of permission annotations.
+ * 
  * @author Kevin Bierhoff
  * @since 8/04/2008
  */
@@ -154,6 +159,12 @@ public class ParamInfoHolder {
 		return new InfoHolderPredicate(perms, prim, stateInfo, var);
 	}
 	
+	/**
+	 * A predicate, suitable for insertion into DynamicStateLogic, that
+	 * holds the information gathered about a variable from the permission
+	 * visitor. It also has an Aliasing location, so we know which variable
+	 * we are talking about. It is immutable, like other predicates. 
+	 */
 	static class InfoHolderPredicate extends PermissionPredicate 
 			implements VariablePredicate {
 

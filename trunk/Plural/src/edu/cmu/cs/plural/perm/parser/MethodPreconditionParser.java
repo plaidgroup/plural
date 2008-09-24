@@ -37,6 +37,7 @@
  */
 package edu.cmu.cs.plural.perm.parser;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -88,7 +89,7 @@ class MethodPreconditionParser extends AbstractParamVisitor
 			boolean frameToVirtual, boolean namedFractions, 
 			Set<String> notBorrowed) {
 		super(perms, spaces, frameToVirtual, namedFractions);
-		this.notBorrowed = new LinkedHashSet<String>(notBorrowed);
+		this.notBorrowed = notBorrowed;
 	}
 	
 	@Override
@@ -122,15 +123,18 @@ class MethodPreconditionParser extends AbstractParamVisitor
 	}
 
 	@Override
-	public Boolean visit(PermissionImplication permissionImplication) {
-		log.warning("Ignore implication: " + permissionImplication);
-		return null;
-	}
-
-	@Override
 	protected void addPerm(String param, PermissionFromAnnotation pa) {
 		notBorrowed.add(param); // assume that any parsed permission makes the parameter not borrowed
 		super.addPerm(param, pa);
+	}
+
+	@Override
+	protected AbstractParamVisitor createSubParser(boolean namedFraction) {
+		return new MethodPreconditionParser(Collections.<String, PermissionSetFromAnnotations>emptyMap(),
+				getSpaces(),
+				isFrameToVirtual(),
+				namedFraction,
+				notBorrowed);
 	}
 
 }
