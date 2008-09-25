@@ -46,6 +46,7 @@ import edu.cmu.cs.plural.annot.Param;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.Unique;
 
 @FailingTest(3)
 @UseAnalyses("FractionalAnalysis")
@@ -102,6 +103,27 @@ public class GCTest {
 		gotIt.needFull();
 		gct2.needFull();
 		gct1.needFull();
+	}
+
+	public static void correctBorrowingReturn1(@Unique GCTest gct1) {
+		GCTest gct2 = new GCTest(gct1);
+		GCTest gotIt = gct2.getGct();
+		gotIt.needFull();
+		gct2.needFull();
+		gct1.needFull();
+	}
+
+	public static void correctBorrowingReturn2(@Unique GCTest gct1) {
+		GCTest gct2 = new GCTest(gct1);
+		GCTest gotIt = gct2.getGct();
+		gotIt.needFull();
+		gct2.needFull();
+	}
+
+	public static void correctBorrowingReturn3(@Unique GCTest gct1) {
+		GCTest gct2 = new GCTest(gct1);
+		GCTest gotIt = gct2.getGct();
+		gotIt.needFull();
 	}
 
 	public static void earlyBorrowingTest() {
