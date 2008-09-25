@@ -77,7 +77,7 @@ public class ReleaseHolder {
 			return; // nothing to release
 		assert var != null && capturingVar != null;
 
-		if(! value.get(capturingVar).isInState(releasedFromState))
+		if(!force && ! value.get(capturingVar).isInState(releasedFromState))
 			return;
 		
 		FractionalPermissions ps = value.get(var);
