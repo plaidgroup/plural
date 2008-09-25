@@ -389,15 +389,20 @@ public abstract class ConsList<T> implements List<T> {
 	}
 	
 	public final boolean contains(Object o) {
-		if( this.isEmpty() ) {
-			return false;
+		for(ConsList<T> l = this; !l.isEmpty(); l = l.tl()) {
+			if(l.hd().equals(o))
+				return true;
 		}
-		else if( hd().equals(o) ) {
-			return true;
-		}
-		else {
-			return tl().contains(o);
-		}
+		return false;
+//		if( this.isEmpty() ) {
+//			return false;
+//		}
+//		else if( hd().equals(o) ) {
+//			return true;
+//		}
+//		else {
+//			return tl().contains(o);
+//		}
 	}
 
 	public final Object[] toArray() {
