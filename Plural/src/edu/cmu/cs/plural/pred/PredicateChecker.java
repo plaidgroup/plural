@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.pred;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.util.SimpleMap;
 
@@ -100,6 +101,11 @@ public interface PredicateChecker {
 		 */
 		boolean checkFalse(Aliasing var);
 
+		/**
+		 * Check that the given implication is satisfied.
+		 */
+		boolean checkImplication(Aliasing var, Implication impl);
+		
 		/**
 		 * Split the given permissions off the given object.
 		 * @param var

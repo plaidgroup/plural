@@ -287,7 +287,19 @@ public abstract class AbstractParamVisitor
 		}
 		
 		/*
-		 * 3. split off permissions
+		 * 3. Check implications.
+		 */
+		for(Pair<AbstractParamVisitor, AbstractParamVisitor> impl : impls) {
+			// NEB: This is definitely weird. Why create a param implication?
+			InfoHolderPredicate ant = impl.fst().createPredicate(vars);
+			ParamImplication i = impl.snd().createImplication(ant, vars);
+			
+			if( !callback.checkImplication(ant.getVariable(), i) )
+				return false;
+		}
+		
+		/*
+		 * 4. split off permissions
 		 */
 		
 		for(Map.Entry<String, ParamInfoHolder> param : getParams().entrySet()) {
@@ -298,16 +310,15 @@ public abstract class AbstractParamVisitor
 		}
 		
 		/*
-		 * 4. additional checks in subclasses.
+		 * 5. additional checks in subclasses.
 		 */
 		
 		if(! finishSplit(vars, callback))
 			return false;
 		
 		/*
-		 * 5. post-processing (e.g., packing before call)
+		 * 6. post-processing (e.g., packing before call)
 		 */
-		
 		return callback.finishSplit();
 		
 	}
