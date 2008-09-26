@@ -47,7 +47,7 @@ import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 
-@FailingTest(2)
+@FailingTest(3)
 @UseAnalyses("FractionalAnalysis")
 @ClassStates(@State(name="alive", inv="hasFull == true => full(data)"))
 public class ImplicationWorks {
@@ -55,6 +55,10 @@ public class ImplicationWorks {
 	boolean hasFull;
 	
 	LastObject data;
+	
+	ImplicationWorks(Object o) { // ERROR: Since we are setting the field to true
+		this.hasFull = true;     // we should have to come up with the permission too.
+	}
 	
 	ImplicationWorks() {
 		this.hasFull = true;
