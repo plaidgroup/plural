@@ -49,6 +49,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.tac.TACInvocation;
+import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.util.ConsList;
@@ -112,6 +113,21 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	protected boolean checkStateInfoInternal(Aliasing var,
 			Set<String> stateInfo, boolean inFrame) {
 		return value.get(var).isInStates(stateInfo, inFrame);
+	}
+
+	
+	
+	@Override
+	public boolean checkImplication(Aliasing var, Implication impl) {
+		if( impl.isSatisfied(value) ) {
+			// TODO: Don't we need to now remove this implication? Or the 
+			// pieces that satisfied it?
+			
+			return true;
+		}
+		else {
+			return false;
+		}
 	}
 
 	@Override
