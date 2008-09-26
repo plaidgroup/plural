@@ -231,7 +231,7 @@ class LinearOperations extends TACAnalysisHelper {
 				
 				// 3. merge in post-condition
 				DefaultPredicateMerger merger = new DefaultPredicateMerger(
-						instr, tuple/*, borrowed*/);
+						instr.getNode(), tuple/*, borrowed*/);
 				post.mergeInPredicate(paramMap, merger);
 				
 				if(merger.isVoid())
@@ -294,7 +294,7 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @see #handleNewObject(NewObjectInstruction, TensorPluralTupleLE, IConstructorCaseInstance, boolean)
 	 * @see #createParameterMap(TACInvocation, TensorPluralTupleLE, Variable, Variable)
 	 */
-	private SimpleMap<String, Aliasing> createParameterMap(
+	public static SimpleMap<String, Aliasing> createParameterMap(
 			final TACInvocation instr,
 			TensorPluralTupleLE value,
 			Aliasing rcvrVirtual, Aliasing rcvrFrame, Aliasing result) {

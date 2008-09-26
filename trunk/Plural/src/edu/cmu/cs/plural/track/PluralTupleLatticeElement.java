@@ -82,7 +82,6 @@ import edu.cmu.cs.plural.fractions.FractionConstraints;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
-import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.PermParser;
 import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
 import edu.cmu.cs.plural.states.StateSpace;
@@ -92,6 +91,7 @@ import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.util.ExtendedIterator;
 import edu.cmu.cs.plural.util.Pair;
 import edu.cmu.cs.plural.util.SimpleMap;
+
 
 /**
  * Subclass of TupleLatticeElement that includes anything we need specifically
@@ -898,123 +898,162 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 */
 	public boolean unpackReceiver(Variable rcvrVar, ASTNode nodeWhereUnpacked,
 					final StateSpaceRepository stateRepo, final SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField){
-		if( isFrozen )
-			throw new IllegalStateException("Object is frozen.");
-
-		if( !isRcvrPacked() )
-			throw new IllegalStateException("Double unpack on the receiver. Not cool.");
-
-		final ITypeBinding class_decl = rcvrVar.resolveType();
 		
-		// 1.) Find out what state the receiver is in.
-		Aliasing rcvrLoc = locs.get(rcvrVar);
-		FractionalPermissions this_perms = this.get(rcvrLoc);
-		if(this_perms.isBottom() || this_perms.getFramePermissions().isEmpty())
-			// no frame permissions 
-			// --> trivially succeed without actually unpacking to avoid abundance of errors
-			// anything that depends on invariants will fail because we don't evaluate invariants
-			return true;
-		this_perms = this_perms.unpack(rcvrRoot);
-
-		// 2.) Add resulting receiver permission.
-		this.put(rcvrLoc, this_perms);
-		this.unpackedVar = rcvrVar;
-		this.nodeWhereUnpacked = nodeWhereUnpacked;
-
-		// 3.) Get invariants based on the unpacked portion of the rcvr permission.
-		FractionalPermission unpacked_perm = this_perms.getUnpackedPermission();
-		List<Pair<Aliasing, PermissionFromAnnotation>> invs = 
-			getInvariantPermissions(class_decl, unpacked_perm, locs, true, stateRepo);
+		throw new RuntimeException("I no longer expect this method to be called ever.");
 		
-		if(invs == null) {
-			log.warning("Tried to unpack impossible state: " + this_perms);
-			return false;
-		}
-
-		boolean purify = this_perms.getUnpackedPermission().isReadOnly();
-		
-		// 4a.) Build field *permissions* from set of individual *permission*s.
-		Map<Aliasing, PermissionSetFromAnnotations> new_field_perms =
-			new HashMap<Aliasing, PermissionSetFromAnnotations>();
-		for(Pair<Aliasing, PermissionFromAnnotation> inv : invs) {
-			/*
-			 * Assigned fields won't last.
-			 */
-			if( assignedField != null && inv.fst().toString().endsWith(assignedField) ) continue;
-			
-			PermissionFromAnnotation p = inv.snd();
-			if(purify)
-				// purify if needed
-				p = p.purify();
-			
-			PermissionSetFromAnnotations fps;
-			if( new_field_perms.containsKey(inv.fst()) ) {
-				fps = new_field_perms.get(inv.fst());
-			}
-			else {
-				fps = PermissionSetFromAnnotations.createEmpty(inv.snd().getStateSpace());
-			}
-			
-			fps = fps.combine(p);
-			new_field_perms.put(inv.fst(), fps);
-		}
-
-		/*
-		 * 4b.) Merge field permissions into lattice.
-		 */
-		for( Map.Entry<Aliasing, PermissionSetFromAnnotations> fperm : new_field_perms.entrySet() ) {
-			final Aliasing field_loc = fperm.getKey();
-			FractionalPermissions fps;
-			if( field_loc.getLabels().isEmpty() ) {
-				continue; // skip weirdness
-//				fps = fperm.getValue().toLatticeElement();
-			}
-			else {
-				/*
-				 * Merge in previous field permissions. These will only exit if there
-				 * haven't been any modifying calls since the last time we packed.
-				 * The awkward check is the only way to see if the lattice is tracking
-				 * a particular variable.
-				 */
-				fps = this.get(field_loc);
-				fps = fps.mergeIn(fperm.getValue());
-			}
-			this.put(field_loc, fps);
-		}
-
-		/*
-		 * 4c.) Add knowledge about concrete values (including nullness / non-nullness)
-		 */
-		SimpleMap<String, Aliasing> vars = createFieldNameToAliasingMapping(
-				locs, class_decl);
-		
-		Set<Aliasing> hints = ConcreteAnnotationUtils.addConcreteFieldInvariants(
-				this, class_decl, assignedField, unpacked_perm, vars, getAnnotationDB());
-		if(!hints.isEmpty()) {
-			List<ImplicationResult> newStuff = dynamicStateLogic.solveWithHints(this, hints.toArray(new Aliasing[0]));
-			for(ImplicationResult continuation : newStuff) {
-				continuation.putResultIntoLattice(this);
-			}
-		}
-//		for( Variable null_field : 
-//			ConcreteAnnotationUtils.getFieldsThatMustBeNull(rcvrVar.resolveType(), unpacked_perm, stateRepo, annotationDB)) {
-//			if( assignedField!= null && null_field.toString().endsWith(assignedField) ) continue;
+//		if( isFrozen )
+//			throw new IllegalStateException("Object is frozen.");
+//
+//		if( !isRcvrPacked() )
+//			throw new IllegalStateException("Double unpack on the receiver. Not cool.");
+//
+//		final ITypeBinding class_decl = rcvrVar.resolveType();
+//		
+//		// 1.) Find out what state the receiver is in.
+//		Aliasing rcvrLoc = locs.get(rcvrVar);
+//		FractionalPermissions this_perms = this.get(rcvrLoc);
+//		if(this_perms.isBottom() || this_perms.getFramePermissions().isEmpty())
+//			// no frame permissions 
+//			// --> trivially succeed without actually unpacking to avoid abundance of errors
+//			// anything that depends on invariants will fail because we don't evaluate invariants
+//			return true;
+//		this_perms = this_perms.unpack(rcvrRoot);
+//
+//		// 2.) Add resulting receiver permission.
+//		this.put(rcvrLoc, this_perms);
+//		this.unpackedVar = rcvrVar;
+//		this.nodeWhereUnpacked = nodeWhereUnpacked;
+//
+//		FractionalPermission unpacked_perm = this_perms.getUnpackedPermission();
+//		
+//		// Build a map: For each field, what is the StateSpace of that field's type?
+//		
+//		
+//		for( Pair<String,String> state_and_inv : getStatesAndInvs(class_decl, unpacked_perm) ) {
+//			// Get the invariant string for each state that applies for this unpacking
+//			String state = state_and_inv.fst();
+//			// foreach invariant string:
+//			String inv = state_and_inv.snd();
+//		
+//			// Parse the invariant string, creating a PredicateMerger object
+//			Pair<PredicateMerger,?> parsed =
+//				PermParser.parseInvariant(inv, getFieldStateSpaces(class_decl, stateRepo));
 //			
-//			Aliasing field_loc = locs.get(null_field);
-//			this.addNullVariable(field_loc);
-//		}
-//		for( Variable nonnull_field : 
-//			ConcreteAnnotationUtils.getFieldsThatMustBeNonNull(rcvrVar.resolveType(), unpacked_perm, stateRepo, annotationDB)
-//		    ) {
-//			if( assignedField!= null && nonnull_field.toString().endsWith(assignedField) ) continue;
+//			// Create a call-back for this state that will purify as necessary
 //			
-//			Aliasing field_loc = locs.get(nonnull_field);
-//			this.addNonNullVariable(field_loc);
+//			MergeIntoTuple callback = new DefaultPredicateMerger(null, null); 
+//			
+//			// Call merge-in...
+//			parsed.fst().mergeInPredicate(vars, callback);
 //		}
-		
-		return true;
+//		
+//		// 3.) Get invariants based on the unpacked portion of the rcvr permission.
+//		List<Pair<Aliasing, PermissionFromAnnotation>> invs = 
+//			getInvariantPermissions(class_decl, unpacked_perm, locs, true, stateRepo);
+//		
+//		if(invs == null) {
+//			log.warning("Tried to unpack impossible state: " + this_perms);
+//			return false;
+//		}
+//
+//		boolean purify = this_perms.getUnpackedPermission().isReadOnly();
+//		
+//		// 4a.) Build field *permissions* from set of individual *permission*s.
+//		Map<Aliasing, PermissionSetFromAnnotations> new_field_perms =
+//			new HashMap<Aliasing, PermissionSetFromAnnotations>();
+//		for(Pair<Aliasing, PermissionFromAnnotation> inv : invs) {
+//			/*
+//			 * Assigned fields won't last.
+//			 */
+//			if( assignedField != null && inv.fst().toString().endsWith(assignedField) ) continue;
+//			
+//			PermissionFromAnnotation p = inv.snd();
+//			if(purify)
+//				// purify if needed
+//				p = p.purify();
+//			
+//			PermissionSetFromAnnotations fps;
+//			if( new_field_perms.containsKey(inv.fst()) ) {
+//				fps = new_field_perms.get(inv.fst());
+//			}
+//			else {
+//				fps = PermissionSetFromAnnotations.createEmpty(inv.snd().getStateSpace());
+//			}
+//			
+//			fps = fps.combine(p);
+//			new_field_perms.put(inv.fst(), fps);
+//		}
+//
+//		/*
+//		 * 4b.) Merge field permissions into lattice.
+//		 */
+//		for( Map.Entry<Aliasing, PermissionSetFromAnnotations> fperm : new_field_perms.entrySet() ) {
+//			final Aliasing field_loc = fperm.getKey();
+//			FractionalPermissions fps;
+//			if( field_loc.getLabels().isEmpty() ) {
+//				continue; // skip weirdness
+////				fps = fperm.getValue().toLatticeElement();
+//			}
+//			else {
+//				/*
+//				 * Merge in previous field permissions. These will only exit if there
+//				 * haven't been any modifying calls since the last time we packed.
+//				 * The awkward check is the only way to see if the lattice is tracking
+//				 * a particular variable.
+//				 */
+//				fps = this.get(field_loc);
+//				fps = fps.mergeIn(fperm.getValue());
+//			}
+//			this.put(field_loc, fps);
+//		}
+//
+//		/*
+//		 * 4c.) Add knowledge about concrete values (including nullness / non-nullness)
+//		 */
+//		SimpleMap<String, Aliasing> vars = createFieldNameToAliasingMapping(
+//				locs, class_decl);
+//		
+//		Set<Aliasing> hints = ConcreteAnnotationUtils.addConcreteFieldInvariants(
+//				this, class_decl, assignedField, unpacked_perm, vars, getAnnotationDB());
+//		if(!hints.isEmpty()) {
+//			List<ImplicationResult> newStuff = dynamicStateLogic.solveWithHints(this, hints.toArray(new Aliasing[0]));
+//			for(ImplicationResult continuation : newStuff) {
+//				continuation.putResultIntoLattice(this);
+//			}
+//		}
+////		for( Variable null_field : 
+////			ConcreteAnnotationUtils.getFieldsThatMustBeNull(rcvrVar.resolveType(), unpacked_perm, stateRepo, annotationDB)) {
+////			if( assignedField!= null && null_field.toString().endsWith(assignedField) ) continue;
+////			
+////			Aliasing field_loc = locs.get(null_field);
+////			this.addNullVariable(field_loc);
+////		}
+////		for( Variable nonnull_field : 
+////			ConcreteAnnotationUtils.getFieldsThatMustBeNonNull(rcvrVar.resolveType(), unpacked_perm, stateRepo, annotationDB)
+////		    ) {
+////			if( assignedField!= null && nonnull_field.toString().endsWith(assignedField) ) continue;
+////			
+////			Aliasing field_loc = locs.get(nonnull_field);
+////			this.addNonNullVariable(field_loc);
+////		}
+//		
+//		return true;
 	}
 
+	protected void setNodeWhereUnpacked(ASTNode node) {
+		if( isFrozen )
+			throw new IllegalStateException("Object is frozen.");
+		
+		this.nodeWhereUnpacked = node;
+	}
+
+	protected void setUnpackedVar(Variable rcvrVar) {
+		if( isFrozen )
+			throw new IllegalStateException("Object is frozen.");
+		
+		this.unpackedVar = rcvrVar;
+	}
+	
 	/**
 	 * @param locs
 	 * @param class_decl

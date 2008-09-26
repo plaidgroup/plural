@@ -353,7 +353,7 @@ public abstract class AbstractParamVisitor
 		 */
 		for(Map.Entry<String, ParamInfoHolder> param : getParams().entrySet()) {
 			Aliasing var = vars.get(param.getKey());
-			callback.mergeInPermission(var, param.getValue().getPerms());
+			callback.mergeInPermission(var, param.getKey(), param.getValue().getPerms());
 		}
 		
 		/*
@@ -363,15 +363,15 @@ public abstract class AbstractParamVisitor
 			Aliasing var = vars.get(param.getKey());
 			final ParamInfoHolder h = param.getValue();
 			if(h.hasStateInfo())
-				callback.addStateInfo(var, h.getStateInfos(), false);
+				callback.addStateInfo(var, param.getKey(), h.getStateInfos(), false);
 			if(h.hasNull())
-				callback.addNull(var);
+				callback.addNull(var, param.getKey());
 			if(h.hasNonNull())
-				callback.addNonNull(var);
+				callback.addNonNull(var, param.getKey());
 			if(h.hasTrue())
-				callback.addTrue(var);
+				callback.addTrue(var, param.getKey());
 			if(h.hasFalse())
-				callback.addFalse(var);
+				callback.addFalse(var, param.getKey());
 		}
 		
 		/*
