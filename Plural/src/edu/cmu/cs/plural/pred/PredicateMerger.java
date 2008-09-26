@@ -65,38 +65,33 @@ public interface PredicateMerger {
 		 * @param stateInfos
 		 * @param inFrame
 		 */
-		public void addStateInfo(Aliasing var, Set<String> stateInfos, boolean inFrame);
+		public void addStateInfo(Aliasing var, String var_name, Set<String> stateInfos, boolean inFrame);
 
 		/**
 		 * Mark the given variable as definitely <code>null</code>.
 		 * @param var
 		 */
-		public void addNull(Aliasing var);
+		public void addNull(Aliasing var, String var_name);
 
 		/**
 		 * Mark the given variable as definitely <b>not</b> <code>null</code>.
-		 * @param var
 		 */
-		public void addNonNull(Aliasing var);
+		public void addNonNull(Aliasing var, String var_name);
 
 		/**
 		 * Mark the given variable as definitely <code>true</code>.
-		 * @param var
 		 */
-		public void addTrue(Aliasing var);
+		public void addTrue(Aliasing var, String var_name);
 
 		/**
 		 * Mark the given variable as definitely <code>false</code>.
-		 * @param var
 		 */
-		public void addFalse(Aliasing var);
+		public void addFalse(Aliasing var, String var_name);
 
 		/**
 		 * Merge the given permission into the permissions for the given object.
-		 * @param var
-		 * @param perms
 		 */
-		public void mergeInPermission(Aliasing var, PermissionSetFromAnnotations perms);
+		public void mergeInPermission(Aliasing var, String var_name, PermissionSetFromAnnotations perms);
 		
 		/**
 		 * Add the given implication for the given object.

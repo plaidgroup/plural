@@ -52,13 +52,17 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.internal.Option;
+import edu.cmu.cs.crystal.internal.Utilities;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.concrete.PluralParseError;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.TopLevelPred.Impossible;
+import edu.cmu.cs.plural.pred.InvariantMergerChecker;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.pred.MethodPrecondition;
+import edu.cmu.cs.plural.pred.PredicateChecker;
+import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 import edu.cmu.cs.plural.states.StateSpace;
@@ -296,7 +300,35 @@ public class PermParser {
 	}
 	
 	/**
-	 * @tag todo.general -id="1969914" : remove need for manual coersion by keeping this and this!fr completely separate (affects AbstractParamVisitor.getRefPair as well)
+	 * This method will parse the invariant declaration for a state and
+	 * return objects that can be used to insert those permissions and
+	 * check those permissions.
+	 * 
+	 * @see {@link #parseSignature(Pair, boolean, boolean, SimpleMap, Map, String, Map, Map, Map, Set)}
+	 */
+	public static Pair<PredicateMerger, PredicateChecker>
+	parseInvariant(String invariantString,
+			SimpleMap<String, StateSpace> fieldMapping) {
+		
+		InvariantParser merger = InvariantParser.createUnpackInvariantParser(fieldMapping);
+		InvariantParser checker = InvariantParser.createPackInvariantParser(fieldMapping);
+		
+		Option<TopLevelPred> inv_pred_ = parse(invariantString);
+		
+		// Parse error or FALSE
+		if( inv_pred_.isNone() || inv_pred_.unwrap() instanceof Impossible ) {
+			return Pair.<PredicateMerger, PredicateChecker>create(impossiblePre, impossiblePost);
+		}
+		
+		// Visit these invariant trees for effect on the InvariantParser.
+		((AccessPred) inv_pred_.unwrap()).accept(merger);
+		((AccessPred) inv_pred_.unwrap()).accept(checker);
+		
+		return Pair.<PredicateMerger, PredicateChecker>create(merger, checker);
+	}
+	
+	/**
+	 * @tag todo.general -id="1969914" : remove need for manual coercion by keeping this and this!fr completely separate (affects AbstractParamVisitor.getRefPair as well)
 	 */
 	public static Pair<MethodPrecondition, MethodPostcondition> 
 	parseSignature(

@@ -41,25 +41,41 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.alias.AliasAwareTupleLE;
 import edu.cmu.cs.plural.concrete.DynamicStateLogic;
+import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
+import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.pred.DefaultInvariantMerger;
+import edu.cmu.cs.plural.pred.PredicateMerger;
+import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
+import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
+import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
+import edu.cmu.cs.plural.track.FieldVariable;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
+import edu.cmu.cs.plural.util.Pair;
 import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
@@ -71,6 +87,7 @@ import edu.cmu.cs.plural.util.SimpleMap;
  */
 public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	
+	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(TensorPluralTupleLE.class.getName());
 
 	/**
@@ -144,6 +161,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	/**
 	 * @deprecated Use {@link #fancyPackReceiverToBestGuess(ThisVariable, StateSpaceRepository, SimpleMap, String...)}.
 	 */
+	@Deprecated
 	@Override
 	public boolean packReceiverToBestGuess(Variable rcvrVar,
 			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
@@ -155,6 +173,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 * @deprecated Use {@link #fancyUnpackReceiver(Variable, ASTNode, StateSpaceRepository, SimpleMap, String, String)}.
 	 */
 	@Override
+	@Deprecated
 	public boolean unpackReceiver(Variable rcvrVar,
 			ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
 			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField) {
@@ -162,8 +181,106 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	}
 
 	private boolean unpackReceiverInternal(Variable rcvrVar, ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
-			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField) {
-		return super.unpackReceiver(rcvrVar, nodeWhereUnpacked, stateRepo, locs, rcvrRoot, assignedField);
+			final SimpleMap<Variable, Aliasing> locs, String rcvrRoot, final String assignedField) {
+
+		if( isFrozen() )
+			throw new IllegalStateException("Object is frozen.");
+
+		if( !isRcvrPacked() )
+			throw new IllegalStateException("Double unpack on the receiver. Not cool.");
+		
+		// 1.) Find out what state the receiver is in.
+		Aliasing rcvrLoc = locs.get(rcvrVar);
+		FractionalPermissions this_perms = this.get(rcvrLoc);
+		if(this_perms.isBottom() || this_perms.getFramePermissions().isEmpty())
+			// no frame permissions 
+			// --> trivially succeed without actually unpacking to avoid abundance of errors
+			// anything that depends on invariants will fail because we don't evaluate invariants
+			return true;
+		this_perms = this_perms.unpack(rcvrRoot);
+
+		// 2.) Add resulting receiver permission.
+		this.put(rcvrLoc, this_perms);
+		this.setUnpackedVar(rcvrVar);
+		this.setNodeWhereUnpacked(nodeWhereUnpacked);
+		
+		final ITypeBinding class_decl = rcvrVar.resolveType();
+		final FractionalPermission unpacked_perm = this_perms.getUnpackedPermission();
+		final SimpleMap<String,StateSpace> field_spaces = getFieldStateSpaces(class_decl, stateRepo);
+		
+		for( Pair<String,String> state_and_inv : getStatesAndInvs(class_decl, unpacked_perm, getAnnotationDB()) ) {
+			// foreach invariant string:
+			final String inv = state_and_inv.snd();
+		
+			// Parse the invariant string, creating a PredicateMerger object
+			final Pair<PredicateMerger,?> parsed =
+				PermParser.parseInvariant(inv, field_spaces);
+			
+			// Create a call-back for this state that will purify as necessary
+			final boolean purify = this_perms.getUnpackedPermission().isReadOnly();
+			final MergeIntoTuple callback = 
+				new DefaultInvariantMerger(nodeWhereUnpacked, this, assignedField, purify); 
+			
+			final SimpleMap<String,Aliasing> locs_ =
+				createFieldNameToAliasingMapping(locs, class_decl);
+			
+			// Call merge-in...
+			parsed.fst().mergeInPredicate(locs_, callback);
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Given a class, create a mapping from field name to state space.
+	 * The state space comes from the type of each field.
+	 */
+	private static SimpleMap<String, StateSpace> getFieldStateSpaces(
+			ITypeBinding class_decl, final StateSpaceRepository stateRepo) {
+		// Build field mapping.
+		final Map<String, IVariableBinding> fields = createFieldNameToBindingMapping(class_decl);
+		
+		return new SimpleMap<String,StateSpace>() {
+			@Override public StateSpace get(String key) {
+				return stateRepo.getStateSpace(fields.get(key).getType());
+			}};
+	}
+
+	/**
+	 * Given a class and the permission that we are unpacking, return
+	 * a list of pairs of state names (that apply) and the invariant
+	 * strings those states define.
+	 */
+	private static Iterable<? extends Pair<String,String>> 
+	getStatesAndInvs(ITypeBinding class_decl,
+			FractionalPermission unpacked_perm, AnnotationDatabase annoDB) {
+		List<Pair<String,String>> result = new LinkedList<Pair<String,String>>();
+		
+		for( ICrystalAnnotation csda : annoDB.getAnnosForType(class_decl)) {
+			if( csda instanceof ClassStateDeclAnnotation ) {
+				final List<StateDeclAnnotation> decls = 
+					((ClassStateDeclAnnotation)csda).getStates();
+
+				for( StateDeclAnnotation decl : decls ) {
+					/*
+					 * Is this declaration applicable to the current recvr state?
+					 * We want the annotation state to be between the this state and
+					 * the this root state, inclusive.
+					 */
+					final boolean applies =
+						unpacked_perm.impliesState(decl.getStateName()) &&
+								(unpacked_perm.coversNode(decl.getStateName()) || 
+										unpacked_perm.getStateSpace().firstBiggerThanSecond(decl.getStateName(), unpacked_perm.getRootNode()));
+					
+					if( applies ) {
+						String state = decl.getStateName();
+						String inv = decl.getInv();
+						result.add(Pair.create(state, inv));
+					}
+				}
+			}
+		}
+		return result;
 	}
 	
 //	/**

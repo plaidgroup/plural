@@ -224,6 +224,22 @@ public class PermissionSetFromAnnotations extends
 	}
 
 	/**
+	 * Return a new permission set where every permission has been purified.
+	 */
+	public PermissionSetFromAnnotations purify() { 
+		List<PermissionFromAnnotation> perms = new ArrayList<PermissionFromAnnotation>(permissions.size());
+		List<PermissionFromAnnotation> frame_perms = new ArrayList<PermissionFromAnnotation>(framePermissions.size());
+		
+		for( PermissionFromAnnotation permission : permissions )
+			perms.add(permission.purify());
+		
+		for( PermissionFromAnnotation framePermission : framePermissions )
+			frame_perms.add(framePermission.purify());
+		
+		return new PermissionSetFromAnnotations(this.stateSpace, perms, frame_perms, this.constraints);
+	}
+	
+	/**
 	 * Returns the permissions in this set with all state information except marker
 	 * and root states removed.
 	 * @return the permissions in this set with all state information except marker

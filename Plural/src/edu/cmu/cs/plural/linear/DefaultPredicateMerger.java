@@ -41,6 +41,8 @@ package edu.cmu.cs.plural.linear;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jdt.core.dom.ASTNode;
+
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.tac.TACInvocation;
 import edu.cmu.cs.plural.alias.ParamVariable;
@@ -48,6 +50,7 @@ import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
+import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 
 /**
@@ -58,23 +61,15 @@ import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
  * @author Kevin Bierhoff
  * @since Sep 15, 2008
  */
-class DefaultPredicateMerger implements MergeIntoTuple {
+public class DefaultPredicateMerger implements MergeIntoTuple {
 
 	private TensorPluralTupleLE value;
 	private boolean isVoid = false;
-	private TACInvocation instr;
-//	private Map<Aliasing, FractionalPermissions> borrowed;
+	private ASTNode astNode;
 
-	public DefaultPredicateMerger(TACInvocation instr, 
-			TensorPluralTupleLE value /*,
-			Map<Aliasing, FractionalPermissions> borrowed*/) {
-		this.instr = instr;
+	public DefaultPredicateMerger(ASTNode astNode, TensorPluralTupleLE value) {
+		this.astNode = astNode;
 		this.value = value;
-//		this.borrowed = borrowed;
-//		for(Map.Entry<Aliasing, FractionalPermissions> b : borrowed.entrySet()) {
-//			FractionalPermissions ps = value.get(b.getKey());
-//			value.put(b.getKey(), b.getValue().replaceConstraints(ps.getConstraints()));
-//		}
 	}
 	
 	public boolean isVoid() {
@@ -87,7 +82,7 @@ class DefaultPredicateMerger implements MergeIntoTuple {
 	}
 
 	@Override
-	public void addStateInfo(Aliasing var, Set<String> stateInfo, boolean inFrame) {
+	public void addStateInfo(Aliasing var, String var_name, Set<String> stateInfo, boolean inFrame) {
 		if(!stateInfo.isEmpty()) {
 			FractionalPermissions perms = value.get(var);
 			for(String s : stateInfo)
@@ -97,7 +92,7 @@ class DefaultPredicateMerger implements MergeIntoTuple {
 	}
 
 	@Override
-	public void mergeInPermission(Aliasing a,
+	public void mergeInPermission(Aliasing a, String var_name, 
 			PermissionSetFromAnnotations perms) {
 //		if(borrowed.containsKey(a)) {
 //			// just update state info for borrowed locations
@@ -115,7 +110,7 @@ class DefaultPredicateMerger implements MergeIntoTuple {
 
 	@Override
 	public void releaseParameter(Aliasing var, String param) {
-		Aliasing loc = value.getLocationsBefore(instr, new ParamVariable(var, param, null));
+		Aliasing loc = value.getLocationsBefore(astNode, new ParamVariable(var, param, null));
 
 		if(loc == null || loc.getLabels().isEmpty())
 			// parameter not instantiated --> throw away released permission
@@ -142,22 +137,22 @@ class DefaultPredicateMerger implements MergeIntoTuple {
 	}
 
 	@Override
-	public void addFalse(Aliasing var) {
+	public void addFalse(Aliasing var, String var_name) {
 		value.addFalseVarPredicate(var);
 	}
 
 	@Override
-	public void addNonNull(Aliasing var) {
+	public void addNonNull(Aliasing var, String var_name) {
 		value.addTrueVarPredicate(var);
 	}
 
 	@Override
-	public void addNull(Aliasing var) {
+	public void addNull(Aliasing var, String var_name) {
 		value.addNullVariable(var);
 	}
 
 	@Override
-	public void addTrue(Aliasing var) {
+	public void addTrue(Aliasing var, String var_name) {
 		value.addNonNullVariable(var);
 	}
 

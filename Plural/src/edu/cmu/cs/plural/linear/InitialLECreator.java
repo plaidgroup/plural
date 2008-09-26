@@ -248,7 +248,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	}
 
 	@Override
-	public void addFalse(Aliasing var) {
+	public void addFalse(Aliasing var, String var_name) {
 		value.addFalseVarPredicate(var);
 	}
 
@@ -258,17 +258,17 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	}
 
 	@Override
-	public void addNonNull(Aliasing var) {
+	public void addNonNull(Aliasing var, String var_name) {
 		value.addNonNullVariable(var);
 	}
 
 	@Override
-	public void addNull(Aliasing var) {
+	public void addNull(Aliasing var, String var_name) {
 		value.addNullVariable(var);
 	}
 
 	@Override
-	public void addStateInfo(Aliasing var, Set<String> stateInfos,
+	public void addStateInfo(Aliasing var, String var_name, Set<String> stateInfos,
 			boolean inFrame) {
 		FractionalPermissions ps = value.get(var);
 		for(String s : stateInfos)
@@ -277,7 +277,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	}
 
 	@Override
-	public void addTrue(Aliasing var) {
+	public void addTrue(Aliasing var, String var_name) {
 		value.addTrueVarPredicate(var);
 	}
 
@@ -287,7 +287,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	}
 
 	@Override
-	public void mergeInPermission(Aliasing var,
+	public void mergeInPermission(Aliasing var, String var_name,
 			PermissionSetFromAnnotations perms) {
 		FractionalPermissions ps = value.get(var);
 		if(ps.isEmpty())
