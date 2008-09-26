@@ -72,6 +72,7 @@ import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.alias.FrameLabel;
 import edu.cmu.cs.plural.alias.ParamVariable;
 import edu.cmu.cs.plural.concrete.ConcreteAnnotationUtils;
+import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.StateImplication;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.Fraction;
@@ -1399,10 +1400,13 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @param resultVar Method return value or <code>null</code> for <code>void</code>
 	 * methods.
 	 * @param post The post-condition to be checked.
-	 * @param Map containing the original method parameter locations at method entry.
+	 * @param parameterVars Map containing the original method parameter locations at method entry.
 	 * This <i>cannot</i> be inferred from the given tuple because parameter variables
 	 * can be re-assigned in the method body.
-	 * @param stateTests Map from Boolean indicator values to indicated states.
+	 * @param trueTest Pair of parameter and state indicated for that parameter by a 
+	 * <code>true</code> return value, or <code>null</code> if the checked
+	 * method is no such test.
+	 * @param falseTest Same as <code>trueTest</code> but for <code>false</code> return value
 	 * @return a string describing failing conditions or <code>null</code> if the
 	 * check was successful.
 	 */
@@ -1411,14 +1415,15 @@ class LinearOperations extends TACAnalysisHelper {
 			Variable resultVar,
 			PredicateChecker post,
 			SimpleMap<String, Aliasing> parameterVars,
-			Map<Boolean, String> stateTests) {
+			Pair<String, String> trueTest,
+			Pair<String, String> falseTest) {
 		// 0. determine receiver and result locations
 		Aliasing this_loc = inStaticMethod() ? null : parameterVars.get("this!fr");
 
 		Aliasing res_loc;
 		if(resultVar == null) {
 			res_loc = null;
-			assert stateTests.isEmpty(); // can't have state tests without result
+			assert trueTest == null && falseTest == null; // can't have state tests without result
 		}
 		else {
 			res_loc = curLattice.getLocationsAfter(node, resultVar);
@@ -1426,46 +1431,60 @@ class LinearOperations extends TACAnalysisHelper {
 		}
 		final SimpleMap<String, Aliasing> vars = createPostMap(parameterVars, res_loc);
 		
-		// 1. Check every state test separately
-//		for(boolean result : stateTests.keySet()) {
-//			if(resultVar == null) 
-//				throw new IllegalArgumentException("No result given for state test: " + node);
-//			if(getThisVar() == null) {
-//				if(log.isLoggable(Level.WARNING))
-//					log.warning("Ignoring state test method without receiver: " + node);
-//				break;
-//			}
-//			
-//			if(result == true && curLattice.isBooleanFalse(res_loc))
-//				// skip state indicated with TRUE only if we know result is FALSE
-//				continue;
-//			if(result == false && curLattice.isBooleanTrue(res_loc))
-//				// skip state indicated with FALSE only if we know result is TRUE
-//				continue;
-//			
-//			final Map<Aliasing, StateImplication> indicated_states;
-//			indicated_states = Collections.singletonMap(this_loc, 
-//					ConcreteAnnotationUtils.createBooleanStateImpl(
-//							res_loc, result, this_loc,
-//							stateTests.get(result)));
-//			
-//			String checkTest = checkPostConditionOption(
-//					node, curLattice, paramPost, res_loc, resultPost, 
-//					indicated_states);
-//
-//			if(checkTest != null)
-//				return checkTest;
-//		}
-	
+		// 1. Check without state tests
+		{
+			PredicateErrorReporter checks = new PredicateErrorReporter(true, // return checker 
+					node, curLattice, this_loc);
+			post.splitOffPredicate(vars, checks);
+			if(checks.hasErrors())
+				return checks.getErrors().iterator().next();
+		}
+
+		// 2. Check true state test
+		if(trueTest != null && ! curLattice.isBooleanFalse(res_loc)) {
+			// checker makes a copy of the lattice
+			PredicateErrorReporter checks = new PredicateErrorReporter(true, // return checker 
+					node, curLattice, this_loc);
+			
+			// TODO hack: slam antecedent in
+			checks.value.addTrueVarPredicate(res_loc);
+			
+			// check whether state is indicated
+			Aliasing tested_loc = parameterVars.get(trueTest.fst());
+			checks.checkStateInfo(tested_loc, 
+					Collections.singleton(trueTest.snd()), // tested state
+					"this!fr".equals(trueTest.fst()));     // frame test?
+			// ignore always-true return value: errors will appear in the list
+
+			post.splitOffPredicate(vars, checks);
+			if(checks.hasErrors())
+				return "For indicating " + trueTest.fst() + " in " + trueTest.snd() + ": " + 
+						checks.getErrors().iterator().next();
+		}
 		
-		// 2. Check without state tests
-		PredicateErrorReporter checks = new PredicateErrorReporter(true, // return checker 
-				node, curLattice, this_loc);
-		post.splitOffPredicate(vars, checks);
-		if(checks.hasErrors())
-			return checks.getErrors().iterator().next();
-		else
-			return null;
+		// 3. Check true state test
+		if(falseTest != null && ! curLattice.isBooleanTrue(res_loc)) {
+			// checker makes a copy of the lattice
+			PredicateErrorReporter checks = new PredicateErrorReporter(true, // return checker 
+					node, curLattice, this_loc);
+			
+			// TODO hack: slam antecedent in
+			checks.value.addFalseVarPredicate(res_loc);
+			
+			// check whether state is indicated
+			Aliasing tested_loc = parameterVars.get(falseTest.fst());
+			checks.checkStateInfo(tested_loc, 
+					Collections.singleton(falseTest.snd()), // tested state
+					"this!fr".equals(falseTest.fst()));     // frame test?
+			// ignore always-true return value: errors will appear in the list
+
+			post.splitOffPredicate(vars, checks);
+			if(checks.hasErrors())
+				return "For indicating " + falseTest.fst() + " in " + falseTest.snd() + ": " +
+						checks.getErrors().iterator().next();
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -1763,6 +1782,19 @@ class LinearOperations extends TACAnalysisHelper {
 				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
 						" true: " + getSourceString(var));
 			return result;
+		}
+		
+		boolean checkImplication(Implication impl) {
+			if(value.isKnownImplication(impl.getAntecedant().getVariable(), impl))
+				// trivially succeed if implication is known
+				return true;
+			
+			if(impl.getAntecedant().isUnsatisfiable(value))
+				// antecedent unsatisfiable --> implication holds
+				return true;
+			
+			// TODO check consequence, but remember to pack as required...
+			return false;
 		}
 
 		@Override
