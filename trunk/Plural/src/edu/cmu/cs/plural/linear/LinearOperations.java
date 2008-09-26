@@ -358,15 +358,18 @@ class LinearOperations extends TACAnalysisHelper {
 
 		private DisjunctiveLE result = null;
 		private Map<Aliasing, FractionalPermissions> borrowed = null;
+		private final ASTNode node;
 
 		public CallPreconditionHandler(TACInvocation instr,
 				TensorPluralTupleLE value, Aliasing thisLoc) {
-			super(instr, value, thisLoc);
+			super(value, thisLoc);
+			this.node = instr.getNode();
 		}
 
 		public CallPreconditionHandler(ASTNode node,
 				TensorPluralTupleLE value, Aliasing thisLoc) {
-			super(node, value, thisLoc);
+			super(value, thisLoc);
+			this.node = node;
 		}
 
 		public Map<Aliasing, FractionalPermissions> getBorrowed() {
@@ -1621,6 +1624,7 @@ class LinearOperations extends TACAnalysisHelper {
 		
 		private final Set<String> errors = new LinkedHashSet<String>();
 		private final boolean isReturnCheck;
+		private final ASTNode node;
 		
 		/**
 		 * Creates a mutable copy of the given lattice as to not interfere
@@ -1634,8 +1638,9 @@ class LinearOperations extends TACAnalysisHelper {
 		 */
 		public PredicateErrorReporter(boolean isReturnCheck, ASTNode node,
 				TensorPluralTupleLE value, Aliasing thisLoc) {
-			super(node, value.mutableCopy(), thisLoc);
+			super(value.mutableCopy(), thisLoc);
 			this.isReturnCheck = isReturnCheck;
+			this.node = node;
 		}
 		
 		/**

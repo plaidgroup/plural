@@ -76,25 +76,16 @@ import edu.cmu.cs.plural.util.Pair;
  * @author Kevin Bierhoff
  * @since Sep 15, 2008
  */
-abstract class AbstractPredicateChecker implements SplitOffTuple {
+public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	
 	// given
 	protected final TensorPluralTupleLE value;
 	protected final Aliasing this_loc;
-	protected final ASTNode node;
-	
 	// constructed
 	private ConsList<PermissionSetFromAnnotations> splitFromThis = empty();
 	private final Set<String> neededReceiverStates = new HashSet<String>();
-
-	public AbstractPredicateChecker(TACInvocation instr,
-			TensorPluralTupleLE value, Aliasing thisLoc) {
-		this(instr.getNode(), value, thisLoc);
-	}
 	
-	public AbstractPredicateChecker(ASTNode node,
-			TensorPluralTupleLE value, Aliasing thisLoc) {
-		this.node = node;
+	public AbstractPredicateChecker(TensorPluralTupleLE value, Aliasing thisLoc) {
 		this.value = value;
 		this.this_loc = thisLoc;
 	}
