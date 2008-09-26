@@ -37,8 +37,10 @@
  */
 package edu.cmu.cs.plural.linear;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.concrete.Implication;
@@ -169,6 +171,15 @@ public class ReleasePermissionImplication implements Implication {
 	@Override
 	public boolean hasTemporaryState() {
 		return false;
+	}
+
+	@Override
+	public Set<Aliasing> getConsequenceVariables() {
+		HashSet<Aliasing> result = new HashSet<Aliasing>();
+		for(Pair<Aliasing, ReleaseHolder> c : cons) {
+			result.add(c.fst());
+		}
+		return result;
 	}
 
 }

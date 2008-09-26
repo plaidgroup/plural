@@ -39,6 +39,7 @@ package edu.cmu.cs.plural.perm.parser;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -57,8 +58,6 @@ import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.ParamInfoHolder.InfoHolderPredicate;
 import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.pred.PredicateMerger;
-import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
-import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
@@ -205,6 +204,15 @@ public abstract class AbstractParamVisitor
 			} else if (!cons.equals(other.cons))
 				return false;
 			return true;
+		}
+
+		@Override
+		public Set<Aliasing> getConsequenceVariables() {
+			HashSet<Aliasing> result = new HashSet<Aliasing>();
+			for(InfoHolderPredicate p : cons) {
+				result.add(p.getVariable());
+			}
+			return result;
 		}
 		
 	}

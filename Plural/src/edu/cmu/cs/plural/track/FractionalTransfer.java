@@ -37,7 +37,6 @@
  */
 package edu.cmu.cs.plural.track;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,13 +75,11 @@ import edu.cmu.cs.crystal.tac.LoadLiteralInstruction;
 import edu.cmu.cs.crystal.tac.MethodCallInstruction;
 import edu.cmu.cs.crystal.tac.NewArrayInstruction;
 import edu.cmu.cs.crystal.tac.NewObjectInstruction;
-import edu.cmu.cs.crystal.tac.SourceVariable;
 import edu.cmu.cs.crystal.tac.SourceVariableDeclaration;
 import edu.cmu.cs.crystal.tac.SourceVariableRead;
 import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.TACInstruction;
-import edu.cmu.cs.crystal.tac.TempVariable;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
 import edu.cmu.cs.crystal.tac.UnaryOperator;
 import edu.cmu.cs.crystal.tac.Variable;
@@ -153,6 +150,12 @@ public class FractionalTransfer extends
 //		return resultPost; 
 //	}
 	
+	//
+	//
+	// LATTICE CREATION and information for following checker
+	//
+	//
+
 	Map<Boolean, String> getDynamicStateTest() {
 		if(dynamicStateTest == null) throw new IllegalStateException("Must call getLattice() first--query any analysis results before calling this method");	
 		return dynamicStateTest;
@@ -330,56 +333,12 @@ public class FractionalTransfer extends
 		return firstStatement != null && (firstStatement instanceof ConstructorInvocation ||
 				firstStatement instanceof SuperConstructorInvocation);
 	}
-
-	/**
-	 * @param value 
-	 * @param instr TODO
-	 * @param initOperands
-	 * @return the changed <code>value</code>.
-	 */
-	private PluralDisjunctiveLE killAllDead(PluralDisjunctiveLE value, TACInstruction instr, Collection<Variable> variables) {
-		if(variables.isEmpty())
-			return value;
-		for(Variable x : variables) {
-			if(isDead(instr, x))
-				/*value.kill(x)*/;
-		}
-		return value;
-	}
-
-	/**
-	 * @param value 
-	 * @param instr TODO
-	 * @param initOperands
-	 * @return the changed <code>value</code>.
-	 */
-	private PluralDisjunctiveLE killAllDead(PluralDisjunctiveLE value, TACInstruction instr, Variable... variables) {
-		if(variables.length == 0)
-			return value;
-		for(Variable x : variables) {
-			if(isDead(instr, x))
-				/*value.kill(x)*/;
-		}
-		return value;
-	}
-
-	/**
-	 * @param instr TODO
-	 * @param x
-	 * @return
-	 */
-	private boolean isDead(TACInstruction instr, Variable x) {
-		if(x instanceof SourceVariable && ((SourceVariable) x).getBinding().isParameter())
-			// keep parameters live for post-condition checks
-			return false;
-		if(x instanceof SourceVariable || x instanceof TempVariable) {
-			return liveness.isDeadBefore(instr, x);
-		}
-		else
-			// keyword, type variables can't die
-			// TODO field variables?
-			return false;
-	}
+	
+	//
+	//
+	// TRANSFER METHODS
+	//
+	//
 
 	@Override
 	public IResult<PluralDisjunctiveLE> transfer(
@@ -387,8 +346,9 @@ public class FractionalTransfer extends
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 		
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
-		
+		// killing dead variables is the last thing we do
+		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
+		value.freeze(); // done with this lattice element--freeze it
 		return super.transfer(instr, labels, value);
 	}
 
@@ -396,15 +356,13 @@ public class FractionalTransfer extends
 	 * @param instr
 	 * @return
 	 */
-	private VariableLiveness createVariableLivenessBefore(
+	private VariableLiveness createVariableLivenessAfter(
 			final TACInstruction instr) {
 		return new VariableLiveness() {
-
 			@Override
 			public boolean isLive(Variable x) {
-				return liveness.isLiveBefore(instr, x);
+				return liveness.isLiveAfter(instr, x);
 			}
-			
 		};
 	}
 
@@ -413,77 +371,93 @@ public class FractionalTransfer extends
 			BinaryOperation binop, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(binop.getNode());
-		value.killDeadVariables(binop, createVariableLivenessBefore(binop));
 		
-		LabeledResult<PluralDisjunctiveLE> result = 
-			LabeledResult.createResult(labels, value);
-		
-//		Aliasing op1_loc = value.getLocationsAfter(binop.getNode(), binop.getOperand1());
-//		Aliasing op2_loc = value.getLocationsAfter(binop.getNode(), binop.getOperand2());
-//		Aliasing target_loc = value.getLocationsAfter(binop.getNode(), binop.getTarget());
+		// need it up to three times, so cache it
+		VariableLiveness live = createVariableLivenessAfter(binop);
+
+		// this code is highly suspicious for going wrong if one of the operands is the target
 		Variable op1_loc = binop.getOperand1();
 		Variable op2_loc = binop.getOperand2();
 		Variable target_loc = binop.getTarget();
 		
+		PluralDisjunctiveLE true_value = null;
 		if( labels.contains(BooleanLabel.getBooleanLabel(true)) ) {
 			/*
 			 * TRUE BRANCH
 			 */
-			PluralDisjunctiveLE branch_value = value.mutableCopy().storeCurrentAliasingInfo(binop.getNode());
+			true_value = value.mutableCopy().storeCurrentAliasingInfo(binop.getNode());
 			if( binop.getOperator().equals(BinaryOperator.BITWISE_AND) ) {
 				/*
 				 * When bitwise and is true, all of the operands involved are true.
 				 */
-				branch_value.addTrueVarPredicate(op1_loc);
-				branch_value.addEquality(op1_loc, target_loc);
-				branch_value.addEquality(op2_loc, target_loc);
-				branch_value.addEquality(op1_loc, op2_loc);
+				true_value.addTrueVarPredicate(op1_loc);
+				true_value.addEquality(op1_loc, target_loc);
+				true_value.addEquality(op2_loc, target_loc);
+				true_value.addEquality(op1_loc, op2_loc);
 			}
 			else {
 				// target is definitely true
-				branch_value.addTrueVarPredicate(target_loc);
+				true_value.addTrueVarPredicate(target_loc);
 				if( binop.getOperator().equals(BinaryOperator.REL_EQ) ) {
-					branch_value.addEquality(op1_loc, op2_loc);
+					true_value.addEquality(op1_loc, op2_loc);
 				}
 				else if( binop.getOperator().equals(BinaryOperator.REL_NEQ) ) {
-					branch_value.addInequality(op1_loc, op2_loc);
+					true_value.addInequality(op1_loc, op2_loc);
 				}
 			}
 			
-			branch_value = addNewlyDeducedFacts(binop, branch_value,
+			true_value = addNewlyDeducedFacts(binop, true_value,
 					op1_loc, op2_loc, target_loc);
-			result.put(BooleanLabel.getBooleanLabel(true), branch_value);
+
+			// killing dead variables is the last thing we do
+			true_value.killDeadVariables(binop, live);
+			true_value.freeze(); // done with this lattice element--freeze it
 		}
 		
+		PluralDisjunctiveLE false_value = null;
 		if( labels.contains(BooleanLabel.getBooleanLabel(false)) ) {
 			/*
 			 * FALSE BRANCH
 			 */
-			PluralDisjunctiveLE branch_value = value.mutableCopy().storeCurrentAliasingInfo(binop.getNode());
+			false_value = value.mutableCopy().storeCurrentAliasingInfo(binop.getNode());
 			if( binop.getOperator().equals(BinaryOperator.BITWISE_OR) ) {
 				/*
 				 * When bitwise or is false, all the operands involved are false.
 				 */
-				branch_value.addFalseVarPredicate(op1_loc);
-				branch_value.addEquality(op1_loc, target_loc);
-				branch_value.addEquality(op2_loc, target_loc);
-				branch_value.addEquality(op1_loc, target_loc);		
+				false_value.addFalseVarPredicate(op1_loc);
+				false_value.addEquality(op1_loc, target_loc);
+				false_value.addEquality(op2_loc, target_loc);
+				false_value.addEquality(op1_loc, target_loc);		
 			}
 			else {
 				// target is definitely false
-				branch_value.addFalseVarPredicate(target_loc);
+				false_value.addFalseVarPredicate(target_loc);
 				if( binop.getOperator().equals(BinaryOperator.REL_EQ) ) {
-					branch_value.addInequality(op1_loc, op2_loc);
+					false_value.addInequality(op1_loc, op2_loc);
 				}
 				else if( binop.getOperator().equals(BinaryOperator.REL_NEQ) ) {
-					branch_value.addEquality(op1_loc, op2_loc);
+					false_value.addEquality(op1_loc, op2_loc);
 				}
 			}
 			
-			branch_value = addNewlyDeducedFacts(binop, branch_value,
+			false_value = addNewlyDeducedFacts(binop, false_value,
 					op1_loc, op2_loc, target_loc);
-			result.put(BooleanLabel.getBooleanLabel(false), branch_value);
+
+			// killing dead variables is the last thing we do
+			false_value.killDeadVariables(binop, live);
+			false_value.freeze(); // done with this lattice element--freeze it
 		}
+		
+		// killing dead variables is the last thing we do
+		value.killDeadVariables(binop, live);
+		value.freeze(); // done with this lattice element--freeze it
+		
+		LabeledResult<PluralDisjunctiveLE> result = 
+			LabeledResult.createResult(labels, value);
+		if(true_value != null)
+			result.put(BooleanLabel.getBooleanLabel(true), true_value);
+		if(false_value != null)
+			result.put(BooleanLabel.getBooleanLabel(false), false_value);
 		
 		return result;
 	}
@@ -517,10 +491,10 @@ public class FractionalTransfer extends
 			CastInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		// could be a boolean test if this instruction is y = (Boolean) x
-		return handleBooleanTest(instr, labels, value);
+		return finishTransfer(instr, labels, value);
 	}
 
 	@Override
@@ -528,7 +502,7 @@ public class FractionalTransfer extends
 			ConstructorCallInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		IMethodBinding binding = instr.resolveBinding();
 
@@ -542,10 +516,10 @@ public class FractionalTransfer extends
 			CopyInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		// equality between source and target?
-		return handleBooleanTest(instr, labels, value);
+		return finishTransfer(instr, labels, value);
 	}
 
 	@Override
@@ -553,7 +527,7 @@ public class FractionalTransfer extends
 			DotClassInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		return super.transfer(instr, labels, value);
 	}
@@ -563,9 +537,9 @@ public class FractionalTransfer extends
 			InstanceofInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
-		return handleBooleanTest(instr, labels, value);
+		return finishTransfer(instr, labels, value);
 	}
 
 	@Override
@@ -573,9 +547,9 @@ public class FractionalTransfer extends
 			LoadArrayInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
-		return handleBooleanTest(instr, labels, value);
+		return finishTransfer(instr, labels, value);
 	}
 
 	@Override
@@ -583,7 +557,7 @@ public class FractionalTransfer extends
 			LoadFieldInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		if(instr.isStaticFieldAccess()) {
 			PermissionSetFromAnnotations perms = getFieldPermissionsFromAnnotations(instr.resolveFieldBinding());
@@ -598,7 +572,7 @@ public class FractionalTransfer extends
 			if(log.isLoggable(Level.WARNING))
 				log.warning("Unsupported field assignment to foreign object: " + instr.getNode());
 		}
-		return handleBooleanTest(instr, labels, value);
+		return finishTransfer(instr, labels, value);
 	}
 
 	/**
@@ -626,10 +600,10 @@ public class FractionalTransfer extends
 	@Override
 	public IResult<PluralDisjunctiveLE> transfer(
 			LoadLiteralInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralDisjunctiveLE initial_value) {
 		PluralDisjunctiveLE new_value = 
-			value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		new_value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+			initial_value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
+//		new_value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 			
 		Variable target = instr.getTarget();
@@ -638,7 +612,6 @@ public class FractionalTransfer extends
 		}
 		else {
 			if( instr.getLiteral() instanceof Boolean ) {
-
 				boolean bool_value = ((Boolean)instr.getLiteral()).booleanValue();
 				
 				if( bool_value ) {
@@ -648,19 +621,10 @@ public class FractionalTransfer extends
 					new_value.addFalseVarPredicate(target);
 				}
 			}
-
-			// immutable permission for primitive literals
-//			PermissionSetFromAnnotations new_perms = PermissionSetFromAnnotations.createEmpty(StateSpace.SPACE_TOP);
-//			new_perms = new_perms.combine(pf.createImmutableOrphan(
-//					StateSpace.SPACE_TOP, 
-//					StateSpace.STATE_ALIVE, 
-//					false, 
-//					new String[] { StateSpace.STATE_ALIVE }, 
-//					true));
-//			new_value.put(instr, instr.getTarget(), new_perms.toLatticeElement());
+			// override any previous permission info
 			new_value.put(instr, instr.getTarget(), FractionalPermissions.createEmpty());
 		}
-		return handleBooleanTest(instr, labels, new_value);
+		return finishTransfer(instr, labels, new_value);
 	}
 
 	@Override
@@ -668,39 +632,31 @@ public class FractionalTransfer extends
 			final MethodCallInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
+
+		// find the signature and the method binding that carries the spec for the invoked method
+		// binding can be different because of spec inheritance
+		IMethodSignature sig = getMethodSignature(instr.resolveBinding());
+		final IMethodBinding specBinding = sig.getSpecifiedMethodBinding();
+	
+		value.handleMethodCall(instr, sig);
 		
-		IMethodBinding binding = instr.resolveBinding();
-
-		value.handleMethodCall(instr, getMethodSignature(binding));
+		/*
+		 * "Nels' first shot at dynamic state tests" [ highly reworked :) --KB ]
+		 */
 		
-		// 4.0 Begin Nels' First Shot at State Tests
-		return dynamicStateTestHelper(instr, labels, value);
-	}
-
-	private IMethodSignature getMethodSignature(
-			IMethodBinding binding) {
-		return context.getRepository().getMethodSignature(binding);
-	}
-
-	private IResult<PluralDisjunctiveLE> dynamicStateTestHelper(
-			MethodCallInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
 		// Well we know afterwards that the receiver is not null!
 		Variable rcvr_loc = instr.getReceiverOperand();
 		value.addNonNullVariable(rcvr_loc);
 
-		// find the method binding that actually carries the spec for the invoked method
-		final IMethodBinding invokedBinding = context.getRepository().getSignature(instr.resolveBinding()).getSpecifiedMethodBinding();
-	
 		// find @TrueIndicates / @FalseIndicates annos
 		IndicatesAnnotation true_result = 
 			IndicatesAnnotation.getBooleanIndicatorOnReceiverIfAny(
-					getAnnoDB().getSummaryForMethod(invokedBinding),
+					getAnnoDB().getSummaryForMethod(specBinding),
 					true);
 		IndicatesAnnotation false_result = 
 			IndicatesAnnotation.getBooleanIndicatorOnReceiverIfAny(
-					getAnnoDB().getSummaryForMethod(invokedBinding),
+					getAnnoDB().getSummaryForMethod(specBinding),
 					false);
 		addIndicatedImplications(instr, value, rcvr_loc, true_result,
 				false_result);
@@ -710,20 +666,19 @@ public class FractionalTransfer extends
 		for(int arg = 0; arg < instr.getArgOperands().size(); arg++) {
 			IndicatesAnnotation arg_true = 
 				IndicatesAnnotation.getBooleanIndicatorIfAny(
-						getAnnoDB().getSummaryForMethod(invokedBinding),
+						getAnnoDB().getSummaryForMethod(specBinding),
 						arg, true);
 			IndicatesAnnotation arg_false = 
 				IndicatesAnnotation.getBooleanIndicatorIfAny(
-						getAnnoDB().getSummaryForMethod(invokedBinding),
+						getAnnoDB().getSummaryForMethod(specBinding),
 						arg, false);
-//			Aliasing arg_loc = value.getLocationsAfter(instr.getNode(), (Variable) instr.getArgOperands().get(arg));
 			Variable arg_loc = (Variable) instr.getArgOperands().get(arg);
 			addIndicatedImplications(instr, value, arg_loc, arg_true,
 					arg_false);
 			
 		}
 		
-		return handleBooleanTest(instr, labels, value);
+		return finishTransfer(instr, labels, value);
 	}
 
 	/**
@@ -739,11 +694,9 @@ public class FractionalTransfer extends
 			PluralDisjunctiveLE value, Variable indicated_loc,
 			IndicatesAnnotation true_result, IndicatesAnnotation false_result) {
 		/*
-		 * If either of the above results is non-null, we can add an implication to the
-		 * normal path.
+		 * Add implications for any state indicator annotations
 		 */
 		if( true_result != null || false_result != null ) {
-//			Aliasing target_loc = value.getLocationsAfter(instr.getNode(), instr.getTarget());
 			Variable target_loc = instr.getTarget();
 			if( true_result != null ) {
 				value.addTrueImplication(target_loc, indicated_loc, true_result.getIndicatedState());
@@ -751,7 +704,6 @@ public class FractionalTransfer extends
 			if( false_result != null ) {
 				value.addFalseImplication(target_loc, indicated_loc, false_result.getIndicatedState());
 			}
-			//result.put(NormalLabel.getNormalLabel(), value, instr.getNode());
 		}
 		return value;
 	}
@@ -761,7 +713,7 @@ public class FractionalTransfer extends
 			NewArrayInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		StateSpace arraySpace = getStateSpace(instr.getArrayType().resolveBinding());
 		value.put(instr, instr.getTarget(), PermissionSetFromAnnotations.createSingleton(
@@ -771,7 +723,7 @@ public class FractionalTransfer extends
 		
 		// After instantiation, we know the target to not be null! 
 		value.addNonNullVariable(instr.getTarget());
-		return super.transfer(instr, labels, value);
+		return finishTransfer(instr, labels, value);
 	}
 
 	@Override
@@ -779,7 +731,7 @@ public class FractionalTransfer extends
 			NewObjectInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		IMethodBinding binding = instr.resolveBinding();
 		
@@ -788,7 +740,7 @@ public class FractionalTransfer extends
 		value.addNonNullVariable(instr.getTarget());
 		
 		// could be a boolean test if this instruction is new Boolean(...);
-		return handleBooleanTest(instr, labels, value);
+		return finishTransfer(instr, labels, value);
 	}
 
 	private IConstructorSignature getConstructorSignature(IMethodBinding binding) {
@@ -800,7 +752,6 @@ public class FractionalTransfer extends
 			SourceVariableDeclaration instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
 		
 		// If this variable is the parameter to a catch block, we default
 		// to the default permission. Catch blocks aren't really called...
@@ -811,6 +762,10 @@ public class FractionalTransfer extends
 			// TODO caught exceptions always non-null?
 			value.addNonNullVariable(instr.getDeclaredVariable());
 		}
+		
+		// killing dead variables is the last thing we do
+		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
+		value.freeze(); // done with this lattice element--freeze it
 		return super.transfer(instr, labels, value);
 	}
 
@@ -839,13 +794,13 @@ public class FractionalTransfer extends
 			StoreArrayInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		if(FractionalAnalysis.checkArrays)
 			value.prepareForArrayWrite(instr);
 
 		// TODO check whether permission stored in array is compatible with array declaration
-		return handleBooleanTest(instr, instr.getSourceOperand(), labels, value);
+		return finishTransfer(instr, instr.getSourceOperand(), labels, value);
 	}
 
 	@Override
@@ -853,7 +808,7 @@ public class FractionalTransfer extends
 			StoreFieldInstruction instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		if(instr.isStaticFieldAccess()) {
 			PermissionSetFromAnnotations perms = getFieldPermissionsFromAnnotations(instr.resolveFieldBinding());
@@ -868,7 +823,7 @@ public class FractionalTransfer extends
 			if(log.isLoggable(Level.WARNING))
 				log.warning("Unsupported field assignment to foreign object: " + instr.getNode());
 		}
-		return handleBooleanTest(instr, instr.getSourceOperand(), labels, value);
+		return finishTransfer(instr, instr.getSourceOperand(), labels, value);
 	}
 
 	@Override
@@ -876,7 +831,7 @@ public class FractionalTransfer extends
 			UnaryOperation unop, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(unop.getNode());
-		value.killDeadVariables(unop, createVariableLivenessBefore(unop));
+//		value.killDeadVariables(unop, createVariableLivenessAfter(unop));
 		
 		if( unop.getOperator().equals(UnaryOperator.BOOL_NOT) ) {
 			/*
@@ -889,7 +844,7 @@ public class FractionalTransfer extends
 					op, target);
 		}
 		
-		return handleBooleanTest(unop, labels, value);
+		return finishTransfer(unop, labels, value);
 	}
 	
 	@Override
@@ -897,65 +852,99 @@ public class FractionalTransfer extends
 			SourceVariableRead instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-		value.killDeadVariables(instr, createVariableLivenessBefore(instr));
+//		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
-		return handleBooleanTest(instr, instr.getVariable(), labels, value);
-	}
-
-	private IResult<PluralDisjunctiveLE> handleBooleanTest(
-			AssignmentInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
-		return handleBooleanTest(instr, instr.getTarget(), labels, value);
+		return finishTransfer(instr, instr.getVariable(), labels, value);
 	}
 
 	/**
-	 * Helper method to handle boolean labels out of a given instruction.
-	 * @param instr
-	 * @param labels
-	 * @param value
-	 * @return
-	 * @tag todo.general -id="6023976" : handle boolean test in all transfer cases
-	 *
+	 * Helper method to handle boolean labels out of a given assignment, and to kill
+	 * variables that are dead after the instruction.
+	 * If we read a variable, and we have boolean labels exiting that statement, it's
+	 * because someone is testing the truth of that boolean. If we have state implications
+	 * that depend on the truth or falsehood of that variable, we could learn new information.
+	 * @param instr Current assignment instruction.
+	 * @param labels Labels out of the instruction <b>as given to the transfer function</b>. 
+	 * @param value Analysis information.
+	 * @return Transfer result with frozen analysis information for return to framework.
+	 * @see #finishTransfer(TACInstruction, Variable, List, PluralDisjunctiveLE)
 	 */
-	private IResult<PluralDisjunctiveLE> handleBooleanTest(
+	private IResult<PluralDisjunctiveLE> finishTransfer(
+			AssignmentInstruction instr, List<ILabel> labels,
+			PluralDisjunctiveLE value) {
+		return finishTransfer(instr, instr.getTarget(), labels, value);
+	}
+
+	/**
+	 * Helper method to handle boolean labels out of a given instruction, and to kill
+	 * variables that are dead after the instruction.
+	 * If we read a variable, and we have boolean labels exiting that statement, it's
+	 * because someone is testing the truth of that boolean. If we have state implications
+	 * that depend on the truth or falsehood of that variable, we could learn new information.
+	 * @param instr Current instruction.
+	 * @param testedVar Variable being tested in the instruction.
+	 * @param labels Labels out of the instruction <b>as given to the transfer function</b>. 
+	 * @param value Analysis information.
+	 * @return Transfer result with frozen analysis information for return to framework.
+	 */
+	private IResult<PluralDisjunctiveLE> finishTransfer(
 			TACInstruction instr,
 			final Variable testedVar, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
-		/*
-		 * If we read a variable, and we have boolean labels exiting that statement, it's
-		 * because someone is testing the truth of that boolean. If we have state implications
-		 * that depend on the truth or falsehood of that variable, we could learn new information.
-		 */
-		LabeledResult<PluralDisjunctiveLE> result = 
-			LabeledResult.createResult(labels, value);
+		// need it up to three times, so cache it
+		VariableLiveness live = createVariableLivenessAfter(instr);
 
+		PluralDisjunctiveLE true_value = null;
 		if( labels.contains(BooleanLabel.getBooleanLabel(true)) ) {
 
 			/*
 			 * If the branch is true, does adding this predicate eliminate any
 			 * implications?
 			 */			
-			PluralDisjunctiveLE br = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-			br.addTrueVarPredicate(testedVar);
-			
-			br = addNewlyDeducedFacts(instr, br, testedVar);
-			result.put(BooleanLabel.getBooleanLabel(true), br);
+			true_value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
+			true_value.addTrueVarPredicate(testedVar);
+
+			true_value = addNewlyDeducedFacts(instr, true_value, testedVar);
+
+			// killing dead variables is the last thing we do
+			true_value.killDeadVariables(instr, live);
+			true_value.freeze(); // done with this lattice element--freeze it
 		}
 
+		PluralDisjunctiveLE false_value = null;
 		if( labels.contains(BooleanLabel.getBooleanLabel(false)) ) {
 			/*
 			 * Same, but we know the variable is false.
 			 */
-			PluralDisjunctiveLE br = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
-			br.addFalseVarPredicate(testedVar);
+			false_value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
+			false_value.addFalseVarPredicate(testedVar);
 			
-			br = addNewlyDeducedFacts(instr, br, testedVar);
-			result.put(BooleanLabel.getBooleanLabel(false), br);
+			false_value = addNewlyDeducedFacts(instr, false_value, testedVar);
+			
+			// killing dead variables is the last thing we do
+			false_value.killDeadVariables(instr, live);
+			false_value.freeze(); // done with this lattice element--freeze it
 		}
+
+		// killing dead variables is the last thing we do
+		value.killDeadVariables(instr, live);
+		value.freeze(); // done with this lattice element--freeze it
+
+		LabeledResult<PluralDisjunctiveLE> result = 
+			LabeledResult.createResult(labels, value);
+		if(true_value != null)
+			result.put(BooleanLabel.getBooleanLabel(true), true_value);
+		if(false_value != null)
+			result.put(BooleanLabel.getBooleanLabel(false), false_value);
 
 		return result;
 	}
 	
+	private IMethodSignature getMethodSignature(
+			IMethodBinding binding) {
+		return context.getRepository().getMethodSignature(binding);
+	}
+
 	private AnnotationDatabase getAnnoDB() {
 		return context.getAnnoDB();
 	}

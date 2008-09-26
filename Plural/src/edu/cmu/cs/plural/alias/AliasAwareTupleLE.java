@@ -52,7 +52,6 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
-import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.flow.LatticeElement;
 import edu.cmu.cs.crystal.internal.Freezable;
@@ -867,13 +866,18 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 
 	/**
 	 * @param filter
+	 * @return <code>true</code> if a location was removed, <code>false</code> otherwise.
 	 */
-	public void removeLocations(LabelFilter filter) {
+	public boolean removeLocations(LabelFilter filter) {
+		boolean result = false;
 		for(Iterator<ObjectLabel> it = info.keySet().iterator(); it.hasNext(); ) {
 			ObjectLabel l = it.next();
-			if(filter.isConsidered(l))
+			if(filter.isConsidered(l)) {
+				result = true;
 				it.remove();
+			}
 		}
+		return result;
 	}
 
 }

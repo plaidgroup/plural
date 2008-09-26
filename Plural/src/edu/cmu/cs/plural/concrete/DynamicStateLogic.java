@@ -707,23 +707,51 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 	 * returns <code>true</code>.
 	 * @param filter Return <code>true</code> from {@link AliasingFilter#isConsidered(Aliasing)}
 	 * for all variables to be deleted.
+	 * @return <code>true</code> if variables were removed, <code>false</code> otherwise.
 	 */
-	public void removeVariables(AliasingFilter filter) {
+	public boolean removeVariables(AliasingFilter filter) {
 		if( frozen ) 
 			throw new IllegalStateException("Cannot change frozen object. Get a mutable copy to do this.");
 
+		boolean result = false;
 		for(Iterator<Aliasing> it = knownPredicates.keySet().iterator(); it.hasNext(); ) {
 			Aliasing var = it.next();
-			if(filter.isConsidered(var))
+			if(filter.isConsidered(var)) {
+				result = true;
 				it.remove();
+			}
 		}
 		
 		for(Iterator<Aliasing> it = knownImplications.keySet().iterator(); it.hasNext(); ) {
 			Aliasing var = it.next();
-			if(filter.isConsidered(var))
+			if(filter.isConsidered(var)) {
+				result = true;
 				it.remove();
+			}
 		}
+		return result;
+	}
+
+	public Set<Aliasing> getLiveInImplVariables() {
+		if(knownImplications.isEmpty())
+			return Collections.emptySet();
 		
+		HashSet<Aliasing> result = new HashSet<Aliasing>();
+		for(Map.Entry<Aliasing, ConsList<Implication>> impls : knownImplications.entrySet()) {
+			Aliasing ant = impls.getKey();
+			for(Implication impl : impls.getValue()) {
+				Set<Aliasing> implied = impl.getConsequenceVariables();
+				for(Aliasing a : implied) {
+					if(a.equals(ant))
+						continue;
+					if(knownImplications.containsKey(a))
+						// should keep a around b/c its one of its antecedents may
+						// become available after eliminating impl
+						result.add(a);
+				}
+			}
+		}
+		return result;
 	}
 	
 //	public void addDelayedImplication(Aliasing target, DelayedImplication impl) {
