@@ -37,22 +37,39 @@
  */
 package edu.cmu.cs.plural.test;
 
-import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
-import edu.cmu.cs.plural.annot.Full;
+import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.FalseIndicates;
+import edu.cmu.cs.plural.annot.Pure;
+import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.TrueIndicates;
 
-@PassingTest
+/**
+ * This class tests Plural's dynamic state test implementation checking
+ * using {@link TrueIndicates} and {@link FalseIndicates} annotations.
+ * @author Kevin Bierhoff
+ * @since 9/26/2008
+ */
+@FailingTest(2)
 @UseAnalyses("FractionalAnalysis")
-public class ConcreteTests {
-
-	public static void concreteTest(@Full Switch s) {
-		s.setState(true);
-		s.requiresOn();
+@ClassStates(@State(name = "A", inv = "a == true"))
+public class FailingDynamicStateTestImplTest {
+	
+	private boolean a;
+	
+	@Pure(fieldAccess = true)
+	@TrueIndicates("A")
+	public boolean isA() {
+		return !a; // error here because of negation
 	}
 
-	public static void implicationTest(@Full Switch s) {
-		if(s.isOn())
-			s.requiresOn();
+	@Pure(fieldAccess = true)
+	@TrueIndicates("A")
+	public boolean isA2() {
+		if(a)
+			return true;
+		return true; // error here because we're not in A
 	}
 
 }
