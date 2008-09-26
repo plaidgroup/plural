@@ -42,9 +42,11 @@ import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
+import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Unique;
 
 @FailingTest(1)
 @UseAnalyses("FractionalAnalysis")
@@ -64,20 +66,59 @@ class OtherObject {
 }
 
 class LastObject {
-	
+	@Perm(ensures="unique(this!fr)")
+	LastObject() {
+		
+	}
 	@Full
 	void modify() {
 		
 	}
-	
 }
 
 @ClassStates(@State(name="alive", inv="hasUnique == true => full(data)"))
 public class ImplicationWorks {
 
-	boolean hasUnique;
+	boolean hasFull;
 	
 	LastObject data;
+	
+	ImplicationWorks() {
+		this.hasFull = true;
+		this.data = new LastObject();
+	}
+	
+//	@Full(fieldAccess=true)
+//	void testPermImplicationShouldWork() {
+//		if( hasFull == true ) {
+//			hasFull = false;
+//			data.modify();
+//			return;
+//		}
+//		else {
+//			return;
+//		}
+//	}
+		
+	static void testStateImplicationShouldFail(@Share OtherObject o, @Full LastObject lo) {
+		
+		boolean stored_bool = o.isClosed();
+		
+		lo.modify();
+		
+		if( stored_bool ) {
+			o.open(); // ERROR: This call should fail
+		}	
+	}
+
+	static void testStateImplicationShouldWork(@Share OtherObject o, @Full LastObject lo) {
+		
+		boolean stored_bool = o.isClosed();
+				
+		if( stored_bool ) {
+			o.open();
+		}	
+	}
 	
 //	@Share
 //	void testPermImplicationShouldFail(@Full LastObject lo) {
@@ -99,44 +140,4 @@ public class ImplicationWorks {
 //		}
 //	}
 //	
-//	@Full
-//	void testPermImplicationShouldWork(@Full LastObject lo) {
-//		boolean local = hasUnique;
-//		
-//		if( hasUnique == true ) {
-//			lo.modify();
-//		}
-//		else {
-//			lo.modify();
-//		}
-//		
-//		boolean a = hasUnique;
-//		if( local ) {
-//			data.modify();
-//			return;
-//		}
-//		else {
-//			return;
-//		}
-//	}
-	
-	static void testStateImplicationShouldFail(@Share OtherObject o, @Full LastObject lo) {
-		
-		boolean stored_bool = o.isClosed();
-		
-		lo.modify();
-		
-		if( stored_bool ) {
-			o.open();
-		}	
-	}
-
-	static void testStateImplicationShouldWork(@Share OtherObject o, @Full LastObject lo) {
-		
-		boolean stored_bool = o.isClosed();
-				
-		if( stored_bool ) {
-			o.open();
-		}	
-	}
 }
