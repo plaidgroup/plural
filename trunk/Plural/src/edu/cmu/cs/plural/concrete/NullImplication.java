@@ -37,6 +37,9 @@
  */
 package edu.cmu.cs.plural.concrete;
 
+import java.util.Collections;
+import java.util.Set;
+
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
@@ -170,6 +173,11 @@ public class NullImplication implements Implication {
 	@Override
 	public boolean hasTemporaryState() {
 		return false;
+	}
+
+	@Override
+	public Set<Aliasing> getConsequenceVariables() {
+		return Collections.singleton(consequencePred.getVariable());
 	}
 
 }

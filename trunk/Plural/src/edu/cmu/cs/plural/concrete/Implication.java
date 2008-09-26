@@ -37,6 +37,8 @@
  */
 package edu.cmu.cs.plural.concrete;
 
+import java.util.Set;
+
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
@@ -64,6 +66,8 @@ public interface Implication extends Predicate {
 	boolean match(VariablePredicate pred);
 	
 	VariablePredicate getAntecedant();
+	
+	Set<Aliasing> getConsequenceVariables();
 
 	ImplicationResult result();
 

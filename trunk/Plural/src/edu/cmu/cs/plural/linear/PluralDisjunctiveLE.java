@@ -932,7 +932,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 
 			@Override
 			public Boolean tuple(TensorPluralTupleLE tuple) {
-				tuple.killDeadVariables(instr, liveness);
+				tuple.killDeadVariablesAfter(instr, liveness);
 				return true;
 			}
 			

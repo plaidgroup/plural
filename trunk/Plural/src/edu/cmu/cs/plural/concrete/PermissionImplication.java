@@ -1,5 +1,7 @@
 package edu.cmu.cs.plural.concrete;
 
+import java.util.Set;
+
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
@@ -64,6 +66,12 @@ public class PermissionImplication implements Implication {
 	public boolean isSatisfied(PluralTupleLatticeElement value) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+
+	@Override
+	public Set<Aliasing> getConsequenceVariables() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
