@@ -235,8 +235,14 @@ abstract class AbstractBindingSignature extends AbstractBinding
 //			notReturned.add("this!fr");
 		
 		// receiver
-		ICrystalAnnotation this_c = getAnnoDB().getSummaryForMethod(binding).getReturn("edu.cmu.cs.plural.annot.Param");
+		ICrystalAnnotation this_c = getAnnoDB().getSummaryForMethod(binding).getReturn("edu.cmu.cs.plural.annot.Capture");
 		if(this_c != null) {
+			// doesn't matter here whether @Capture or @Lend
+			capturedParams.put("this!fr", StateSpace.STATE_ALIVE);
+		}
+		ICrystalAnnotation this_l = getAnnoDB().getSummaryForMethod(binding).getReturn("edu.cmu.cs.plural.annot.Lend");
+		if(this_l != null) {
+			// doesn't matter here whether @Capture or @Lend
 			capturedParams.put("this!fr", StateSpace.STATE_ALIVE);
 		}
 		ICrystalAnnotation this_r = getAnnoDB().getSummaryForMethod(binding).getReturn("edu.cmu.cs.plural.annot.Release");
@@ -250,8 +256,14 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		
 		// parameters
 		for(int i = 0; i < binding.getParameterTypes().length; i++) {
-			ICrystalAnnotation param_c = getAnnoDB().getSummaryForMethod(binding).getParameter(i, "edu.cmu.cs.plural.annot.Param");
+			ICrystalAnnotation param_c = getAnnoDB().getSummaryForMethod(binding).getParameter(i, "edu.cmu.cs.plural.annot.Capture");
 			if(param_c != null) {
+				// doesn't matter here whether @Capture or @Lend
+				capturedParams.put("#" + i, StateSpace.STATE_ALIVE);
+			}
+			ICrystalAnnotation param_l = getAnnoDB().getSummaryForMethod(binding).getParameter(i, "edu.cmu.cs.plural.annot.Lend");
+			if(param_l != null) {
+				// doesn't matter here whether @Capture or @Lend
 				capturedParams.put("#" + i, StateSpace.STATE_ALIVE);
 			}
 			ICrystalAnnotation param_r = getAnnoDB().getSummaryForMethod(binding).getParameter(i, "edu.cmu.cs.plural.annot.Release");

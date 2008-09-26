@@ -230,13 +230,43 @@ public class LocalAliasTransfer extends
 		return value;
 	}
 	
+	/**
+	 * Create a label for the invocation result, with special treatment of
+	 * @IsResult, @Capture, and @Lend annotations
+	 * @param instr
+	 * @param receiver Receiver variable, if this invocation has a receiver, 
+	 * <code>null</code> otherwise.  Use <code>null</code> for static methods!
+	 * @param value
+	 * @return
+	 */
 	private AliasingLE 
-	putSingletonLabel(InvocationInstruction instr, AliasingLE value) {
+	putSingletonLabel(InvocationInstruction instr, Variable receiver, AliasingLE value) {
 		IMethodBinding binding = instr.resolveBinding();
 
 		/*
-		 * 1. See if one of the parameters is the result
+		 * 1. See if one of the parameters is the result or lends the result
 		 */
+		if(receiver != null) {
+			ICrystalAnnotation a = getAnnoDB().getSummaryForMethod(binding).getReturn(
+					"edu.cmu.cs.plural.annot.IsResult");
+			if(a != null) {
+				value.put(instr.getTarget(), value.get(receiver));
+				// have result point to the same locations as the receiver and quit
+				return value;
+			}
+			
+			ICrystalAnnotation l = getAnnoDB().getSummaryForMethod(binding).getReturn(
+					"edu.cmu.cs.plural.annot.Lend");
+			if(l != null) {
+				String paramName = (String) l.getObject("param");
+				Variable x = new ParamVariable(value.get(receiver), paramName, null /* not relevant for lookup */);
+				if(! value.get(x).getLabels().isEmpty()) {
+					value.put(instr.getTarget(), value.get(x));
+					// have result point to the lent parameter and quit, if parameter location known
+					return value;
+				}
+			}
+		}
 		for(int i = 0; i < binding.getParameterTypes().length; i++) {
 			ICrystalAnnotation a = getAnnoDB().getSummaryForMethod(binding).getParameter(
 					i, "edu.cmu.cs.plural.annot.IsResult");
@@ -245,6 +275,20 @@ public class LocalAliasTransfer extends
 				// have result point to the same locations as the annotated parameter and quit
 				return value;
 			}
+
+			ICrystalAnnotation l = getAnnoDB().getSummaryForMethod(binding).getParameter(
+					i, "edu.cmu.cs.plural.annot.Lend");
+			if(l != null) {
+				String paramName = (String) l.getObject("param");
+				Variable x = new ParamVariable(value.get(instr.getArgOperands().get(i)), 
+						paramName, null /* not relevant for lookup */);
+				if(! value.get(x).getLabels().isEmpty()) {
+					value.put(instr.getTarget(), value.get(x));
+					// have result point to the lent parameter and quit, if parameter location known
+					return value;
+				} // else make up new location
+			}
+			
 		}
 		
 		/*
@@ -257,11 +301,20 @@ public class LocalAliasTransfer extends
 		/*
 		 * 3. Create a ParamVariable for each parameter annotated with @Param
 		 */
+		if(receiver != null) {
+			ICrystalAnnotation a = getAnnoDB().getSummaryForMethod(binding).getReturn(
+					"edu.cmu.cs.plural.annot.Capture");
+			if(a != null) {
+				String paramName = (String) a.getObject("param");
+				Variable x = new ParamVariable(aliases, paramName, binding.getDeclaringClass());
+				value.put(x, value.get(receiver));
+			}
+		}
 		for(int i = 0; i < binding.getParameterTypes().length; i++) {
 			ICrystalAnnotation a = getAnnoDB().getSummaryForMethod(binding).getParameter(
-					i, "edu.cmu.cs.plural.annot.Param");
+					i, "edu.cmu.cs.plural.annot.Capture");
 			if(a != null) {
-				String paramName = (String) a.getObject("name");
+				String paramName = (String) a.getObject("param");
 				Variable x = new ParamVariable(aliases, paramName, binding.getParameterTypes()[i]);
 				value.put(x, value.get(instr.getArgOperands().get(i)));
 			}
@@ -439,7 +492,8 @@ public class LocalAliasTransfer extends
 		value = value.mutableCopy();
 		value = killAllDead(value, instr, instr.getReceiverOperand());
 		value = killAllDead(value, instr, instr.getArgOperands());
-		return LabeledSingleResult.createResult(putSingletonLabel(instr, value), labels);
+		return LabeledSingleResult.createResult(putSingletonLabel(
+				instr, instr.isStaticMethodCall() ? null : instr.getReceiverOperand(), value), labels);
 	}
 
 	@Override
@@ -460,7 +514,7 @@ public class LocalAliasTransfer extends
 			AliasingLE value) {
 		value = value.mutableCopy();
 		value = killAllDead(value, instr, instr.getArgOperands());
-		return LabeledSingleResult.createResult(putSingletonLabel(instr, value), labels);
+		return LabeledSingleResult.createResult(putSingletonLabel(instr, null, value), labels);
 	}
 
 	@Override
