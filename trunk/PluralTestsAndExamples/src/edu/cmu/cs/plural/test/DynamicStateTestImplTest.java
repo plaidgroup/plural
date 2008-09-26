@@ -39,20 +39,55 @@ package edu.cmu.cs.plural.test;
 
 import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
-import edu.cmu.cs.plural.annot.Full;
+import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.FalseIndicates;
+import edu.cmu.cs.plural.annot.Pure;
+import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.TrueIndicates;
 
+/**
+ * This class tests Plural's dynamic state test implementation checking
+ * using {@link TrueIndicates} and {@link FalseIndicates} annotations.
+ * @author Kevin Bierhoff
+ * @since 9/26/2008
+ */
 @PassingTest
 @UseAnalyses("FractionalAnalysis")
-public class ConcreteTests {
-
-	public static void concreteTest(@Full Switch s) {
-		s.setState(true);
-		s.requiresOn();
+@ClassStates(@State(name = "A", inv = "a == true"))
+public class DynamicStateTestImplTest {
+	
+	private boolean a;
+	
+	/**
+	 * Simply returns the field indicating the state.
+	 * @return the field indicating the state.
+	 */
+	@Pure(fieldAccess = true)
+	@TrueIndicates("A")
+	public boolean isA() {
+		return a; 
 	}
 
-	public static void implicationTest(@Full Switch s) {
-		if(s.isOn())
-			s.requiresOn();
+	/**
+	 * This is a correct method.
+	 */
+	@Pure(fieldAccess = true)
+	@FalseIndicates("A")
+	public boolean isNotA() {
+		if(a)
+			return false;
+		return true;
+	}
+	
+	/**
+	 * This is a correct, albeit useless, method.
+	 * @return never <code>true</code>, and therefore
+	 * it trivially indicates A with <code>true</code>.
+	 */
+	@Pure(fieldAccess = true)
+	@TrueIndicates("A")
+	public boolean isNeverA() {
+		return false;
 	}
 
 }
