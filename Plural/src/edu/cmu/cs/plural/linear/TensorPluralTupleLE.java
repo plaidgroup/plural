@@ -65,8 +65,11 @@ import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.pred.DefaultInvariantChecker;
 import edu.cmu.cs.plural.pred.DefaultInvariantMerger;
+import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.pred.PredicateMerger;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
@@ -151,13 +154,6 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		return (TensorPluralTupleLE) super.join(other, node);
 	}
 
-	@Override
-	public boolean packReceiver(Variable rcvrVar,
-			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
-			Set<String> desiredState) {
-		return super.packReceiver(rcvrVar, stateRepo, locs, desiredState);
-	}
-
 	/**
 	 * @deprecated Use {@link #fancyPackReceiverToBestGuess(ThisVariable, StateSpaceRepository, SimpleMap, String...)}.
 	 */
@@ -227,6 +223,64 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			// Call merge-in...
 			parsed.fst().mergeInPredicate(locs_, callback);
 		}
+		
+		return true;
+	}
+	
+	@Override
+	public boolean packReceiver(Variable rcvrVar,
+			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
+			Set<String> desiredState) {
+		
+		if( isFrozen() || isRcvrPacked() )
+			throw new IllegalStateException("Object cannot be packed or is frozen.");
+		
+		final Aliasing rcvrLoc = locs.get(rcvrVar);		
+		final ITypeBinding rcvr_type = rcvrVar.resolveType();
+		
+		// Create the new receiver permission.
+		FractionalPermissions rcvr_perms = this.get(rcvrLoc);
+		FractionalPermission new_rcvr_perm = 
+			rcvr_perms.getUnpackedPermission().copyNewState(desiredState);
+
+		// Get state spaces for field types
+		final SimpleMap<String,StateSpace> field_spaces = getFieldStateSpaces(rcvr_type, stateRepo);
+		
+		for( Pair<String,String> state_and_inv : getStatesAndInvs(rcvr_type, new_rcvr_perm, getAnnotationDB()) ) {
+			// foreach invariant string
+			final String inv = state_and_inv.snd();
+		
+			// Parse the invariant string, creating a PredicateMerger object
+			final Pair<?,PredicateChecker> parsed =
+				PermParser.parseInvariant(inv, field_spaces);
+
+			// Create a call-back for this state that will purify as necessary
+			final boolean purify = new_rcvr_perm.isReadOnly();
+			
+			final SimpleMap<String,Aliasing> locs_ =
+				createFieldNameToAliasingMapping(locs, rcvr_type);
+			
+			final SplitOffTuple callback =
+				new DefaultInvariantChecker(this, rcvrLoc, purify);
+			
+			// Call splitOff to see if we have enough permission
+			boolean split_worked = 
+				parsed.snd().splitOffPredicate(locs_, callback);
+			
+			if( !split_worked ) {
+				// If the pack didn't work, we poison the lattice
+				put(rcvrLoc, rcvr_perms.invalidPack());
+				setUnpackedVar(null);
+				setNodeWhereUnpacked(null);
+				return false;	
+			}
+		}
+		
+		// 3. pack the receiver permissions object, put new results back in.
+		rcvr_perms = rcvr_perms.pack(desiredState);
+		put(rcvrLoc, rcvr_perms);
+		setUnpackedVar(null);
+		setNodeWhereUnpacked(null);
 		
 		return true;
 	}

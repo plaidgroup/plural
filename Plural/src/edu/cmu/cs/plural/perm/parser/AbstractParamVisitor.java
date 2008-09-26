@@ -292,7 +292,8 @@ public abstract class AbstractParamVisitor
 		
 		for(Map.Entry<String, ParamInfoHolder> param : getParams().entrySet()) {
 			Aliasing var = vars.get(param.getKey());
-			if(! callback.splitOffPermission(var, param.getValue().getPerms()))
+			if( param.getValue().getPerms() != null && 
+				!callback.splitOffPermission(var, param.getValue().getPerms()) )
 				return false;
 		}
 		

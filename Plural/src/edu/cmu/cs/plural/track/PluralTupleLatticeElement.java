@@ -646,93 +646,95 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	public boolean packReceiver(Variable rcvrVar, StateSpaceRepository stateRepo,
 			SimpleMap<Variable, Aliasing> locs, Set<String> desiredState) {
 		
-		if( isFrozen || isRcvrPacked() )
-			throw new IllegalStateException("Object cannot be packed or is frozen.");
-
-		final Aliasing rcvrLoc = locs.get(rcvrVar);		
-		final ITypeBinding rcvr_type = rcvrVar.resolveType();
+		throw new IllegalStateException("This method should no longer be called.");
 		
-		// 1. Create the new receiver permission.
-		FractionalPermissions rcvr_perms = this.get(rcvrLoc);
-		FractionalPermission new_rcvr_perm = 
-			rcvr_perms.getUnpackedPermission().copyNewState(desiredState);
-
-		
-		// 2. Get field invariants for that state.
-		List<Pair<Aliasing, PermissionFromAnnotation>> needed_perms =
-			this.getInvariantPermissions(rcvr_type,
-					new_rcvr_perm, locs, false, stateRepo);
-		
-		if(needed_perms == null) {
-			// Sad path exit. The state we are supposed to pack to is
-			// an "impossible" state (FALSE invariant)
-			this.put(rcvrLoc, rcvr_perms.invalidPack());
-			unpackedVar = null;
-			return false;
-		}
-		
-//		needed_perms = 
-//			this.filterOutNullPermissions(needed_perms, locs, 
-//					rcvr_type, new_rcvr_perm, stateRepo);
-		
-		boolean purify = new_rcvr_perm.isReadOnly();
-		
-		Set<Aliasing> inv_fields = new LinkedHashSet<Aliasing>(needed_perms.size());
-		for( Pair<Aliasing, PermissionFromAnnotation> needed_field_perm : needed_perms ) {
-			Aliasing fvar = needed_field_perm.fst();
-			inv_fields.add(fvar);
-			FractionalPermissions cur_f_perms = this.get(fvar);
-
-			// get the permission and purify, if necessary
-			PermissionFromAnnotation p = needed_field_perm.snd();
-			if(purify) 
-				p = p.purify();
-			
-			// First, check to see if the current permission is even in the correct state.
-			if( !cur_f_perms.isInStates(p.getStateInfo(), p.isFramePermission()) ) {					
-				this.put(rcvrLoc, rcvr_perms.invalidPack());
-				unpackedVar = null;
-				return false;					
-			}
-			
-			// Then, check to see if there is enough permission by splitting off.
-			cur_f_perms = cur_f_perms.splitOff(p);
-			
-			this.put(fvar, cur_f_perms);
-		}
-
-		// 2a. Check field permissions for SAT.
-		for( Aliasing inv_field : inv_fields ) {
-			if( this.get(inv_field).isUnsatisfiable() ) {
-				// Sad path exit. The state we are supposed to pack to is
-				// not actually satisfied by the fields.
-				this.put(rcvrLoc, rcvr_perms.invalidPack());
-				unpackedVar = null;
-				return false;
-			}
-		}
-
-
-		// 2b. Check concrete invariants (including nullness / non-nullness)
-		SimpleMap<String, Aliasing> vars = 
-			createFieldNameToAliasingMapping(locs, rcvr_type);
-		String error = ConcreteAnnotationUtils.checkConcreteFieldInvariants(
-				this, rcvr_type, new_rcvr_perm, vars, getAnnotationDB());
-		if(error != null) {
-			// Sad path exit. A concrete invariant was violated
-			if(log.isLoggable(Level.FINE))
-				log.fine("Concrete invariant violated: " + error);
-			
-			this.put(rcvrLoc, rcvr_perms.invalidPack());
-			unpackedVar = null;
-			return false;
-		}
-		
-		// 3. pack the receiver permissions object, put new results back in.
-		rcvr_perms = rcvr_perms.pack(desiredState);
-		this.put(rcvrLoc, rcvr_perms);
-		unpackedVar = null;
-		return true;
+//		if( isFrozen || isRcvrPacked() )
+//			throw new IllegalStateException("Object cannot be packed or is frozen.");
+//
+//		final Aliasing rcvrLoc = locs.get(rcvrVar);		
+//		final ITypeBinding rcvr_type = rcvrVar.resolveType();
+//		
+//		// 1. Create the new receiver permission.
+//		FractionalPermissions rcvr_perms = this.get(rcvrLoc);
+//		FractionalPermission new_rcvr_perm = 
+//			rcvr_perms.getUnpackedPermission().copyNewState(desiredState);
+//
+//		
+//		// 2. Get field invariants for that state.
+//		List<Pair<Aliasing, PermissionFromAnnotation>> needed_perms =
+//			this.getInvariantPermissions(rcvr_type,
+//					new_rcvr_perm, locs, false, stateRepo);
+//		
+//		if(needed_perms == null) {
+//			// Sad path exit. The state we are supposed to pack to is
+//			// an "impossible" state (FALSE invariant)
+//			this.put(rcvrLoc, rcvr_perms.invalidPack());
+//			unpackedVar = null;
+//			return false;
+//		}
+//		
+////		needed_perms = 
+////			this.filterOutNullPermissions(needed_perms, locs, 
+////					rcvr_type, new_rcvr_perm, stateRepo);
+//		
+//		boolean purify = new_rcvr_perm.isReadOnly();
+//		
+//		Set<Aliasing> inv_fields = new LinkedHashSet<Aliasing>(needed_perms.size());
+//		for( Pair<Aliasing, PermissionFromAnnotation> needed_field_perm : needed_perms ) {
+//			Aliasing fvar = needed_field_perm.fst();
+//			inv_fields.add(fvar);
+//			FractionalPermissions cur_f_perms = this.get(fvar);
+//
+//			// get the permission and purify, if necessary
+//			PermissionFromAnnotation p = needed_field_perm.snd();
+//			if(purify) 
+//				p = p.purify();
+//			
+//			// First, check to see if the current permission is even in the correct state.
+//			if( !cur_f_perms.isInStates(p.getStateInfo(), p.isFramePermission()) ) {					
+//				this.put(rcvrLoc, rcvr_perms.invalidPack());
+//				unpackedVar = null;
+//				return false;					
+//			}
+//			
+//			// Then, check to see if there is enough permission by splitting off.
+//			cur_f_perms = cur_f_perms.splitOff(p);
+//			
+//			this.put(fvar, cur_f_perms);
+//		}
+//
+//		// 2a. Check field permissions for SAT.
+//		for( Aliasing inv_field : inv_fields ) {
+//			if( this.get(inv_field).isUnsatisfiable() ) {
+//				// Sad path exit. The state we are supposed to pack to is
+//				// not actually satisfied by the fields.
+//				this.put(rcvrLoc, rcvr_perms.invalidPack());
+//				unpackedVar = null;
+//				return false;
+//			}
+//		}
+//
+//
+//		// 2b. Check concrete invariants (including nullness / non-nullness)
+//		SimpleMap<String, Aliasing> vars = 
+//			createFieldNameToAliasingMapping(locs, rcvr_type);
+//		String error = ConcreteAnnotationUtils.checkConcreteFieldInvariants(
+//				this, rcvr_type, new_rcvr_perm, vars, getAnnotationDB());
+//		if(error != null) {
+//			// Sad path exit. A concrete invariant was violated
+//			if(log.isLoggable(Level.FINE))
+//				log.fine("Concrete invariant violated: " + error);
+//			
+//			this.put(rcvrLoc, rcvr_perms.invalidPack());
+//			unpackedVar = null;
+//			return false;
+//		}
+//		
+//		// 3. pack the receiver permissions object, put new results back in.
+//		rcvr_perms = rcvr_perms.pack(desiredState);
+//		this.put(rcvrLoc, rcvr_perms);
+//		unpackedVar = null;
+//		return true;
 	}
 	
 	/**
