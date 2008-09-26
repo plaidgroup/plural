@@ -1314,85 +1314,101 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 * @param liveness Liveness information after the given instruction.
 	 */
 	public void killDeadVariablesAfter(TACInstruction instr, final VariableLiveness liveness) {
+		// variables that "also" need to stay alive
+		// this is to avoid removing a variable that's the target of an implication
+		// declare them here so then can be captured in the filter
+		final Set<Aliasing> liveInImpl = new HashSet<Aliasing>();
+		final Set<ObjectLabel> liveLocInImpl = new HashSet<ObjectLabel>();
+		
+		final AliasingLE aliasing = tupleLatticeElement.getLocationsAfter(instr.getNode());
+		
+		class Filter implements AliasingFilter, LabelFilter {
+			
+			/**
+			 * Returns <code>true</code> if all locations in the given aliasing set
+			 * are pointed to by dead variables, false otherwise.
+			 * @param var
+			 * @return
+			 */
+			@Override
+			public boolean isConsidered(Aliasing var) {
+				if(var.getLabels().isEmpty())
+					return false;
+				if(liveInImpl.contains(var))
+					// staying alive in implication
+					return false;
+				
+				for(ObjectLabel l : var.getLabels()) {
+					if(isLive(l))
+						return false;
+				}
+				return true;
+			}
+
+			/**
+			 * @param l
+			 */
+			private boolean isLive(ObjectLabel l) {
+				if(liveLocInImpl.contains(l))
+					// staying alive in implication
+					return true;
+				Set<Variable> vars = aliasing.getVariables(l);
+				if(vars == null || vars.isEmpty())
+					// this is for parameters whose "declare" instructions have not yet been processed
+					// TODO remove this and initialize parameter labels in LocalAliasTransfer.getLattice()
+					return true;
+				for(Variable x : vars) {
+					if(x instanceof SourceVariable && ((SourceVariable) x).getBinding().isParameter()) {
+						// keep parameters live for post-condition checks
+						return true;
+					}
+					else if(x instanceof SourceVariable || x instanceof TempVariable) {
+						if(liveness.isLive(x))
+							return true;
+					}
+					else if(x instanceof ParamVariable) {
+						if(! isConsidered(((ParamVariable) x).getOwner()))
+							return true;
+					}
+					else
+						// keyword, type variables can't die
+						// TODO field variables?
+						return true;
+				}
+				return false;
+			}
+
+			@Override
+			public boolean isConsidered(ObjectLabel l) {
+				return ! isLive(l);
+			}
+		};
+		
+		Filter filter = new Filter();
+
+		// in order to find implications enabled by previously solved implications,
+		// we iterate until nothing more happens
+		// would be better to not consider variables kept alive by implications
+		// when looking for applicable implications, but that currently results in
+		// either implications being dropped too early or non-linear implications
+		// staying around until the loop terminates after 10 iterations
+		// TODO apply implications without regard to variables live in implications
+		// TODO revisit only locations and implications revealed by previous iteration
 		boolean changed;
 		int count = 0;
 		do {
 			changed = false;
-			
+
 			// trace variables that "also" need to stay alive
 			// this is to avoid removing a variable that's the target of an implication
-			final Set<Aliasing> liveInImpl = dynamicStateLogic.getLiveInImplVariables();
-			final Set<ObjectLabel> liveLocInImpl = new HashSet<ObjectLabel>();
+			// re-compute on every turn since linear implications may have been removed
+			liveInImpl.clear();
+			liveInImpl.addAll(dynamicStateLogic.getLiveInImplVariables());
+			liveLocInImpl.clear();
 			for(Aliasing a : liveInImpl) {
 				liveLocInImpl.addAll(a.getLabels());
 			}
 			
-			final AliasingLE aliasing = tupleLatticeElement.getLocationsAfter(instr.getNode());
-			
-			class Filter implements AliasingFilter, LabelFilter {
-	
-				/**
-				 * Returns <code>true</code> if all locations in the given aliasing set
-				 * are pointed to by dead variables, false otherwise.
-				 * @param var
-				 * @return
-				 */
-				@Override
-				public boolean isConsidered(Aliasing var) {
-					if(var.getLabels().isEmpty())
-						return false;
-					if(liveInImpl.contains(var))
-						// staying alive in implication
-						return false;
-					
-					for(ObjectLabel l : var.getLabels()) {
-						if(isLive(l))
-							return false;
-					}
-					return true;
-				}
-	
-				/**
-				 * @param l
-				 */
-				private boolean isLive(ObjectLabel l) {
-					if(liveLocInImpl.contains(l))
-						// staying alive in implication
-						return true;
-					Set<Variable> vars = aliasing.getVariables(l);
-					if(vars == null || vars.isEmpty())
-						// this is for parameters whose "declare" instructions have not yet been processed
-						// TODO remove this and initialize parameter labels in LocalAliasTransfer.getLattice()
-						return true;
-					for(Variable x : vars) {
-						if(x instanceof SourceVariable && ((SourceVariable) x).getBinding().isParameter()) {
-							// keep parameters live for post-condition checks
-							return true;
-						}
-						else if(x instanceof SourceVariable || x instanceof TempVariable) {
-							if(liveness.isLive(x))
-								return true;
-						}
-						else if(x instanceof ParamVariable) {
-							if(! isConsidered(((ParamVariable) x).getOwner()))
-								return true;
-						}
-						else
-							// keyword, type variables can't die
-							// TODO field variables?
-							return true;
-					}
-					return false;
-				}
-	
-				@Override
-				public boolean isConsidered(ObjectLabel l) {
-					return ! isLive(l);
-				}
-			};
-			
-			Filter filter = new Filter();
-	
 			/*
 			 * 1. apply implications of dead variables
 			 */
@@ -1413,14 +1429,10 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			 */
 			if(tupleLatticeElement.removeLocations(filter))
 				changed = true;
-			
 		}
-		// in order to find implications enabled by previously solved implications,
-		// we iterate until nothing more happens
-		// TODO revisit only locations and implications revealed by previous iteration
 		while(changed && /* avoid infinite loop */ ++count < 10);
 		if(changed)
-			log.fine("Exceeded dead variable kill iteration limit: " + count);
+			log.warning("Exceeded dead variable kill iteration limit: " + count);
 	}
 
 	/**
