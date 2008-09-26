@@ -46,37 +46,10 @@ import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
-import edu.cmu.cs.plural.annot.Unique;
 
-@FailingTest(1)
+@FailingTest(2)
 @UseAnalyses("FractionalAnalysis")
-class OtherObject {
-	
-	@Share(fieldAccess = true)
-	@TrueIndicates("closed")
-	boolean isClosed() {
-		return true;
-	}
-	
-	@Share(requires="closed")
-	void open() {
-		
-	}
-	
-}
-
-class LastObject {
-	@Perm(ensures="unique(this!fr)")
-	LastObject() {
-		
-	}
-	@Full
-	void modify() {
-		
-	}
-}
-
-@ClassStates(@State(name="alive", inv="hasUnique == true => full(data)"))
+@ClassStates(@State(name="alive", inv="hasFull == true => full(data)"))
 public class ImplicationWorks {
 
 	boolean hasFull;
@@ -88,18 +61,39 @@ public class ImplicationWorks {
 		this.data = new LastObject();
 	}
 	
-//	@Full(fieldAccess=true)
-//	void testPermImplicationShouldWork() {
-//		if( hasFull == true ) {
-//			hasFull = false;
-//			data.modify();
-//			return;
-//		}
-//		else {
-//			return;
-//		}
-//	}
+	@Full(fieldAccess=true)
+	void testPermImplicationShouldWork() {
+		if( hasFull == true ) {
+			hasFull = false;
+			data.modify();
+			return;
+		}
+		else {
+			return;
+		}
+	}
 		
+	@Share
+	void testPermImplicationShouldFail(@Full LastObject lo) {
+		boolean local = hasFull;
+		
+		if( hasFull == true ) {
+			lo.modify();
+		}
+		else {
+			lo.modify();
+		}
+		
+		if( local == true ) {
+			data.modify(); // ERROR: You should only be able to eliminate once.
+			return;
+		}
+		else {
+			return;
+		}
+	}
+	
+	
 	static void testStateImplicationShouldFail(@Share OtherObject o, @Full LastObject lo) {
 		
 		boolean stored_bool = o.isClosed();
@@ -119,25 +113,29 @@ public class ImplicationWorks {
 			o.open();
 		}	
 	}
+}
+
+class OtherObject {
 	
-//	@Share
-//	void testPermImplicationShouldFail(@Full LastObject lo) {
-//		boolean local = hasUnique;
-//		
-//		if( hasUnique == true ) {
-//			lo.modify();
-//		}
-//		else {
-//			lo.modify();
-//		}
-//		
-//		if( local == true ) {
-//			data.modify();
-//			return;
-//		}
-//		else {
-//			return;
-//		}
-//	}
-//	
+	@Share(fieldAccess = true)
+	@TrueIndicates("closed")
+	boolean isClosed() {
+		return true;
+	}
+	
+	@Share(requires="closed")
+	void open() {
+		
+	}
+}
+
+class LastObject {
+	@Perm(ensures="unique(this!fr)")
+	LastObject() {
+		
+	}
+	@Full
+	void modify() {
+		
+	}
 }
