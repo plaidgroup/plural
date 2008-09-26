@@ -76,6 +76,7 @@ import edu.cmu.cs.plural.states.IMethodSignature;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
+import edu.cmu.cs.plural.util.Pair;
 import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
@@ -900,8 +901,14 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		return le.dispatch(new ErrorReportingVisitor() {
 			@Override
 			public String checkTuple(TensorPluralTupleLE tuple) {
+				Pair<String, String> trueTest = null;
+				Pair<String, String> falseTest = null;
+				if(stateTests.containsKey(true))
+					trueTest = Pair.create("this!fr", stateTests.get(true));
+				if(stateTests.containsKey(false))
+					falseTest = Pair.create("this!fr", stateTests.get(false));
 				return op.checkPostCondition(
-						node, tuple, resultVar, post, parameterVars, stateTests);
+						node, tuple, resultVar, post, parameterVars, trueTest, falseTest);
 			}
 		});
 	}
