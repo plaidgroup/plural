@@ -40,9 +40,10 @@ package edu.cmu.cs.plural.test;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.plural.annot.Capture;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
-import edu.cmu.cs.plural.annot.Param;
+import edu.cmu.cs.plural.annot.Lend;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
@@ -61,7 +62,7 @@ public class GCTest {
 	}
 
 	@Perm(requires = "full(#0)", ensures = "unique(this!fr)")
-	public GCTest(@Param(name = "p") GCTest gct) {
+	public GCTest(@Capture(param = "p") GCTest gct) {
 		this.gct = gct;
 	}
 	
@@ -74,7 +75,7 @@ public class GCTest {
 	}
 	
 	@Perm(requires = "unique(this!fr)", ensures = "full(result)")
-	@Param(name = "outer")
+	@Lend(param = "outer")
 	public GCTest getGct() {
 		return gct; // error here b/c we pack before checking result
 		// shouldn't pack at all here

@@ -42,6 +42,7 @@ import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.FalseIndicates;
 import edu.cmu.cs.plural.annot.Full;
+import edu.cmu.cs.plural.annot.Capture;
 import edu.cmu.cs.plural.annot.Param;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
@@ -62,7 +63,7 @@ public class ArrayIterator<T> {
 	private int pos = 0;
 
 	@Perm(requires = "immutable(#0)", ensures = "unique(this!fr)")
-	public ArrayIterator(@Param(name = "array") T[] array) {
+	public ArrayIterator(@Capture(param = "array") T[] array) {
 		this.array = array;
 	}
 	
