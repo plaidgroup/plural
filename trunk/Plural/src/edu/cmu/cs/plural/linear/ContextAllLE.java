@@ -46,7 +46,9 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 /**
  * {@code ContextAllLE} is currently unused, but it's intended for the case where
- * you need to prove something in all contexts.
+ * you need to prove something in all contexts.  It corresponds to alternative
+ * disjunction in linear logic, which we write as <b>+</b> (omitting the conventional
+ * circle around the plus symbol).
  * 
  * @author Kevin Bierhoff
  * @since 4/16/2008
@@ -57,7 +59,7 @@ public final class ContextAllLE extends AbstractDisjunctiveLE implements Disjunc
 		return new ContextAllLE(elements);
 	}
 	
-	static ContextAllLE trueContext() {
+	static ContextAllLE falseContext() {
 		return new ContextAllLE();
 	}
 
@@ -79,9 +81,9 @@ public final class ContextAllLE extends AbstractDisjunctiveLE implements Disjunc
 	}
 
 	/**
-	 *
+	 * Keeps only the least precise elements in the disjunction, since all have to be satisfied.
 	 * @tag artifact.explanation -id="676302" : this is a near code-clone of ContextChoiceLE.compact
-	 *
+	 * @see DisjunctiveLE#compact(ASTNode, boolean)
 	 */
 	@Override
 	public DisjunctiveLE compact(ASTNode node, boolean freeze) {
@@ -92,9 +94,13 @@ public final class ContextAllLE extends AbstractDisjunctiveLE implements Disjunc
 		next_elem:
 		for(DisjunctiveLE e : getElements()) {
 			e = e.compact(node, freeze);
+			if(ContextFactory.isTrueContext(e))
+				// one true makes the whole thing true, since true is less precise than anything
+				ContextFactory.trueContext();
 			if(ContextFactory.isFalseContext(e))
-				// one false makes the whole thing false
-				return ContextFactory.falseContext(); 
+				// false context more precise than anything--drop it
+				// dropping all contexts makes the whole thing false
+				continue; 
 			if(this.getClass().equals(e.getClass())) {
 				LinkedHashSet<DisjunctiveLE> subElems = 
 					new LinkedHashSet<DisjunctiveLE>(((AbstractDisjunctiveLE) e).getElements());
@@ -140,19 +146,57 @@ public final class ContextAllLE extends AbstractDisjunctiveLE implements Disjunc
 	//
 
 	@Override
-	public boolean atLeastAsPrecise(DisjunctiveLE other, ASTNode node) {
+	public boolean atLeastAsPrecise(DisjunctiveLE other, final ASTNode node) {
 		this.freeze();
 		if(this == other)
 			return true;
 		other.freeze();
 		
+		if(getElements().isEmpty())
+			// false context always more precise
+			return true;
+		
+		// This implements proving other with the given disjuncts.
+		// For completeness, first break down other until atoms (tuples)
+		// are found.  Then, break down the receiver using the helper
+		// atLeastAsPrecise method.
+		final DisjunctiveVisitor<Boolean> compVisitor = new DisjunctiveVisitor<Boolean>() {
+			
+			@Override
+			public Boolean choice(ContextChoiceLE other) {
+				for(DisjunctiveLE otherElem : other.getElements()) {
+					if(! otherElem.dispatch(this))
+						return false;
+				}
+				return true;
+			}
+
+			@Override
+			public Boolean context(LinearContextLE other) {
+				return ContextAllLE.this.atLeastAsPrecise(other.getTuple(), node);
+			}
+
+			@Override
+			public Boolean all(ContextAllLE other) {
+				for(DisjunctiveLE otherElem : other.getElements()) {
+					if(otherElem.dispatch(this))
+						return true;
+				}
+				return false;
+			}
+		};
+		return other.dispatch(compVisitor);
+	}
+
+	@Override
+	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node) {
 		// since we have to succeed with all of the elements,
 		// all our elements must be more precise than other
 		for(DisjunctiveLE e : getElements()) {
-			if(e.atLeastAsPrecise(other, node))
-				return true;
+			if(! e.atLeastAsPrecise(other, node))
+				return false;
 		}
-		return false;
+		return true;
 	}
 
 	/*
@@ -161,7 +205,7 @@ public final class ContextAllLE extends AbstractDisjunctiveLE implements Disjunc
 
 	@Override
 	public String toString() {
-		return super.elemString("UNIT", " + ");
+		return super.elemString("VOID", " + ");
 	}
 
 	/*

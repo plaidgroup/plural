@@ -102,41 +102,47 @@ public class LinearContextLE implements DisjunctiveLE {
 	 * LatticeElement methods
 	 */
 
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.crystal.flow.LatticeElement#atLeastAsPrecise(edu.cmu.cs.crystal.flow.LatticeElement, org.eclipse.jdt.core.dom.ASTNode)
-	 */
 	@Override
 	public boolean atLeastAsPrecise(DisjunctiveLE other, final ASTNode node) {
 		this.freeze();
 		if(this == other)
 			return true;
 		other.freeze();
+		
+		// This implements proving other with the given tuple.
+		// For completeness, first break down other until atoms (tuples)
+		// are found.  Then, compare those tuples with the receiver's.
 		final DisjunctiveVisitor<Boolean> compVisitor = new DisjunctiveVisitor<Boolean>() {
 			
 			@Override
 			public Boolean choice(ContextChoiceLE other) {
-				for(DisjunctiveLE otherElem : other.getElements()) {
-					if(otherElem.dispatch(this))
-						return true;
-				}
-				return false;
-			}
-
-			@Override
-			public Boolean context(LinearContextLE other) {
-				return LinearContextLE.this.tuple.atLeastAsPrecise(other.tuple, node);
-			}
-
-			@Override
-			public Boolean all(ContextAllLE other) {
 				for(DisjunctiveLE otherElem : other.getElements()) {
 					if(! otherElem.dispatch(this))
 						return false;
 				}
 				return true;
 			}
+
+			@Override
+			public Boolean context(LinearContextLE other) {
+				return LinearContextLE.this.atLeastAsPrecise(other.tuple, node);
+			}
+
+			@Override
+			public Boolean all(ContextAllLE other) {
+				for(DisjunctiveLE otherElem : other.getElements()) {
+					if(otherElem.dispatch(this))
+						return true;
+				}
+				return false;
+			}
 		};
 		return other.dispatch(compVisitor);
+	}
+
+	@Override
+	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node) {
+		return this.tuple.atLeastAsPrecise(other, node);	
 	}
 
 	@Override
@@ -207,36 +213,5 @@ public class LinearContextLE implements DisjunctiveLE {
 			return "CTX";
 //		return tuple.toString();
 	}
-
-//	/* (non-Javadoc)
-//	 * @see java.lang.Object#hashCode()
-//	 */
-//	@Override
-//	public int hashCode() {
-//		final int prime = 31;
-//		int result = 1;
-//		result = prime * result + ((tuple == null) ? 0 : tuple.hashCode());
-//		return result;
-//	}
-//
-//	/* (non-Javadoc)
-//	 * @see java.lang.Object#equals(java.lang.Object)
-//	 */
-//	@Override
-//	public boolean equals(Object obj) {
-//		if (this == obj)
-//			return true;
-//		if (obj == null)
-//			return false;
-//		if (getClass() != obj.getClass())
-//			return false;
-//		LinearContextLE other = (LinearContextLE) obj;
-//		if (tuple == null) {
-//			if (other.tuple != null)
-//				return false;
-//		} else if (!tuple.equals(other.tuple))
-//			return false;
-//		return true;
-//	}
 
 }

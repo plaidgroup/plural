@@ -124,10 +124,10 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @param value Must be mutable.
 	 * @param sigCase Must be an instance for checking the call.
 	 * @param failFast When <code>true</code>, unsatisfiable predicates are detected
-	 * and lead to {@link ContextFactory#falseContext() false}.  Otherwise, predicates
+	 * and lead to {@link ContextFactory#trueContext() false}.  Otherwise, predicates
 	 * are not checked and permissions simply split.
 	 * @return The resulting context, possibly containing multiple tuples or
-	 * {@link ContextFactory#falseContext() false}.
+	 * {@link ContextFactory#trueContext() false}.
 	 */
 	public DisjunctiveLE handleMethodCall(
 			MethodCallInstruction instr,
@@ -146,10 +146,10 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @param value Must be mutable.
 	 * @param sigCase Must be an instance for checking the call.
 	 * @param failFast When <code>true</code>, unsatisfiable predicates are detected
-	 * and lead to {@link ContextFactory#falseContext() false}.  Otherwise, predicates
+	 * and lead to {@link ContextFactory#trueContext() false}.  Otherwise, predicates
 	 * are not checked and permissions simply split.
 	 * @return The resulting context, possibly containing multiple tuples or
-	 * {@link ContextFactory#falseContext() false}.
+	 * {@link ContextFactory#trueContext() false}.
 	 */
 	public DisjunctiveLE handleNewObject(
 			NewObjectInstruction instr,
@@ -172,10 +172,10 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @param value Must be mutable.
 	 * @param sigCase Must be an instance for checking the call.
 	 * @param failFast When <code>true</code>, unsatisfiable predicates are detected
-	 * and lead to {@link ContextFactory#falseContext() false}.  Otherwise, predicates
+	 * and lead to {@link ContextFactory#trueContext() false}.  Otherwise, predicates
 	 * are not checked and permissions simply split.
 	 * @return The resulting context, possibly containing multiple tuples or
-	 * {@link ContextFactory#falseContext() false}.
+	 * {@link ContextFactory#trueContext() false}.
 	 */
 	public DisjunctiveLE handleConstructorCall(
 			ConstructorCallInstruction instr,
@@ -198,7 +198,7 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @param failFast
 	 * @param paramMap
 	 * @return The resulting context, possibly containing multiple tuples or
-	 * {@link ContextFactory#falseContext() false}.
+	 * {@link ContextFactory#trueContext() false}.
 	 */
 	private DisjunctiveLE handleInvocation(final TACInvocation instr,
 			TensorPluralTupleLE value, final IInvocationCaseInstance sigCase,
@@ -210,7 +210,7 @@ class LinearOperations extends TACAnalysisHelper {
 		if(! pre.splitOffPredicate(
 				paramMap, 
 				splitter))
-			return ContextFactory.falseContext();
+			return ContextFactory.trueContext();
 		
 		final Map<Aliasing, FractionalPermissions> borrowed = splitter.getBorrowed();
 		DisjunctiveLE result = splitter.getResult();
@@ -235,7 +235,7 @@ class LinearOperations extends TACAnalysisHelper {
 				post.mergeInPredicate(paramMap, merger);
 				
 				if(merger.isVoid())
-					return ContextFactory.trueContext();
+					return ContextFactory.falseContext();
 				else
 					return le;
 			}
@@ -404,14 +404,14 @@ class LinearOperations extends TACAnalysisHelper {
 					TensorPluralTupleLE tuple = le.getTuple();
 					for(PermissionSetFromAnnotations pa : getSplitFromThis()) {
 						if(! splitOffInternal(this_loc, tuple, pa))
-							return ContextFactory.falseContext();
+							return ContextFactory.trueContext();
 					}
 					return le;
 				}
 				
 			});
 			
-			return ! ContextFactory.isFalseContext(result);
+			return ! ContextFactory.isTrueContext(result);
 		}
 		
 	}
@@ -604,7 +604,7 @@ class LinearOperations extends TACAnalysisHelper {
 				// don't have to pack for receiver
 				if(failFast && !value.get(instr, rcvrInstanceVar).isInStates(rcvrPrePost.fst().getStateInfoPair()))
 					// if failFast, make sure receiver is in required state(s)
-					return ContextFactory.falseContext();
+					return ContextFactory.trueContext();
 				
 				// put borrowed permission for receiver or null, if not borrowed
 				if(rcvrBorrowed) {
@@ -651,7 +651,7 @@ class LinearOperations extends TACAnalysisHelper {
 				// don't have to pack for receiver
 				if(failFast && !value.get(instr, x).isInStates(pre.getStateInfoPair()))
 					// optionally, make sure argument is in required state(s)
-					return ContextFactory.falseContext();
+					return ContextFactory.trueContext();
 
 				// put borrowed permission for argument or null if not borrowed
 				if(argBorrowed[arg]) {
@@ -700,7 +700,7 @@ class LinearOperations extends TACAnalysisHelper {
 		if(failFast)
 			for(Variable x : usedVariables) {
 				if(value.get(instr, x).isUnsatisfiable())
-					return ContextFactory.falseContext();
+					return ContextFactory.trueContext();
 			}
 				
 		// 1.4 Now we pack. If 'this' is the method call receiver or an arg,
@@ -720,7 +720,7 @@ class LinearOperations extends TACAnalysisHelper {
 				if(finishCall(le.getTuple()))
 					return le;
 				else
-					return ContextFactory.falseContext();
+					return ContextFactory.trueContext();
 			}
 
 			/**
@@ -1685,7 +1685,7 @@ class LinearOperations extends TACAnalysisHelper {
 			
 			// fail right away if wrangling was unsuccessful
 			if( !hasErrors() /* only check this if previously no error */ && 
-					ContextFactory.isFalseContext(packed_lattice) ) {
+					ContextFactory.isTrueContext(packed_lattice) ) {
 				if(getNeededReceiverStates().isEmpty())
 					errors.add("Could not pack receiver to any state " +
 							"due to insufficient field permissions " + (isReturnCheck ? "for return" : "for call"));					
@@ -2149,7 +2149,7 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @param neededStates States needed for the receiver <i>frame</i>; wrangling cannot
 	 * be used to get virtual permissions into desired states.s
 	 * @param value
-	 * @return Possible contexts after packing, including {@link ContextFactory#falseContext()}
+	 * @return Possible contexts after packing, including {@link ContextFactory#trueContext()}
 	 * if packing was unsuccessful, but the resulting permissions need not be in the right state. 
 	 */
 	private DisjunctiveLE wrangleIntoPackedStates(
@@ -2199,7 +2199,7 @@ class LinearOperations extends TACAnalysisHelper {
 				value.packReceiver(getThisVar(),
 					getRepository(), loc_map, packToStates);
 			if(! packed)
-				return ContextFactory.falseContext();
+				return ContextFactory.trueContext();
 			// else see if all states are satisfied below
 		}
 		
@@ -2235,7 +2235,7 @@ class LinearOperations extends TACAnalysisHelper {
 			}
 			if(unpack_state == null)
 				// no permission could be unpacked to reach desired state
-				return ContextFactory.falseContext();
+				return ContextFactory.trueContext();
 			
 			/*
 			 * We have to try to unpack and pack to the correct states.
@@ -2281,7 +2281,7 @@ class LinearOperations extends TACAnalysisHelper {
 							filteredPackToStates.add(n);
 						else if(! le.getTuple().get(this_loc).isInState(n, true))
 							// cannot pack to n and rcvr is not currently in n --> fail
-							return ContextFactory.falseContext();
+							return ContextFactory.trueContext();
 						// else n is outside unpacked_perm and rcvr is currently in n --> ignore
 					}
 					
@@ -2293,7 +2293,7 @@ class LinearOperations extends TACAnalysisHelper {
 							))
 						return le;
 					else
-						return ContextFactory.falseContext();
+						return ContextFactory.trueContext();
 				}
 			});
 			return unpacked.compact(node, false);
