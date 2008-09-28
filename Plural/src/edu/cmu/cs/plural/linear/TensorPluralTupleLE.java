@@ -434,7 +434,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			if(this.unpackReceiverInternal(rcvrVar, nodeWhereUnpacked, stateRepo, locs, rcvrRoot, assignedField))
 				return ContextFactory.tensor(this);
 			else
-				return ContextFactory.falseContext();
+				return ContextFactory.trueContext();
 		}
 		else {
 			// try all states implied by receiver's state info inside the requested root
@@ -486,7 +486,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 					if(!elem.unpackReceiverInternal(rcvrVar, nodeWhereUnpacked, stateRepo, locs, try_node, assignedField))
 						// tried to unpack to a state with FALSE invariant
 						// this should not be possible, so we fail conservatively 
-						return ContextChoiceLE.falseContext();
+						return ContextChoiceLE.trueContext();
 					if(elem.get(rcvr_loc).getConstraints().seemsConsistent())
 						// could check for satisfiability here
 						resultElems.add(LinearContextLE.tensor(elem));

@@ -61,6 +61,7 @@ abstract class TestVisitor extends DisjunctiveVisitor<Boolean> {
 
 	@Override
 	public Boolean all(ContextAllLE le) {
+		// succeeds for the empty (false) disjunction
 		for(DisjunctiveLE e : le.getElements()) {
 			if(! e.dispatch(this))
 				return false;
@@ -70,6 +71,7 @@ abstract class TestVisitor extends DisjunctiveVisitor<Boolean> {
 
 	@Override
 	public Boolean choice(ContextChoiceLE le) {
+		// fails for the empty (true) conjunction
 		for(DisjunctiveLE e : le.getElements()) {
 			if(e.dispatch(this))
 				return true;

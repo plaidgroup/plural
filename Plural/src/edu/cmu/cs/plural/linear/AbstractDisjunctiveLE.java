@@ -38,7 +38,6 @@
 package edu.cmu.cs.plural.linear;
 
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -101,10 +100,10 @@ abstract class AbstractDisjunctiveLE implements DisjunctiveLE {
 			LinkedHashSet<DisjunctiveLE> compacted = new LinkedHashSet<DisjunctiveLE>();
 			for(DisjunctiveLE e : elements) {
 				e = e.freeze();
-				if(ContextFactory.isFalseContext(e)) {
+				/*if(ContextFactory.isFalseContext(e)) {
 					// drop it
 				}
-				else if(this.getClass().equals(e.getClass())) {
+				else*/ if(this.getClass().equals(e.getClass())) {
 					compacted.addAll(((AbstractDisjunctiveLE) e).getElements());
 				}
 				else {

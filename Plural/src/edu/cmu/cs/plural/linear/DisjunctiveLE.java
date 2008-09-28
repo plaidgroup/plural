@@ -60,6 +60,27 @@ public interface DisjunctiveLE extends LatticeElement<DisjunctiveLE>, Freezable<
 	 */
 	public <T> T dispatch(DisjunctiveVisitor<T> visitor);
 	
+	/**
+	 * Throw out redundant content and return the resulting context, which
+	 * may or may not be the given one.
+	 * @param node Node on which the method is called, or <code>null</code>, 
+	 * for calls to {@link #atLeastAsPrecise(DisjunctiveLE, ASTNode)}.
+	 * @param freeze <code>true</code> freezes the resulting context.
+	 * @return the resulting context, which
+	 * may or may not be the given one.
+	 */
 	public DisjunctiveLE compact(ASTNode node, boolean freeze);
+
+	/**
+	 * Helper method to compare the receiver with a given individual tuple.  
+	 * This method is used by {@link #atLeastAsPrecise(DisjunctiveLE, ASTNode)}.
+	 * It is intended to break down con- and disjuncts in the receiver until
+	 * individual tuples can compared with <code>other</other>.
+	 * @param other The tuple to compare with
+	 * @param node Node on which the comparison occurs, or <code>null</code>
+	 * if not available.
+	 * @see LatticeElement#atLeastAsPrecise(LatticeElement, ASTNode)
+	 */
+	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node);
 
 }

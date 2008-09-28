@@ -81,11 +81,13 @@ public class ContextFactory {
 	}
 	
 	/**
-	 * This is the linear logic <b>unit</b> predicate (universal truth).
-	 * @return
+	 * This is the <b>false</b> context, which can prove anything.
+	 * This corresponds to the linear logic <b>void</b> predicate
+	 * (usually written <b>0</b>).
+	 * @return the <b>false</b> context.
 	 */
-	public static DisjunctiveLE trueContext() {
-		return ContextAllLE.trueContext();
+	public static DisjunctiveLE falseContext() {
+		return ContextAllLE.falseContext();
 	}
 
 	/**
@@ -108,22 +110,25 @@ public class ContextFactory {
 	}
 	
 	/**
-	 * This is the linear logic <b>void</b> predicate,
-	 * which happens to be a reserved keyword in Java.
-	 * @return
+	 * This is the <b>true</b> context, which can essentially prove nothing
+	 * but <b>true</b> itself.  This corresponds to the linear logic <b>unit</b> 
+	 * (universal truth, usually written <b>1</b>).
+	 * @return A <b>true</b> context.
+	 * 
 	 */
-	public static DisjunctiveLE falseContext() {
-		return ContextChoiceLE.falseContext();
+	public static DisjunctiveLE trueContext() {
+		return ContextChoiceLE.trueContext();
 	}
 
 	/**
 	 * Tests if the given disjunctive context is equivalent to the  
 	 * {@link #falseContext()}.  That essentially means
-	 * that {@link #choice(Set)} contexts are empty or
-	 * contain only contexts equivalent to false, and that 
-	 * {@link #all(Set)} contexts contain at least one
-	 * context that's equivalent to false.  Only bottom 
-	 * {@link #tensor(TensorPluralTupleLE)} contexts count as
+	 * that {@link #choice(Set)} contexts 
+	 * contain at least one context equivalent to false, and that 
+	 * {@link #all(Set)} contexts are emtpy or contain only contexts
+	 * that are equivalent to false.  Only bottom 
+	 * {@link #tensor(TensorPluralTupleLE)} contexts and empty
+	 * {@link #all(Set)} contexts count as
 	 * equivalent to false.
 	 * @param le
 	 * @return <code>true</code> if this context is equivalent to 
@@ -131,19 +136,49 @@ public class ContextFactory {
 	 * @see #isImpossible(DisjunctiveLE)
 	 */
 	public static boolean isFalseContext(DisjunctiveLE le) {
-		// turns out the way TestVisitor works, we have to test for non-emptiness
-		return ! le.dispatch(nonemptyVisitor);
+		// simply test for emptiness of tuples; TestVisitor already does the right thing for empty contexts
+		return le.dispatch(emptyVisitor);
 	}
 	
 	/**
 	 * Helper test visitor for {@link #isFalseContext(DisjunctiveLE)}.
 	 * @author Kevin Bierhoff
 	 */
-	private static final TestVisitor nonemptyVisitor = new TestVisitor() {
+	private static final TestVisitor emptyVisitor = new TestVisitor() {
 		@Override
 		public boolean testTuple(TensorPluralTupleLE tuple) {
 			// any "real" tuple counts as non-empty
-			return ! tuple.isBottom();
+			return tuple.isBottom();
+		}
+	};
+	
+	/**
+	 * Tests if the given disjunctive context is equivalent to the  
+	 * {@link #trueContext()}.  That essentially means
+	 * that {@link #choice(Set)} contexts are empty or contain only
+	 * contexts that are equivalent to true, and that 
+	 * {@link #all(Set)} contexts contain at least one context
+	 * that is equivalent to true.  Only empty {@link #choice(Set)} 
+	 * contexts count as equivalent to true.
+	 * @param le
+	 * @return <code>true</code> if this context is equivalent to 
+	 * {@link #trueContext()}, <code>false</code> otherwise.
+	 * @see #isImpossible(DisjunctiveLE)
+	 */
+	public static boolean isTrueContext(DisjunctiveLE le) {
+		// turns out the way TestVisitor works, we have to negate the result
+		return ! le.dispatch(anyTupleVisitor);
+	}
+	
+	/**
+	 * Helper test visitor for {@link #isTrueContext(DisjunctiveLE)}.
+	 * @author Kevin Bierhoff
+	 */
+	private static final TestVisitor anyTupleVisitor = new TestVisitor() {
+		@Override
+		public boolean testTuple(TensorPluralTupleLE tuple) {
+			// any tuple counts 
+			return true;
 		}
 	};
 	
@@ -173,9 +208,6 @@ public class ContextFactory {
 	 */
 	private static final DisjunctiveVisitor<Boolean> impossibleVisitor = new DisjunctiveVisitor<Boolean>() {
 
-		/* (non-Javadoc)
-		 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#alt(edu.cmu.cs.plural.linear.ContextChoiceLE)
-		 */
 		@Override
 		public Boolean choice(ContextChoiceLE le) {
 			for(DisjunctiveLE e : le.getElements()) {
@@ -186,9 +218,6 @@ public class ContextFactory {
 			return true;
 		}
 
-		/* (non-Javadoc)
-		 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#tensor(edu.cmu.cs.plural.linear.LinearContextLE)
-		 */
 		@Override
 		public Boolean context(LinearContextLE le) {
 			for(Iterator<FractionalPermissions> it = le.getTuple().tupleInfoIterator(); it.hasNext(); ) {
@@ -198,9 +227,6 @@ public class ContextFactory {
 			return false;
 		}
 
-		/* (non-Javadoc)
-		 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#with(edu.cmu.cs.plural.linear.ContextAllLE)
-		 */
 		@Override
 		public Boolean all(ContextAllLE le) {
 			for(DisjunctiveLE e : le.getElements()) {
@@ -230,9 +256,6 @@ public class ContextFactory {
 	 */
 	private static final DisjunctiveVisitor<Boolean> singleContextVisitor = new DisjunctiveVisitor<Boolean>() {
 
-		/* (non-Javadoc)
-		 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#all(edu.cmu.cs.plural.linear.ContextAllLE)
-		 */
 		@Override
 		public Boolean all(ContextAllLE le) {
 			if(le.getElements().isEmpty() || le.getElements().size() > 1)
@@ -241,9 +264,6 @@ public class ContextFactory {
 			return le.getElements().iterator().next().dispatch(this);
 		}
 
-		/* (non-Javadoc)
-		 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#choice(edu.cmu.cs.plural.linear.ContextChoiceLE)
-		 */
 		@Override
 		public Boolean choice(ContextChoiceLE le) {
 			if(le.getElements().isEmpty() || le.getElements().size() > 1)
@@ -252,9 +272,6 @@ public class ContextFactory {
 			return le.getElements().iterator().next().dispatch(this);
 		}
 
-		/* (non-Javadoc)
-		 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#context(edu.cmu.cs.plural.linear.LinearContextLE)
-		 */
 		@Override
 		public Boolean context(LinearContextLE le) {
 			// found the single element

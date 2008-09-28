@@ -46,7 +46,8 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 /**
  * Intended for the case where you need to prove something in 
- * one context, of several.
+ * one context, of several.  It corresponds to alternative conjunction
+ * in linear logic, usually written <b>&amp;</b>.
  * 
  * @author Kevin Bierhoff
  * @since 4/16/2008
@@ -56,18 +57,17 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 	/**
 	 * Creates an alternative disjunction with the given elements.
 	 * @param elements
-	 * @return
+	 * @return an alternative disjunction with the given elements.
 	 */
 	static ContextChoiceLE choice(Set<DisjunctiveLE> elements) {
 		return new ContextChoiceLE(elements);
 	}
 
 	/**
-	 * This is the linear logic <b>void</b> predicate,
-	 * which happens to be a reserved keyword in Java.
-	 * @return
+	 * Returns the empty choice, which corresponds to <b>true</b> (<b>1</b>).
+	 * @return the empty choice.
 	 */
-	static ContextChoiceLE falseContext() {
+	static ContextChoiceLE trueContext() {
 		return new ContextChoiceLE();
 	}
 
@@ -89,11 +89,10 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 	}
 	
 	/**
-	 *
+	 * Keeps only the most precise elements in the choice, since only one has to be satisfied.
 	 * @tag artifact.explanation -id="676301" : ContextAllLE.compact is a near code-clone of this method
-	 *
 	 * @tag todo.general -id="676303" : get rid of hack for case where no freezing happens
-	 *
+	 * @see DisjunctiveLE#compact(ASTNode, boolean)
 	 */
 	@Override
 	public DisjunctiveLE compact(ASTNode node, boolean freeze) {
@@ -105,8 +104,12 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 		for(DisjunctiveLE e : getElements()) {
 			e = e.compact(node, freeze);
 			if(ContextFactory.isFalseContext(e))
-				// one less option--if compacted ends up empty we're automatically false
-				continue; 
+				// one false makes the whole thing false, since false more precise than anything
+				return ContextFactory.falseContext();
+			if(ContextFactory.isTrueContext(e))
+				// true contexts less precise than anything--drop it
+				// dropping everything makes the whole thing true
+				continue;
 			if(this.getClass().equals(e.getClass())) {
 				LinkedHashSet<DisjunctiveLE> subElems = 
 					new LinkedHashSet<DisjunctiveLE>(((AbstractDisjunctiveLE) e).getElements());
@@ -152,23 +155,57 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 	//
 
 	@Override
-	public boolean atLeastAsPrecise(DisjunctiveLE other, ASTNode node) {
+	public boolean atLeastAsPrecise(DisjunctiveLE other, final ASTNode node) {
 		this.freeze();
 		if(this == other)
 			return true;
 		other.freeze();
 		
+		// This implements proving other with the given choices
+		// For completeness, first break down other until atoms (tuples)
+		// are found.  Then, break down the receiver using the helper
+		// atLeastAsPrecise method.
+		final DisjunctiveVisitor<Boolean> compVisitor = new DisjunctiveVisitor<Boolean>() {
+			
+			@Override
+			public Boolean choice(ContextChoiceLE other) {
+				for(DisjunctiveLE otherElem : other.getElements()) {
+					if(! otherElem.dispatch(this))
+						return false;
+				}
+				return true;
+			}
+
+			@Override
+			public Boolean context(LinearContextLE other) {
+				return ContextChoiceLE.this.atLeastAsPrecise(other.getTuple(), node);
+			}
+
+			@Override
+			public Boolean all(ContextAllLE other) {
+				for(DisjunctiveLE otherElem : other.getElements()) {
+					if(otherElem.dispatch(this))
+						return true;
+				}
+				return false;
+			}
+		};
+		return other.dispatch(compVisitor);
+	}
+
+	@Override
+	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node) {
 		// all choices we could make have to be more precise than other
 		for(DisjunctiveLE e : getElements()) {
-			if(! e.atLeastAsPrecise(other, node))
-				return false;
+			if(e.atLeastAsPrecise(other, node))
+				return true;
 		}
-		return true;
+		return false;
 	}
 
 	@Override
 	public String toString() {
-		return super.elemString("VOID", " & ");
+		return super.elemString("UNIT", " & ");
 	}
 	
 	/*

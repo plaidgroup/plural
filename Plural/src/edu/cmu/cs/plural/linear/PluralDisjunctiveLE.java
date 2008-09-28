@@ -110,6 +110,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	/**
 	 * Returns a special "bottom" lattice element.
 	 * @return Bottom
+	 * TODO Use false context for bottom
 	 */
 	public static PluralDisjunctiveLE bottom() {
 		return BOTTOM;
@@ -392,15 +393,16 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @param instr
 	 * @param x
 	 * @param info
+	 * @param inFrame
 	 */
 	public void learnTemporaryStateInfo(final TACInstruction instr, final Variable x,
-			final String info) {
+			final String info, final boolean inFrame) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
 			public Boolean tuple(TensorPluralTupleLE tuple) {
 				// learn info in every tuple
 				FractionalPermissions perms = tuple.get(instr, x);
-				perms = perms.learnTemporaryStateInfo(info);
+				perms = perms.learnTemporaryStateInfo(info, inFrame);
 				tuple.put(instr, x, perms);
 				return true;
 			}
@@ -534,13 +536,13 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 					if(le.getTuple().packReceiver(rcvrVar, stateRepo, locs, neededStates))
 						return le;
 					else
-						return ContextFactory.falseContext();
+						return ContextFactory.trueContext();
 				}
 				else {
-					if(le.getTuple().get(locs.get(rcvrVar)).isInStates(neededStates))
+					if(le.getTuple().get(locs.get(rcvrVar)).isInStates(neededStates, true))
 						return le;
 					else
-						return ContextFactory.falseContext();
+						return ContextFactory.trueContext();
 				}
 			}
 		});
@@ -777,6 +779,8 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	/**
 	 * Checks that the given variable is, in fact, in the states that are required
 	 * of it, also given.
+	 * @deprecated Use {@link #checkRegularCallPrecondition(ASTNode, Variable, List, PredicateChecker)}
+	 * or {@link #checkSuperCallPrecondition(ASTNode, List, PredicateChecker)}.
 	 */
 	public String checkStates(final Variable x, final Set<Set<String>> requiredOptions) {
 		if(requiredOptions == null || requiredOptions.isEmpty()) 
@@ -824,9 +828,14 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 
 	/**
 	 * Tests whether the constraints for the given variable are satisfiable.
+	 * This method is no longer guaranteed to work properly because
+	 * the garbage-collection logic may get rid of lattice information before
+	 * you can test it.
 	 * @param x
 	 * @return <code>true</code> if the constraints are satisfiable, 
 	 * <code>false</code> otherwise.
+	 * @deprecated Use {@link #checkRegularCallPrecondition(ASTNode, Variable, List, PredicateChecker)}
+	 * or {@link #checkSuperCallPrecondition(ASTNode, List, PredicateChecker)}.
 	 */
 	public boolean checkConstraintsSatisfiable(final Variable x) {
 		return le.dispatch(new TestVisitor() {
@@ -839,6 +848,18 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		});
 	}
 	
+	/**
+	 * Checks the given pre-condition of a call with the given receiver and
+	 * arguments.  Not to be used for calls on <code>super</code>.
+	 * @param node
+	 * @param receiver Receiver, if a instance method or constructor call.
+	 * Must be <code>null</code> for static calls and <code>new</code>.
+	 * @param arguments Call arguments.
+	 * @param pre Pre-condition to check.
+	 * @return String describing errors found or <code>null</code> if there
+	 * were no errors.
+	 * @see #checkSuperCallPrecondition(ASTNode, List, PredicateChecker) Checking calls on <code>super</code>.
+	 */
 	public String checkRegularCallPrecondition(final ASTNode node,
 			final Variable receiver,
 			final List<Variable> arguments, final PredicateChecker pre) {
@@ -859,9 +880,10 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * but for calls on <code>super</code>.  Need to treat this special because
 	 * {@link ITACAnalysisContext#getSuperVariable()} is not available to the checker.
 	 * @param node
-	 * @param arguments
-	 * @param pre
-	 * @return
+	 * @param arguments Call arguments.
+	 * @param pre Pre-condition to check.
+	 * @return String describing errors found or <code>null</code> if there
+	 * were no errors.
 	 */
 	public String checkSuperCallPrecondition(final ASTNode node,
 			final List<Variable> arguments, final PredicateChecker pre) {
@@ -880,14 +902,16 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	}
 	
 	/**
-	 * 
+	 * Checks the given post-condition with the given result variable
+	 * and aliasing mapping for formal method parameters.
 	 * @param node
-	 * @param paramPost
 	 * @param resultVar
-	 * @param resultPost
+	 * @param post
+	 * @param parameterVars
 	 * @param stateTests (possibly empty) map from return values to the 
 	 * receiver state being tested.
-	 * @return
+	 * @return String describing errors found or <code>null</code> if there
+	 * were no errors.
 	 */
 	public String checkPostCondition(
 			final ASTNode node,

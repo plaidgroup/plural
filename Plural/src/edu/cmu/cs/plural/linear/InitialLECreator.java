@@ -107,8 +107,8 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		final SimpleMap<String, Aliasing> vars = createStartMap(tacContext, tuple);
 		pre.mergeInPredicate(vars, c);
 		if(c.isVoid)
-			// void can prove anything: start with true
-			return Pair.create(ContextFactory.trueContext(), vars);
+			// void can prove anything: start with false
+			return Pair.create(ContextFactory.falseContext(), vars);
 		return Pair.create(ContextFactory.tensor(tuple), vars);
 	}
 	
@@ -149,8 +149,8 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		final SimpleMap<String, Aliasing> vars = createStartMap(tacContext, tuple);
 		pre.mergeInPredicate(vars, c);
 		if(c.isVoid)
-			// void can prove anything: start with true
-			return Pair.create(ContextFactory.trueContext(), vars);
+			// void can prove anything: start with false
+			return Pair.create(ContextFactory.falseContext(), vars);
 		return Pair.create(ContextFactory.tensor(tuple), vars);
 	}
 	

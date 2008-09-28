@@ -48,7 +48,28 @@ import java.util.LinkedHashSet;
  * @since 4/24/2008
  */
 abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
-	
+
+	/**
+	 * Formats a error string from the given error enumeration, by inserting
+	 * the given separator between the individual errors.
+	 * @param errors Errors to format, never <code>null</code>.
+	 * @param separator String to insert between errors (including whitespace).
+	 * @return a error string from the given error enumeration, empty if
+	 * <code>errors</code> is empty.
+	 */
+	public static String errorString(Iterable<String> errors, String separator) {
+		StringBuffer result = new StringBuffer();
+		boolean first = true;
+		for(String s : errors) {
+			if(first)
+				first = false;
+			else
+				result.append(separator);
+			result.append(s);
+		}
+		return result.toString();
+	}
+
 	/**
 	 * Check an individual tuple with this method.
 	 * @param tuple
@@ -64,7 +85,7 @@ abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
 	@Override
 	public String all(ContextAllLE le) {
 		LinkedHashSet<String> errors = new LinkedHashSet<String>();
-		// succeed for empty (true) choice
+		// succeed for empty (false) conjunction: false can prove anything
 		for(DisjunctiveLE e : le.getElements()) {
 			String error = e.dispatch(this);
 			// more complete error message: find *all* failing contexts,
@@ -81,23 +102,11 @@ abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
 			return result;
 	}
 
-	public static String errorString(Iterable<String> errors, String separator) {
-		StringBuffer result = new StringBuffer();
-		boolean first = true;
-		for(String s : errors) {
-			if(first)
-				first = false;
-			else
-				result.append(separator);
-			result.append(s);
-		}
-		return result.toString();
-	}
-
 	@Override
 	public String choice(ContextChoiceLE le) {
 		if(le.getElements().isEmpty())
-			// fail for empty (false) choice
+			// fail for empty (true) choice: true cannot prove anything
+			// TODO Suppress these warnings, because they result from previous failure?
 			return "No available context--usually due to a previous failure or error during packing/unpacking";
 		LinkedHashSet<String> errors = new LinkedHashSet<String>();
 		for(DisjunctiveLE e : le.getElements()) {
@@ -106,7 +115,7 @@ abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
 				return null;
 			errors.add(error);
 		}
-		assert !errors.isEmpty() : "Shouldn't be able to get here without actual errors";
+		assert ! errors.isEmpty() : "Shouldn't be able to get here without actual errors";
 		String result = errorString(errors, " OR ");
 		if(errors.size() > 1)
 			return "[ " + result + " ]";
