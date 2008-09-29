@@ -154,7 +154,7 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	}
 	
 	/**
-	 * Filter interface for locations.
+	 * Filter callback interface for locations.
 	 * @author Kevin Bierhoff
 	 * @since 8/15/2008
 	 * @see AliasAwareTupleLE#removeLocations(edu.cmu.cs.plural.alias.AliasAwareTupleLE.LabelFilter)
@@ -162,10 +162,13 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	public interface LabelFilter {
 
 		/**
-		 * @param next
-		 * @return
+		 * Indicate whether the given label should be considered, in the context
+		 * this filter is used.
+		 * @param l
+		 * @return <code>true</code> if the given label should be considered,
+		 * <code>false</code> otherwise.
 		 */
-		boolean isConsidered(ObjectLabel next);
+		boolean isConsidered(ObjectLabel l);
 		
 	}
 
@@ -681,12 +684,6 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 		return createTuple(newInfo);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.cmu.cs.crystal.flow.LatticeElement#atLeastAsPrecise(edu.cmu.cs.crystal.flow.LatticeElement, 
-	 * 		org.eclipse.jdt.core.dom.ASTNode)
-	 */
 	public boolean atLeastAsPrecise(AliasAwareTupleLE<LE> other, ASTNode node) {
 		this.freeze();
 		if (this == other)
@@ -704,31 +701,24 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 			ObjectLabel l = e.getKey();
 			LE otherInfo = other.info.get(l);
 			if(otherInfo == null)
-				// Any information is less precise than no information.
-				return false;
+				// Any information is more precise than no information.
+				continue;
 			if (e.getValue().atLeastAsPrecise(otherInfo, node) == false)
 				return false;
 		}
-		// additional information in other ignored -- other needs to contain this
+		for(Map.Entry<ObjectLabel, LE> e : other.info.entrySet()) {
+			if(! this.info.containsKey(e.getKey()))
+				// there is info in other that this doesn't have -> fail to get it
+				return false;
+		}
 		return true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.cmu.cs.crystal.flow.LatticeElement#copy()
-	 */
 	public AliasAwareTupleLE<LE> copy() {
 		// force-freeze when copies are requested
 		return freeze();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see edu.cmu.cs.crystal.flow.LatticeElement#join(edu.cmu.cs.crystal.flow.LatticeElement,
-	 *      org.eclipse.jdt.core.dom.ASTNode)
-	 */
 	public AliasAwareTupleLE<LE> join(AliasAwareTupleLE<LE> other, ASTNode node) {
 		this.freeze();
 		if (this == other || other == null)
@@ -858,15 +848,25 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	}
 
 	/**
-	 * @return
+	 * Returns a set of locations in the tuple that is backed by the tuple.
+	 * Thus, removing locations from the returned set will affect the tuple.
+	 * Removing locations will result in an exception if the tuple is frozen.
+	 * Adding locations to the set is not possible.
+	 * @return a set of locations in the tuple that is backed by the tuple.
+	 * @see Map#keySet()
 	 */
 	public Set<ObjectLabel> keySet() {
+		if(frozen)
+			// info remains modifiable...
+			return Collections.unmodifiableSet(info.keySet());
 		return info.keySet();
 	}
 
 	/**
+	 * Removes the locations for which the given filter's {@link LabelFilter#isConsidered(ObjectLabel)}
+	 * returns <code>true</code> from the tuple.
 	 * @param filter
-	 * @return <code>true</code> if a location was removed, <code>false</code> otherwise.
+	 * @return <code>true</code> if any locations were removed, <code>false</code> otherwise.
 	 */
 	public boolean removeLocations(LabelFilter filter) {
 		boolean result = false;
