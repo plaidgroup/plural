@@ -54,6 +54,7 @@ import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import edu.cmu.cs.crystal.BooleanLabel;
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
+import edu.cmu.cs.crystal.NormalLabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.IResult;
@@ -347,7 +348,7 @@ public class FractionalTransfer extends
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 		
 		// killing dead variables is the last thing we do
-		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
+		value.killDeadVariables(instr, createVariableLivenessAfter(instr, NormalLabel.getNormalLabel()));
 		value.freeze(); // done with this lattice element--freeze it
 		return super.transfer(instr, labels, value);
 	}
@@ -357,11 +358,11 @@ public class FractionalTransfer extends
 	 * @return
 	 */
 	private VariableLiveness createVariableLivenessAfter(
-			final TACInstruction instr) {
+			final TACInstruction instr, final ILabel label) {
 		return new VariableLiveness() {
 			@Override
 			public boolean isLive(Variable x) {
-				return liveness.isLiveAfter(instr, x);
+				return liveness.isLiveAfter(instr, x, label);
 			}
 		};
 	}
@@ -372,9 +373,6 @@ public class FractionalTransfer extends
 			PluralDisjunctiveLE value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(binop.getNode());
 		
-		// need it up to three times, so cache it
-		VariableLiveness live = createVariableLivenessAfter(binop);
-
 		// this code is highly suspicious for going wrong if one of the operands is the target
 		Variable op1_loc = binop.getOperand1();
 		Variable op2_loc = binop.getOperand2();
@@ -410,7 +408,8 @@ public class FractionalTransfer extends
 					op1_loc, op2_loc, target_loc);
 
 			// killing dead variables is the last thing we do
-			true_value.killDeadVariables(binop, live);
+			true_value.killDeadVariables(binop, 
+					createVariableLivenessAfter(binop, BooleanLabel.getBooleanLabel(true)));
 			true_value.freeze(); // done with this lattice element--freeze it
 		}
 		
@@ -444,12 +443,14 @@ public class FractionalTransfer extends
 					op1_loc, op2_loc, target_loc);
 
 			// killing dead variables is the last thing we do
-			false_value.killDeadVariables(binop, live);
+			false_value.killDeadVariables(binop, 
+					createVariableLivenessAfter(binop, BooleanLabel.getBooleanLabel(false)));
 			false_value.freeze(); // done with this lattice element--freeze it
 		}
 		
 		// killing dead variables is the last thing we do
-		value.killDeadVariables(binop, live);
+		value.killDeadVariables(binop, createVariableLivenessAfter(binop, 
+				NormalLabel.getNormalLabel()));
 		value.freeze(); // done with this lattice element--freeze it
 		
 		LabeledResult<PluralDisjunctiveLE> result = 
@@ -764,7 +765,7 @@ public class FractionalTransfer extends
 		}
 		
 		// killing dead variables is the last thing we do
-		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
+		value.killDeadVariables(instr, createVariableLivenessAfter(instr, NormalLabel.getNormalLabel()));
 		value.freeze(); // done with this lattice element--freeze it
 		return super.transfer(instr, labels, value);
 	}
@@ -891,9 +892,6 @@ public class FractionalTransfer extends
 			TACInstruction instr,
 			final Variable testedVar, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
-		// need it up to three times, so cache it
-		VariableLiveness live = createVariableLivenessAfter(instr);
-
 		PluralDisjunctiveLE true_value = null;
 		if( labels.contains(BooleanLabel.getBooleanLabel(true)) ) {
 
@@ -907,7 +905,8 @@ public class FractionalTransfer extends
 			true_value = addNewlyDeducedFacts(instr, true_value, testedVar);
 
 			// killing dead variables is the last thing we do
-			true_value.killDeadVariables(instr, live);
+			true_value.killDeadVariables(instr, 
+					createVariableLivenessAfter(instr, BooleanLabel.getBooleanLabel(true)));
 			true_value.freeze(); // done with this lattice element--freeze it
 		}
 
@@ -922,12 +921,14 @@ public class FractionalTransfer extends
 			false_value = addNewlyDeducedFacts(instr, false_value, testedVar);
 			
 			// killing dead variables is the last thing we do
-			false_value.killDeadVariables(instr, live);
+			false_value.killDeadVariables(instr, 
+					createVariableLivenessAfter(instr, BooleanLabel.getBooleanLabel(false)));
 			false_value.freeze(); // done with this lattice element--freeze it
 		}
 
 		// killing dead variables is the last thing we do
-		value.killDeadVariables(instr, live);
+		value.killDeadVariables(instr, 
+				createVariableLivenessAfter(instr, NormalLabel.getNormalLabel()));
 		value.freeze(); // done with this lattice element--freeze it
 
 		LabeledResult<PluralDisjunctiveLE> result = 
