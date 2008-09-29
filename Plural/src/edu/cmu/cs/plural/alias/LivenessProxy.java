@@ -40,8 +40,10 @@ package edu.cmu.cs.plural.alias;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.IAnalysisInput;
+import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.analysis.live.LiveVariableLE;
 import edu.cmu.cs.crystal.analysis.live.LiveVariableTransferFunction;
+import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.flow.TupleLatticeElement;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
@@ -70,19 +72,49 @@ public class LivenessProxy {
 	}
 	
 	public boolean isDeadBefore(TACInstruction instr, Variable x) {
+		// no point in using labeled results since dead variable is branch insensitive
 		return livenessAnalysis.getResultsBefore(instr).get(x) == LiveVariableLE.DEAD;
 	}
 
-	public boolean isDeadAfter(TACInstruction instr, Variable x) {
-		return livenessAnalysis.getResultsAfter(instr).get(x) == LiveVariableLE.DEAD;
+	public boolean isDeadAfter(TACInstruction instr, Variable x, ILabel label) {
+		// distinguish incoming results on different labels
+		return getAfterResult(instr, x, label) == LiveVariableLE.DEAD;
 	}
 
 	public boolean isLiveBefore(TACInstruction instr, Variable x) {
+		// no point in using labeled results since dead variable is branch insensitive
 		return livenessAnalysis.getResultsBefore(instr).get(x) == LiveVariableLE.LIVE;
 	}
 
-	public boolean isLiveAfter(TACInstruction instr, Variable x) {
-		return livenessAnalysis.getResultsAfter(instr).get(x) == LiveVariableLE.LIVE;
+	public boolean isLiveAfter(TACInstruction instr, Variable x, ILabel label) {
+		// distinguish incoming results on different labels
+		LiveVariableLE info = getAfterResult(instr, x, label);
+		return info == LiveVariableLE.LIVE;
+	}
+
+	/**
+	 * Internally used to look up the after-liveness information for the given variable on
+	 * edges of the given label, or the merged after-result, if there are
+	 * no edges with that label.
+	 * @param instr
+	 * @param x
+	 * @param label
+	 * @return the after-liveness information for the given variable on
+	 * edges of the given label, or the merged after-result, if there are
+	 * no edges with that label.
+	 */
+	private LiveVariableLE getAfterResult(TACInstruction instr, Variable x,
+			ILabel label) {
+		IResult<TupleLatticeElement<Variable, LiveVariableLE>> after = 
+			livenessAnalysis.getLabeledResultsAfter(instr);
+		LiveVariableLE result;
+		if(after.keySet().contains(label)) {
+			result = after.get(label).get(x);
+		} 
+		else
+			// label unknown--use merged result
+			result = livenessAnalysis.getResultsAfter(instr).get(x);
+		return result;
 	}
 
 }
