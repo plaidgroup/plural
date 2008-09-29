@@ -127,6 +127,24 @@ public class GCTest {
 		gotIt.needFull();
 	}
 
+	/**
+	 * This is correct use, but it's challenging in two ways:
+	 * <ul>
+	 *   <li><code>gct2</code> is live inside the if, but not after the
+	 *   if statement.  The captured gct1 permission has to be released
+	 *   on both paths.
+	 *   <li><code>gct1</code> is used while <code>gct2</code> is live,
+	 *   but only for reference equality, which doesn't require a permission.
+	 * </ul>
+	 * @param gct1
+	 */
+	public static void correctConditionalBorrowing(@Unique GCTest gct1) {
+		GCTest gct2 = new GCTest(gct1);
+		if(gct1 != null) {
+			gct2.getGct();
+		}
+	}
+
 	public static void earlyBorrowingTest() {
 		GCTest gct1 = new GCTest();
 		GCTest gct2 = new GCTest(gct1);
