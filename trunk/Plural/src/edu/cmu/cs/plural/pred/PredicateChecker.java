@@ -62,58 +62,70 @@ public interface PredicateChecker {
 		/**
 		 * Check that the given object is in the given states.
 		 * @param var 
+		 * @param var_name 
 		 * @param stateInfos
 		 * @param inFrame
 		 * @return <code>true</code> if checking should continue, 
 		 * <code>false</code> to fail the check.
 		 */
-		boolean checkStateInfo(Aliasing var, Set<String> stateInfos, boolean inFrame);
+		boolean checkStateInfo(Aliasing var, String var_name, Set<String> stateInfos, boolean inFrame);
 
 		/**
 		 * Check that the given variable is definitely <code>null</code>.
 		 * @param var
+		 * @param var_name 
 		 * @return <code>true</code> if checking should continue, 
 		 * <code>false</code> to fail the check.
 		 */
-		boolean checkNull(Aliasing var);
+		boolean checkNull(Aliasing var, String var_name);
 
 		/**
 		 * Check that the given variable is definitely <b>not</b> <code>null</code>.
 		 * @param var
+		 * @param var_name 
 		 * @return <code>true</code> if checking should continue, 
 		 * <code>false</code> to fail the check.
 		 */
-		boolean checkNonNull(Aliasing var);
+		boolean checkNonNull(Aliasing var, String var_name);
 
 		/**
 		 * Check that the given variable is definitely <code>true</code>.
 		 * @param var
+		 * @param var_name 
 		 * @return <code>true</code> if checking should continue, 
 		 * <code>false</code> to fail the check.
 		 */
-		boolean checkTrue(Aliasing var);
+		boolean checkTrue(Aliasing var, String var_name);
 
 		/**
 		 * Check that the given variable is definitely <code>false</code>.
 		 * @param var
+		 * @param var_name 
 		 * @return <code>true</code> if checking should continue, 
 		 * <code>false</code> to fail the check.
 		 */
-		boolean checkFalse(Aliasing var);
+		boolean checkFalse(Aliasing var, String var_name);
 
 		/**
 		 * Check that the given implication is satisfied.
+		 * This method should be called after any permissions are split off.
+		 * This makes it easier to add a permission antecedent into the tuple.
+		 * @param var
+		 * @param impl
+		 * @return <code>true</code> if checking should continue, 
+		 * <code>false</code> to fail the check.
 		 */
 		boolean checkImplication(Aliasing var, Implication impl);
 		
 		/**
 		 * Split the given permissions off the given object.
 		 * @param var
+		 * @param var_name 
 		 * @param perms
 		 * @return <code>true</code> if checking should continue, 
 		 * <code>false</code> to fail the check.
 		 */
-		boolean splitOffPermission(Aliasing var, PermissionSetFromAnnotations perms);
+		boolean splitOffPermission(Aliasing var, String var_name, PermissionSetFromAnnotations perms);
 
 		/**
 		 * Post-processing, e.g., of delayed checks.  No other methods will be called

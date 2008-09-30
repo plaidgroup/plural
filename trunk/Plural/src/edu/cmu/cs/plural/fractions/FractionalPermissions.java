@@ -709,13 +709,6 @@ implements LatticeElement<FractionalPermissions> {
 //		return parameterPermissions.get(getParameter(parameterName));
 //	}
 
-	@Override
-	public String toString() {
-		if(unpackedPermission == null)
-			return permissions + " frame " + framePermissions + " with " + constraints;
-		return "unpacked[" + unpackedPermission + "] + " + permissions + " frame " + framePermissions + " with " + constraints;
-	}
-
 	/**
 	 * Makes sure there is a modifiable permission with the given root.
 	 * You may not call this method on bottom.
@@ -1016,9 +1009,45 @@ implements LatticeElement<FractionalPermissions> {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
+	@Override
+	public String getUserString() {
+		if(isBottom())
+			return "BOTTOM";
+
+		String vs = getUserString(permissions);
+		String fs = getUserString(framePermissions);
+		String us = null;
+		if(unpackedPermission != null) {
+			us = unpackedPermission.getUserString(constraints);
+			if(us == null)
+				// unpacked permission is not real -> weird
+				us = "NOTHING";
+		}
+
+		String inSets; 
+		if(vs != null && fs != null)
+			inSets = vs + " frame " + fs;
+		else if(vs != null)
+			inSets = vs;
+		else if(fs != null)
+			inSets = "frame " + fs;
+		else if(us == null)
+			return "NOTHING";
+		else
+			return "unpacked[" + us + "]";
+		if(us == null)
+			return inSets;
+		else
+			return "unpacked[" + us + "] + " + inSets; 
+	}
+
+	@Override
+	public String toString() {
+		if(unpackedPermission == null)
+			return permissions + " frame " + framePermissions + " with " + constraints;
+		return "unpacked[" + unpackedPermission + "] + " + permissions + " frame " + framePermissions + " with " + constraints;
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -1030,9 +1059,6 @@ implements LatticeElement<FractionalPermissions> {
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -1049,26 +1075,5 @@ implements LatticeElement<FractionalPermissions> {
 			return false;
 		return true;
 	}
-
-	/**
-	 * Replaces this permission set's constraints with the given ones but leaves
-	 * the actual permissions untouched.  Be very careful with this method
-	 * to make sure that constraints and permissions match.
-	 * @param constraints
-	 * @return
-	 */
-	public FractionalPermissions replaceConstraints(
-			FractionConstraints constraints) {
-		return createPermissions(permissions, framePermissions, constraints);
-	}
-
-//	/**
-//	 * @return
-//	 */
-//	public boolean hasParameterPermissions() {
-//		return ! parameterPermissions.isEmpty();
-//	}
-	
-	
 
 }

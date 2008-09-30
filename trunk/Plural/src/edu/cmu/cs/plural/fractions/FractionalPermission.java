@@ -52,6 +52,7 @@ import java.util.logging.Logger;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.plural.states.StateSpace;
+import edu.cmu.cs.plural.track.Permission.PermissionKind;
 import edu.cmu.cs.plural.util.Pair;
 
 /**
@@ -902,6 +903,49 @@ public class FractionalPermission extends AbstractFractionalPermission {
 		else
 			// create permission with new states
 			return copyNewState(newStates);
+	}
+	
+	/**
+	 * Resolves the given constraints to figure out what kind of permission
+	 * this is.
+	 * @param constraints
+	 * @return This permission's kind or <code>null</code> if this is not
+	 * a real permission.
+	 */
+	public PermissionKind getKind(FractionConstraints constraints) {
+		FractionAssignment a = constraints.simplify();
+		if(a.isZero(getFractions().get(getRootNode())))
+			// root is zero -> not a real permission
+			return null;
+		
+		Fraction belowF = getFractions().getBelowFraction();
+		if(a.isOne(getFractions().get(getStateSpace().getRootState())) &&
+				a.isOne(belowF))
+			// readonly flag can be true or false for UNIQUE
+			return PermissionKind.UNIQUE;
+		if(a.isOne(belowF))
+			// readonly flag can be true or false for FULL
+			return PermissionKind.FULL;
+		if(a.isZero(belowF)) {
+			if(! isReadOnly())
+				log.warning("Pure permission with modifying flag found: " + toString());
+			return PermissionKind.PURE;
+		}
+		return isReadOnly() ? PermissionKind.IMMUTABLE : PermissionKind.SHARE; 
+	}
+
+	/*
+	 * this method is final b/c it delegates the real work to getKind(constraints)
+	 */
+	public final String getUserString(FractionConstraints constraints) {
+		PermissionKind kind = getKind(constraints);
+		if(kind == null)
+			// not a real permission -> return null
+			return null;
+		if(getRootNode().equals(getStateSpace().getRootState()))
+			return kind + " in " + getStateInfo();
+		else
+			return kind + "(" + getRootNode() + ") in " + getStateInfo();
 	}
 
 }

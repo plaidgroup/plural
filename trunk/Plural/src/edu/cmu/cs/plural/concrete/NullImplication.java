@@ -99,10 +99,10 @@ public class NullImplication implements Implication {
 			@Override
 			public boolean splitOffResult(SplitOffTuple tuple) {
 				if( consequencePred.denotesNullVar() ) {
-					return tuple.checkNull(consequencePred.getVariable());
+					return tuple.checkNull(consequencePred.getVariable(), null);
 				}
 				else if( consequencePred.denotesNonNullVariable() ) {
-					return tuple.checkNonNull(consequencePred.getVariable());
+					return tuple.checkNonNull(consequencePred.getVariable(), null);
 				}
 				return true;
 			}

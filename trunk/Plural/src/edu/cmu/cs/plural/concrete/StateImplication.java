@@ -106,7 +106,7 @@ public final class StateImplication implements Implication {
 
 			@Override
 			public boolean splitOffResult(SplitOffTuple tuple) {
-				return tuple.checkStateInfo(describedVar, 
+				return tuple.checkStateInfo(describedVar, null,
 						Collections.singleton(varState), false);
 			}
 		};

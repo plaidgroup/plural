@@ -267,20 +267,21 @@ public abstract class AbstractParamVisitor
 			String paramName = param.getKey();
 			Aliasing var = vars.get(paramName);
 			final ParamInfoHolder h = param.getValue();
-			if(h.hasStateInfo() && ! callback.checkStateInfo(var, h.getStateInfos(), "this!fr".equals(paramName))) {
+			if(h.hasStateInfo() && ! callback.checkStateInfo(
+					var, paramName, h.getStateInfos(), "this!fr".equals(paramName))) {
 				// TODO figure out whether we're checking frame or virtual states
 				return false;
 			}
-			if(h.hasNull() && ! callback.checkNull(var)) {
+			if(h.hasNull() && ! callback.checkNull(var, paramName)) {
 				return false;
 			}
-			if(h.hasNonNull() && ! callback.checkNonNull(var)) {
+			if(h.hasNonNull() && ! callback.checkNonNull(var, paramName)) {
 				return false;
 			}
-			if(h.hasTrue() && ! callback.checkTrue(var)) {
+			if(h.hasTrue() && ! callback.checkTrue(var, paramName)) {
 				return false;
 			}
-			if(h.hasFalse() && ! callback.checkFalse(var)) {
+			if(h.hasFalse() && ! callback.checkFalse(var, paramName)) {
 				return false;
 			}
 		}
@@ -304,7 +305,7 @@ public abstract class AbstractParamVisitor
 		for(Map.Entry<String, ParamInfoHolder> param : getParams().entrySet()) {
 			Aliasing var = vars.get(param.getKey());
 			if( param.getValue().getPerms() != null && 
-				!callback.splitOffPermission(var, param.getValue().getPerms()) )
+				!callback.splitOffPermission(var, param.getKey(), param.getValue().getPerms()) )
 				return false;
 		}
 		

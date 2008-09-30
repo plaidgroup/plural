@@ -479,7 +479,7 @@ class LinearOperations extends TACAnalysisHelper {
 
 		@Override
 		protected final boolean splitOffInternal(Aliasing var,
-				TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
+				String var_name, TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
 			if(borrowed != null && borrowed.contains(var)) {
 				// no frame permissions should get here
 				assert perms.getFramePermissions().isEmpty();
@@ -495,7 +495,7 @@ class LinearOperations extends TACAnalysisHelper {
 		}
 
 		/**
-		 * Replaces {@link #splitOffInternal(Aliasing, TensorPluralTupleLE, PermissionSetFromAnnotations)}
+		 * Replaces {@link #splitOffInternal(Aliasing, String, TensorPluralTupleLE, PermissionSetFromAnnotations)}
 		 * in subclasses so we can delay permission splitting.  Takes an additional parameter
 		 * to force state and constraint checks in {@link LazyPreconditionHandler}.
 		 * @param var
@@ -503,12 +503,12 @@ class LinearOperations extends TACAnalysisHelper {
 		 * @param perms
 		 * @param forceFail 
 		 * @return <code>true</code> to continue checking, <code>false</code> otherwise
-		 * @see #splitOffInternal(Aliasing, TensorPluralTupleLE, PermissionSetFromAnnotations)
+		 * @see #splitOffInternal(Aliasing, String, TensorPluralTupleLE, PermissionSetFromAnnotations)
 		 */
 		protected boolean doSplitOffInternal(Aliasing var,
 				TensorPluralTupleLE value, PermissionSetFromAnnotations perms, 
 				boolean forceFail) {
-			return super.splitOffInternal(var, value, perms);
+			return super.splitOffInternal(var, null /* doesn't matter */, value, perms);
 		}
 
 		@Override
@@ -622,22 +622,22 @@ class LinearOperations extends TACAnalysisHelper {
 		}
 
 		@Override
-		public boolean checkFalse(Aliasing var) {
+		public boolean checkFalse(Aliasing var, String var_name) {
 			return true;  // ignore this check
 		}
 
 		@Override
-		public boolean checkNonNull(Aliasing var) {
+		public boolean checkNonNull(Aliasing var, String var_name) {
 			return true;  // ignore this check
 		}
 
 		@Override
-		public boolean checkNull(Aliasing var) {
+		public boolean checkNull(Aliasing var, String var_name) {
 			return true;  // ignore this check
 		}
 
 		@Override
-		public boolean checkTrue(Aliasing var) {
+		public boolean checkTrue(Aliasing var, String var_name) {
 			return true;  // ignore this check
 		}
 		
@@ -1686,7 +1686,7 @@ class LinearOperations extends TACAnalysisHelper {
 			
 			// check whether state is indicated
 			Aliasing tested_loc = parameterVars.get(trueTest.fst());
-			checks.checkStateInfo(tested_loc, 
+			checks.checkStateInfo(tested_loc, trueTest.fst(),
 					Collections.singleton(trueTest.snd()), // tested state
 					"this!fr".equals(trueTest.fst()));     // frame test?
 			// ignore always-true return value: errors will appear in the list
@@ -1708,7 +1708,7 @@ class LinearOperations extends TACAnalysisHelper {
 			
 			// check whether state is indicated
 			Aliasing tested_loc = parameterVars.get(falseTest.fst());
-			checks.checkStateInfo(tested_loc, 
+			checks.checkStateInfo(tested_loc, falseTest.fst(),
 					Collections.singleton(falseTest.snd()), // tested state
 					"this!fr".equals(falseTest.fst()));     // frame test?
 			// ignore always-true return value: errors will appear in the list
@@ -1895,9 +1895,17 @@ class LinearOperations extends TACAnalysisHelper {
 		 * Override this method to return a string describing the given location 
 		 * in error messages to the user.
 		 * @param var
+		 * @param var_name Formal parameter name, if known, <code>null</code> otherwise.
 		 * @return a string describing the given location in error messages to the user.
 		 */
-		protected String getSourceString(Aliasing var) {
+		protected String getSourceString(Aliasing var, String var_name) {
+			if(var_name != null) {
+				if(var_name.equals("result") || var_name.equals("this") || var_name.equals("this!fr"))
+					// don't use "parameter" for receiver and result return checks
+					// shouldn't normally report errors for result if isReturnCheck false
+					return isReturnCheck ? var_name : "argument " + var_name;
+				return (isReturnCheck ? "formal parameter " : "argument ") + var_name;
+			}
 			return var == null ? "NULL location" : var.toString();
 		}
 
@@ -1937,20 +1945,26 @@ class LinearOperations extends TACAnalysisHelper {
 						if(pa.isEmpty())
 							continue;
 						if(!tuple.get(this_loc).isInStates(pa.getStateInfo(false), false)) {
-							return "After packing, receiver must be in state " + pa.getStateInfo(false) + " but is in " + value.get(this_loc).getStateInfo(false);
+							return "After packing, receiver must be in state " + 
+									pa.getStateInfo(false) + " but is in " + 
+									value.get(this_loc).getStateInfo(false);
 						}
 						else if(!tuple.get(this_loc).isInStates(pa.getStateInfo(true), true)) {
-							return "After packing, receiver frame must be in state " + pa.getStateInfo(true) + " but is in " + value.get(this_loc).getStateInfo(true);
+							return "After packing, receiver frame must be in state " + 
+									pa.getStateInfo(true) + " but is in " + 
+									value.get(this_loc).getStateInfo(true);
 						}
 						// keep going anyway....
-						
+
 						// split off permission 
+						FractionalPermissions beforeSplit = tuple.get(this_loc);
 						tuple = LinearOperations.splitOff(this_loc, tuple, pa);
 						
 						if(tuple.get(this_loc).isUnsatisfiable()) {
 							// constraint failure
 							return "After packing, receiver must " + 
-								(isReturnCheck ? "return" : "have") + " permissions " + pa;
+								(isReturnCheck ? "return" : "have") + " permissions " + pa.getUserString() + 
+								" but it has " + beforeSplit.getUserString();
 						}
 					}
 					return null;
@@ -1963,80 +1977,68 @@ class LinearOperations extends TACAnalysisHelper {
 		}
 		
 		@Override
-		public boolean splitOffPermission(Aliasing var,
+		public boolean splitOffPermission(Aliasing var, String var_name,
 				PermissionSetFromAnnotations perms) {
-			boolean result = super.splitOffPermission(var, perms);
+			boolean result = super.splitOffPermission(var, var_name, perms);
 			return true;
 		}
 
 		@Override
-		public boolean checkFalse(Aliasing var) {
-			boolean result = super.checkFalse(var);
+		public boolean checkFalse(Aliasing var, String var_name) {
+			boolean result = super.checkFalse(var, var_name);
 			if(! result)
 				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
-						" false: " + getSourceString(var));
+						" false: " + getSourceString(var, var_name));
 			return true;
 		}
 
 		@Override
-		public boolean checkNonNull(Aliasing var) {
-			boolean result = super.checkNonNull(var);
+		public boolean checkNonNull(Aliasing var, String var_name) {
+			boolean result = super.checkNonNull(var, var_name);
 			if(! result)
 				errors.add("Must not " + (isReturnCheck ? "return" : "be") + 
-						" null: " + getSourceString(var));
+						" null: " + getSourceString(var, var_name));
 			return true;
 		}
 
 		@Override
-		public boolean checkNull(Aliasing var) {
-			boolean result = super.checkNull(var);
+		public boolean checkNull(Aliasing var, String var_name) {
+			boolean result = super.checkNull(var, var_name);
 			if(! result)
 				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
-						" null: " + getSourceString(var));
+						" null: " + getSourceString(var, var_name));
 			return true;
 		}
 
 		@Override
-		public boolean checkStateInfo(Aliasing var, Set<String> stateInfo,
-				boolean inFrame) {
-			boolean result = super.checkStateInfo(var, stateInfo, inFrame);
+		public boolean checkStateInfo(Aliasing var, String var_name, 
+				Set<String> stateInfo, boolean inFrame) {
+			boolean result = super.checkStateInfo(var, var_name, stateInfo, inFrame);
 			if(! result) {
 				List<String> actual = value.get(var).getStateInfo(inFrame);
 				if(inFrame)
-					errors.add(getSourceString(var) + " frame must " + (isReturnCheck ? "return" : "be") + 
+					errors.add(getSourceString(var, var_name) + " frame must " + (isReturnCheck ? "return" : "be") + 
 						" in state(s) " + stateInfo + " but is in " + actual);
 				else
-					errors.add(getSourceString(var) + " must " + (isReturnCheck ? "return" : "be") + 
+					errors.add(getSourceString(var, var_name) + " must " + (isReturnCheck ? "return" : "be") + 
 						" in state(s) " + stateInfo + " but is in " + actual);
 			}
 			return true;
 		}
 
 		@Override
-		public boolean checkTrue(Aliasing var) {
-			boolean result = super.checkTrue(var);
+		public boolean checkTrue(Aliasing var, String var_name) {
+			boolean result = super.checkTrue(var, var_name);
 			if(! result)
 				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
-						" true: " + getSourceString(var));
+						" true: " + getSourceString(var, var_name));
 			return result;
 		}
 		
-		boolean checkImplication(Implication impl) {
-			if(value.isKnownImplication(impl.getAntecedant().getVariable(), impl))
-				// trivially succeed if implication is known
-				return true;
-			
-			if(impl.getAntecedant().isUnsatisfiable(value))
-				// antecedent unsatisfiable --> implication holds
-				return true;
-			
-			// TODO check consequence, but remember to pack as required...
-			return false;
-		}
-
 		@Override
-		protected boolean splitOffInternal(Aliasing var, TensorPluralTupleLE value,
-				PermissionSetFromAnnotations perms) {
+		protected boolean splitOffInternal(Aliasing var, 
+				String var_name,
+				TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
 			if((var == null || var.getLabels().isEmpty()) && perms.isEmpty())
 				// this should be an empty permission set for results
 				// this happens when checking the post-condition of VOID methods
@@ -2044,22 +2046,26 @@ class LinearOperations extends TACAnalysisHelper {
 				return true;
 			
 			if(!value.get(var).isInStates(perms.getStateInfo(false), false)) {
-				errors.add(getSourceString(var) + " must " + (isReturnCheck ? "return" : "be") + 
-						" in state " + perms.getStateInfo(false) + " but is in " + value.get(var).getStateInfo(false));
+				errors.add(getSourceString(var, var_name) + " must " + (isReturnCheck ? "return" : "be") + 
+						" in state " + perms.getStateInfo(false) + 
+						" but is in " + value.get(var).getStateInfo(false));
 			}
 			else if(!value.get(var).isInStates(perms.getStateInfo(true), true)) {
-				errors.add(getSourceString(var) + " frame must " + (isReturnCheck ? "return" : "be") + 
-						" in state " + perms.getStateInfo(true) + " but is in " + value.get(var).getStateInfo(true));
+				errors.add(getSourceString(var, var_name) + " frame must " + (isReturnCheck ? "return" : "be") + 
+						" in state " + perms.getStateInfo(true) + 
+						" but is in " + value.get(var).getStateInfo(true));
 			}
 			// keep going anyway....
 			
 			// split off permission 
+			FractionalPermissions beforeSplit = value.get(var);
 			value = LinearOperations.splitOff(var, value, perms);
 			
 			if(value.get(var).isUnsatisfiable()) {
 				// constraint failure
-				errors.add(getSourceString(var) + " must " + (isReturnCheck ? "return" : "have") + 
-						" permissions " + perms);
+				errors.add(getSourceString(var, var_name) + " must " + (isReturnCheck ? "return" : "have") + 
+						" permissions " + perms.getUserString() + 
+						" but it has " + beforeSplit.getUserString());
 			}
 			return true; // keep going....
 		}

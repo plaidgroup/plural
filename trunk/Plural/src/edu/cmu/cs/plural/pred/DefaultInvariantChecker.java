@@ -39,13 +39,11 @@ package edu.cmu.cs.plural.pred;
 
 import java.util.Set;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-
-import edu.cmu.cs.plural.linear.*;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.internal.Utilities;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
+import edu.cmu.cs.plural.linear.AbstractPredicateChecker;
+import edu.cmu.cs.plural.linear.TensorPluralTupleLE;
 
 /**
  * This class is an analogue to DefaultInvariantMerger. It provides
@@ -67,10 +65,10 @@ public class DefaultInvariantChecker extends AbstractPredicateChecker {
 	}
 
 	@Override
-	public boolean splitOffPermission(Aliasing var,
+	public boolean splitOffPermission(Aliasing var, String var_name,
 			PermissionSetFromAnnotations perms) {
 		// Purify if we need to.
-		return super.splitOffPermission(var, purify ? perms.purify() : perms);
+		return super.splitOffPermission(var, var_name, purify ? perms.purify() : perms);
 	}
 
 	// Weirdo methods...

@@ -147,9 +147,45 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 
 	public abstract StateSpace getStateSpace();
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
+	/**
+	 * Returns a string describing this permission set for a user.  
+	 * It is permitted for this operation to take a while, unlike {@link #toString()}.
+	 * @return a string describing this permission for a user, never <code>null</code>.  
 	 */
+	public abstract String getUserString();
+	
+	/**
+	 * Helper method for {@link #getUserString()} that formats the given permission set.
+	 * It is permitted for this operation to take a while, unlike {@link #toString()}.
+	 * @param permissions
+	 * @return  a string describing the given permission set for a user, or
+	 * <code>null</code> if the given set contains no (real) permissions.
+	 * @see AbstractFractionalPermission#getUserString(FractionConstraints)
+	 */
+	protected String getUserString(List<? extends AbstractFractionalPermission> permissions) {
+		if(permissions.isEmpty())
+			return null;
+
+		StringBuffer result = new StringBuffer("[");
+		boolean first = true;
+		for(AbstractFractionalPermission p : permissions) {
+			String ps = p.getUserString(constraints);
+			if(ps == null)
+				// not a real permission -> skip
+				continue;
+			if(first)
+				first = false;
+			else
+				result.append(", ");
+			result.append(ps.toString());
+		}
+		result.append("]");
+		if(first)
+			// no real permissions in the set
+			return null;
+		return result.toString();
+	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -164,9 +200,6 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -193,44 +226,5 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 			return false;
 		return true;
 	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
-//	@Override
-//	public int hashCode() {
-//		final int prime = 31;
-//		int result = 1;
-//		result = prime * result
-//				+ ((constraints == null) ? 0 : constraints.hashCode());
-//		result = prime * result
-//				+ ((permissions == null) ? 0 : permissions.hashCode());
-//		return result;
-//	}
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
-//	@Override
-//	public boolean equals(Object obj) {
-//		if (this == obj)
-//			return true;
-//		if (obj == null)
-//			return false;
-//		if (getClass() != obj.getClass())
-//			return false;
-//		AbstractFractionalPermissionSet other = (AbstractFractionalPermissionSet) obj;
-//		if (constraints == null) {
-//			if (other.constraints != null)
-//				return false;
-//		} else if (!constraints.equals(other.constraints))
-//			return false;
-//		if (permissions == null) {
-//			if (other.permissions != null)
-//				return false;
-//		} else if (!permissions.equals(other.permissions))
-//			return false;
-//		return true;
-//	}
 
 }

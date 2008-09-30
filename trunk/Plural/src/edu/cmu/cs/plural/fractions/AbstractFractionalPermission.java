@@ -251,6 +251,16 @@ public abstract class AbstractFractionalPermission {
 		
 	}
 
+	/**
+	 * Returns a string describing this permission, possibly resolving the given
+	 * constraints.
+	 * This operation is allowed to take a while, unlike {@link #toString()}.
+	 * @param constraints
+	 * @return a string describing this permission, or <code>null</code> 
+	 * if this is not a real permission.
+	 */
+	public abstract String getUserString(FractionConstraints constraints);
+	
 	@Override
 	public String toString() {
 		return "access(" + rootNode + " " + fractions + (mutable ? " mutable" : " immutable") + ") in " + stateInfo;
