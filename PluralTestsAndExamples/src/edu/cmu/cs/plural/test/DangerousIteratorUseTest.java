@@ -41,7 +41,8 @@ import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Unique;
 
-@FailingTest(3)  
+@FailingTest(2)
+// 3 when not using borrowing optimization
 // was 5 when reporting state and permission failures separately
 // should be 4 because one problem (need full for second parameter to concat)
 // was reported twice before
