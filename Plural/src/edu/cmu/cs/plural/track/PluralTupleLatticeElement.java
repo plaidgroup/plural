@@ -709,7 +709,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			FractionalPermission new_rcvr_perm = unpacked_permission.copyNewState(state);
 			List<Pair<Aliasing, PermissionFromAnnotation>> inv_perms =
 				this.getInvariantPermissions(rcvrVar.resolveType(),
-						new_rcvr_perm, locs, false, stateRepo);
+						new_rcvr_perm, locs,rcvrLoc, false, stateRepo);
 			
 			if(inv_perms == null)
 				// FALSE invariant --> try next state
@@ -752,7 +752,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			// After we've checked each of the fields for permissions,
 			// make sure concrete field invariants hold (including null/non-null).
 			SimpleMap<String, Aliasing> vars = 
-				createFieldNameToAliasingMapping(locs, rcvrVar.resolveType());
+				createFieldNameToAliasingMapping(locs, rcvrVar.resolveType(), rcvrLoc);
 			if(ConcreteAnnotationUtils.checkConcreteFieldInvariants(
 					this, rcvrVar.resolveType(), new_rcvr_perm, vars, getAnnotationDB()) != null) {
 				// Sad path exit. A concrete invariant was violated
@@ -836,16 +836,21 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 */
 	public static SimpleMap<String, Aliasing> createFieldNameToAliasingMapping(
 			final SimpleMap<Variable, Aliasing> locs,
-			final ITypeBinding class_decl) {
-		final SimpleMap<String, Variable> fields = createFieldNameToVariableMapping(class_decl);
+			final ITypeBinding rcvr_type,
+			final Aliasing rcvr_loc) {
+		final SimpleMap<String, Variable> fields = createFieldNameToVariableMapping(rcvr_type);
+				
 		SimpleMap<String, Aliasing> vars = new SimpleMap<String, Aliasing>() {
 			@Override
 			public Aliasing get(String key) {
-				if(key.equals("super")) {
-					if(class_decl.getSuperclass() != null)
-						return getFrameAliasing(class_decl.getSuperclass());
+				if( "this".equals(key) || "this!fr".equals(key) ) {
+					return rcvr_loc;
+				}
+				else if(key.equals("super")) {
+					if(rcvr_type.getSuperclass() != null)
+						return getFrameAliasing(rcvr_type.getSuperclass());
 					else
-						throw new IllegalArgumentException("No superclass available for: " + class_decl);
+						throw new IllegalArgumentException("No superclass available for: " + rcvr_type);
 				}
 				return locs.get(fields.get(key));
 			}
@@ -912,7 +917,8 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 */
 	private List<Pair<Aliasing, PermissionFromAnnotation>>
 	getInvariantPermissions(final ITypeBinding class_decl, FractionalPermission thisPerm,
-			SimpleMap<Variable, Aliasing> locs, boolean isPreCondition, final StateSpaceRepository stateRepo) {
+			SimpleMap<Variable, Aliasing> locs, Aliasing rcvrLoc, 
+			boolean isPreCondition, final StateSpaceRepository stateRepo) {
 
 		/*
 		 * We have this's state. Now, assume an unpack at this location. Does this state
@@ -1005,7 +1011,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 				}
 			}
 			
-			SimpleMap<String, Aliasing> fieldLocs = createFieldNameToAliasingMapping(locs, class_decl);
+			SimpleMap<String, Aliasing> fieldLocs = createFieldNameToAliasingMapping(locs, class_decl, rcvrLoc);
 			Aliasing a = fieldLocs.get(pair.fst());
 			result.add(Pair.create(a, pair.snd()));
 		}
