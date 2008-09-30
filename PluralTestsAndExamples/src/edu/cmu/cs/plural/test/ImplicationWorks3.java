@@ -42,44 +42,41 @@ import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
-import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.Refine;
+import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
-import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.States;
 
-/*
- * In this test, we see if we can use a state implication in a
- * state invariant.
+/**
+ * This is specifically a test for issue 46, to see if I can use 'this'
+ * as the target of an implication.
  */
 @PassingTest
 @UseAnalyses("FractionalAnalysis")
-@ClassStates(@State(name="SPECIAL", 
-		     inv="full(data) * hasAState == true => data in ASTATE"))
-public class ImplicationWorks2 {
-	LastObject data;
-	boolean hasAState;
+@Refine({
+	@States(dim="STRUCTURE", value={"SINGLETONS"}),
+	@States(dim="PROTOCOL", value= {"SINGLETONP"})
+})
+@ClassStates({
+	@State(name="STRUCTURE", 
+		   inv="giveMeFull == true => full(this,PROTOCOL)")
+})
+public class ImplicationWorks3 {
+
+	private boolean giveMeFull = true;
 	
-	// Should work fine
-	@Unique(fieldAccess=true,requires="SPECIAL")
+	@Share(fieldAccess=true, value="STRUCTURE")
 	void foo() {
-		if( this.hasAState ) {
-			data.mustBeInAState();
+		if( this.giveMeFull ) {
+			this.giveMeFull = false;
+			this.needsFull();
+			return;
 		}
+		return;
 	}
 	
-	private class LastObject {
-		@Perm(ensures="unique(this!fr)")
-		LastObject() {
-			
-		}
-		@Full
-		void modify() {
-			
-		}
+	@Full("PROTOCOL")
+	void needsFull() {
 		
-		@Full(requires="ASTATE")
-		void mustBeInAState() {
-			
-		}
 	}
 }
-
