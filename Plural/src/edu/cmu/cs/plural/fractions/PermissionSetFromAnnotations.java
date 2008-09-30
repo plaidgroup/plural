@@ -203,11 +203,6 @@ public class PermissionSetFromAnnotations extends
 		return Pair.create(getStateInfo(false), getStateInfo(true));
 	}
 
-	@Override
-	public String toString() {
-		return permissions + " frame " + framePermissions + " with " + constraints;
-	}
-
 	/**
 	 * Tests if this permission set consists only of 
 	 * {@link PermissionFromAnnotation#isReadOnly() read-only} permissions.
@@ -293,6 +288,25 @@ public class PermissionSetFromAnnotations extends
 		}
 
 		return createPermissions(newPs, newFramePs, constraints);
+	}
+
+	@Override
+	public String getUserString() {
+		String vs = getUserString(permissions);
+		String fs = getUserString(framePermissions);
+		if(vs != null && fs != null)
+			return vs + " frame " + fs;
+		else if(vs != null)
+			return vs;
+		else if(fs != null)
+			return "frame " + fs;
+		else
+			return "NOTHING";
+	}
+
+	@Override
+	public String toString() {
+		return permissions + " frame " + framePermissions + " with " + constraints;
 	}
 
 }

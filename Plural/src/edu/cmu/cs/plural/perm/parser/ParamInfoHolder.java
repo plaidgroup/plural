@@ -373,19 +373,19 @@ public class ParamInfoHolder {
 			if(prim != null) {
 				switch(prim) {
 				case NULL: 
-					if(! tuple.checkNull(getVariable())) 
+					if(! tuple.checkNull(getVariable(), paramName)) 
 						return false;
 					break;
 				case NONNULL: 
-					if(! tuple.checkNonNull(getVariable())) 
+					if(! tuple.checkNonNull(getVariable(), paramName)) 
 						return false;
 					break;
 				case TRUE: 
-					if(! tuple.checkTrue(getVariable())) 
+					if(! tuple.checkTrue(getVariable(), paramName)) 
 						return false;
 					break;
 				case FALSE: 
-					if(! tuple.checkFalse(getVariable())) 
+					if(! tuple.checkFalse(getVariable(), paramName)) 
 						return false;
 					break;
 				default: 
@@ -395,7 +395,7 @@ public class ParamInfoHolder {
 			}
 			
 			if(!stateInfo.isEmpty()) {
-				boolean state_info_correct = tuple.checkStateInfo(getVariable(), 
+				boolean state_info_correct = tuple.checkStateInfo(getVariable(), paramName, 
 						stateInfo, isFramePredicate());
 				
 				if( !state_info_correct )
@@ -404,7 +404,7 @@ public class ParamInfoHolder {
 			
 			if(getPerms() != null) {
 				boolean split_worked =
-					tuple.splitOffPermission(getVariable(), getPerms());
+					tuple.splitOffPermission(getVariable(), paramName, getPerms());
 				
 				return split_worked;
 			}

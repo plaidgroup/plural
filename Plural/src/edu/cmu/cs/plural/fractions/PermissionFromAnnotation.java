@@ -309,6 +309,10 @@ public class PermissionFromAnnotation extends FractionalPermission
 							Fraction.zero(), fractions.getBelowFraction()));
 	}
 
+	/**
+	 * Returns this permission's kind.
+	 * @return this permission's kind, never <code>null</code>.
+	 */
 	public PermissionKind getKind() {
 		if(isUnique())
 			return PermissionKind.UNIQUE;
@@ -321,6 +325,12 @@ public class PermissionFromAnnotation extends FractionalPermission
 		if(isPure())
 			return PermissionKind.PURE;
 		throw new IllegalStateException("Not a valid permission: " + this);
+	}
+	
+	@Override
+	public PermissionKind getKind(FractionConstraints constraints) {
+		// don't need the constraints for permissions from annotations
+		return getKind();
 	}
 	
 	/**
@@ -338,9 +348,6 @@ public class PermissionFromAnnotation extends FractionalPermission
 		return getKind().toString() + "(" + rootNode + " " + fractions + ") in " + stateInfo;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -349,9 +356,6 @@ public class PermissionFromAnnotation extends FractionalPermission
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)

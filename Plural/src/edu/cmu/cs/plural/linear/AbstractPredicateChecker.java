@@ -45,10 +45,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.tac.TACInvocation;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
@@ -71,7 +68,7 @@ import edu.cmu.cs.plural.util.Pair;
  * return <code>false</code> when any errors are detected.  They must be
  * overridden to change this behavior.  Care must be taken to ensure that
  * failed checks are caught eventually; also, permissions must still be split
- * (in {@link #splitOffInternal(Aliasing, TensorPluralTupleLE, PermissionSetFromAnnotations)})
+ * (in {@link #splitOffInternal(Aliasing, String, TensorPluralTupleLE, PermissionSetFromAnnotations)})
  * even if splitting failures should not be detected.   
  *  
  * @author Kevin Bierhoff
@@ -92,7 +89,7 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	}
 	
 	@Override
-	public boolean checkStateInfo(Aliasing var, Set<String> stateInfo, boolean inFrame) {
+	public boolean checkStateInfo(Aliasing var, String var_name, Set<String> stateInfo, boolean inFrame) {
 		if(inFrame && var.equals(this_loc)) {
 			neededReceiverStates.addAll(stateInfo);
 			return true;
@@ -114,8 +111,6 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 			Set<String> stateInfo, boolean inFrame) {
 		return value.get(var).isInStates(stateInfo, inFrame);
 	}
-
-	
 	
 	@Override
 	public boolean checkImplication(Aliasing var, Implication impl) {
@@ -142,7 +137,7 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	}
 
 	@Override
-	public boolean splitOffPermission(Aliasing var,
+	public boolean splitOffPermission(Aliasing var, String var_name,
 			PermissionSetFromAnnotations perms) {
 		if(this_loc != null && this_loc.equals(var)) {
 			// defer...
@@ -153,17 +148,19 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 			perms = virtualAndFrame.fst(); // split the virtual part below--frame later
 		}
 		// split virtual permissions
-		return splitOffInternal(var, value, perms);
+		return splitOffInternal(var, var_name, value, perms);
 	}
 
 	/**
 	 * Override this method to manipulate how permissions are split from the given object.
 	 * @param var
+	 * @param var_name Formal parameter name for <code>var</code> or <code>null</code>
+	 * if unknown
 	 * @param value
 	 * @param perms
 	 * @return
 	 */
-	protected boolean splitOffInternal(Aliasing var, TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
+	protected boolean splitOffInternal(Aliasing var, String var_name, TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
 		if(!value.get(var).isInStates(perms.getStateInfoPair()))
 			return false;
 		
@@ -174,22 +171,22 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	}
 
 	@Override
-	public boolean checkFalse(Aliasing var) {
+	public boolean checkFalse(Aliasing var, String var_name) {
 		return value.isBooleanFalse(var);
 	}
 
 	@Override
-	public boolean checkNonNull(Aliasing var) {
+	public boolean checkNonNull(Aliasing var, String var_name) {
 		return value.isNonNull(var);
 	}
 
 	@Override
-	public boolean checkNull(Aliasing var) {
+	public boolean checkNull(Aliasing var, String var_name) {
 		return value.isNull(var);
 	}
 
 	@Override
-	public boolean checkTrue(Aliasing var) {
+	public boolean checkTrue(Aliasing var, String var_name) {
 		return value.isBooleanTrue(var);
 	}
 
