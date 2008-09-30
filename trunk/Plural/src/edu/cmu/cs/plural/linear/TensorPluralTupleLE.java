@@ -218,7 +218,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 				new DefaultInvariantMerger(nodeWhereUnpacked, this, assignedField, purify); 
 			
 			final SimpleMap<String,Aliasing> locs_ =
-				createFieldNameToAliasingMapping(locs, class_decl);
+				createFieldNameToAliasingMapping(locs, class_decl, rcvrLoc);
 			
 			// Call merge-in...
 			parsed.fst().mergeInPredicate(locs_, callback);
@@ -258,7 +258,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			final boolean purify = new_rcvr_perm.isReadOnly();
 			
 			final SimpleMap<String,Aliasing> locs_ =
-				createFieldNameToAliasingMapping(locs, rcvr_type);
+				createFieldNameToAliasingMapping(locs, rcvr_type, rcvrLoc);
 			
 			final SplitOffTuple callback =
 				new DefaultInvariantChecker(this, rcvrLoc, purify);
@@ -297,7 +297,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		
 		return new SimpleMap<String,StateSpace>() {
 			@Override public StateSpace get(String key) {
-				if( "this".equals(key) )
+				if( "this".equals(key) || "this!fr".equals(key) )
 					return this_space;
 				else
 					return stateRepo.getStateSpace(fields.get(key).getType());
