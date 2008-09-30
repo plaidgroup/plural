@@ -119,14 +119,25 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	
 	@Override
 	public boolean checkImplication(Aliasing var, Implication impl) {
-		if( impl.isSatisfied(value) ) {
-			// TODO: Don't we need to now remove this implication? Or the 
-			// pieces that satisfied it?
-			
+		
+		if( value.isKnownImplication(var, impl) ) {
+			// TODO: We only have to remove this if the implication is linear!
+			// Need a new subclass of implcation, with isLinear method.
+			value.removeImplication(var, impl);
+			return true;
+		}
+		else if( impl.getAntecedant().isUnsatisfiable(value) ) {
 			return true;
 		}
 		else {
-			return false;
+			// Assuming the antecedant,
+			impl.getAntecedant().putIntoLattice(value);
+			if( impl.result().splitOffResult(this) ) {
+				return true;
+			}
+			else {
+				return false;
+			}
 		}
 	}
 

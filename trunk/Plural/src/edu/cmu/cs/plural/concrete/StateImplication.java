@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
@@ -116,6 +117,12 @@ public final class StateImplication implements Implication {
 					final PluralTupleLatticeElement value) {
 				value.put(describedVar, value.get(describedVar).learnTemporaryStateInfo(varState));
 				return value;
+			}
+
+			@Override
+			public boolean splitOffResult(SplitOffTuple tuple) {
+				return tuple.checkStateInfo(describedVar, 
+						Collections.singleton(varState), false);
 			}
 		};
 	}

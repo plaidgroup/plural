@@ -214,6 +214,15 @@ public abstract class AbstractParamVisitor
 			}
 			return result;
 		}
+
+		@Override
+		public boolean splitOffResult(SplitOffTuple tuple) {
+			for( InfoHolderPredicate info_holder : this.cons ) {
+				if( !info_holder.splitOff(tuple) )
+					return false;
+			}
+			return true;
+		}
 		
 	}
 
@@ -698,14 +707,15 @@ public abstract class AbstractParamVisitor
 		assert impls.isEmpty();
 		assert getParams().size() == 1 : "Not a single antecedent: " + getParams().keySet();
 		Map.Entry<String, ParamInfoHolder> singleton = getParams().entrySet().iterator().next();
-		return singleton.getValue().createInfoPredicate(vars.get(singleton.getKey()));
+		return singleton.getValue().createInfoPredicate(
+				singleton.getKey(), vars.get(singleton.getKey()));
 	}
 
 	protected ParamImplication createImplication(InfoHolderPredicate antecedant, SimpleMap<String, Aliasing> vars) {
 		assert impls.isEmpty();
 		ArrayList<InfoHolderPredicate> cons = new ArrayList<InfoHolderPredicate>(getParams().size());
 		for(Map.Entry<String, ParamInfoHolder> h : getParams().entrySet()) {
-			cons.add(h.getValue().createInfoPredicate(vars.get(h.getKey())));
+			cons.add(h.getValue().createInfoPredicate(h.getKey(), vars.get(h.getKey())));
 		}
 		return new ParamImplication(antecedant, cons);
 	}

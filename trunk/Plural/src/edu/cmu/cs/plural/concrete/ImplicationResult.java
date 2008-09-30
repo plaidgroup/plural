@@ -37,6 +37,8 @@
  */
 package edu.cmu.cs.plural.concrete;
 
+import edu.cmu.cs.plural.pred.PredicateChecker;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
@@ -59,5 +61,11 @@ public interface ImplicationResult {
 	 * @param value
 	 * @return
 	 */
-	PluralTupleLatticeElement putResultIntoLattice(PluralTupleLatticeElement value);	
+	PluralTupleLatticeElement putResultIntoLattice(PluralTupleLatticeElement value);
+	
+	/**
+	 * This will call the given call-back to remove the result of this implication
+	 * from the lattice.
+	 */
+	boolean splitOffResult(SplitOffTuple tuple);
 }
