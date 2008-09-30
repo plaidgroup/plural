@@ -52,7 +52,8 @@ import edu.cmu.cs.plural.annot.States;
  * @author Kevin Bierhoff
  * @since 7/16/2008
  */
-@FailingTest(3)
+@FailingTest(2)
+// 3 when not using borrowing optimization
 @UseAnalyses({"FractionalAnalysis","PluralAnnotationAnalysis"})
 public class SpecInheritanceTest {
 	

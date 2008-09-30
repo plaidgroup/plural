@@ -53,7 +53,9 @@ import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
 
-@FailingTest(6)  // 7 when reporting state and permission failures separately
+@FailingTest(5)  
+// 6 when not using borrowing optimization 
+// 7 when reporting state and permission failures separately
 @UseAnalyses("FractionalAnalysis")
 @States({"available", "end"})
 @Param(name = "array", releasedFrom = "alive")
