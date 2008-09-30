@@ -84,6 +84,7 @@ import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
 import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
+import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 import edu.cmu.cs.plural.states.IConstructorCaseInstance;
 import edu.cmu.cs.plural.states.IInvocationCaseInstance;
 import edu.cmu.cs.plural.states.IMethodCaseInstance;
@@ -206,23 +207,12 @@ class LinearOperations extends TACAnalysisHelper {
 		// 1. split off pre-condition
 		PredicateChecker pre = sigCase.getPreconditionChecker();
 		Aliasing this_loc = value.getLocationsBefore(instr, getThisVar());
-		CallPreconditionHandler splitter = createSplitter(instr, value, this_loc, failFast);
-		if(! pre.splitOffPredicate(
-				paramMap, 
-				splitter))
-			return ContextFactory.trueContext();
 		
-		final Map<Aliasing, FractionalPermissions> borrowed = splitter.getBorrowed();
-		DisjunctiveLE result = splitter.getResult();
-		assert result != null;
-		
-		final PredicateMerger post = sigCase.getPostconditionMerger();
-		result = result.dispatch(new RewritingVisitor() {
-			
+		CallHandlerContinuation cont = new CallHandlerContinuation() {
+
 			@Override
-			public DisjunctiveLE context(LinearContextLE le) {
-				TensorPluralTupleLE tuple = le.getTuple();
-				
+			public DisjunctiveLE mergePostIntoTuple(TensorPluralTupleLE tuple,
+					Map<Aliasing, FractionalPermissions> borrowedPerms) {
 				// 2. forget state information for remaining permissions
 				if(sigCase.isEffectFree() == false) {
 					tuple = forgetStateInfo(tuple);
@@ -230,18 +220,54 @@ class LinearOperations extends TACAnalysisHelper {
 				}
 				
 				// 3. merge in post-condition
-				DefaultPredicateMerger merger = new DefaultPredicateMerger(
-						instr.getNode(), tuple/*, borrowed*/);
+				PredicateMerger post = sigCase.getPostconditionMerger();
+				CallPostPredicateMerger merger = new CallPostPredicateMerger(
+						instr.getNode(), tuple, borrowedPerms);
 				post.mergeInPredicate(paramMap, merger);
 				
 				if(merger.isVoid())
 					return ContextFactory.falseContext();
 				else
-					return le;
+					return ContextFactory.tensor(tuple);
 			}
-		});
+			
+		};
 		
-		return result;
+		CallPreconditionHandler splitter = createSplitter(
+				instr, value, this_loc, cont, failFast);
+		
+		// the splitter will also merge in the post-condition
+		if(! pre.splitOffPredicate(
+				paramMap, 
+				splitter))
+			return ContextFactory.trueContext();
+		
+		return splitter.getResult();
+//		result = result.dispatch(new RewritingVisitor() {
+//			
+//			@Override
+//			public DisjunctiveLE context(LinearContextLE le) {
+//				TensorPluralTupleLE tuple = le.getTuple();
+//				
+//				// 2. forget state information for remaining permissions
+//				if(sigCase.isEffectFree() == false) {
+//					tuple = forgetStateInfo(tuple);
+//					tuple = forgetFieldPermissionsIfNeeded(tuple, getThisVar(), instr);
+//				}
+//				
+//				// 3. merge in post-condition
+//				CallPostPredicateMerger merger = new CallPostPredicateMerger(
+//						instr.getNode(), tuple, borrowed);
+//				post.mergeInPredicate(paramMap, merger);
+//				
+//				if(merger.isVoid())
+//					return ContextFactory.falseContext();
+//				else
+//					return le;
+//			}
+//		});
+//		
+//		return result;
 	}
 
 	/**
@@ -332,6 +358,7 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @param instr
 	 * @param value
 	 * @param this_loc
+	 * @param cont 
 	 * @param failFast
 	 * @return A {@link CallPreconditionHandler} instance if <code>failFast</code> is
 	 * <code>true</code>; a {@link LazyPreconditionHandler} otherwise.
@@ -339,56 +366,155 @@ class LinearOperations extends TACAnalysisHelper {
 	 */
 	private CallPreconditionHandler createSplitter(
 			final TACInvocation instr, TensorPluralTupleLE value,
-			final Aliasing this_loc, boolean failFast) {
-		return failFast ? new CallPreconditionHandler(instr, value, this_loc) :
-					new LazyPreconditionHandler(instr, value, this_loc);
+			final Aliasing this_loc, CallHandlerContinuation cont, boolean failFast) {
+		return failFast ? new CallPreconditionHandler(instr, value, this_loc, cont) :
+					new LazyPreconditionHandler(instr, value, this_loc, cont);
 	}
 	
 	/**
+	 * Continuation called by {@link CallPreconditionHandler#finishSplit()} to
+	 * move on to post-condition processing.  Convenient to define this as a
+	 * continuation in order to keep post-condition concerns out of the
+	 * pre-condition checker.
+	 * @author Kevin Bierhoff
+	 * @since Sep 29, 2008
+	 * @see CallPreconditionHandler
+	 * @see LinearOperations#handleInvocation(TACInvocation, TensorPluralTupleLE, IInvocationCaseInstance, boolean, SimpleMap)
+	 */
+	interface CallHandlerContinuation {
+
+		/**
+		 * Call this method to merge the post-condition of an invocation
+		 * into the given tuple, assuming the given borrowed permissions.
+		 * @param tuple
+		 * @param borrowedPerms Map from borrowed locations to their original
+		 * permissions.
+		 * @return The resulting context(s).
+		 */
+		DisjunctiveLE mergePostIntoTuple(TensorPluralTupleLE tuple,
+				Map<Aliasing, FractionalPermissions> borrowedPerms);
+		
+	}
+
+	/**
 	 * Callbacks for checking and splitting a call pre-condition off a tuple as part of a
-	 * transfer function.  The checker methods return <code>false</code> when a check
-	 * fails.  Defined as inner class because it uses instance methods
-	 * of {@link LinearOperations}.
+	 * transfer function.  
+	 * Afterwards, it calls a continuation to merge in the call post-condition.  
+	 * The checker methods return <code>false</code> when a check fails.  
+	 * 
+	 * In order to treat borrowed objects special, this splitter delays permission splits
+	 * on borrowed objects until after packing.
+	 * It then remembers the current permissions of borrowed objects, allowing the post-
+	 * condition merger to put those back into the tuple (instead of performing an explicit
+	 * merge).
+	 * It is important to do this after packing in case packing affects objects borrowed
+	 * in the call (e.g., in a method call on a field).
+	 * In order to allow this special treatment of borrowed objects in the post-condition,
+	 * this class invokes a continuation into which it passes the tuple after pre-condition
+	 * checking as well as borrowed permissions.
+	 * 
+	 * Defined as inner class because it uses instance methods of {@link LinearOperations}.
 	 * @author Kevin Bierhoff
 	 * @since Sep 15, 2008
 	 * @see LazyPreconditionHandler
 	 * @see LinearOperations#handleInvocation(TACInvocation, TensorPluralTupleLE, IInvocationCaseInstance, boolean, SimpleMap)
 	 */
 	class CallPreconditionHandler extends AbstractPredicateChecker implements SplitOffTuple {
-
-		private DisjunctiveLE result = null;
-		private Map<Aliasing, FractionalPermissions> borrowed = null;
+		
+		// given
+		/** Node being processed, for looking up aliasing information etc. */
 		private final ASTNode node;
+		/** Post-condition processing. */
+		private final CallHandlerContinuation cont;
 
+		// populated
+		/** Final lattice after pre- and post-condition processing, from {@link #finishSplit()} */
+		private DisjunctiveLE result = null;
+		/** Borrowed locations, populated in {@link #announceBorrowed(Set)}. */
+		private Set<Aliasing> borrowed = null;
+		/** Permission splits delayed until after packing (internal). */
+		private final List<Pair<Aliasing, PermissionSetFromAnnotations>> delayed =
+			new LinkedList<Pair<Aliasing, PermissionSetFromAnnotations>>();
+		
+		/**
+		 * Creates a call pre-condition handler for the given invocation instruction.
+		 * @param instr Invocation being processed
+		 * @param value Initial tuple
+		 * @param thisLoc Location of the (possibly unpacked) surrounding receiver
+		 * @param cont Continuation to perform post-condition processing
+		 * @see #CallPreconditionHandler(ASTNode, TensorPluralTupleLE, Aliasing, CallHandlerContinuation)
+		 */
 		public CallPreconditionHandler(TACInvocation instr,
-				TensorPluralTupleLE value, Aliasing thisLoc) {
+				TensorPluralTupleLE value, Aliasing thisLoc,
+				CallHandlerContinuation cont) {
 			super(value, thisLoc);
 			this.node = instr.getNode();
+			this.cont = cont;
 		}
 
-		public CallPreconditionHandler(ASTNode node,
-				TensorPluralTupleLE value, Aliasing thisLoc) {
+		/**
+		 * Creates a call pre-condition handler for the given AST node.
+		 * @param node Node being processed
+		 * @param value Initial tuple
+		 * @param thisLoc Location of the (possibly unpacked) surrounding receiver
+		 * @param cont Continuation to perform post-condition processing
+		 * @see #CallPreconditionHandler(TACInvocation, TensorPluralTupleLE, Aliasing, CallHandlerContinuation)
+		 */
+		protected CallPreconditionHandler(ASTNode node,
+				TensorPluralTupleLE value, Aliasing thisLoc,
+				CallHandlerContinuation cont) {
 			super(value, thisLoc);
 			this.node = node;
+			this.cont = cont;
 		}
 
-		public Map<Aliasing, FractionalPermissions> getBorrowed() {
-			return borrowed != null ? borrowed : 
-				Collections.<Aliasing, FractionalPermissions>emptyMap();
-		}
-
+		/**
+		 * The result of performing pre-condition checks <b>and</b> invoking
+		 * the continuation for post-condition processing.
+		 * @return
+		 */
 		public DisjunctiveLE getResult() {
 			return result;
 		}
 
 		@Override
+		protected final boolean splitOffInternal(Aliasing var,
+				TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
+			if(borrowed != null && borrowed.contains(var)) {
+				// no frame permissions should get here
+				assert perms.getFramePermissions().isEmpty();
+				
+				if(!checkStateInfoInternal(var, perms.getStateInfo(false), false))
+					// check state info right away so we can fail early if desired
+					return false;
+				delayed.add(Pair.create(var, perms));
+				return true;
+			}
+			else
+				return doSplitOffInternal(var, value, perms, false);
+		}
+
+		/**
+		 * Replaces {@link #splitOffInternal(Aliasing, TensorPluralTupleLE, PermissionSetFromAnnotations)}
+		 * in subclasses so we can delay permission splitting.  Takes an additional parameter
+		 * to force state and constraint checks in {@link LazyPreconditionHandler}.
+		 * @param var
+		 * @param value
+		 * @param perms
+		 * @param forceFail 
+		 * @return <code>true</code> to continue checking, <code>false</code> otherwise
+		 * @see #splitOffInternal(Aliasing, TensorPluralTupleLE, PermissionSetFromAnnotations)
+		 */
+		protected boolean doSplitOffInternal(Aliasing var,
+				TensorPluralTupleLE value, PermissionSetFromAnnotations perms, 
+				boolean forceFail) {
+			return super.splitOffInternal(var, value, perms);
+		}
+
+		@Override
 		public void announceBorrowed(Set<Aliasing> borrowedVars) {
-			// TODO fix problems with borrowing and comment in code below
-//			assert borrowed == null;
-//			borrowed = new LinkedHashMap<Aliasing, FractionalPermissions>(borrowedVars.size());
-//			for(Aliasing var : borrowedVars) {
-//				borrowed.put(var, value.get(var).withoutStateInfo());
-//			}
+			assert this.borrowed == null;
+			this.borrowed = borrowedVars;
 		}
 
 		@Override
@@ -396,17 +522,46 @@ class LinearOperations extends TACAnalysisHelper {
 			result = prepareAnalyzedMethodReceiverForCall(node, value,
 					getNeededReceiverStates(), !getNeededReceiverStates().isEmpty());
 			
+			final boolean forceFail = !ContextFactory.isSingleContext(result);
+			
 			result = result.dispatch(new RewritingVisitor() {
 
 				@Override
 				public DisjunctiveLE context(LinearContextLE le) {
-					// TODO use receiver frame permissions after packing (i.e., here) for borrowing
 					TensorPluralTupleLE tuple = le.getTuple();
-					for(PermissionSetFromAnnotations pa : getSplitFromThis()) {
-						if(! splitOffInternal(this_loc, tuple, pa))
-							return ContextFactory.trueContext();
+					
+					/*
+					 * Finish splitting
+					 */
+					Map<Aliasing, FractionalPermissions> borrowedPerms;
+					if(borrowed != null) {
+						borrowedPerms = new HashMap<Aliasing, FractionalPermissions>(
+								borrowed.size());
+
+						// populate map of borrowed permissions
+						for(Aliasing var : borrowed) {
+							borrowedPerms.put(var, tuple.get(var));
+						}
+	
+						// split off delayed permissions
+						for(Pair<Aliasing, PermissionSetFromAnnotations> d : delayed) {
+							if(! doSplitOffInternal(d.fst(), tuple, d.snd(), forceFail))
+								return ContextFactory.trueContext();
+						}
+						
+						// split off permissions for packed frame
+						for(PermissionSetFromAnnotations pa : getSplitFromThis()) {
+							if(! doSplitOffInternal(this_loc, tuple, pa, forceFail))
+								return ContextFactory.trueContext();
+						}
 					}
-					return le;
+					else
+						borrowedPerms = Collections.emptyMap();
+
+					/*
+					 * Call continuation to forget state info and merge
+					 */
+					return cont.mergePostIntoTuple(tuple, borrowedPerms);
 				}
 				
 			});
@@ -418,37 +573,52 @@ class LinearOperations extends TACAnalysisHelper {
 	
 	/**
 	 * Callbacks for splitting permissions in a call pre-condition off a tuple as part of a
-	 * transfer function.  Unlike its superclass, the checker methods in this class do not 
-	 * actually check anything. 
-	 * Defined as inner class because it uses instance methods
-	 * of {@link LinearOperations}.
+	 * transfer function.  
+	 * Unlike its superclass, the checker methods in this class do not 
+	 * actually check anything.
+	 * The exception is {@link #doSplitOffInternal(Aliasing, TensorPluralTupleLE, PermissionSetFromAnnotations, boolean)}
+	 * which can be forced to perform checks.
+	 * Defined as inner class because it uses instance methods of {@link LinearOperations}.
 	 * @author Kevin Bierhoff
 	 * @since Sep 15, 2008
 	 * @see CallPreconditionHandler
 	 */
 	class LazyPreconditionHandler extends CallPreconditionHandler implements SplitOffTuple {
 		
+		/**
+		 * @see CallPreconditionHandler#CallPreconditionHandler(TACInvocation, TensorPluralTupleLE, Aliasing, CallHandlerContinuation)
+		 */
 		public LazyPreconditionHandler(TACInvocation instr,
-				TensorPluralTupleLE value, Aliasing thisLoc) {
-			super(instr, value, thisLoc);
+				TensorPluralTupleLE value, Aliasing thisLoc,
+				CallHandlerContinuation cont) {
+			super(instr, value, thisLoc, cont);
+		}
+
+		/**
+		 * @see CallPreconditionHandler#CallPreconditionHandler(ASTNode, TensorPluralTupleLE, Aliasing, CallHandlerContinuation)
+		 */
+		protected LazyPreconditionHandler(ASTNode node,
+				TensorPluralTupleLE value, Aliasing thisLoc,
+				CallHandlerContinuation cont) {
+			super(node, value, thisLoc, cont);
 		}
 		
-		public LazyPreconditionHandler(ASTNode node,
-				TensorPluralTupleLE value, Aliasing thisLoc) {
-			super(node, value, thisLoc);
-		}
-		
-		protected boolean splitOffInternal(Aliasing var, TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
+		@Override
+		protected boolean doSplitOffInternal(
+				Aliasing var, TensorPluralTupleLE value, 
+				PermissionSetFromAnnotations perms, boolean forceFail) {
+			if(forceFail)
+				return super.doSplitOffInternal(var, value, perms, forceFail);
+			
 			// split off permission 
 			value = LinearOperations.splitOff(var, value, perms);
-			
 			return true; // ignore checks
 		}
 
 		@Override
 		protected boolean checkStateInfoInternal(Aliasing var,
 				Set<String> stateInfo, boolean inFrame) {
-			return true;
+			return true;  // ignore this check
 		}
 
 		@Override
@@ -469,6 +639,66 @@ class LinearOperations extends TACAnalysisHelper {
 		@Override
 		public boolean checkTrue(Aliasing var) {
 			return true;  // ignore this check
+		}
+		
+	}
+	
+	/**
+	 * Call post-condition merger with special treatment of borrowed objects.
+	 * {@link #finishMerge()} puts permissions of borrowed objects back into the lattice,
+	 * with updated state information, overriding any constraints collected for them
+	 * for the processed call.
+	 * This is ok as long as we catch constraint failures either right away or,
+	 * for {@link LazyPreconditionHandler lazy processing}, in the checker.
+	 * Nonetheless, the current approach isn't perfect because it's conceivable
+	 * that permissions in addition to ones borrowed in the call are merged from the
+	 * post-condition.
+	 * These permissions would currently be dropped.
+	 * @author Kevin Bierhoff
+	 * @since Sep 29, 2008
+	 *
+	 */
+	class CallPostPredicateMerger extends DefaultPredicateMerger implements MergeIntoTuple {
+
+		// given
+		/** Permissions for borrowed objects. */
+		private Map<Aliasing, FractionalPermissions> borrowed;
+
+		/**
+		 * Creates a merger with the given borrowed permissions.
+		 * @param astNode Node being processed.
+		 * @param value Initial tuple.
+		 * @param borrowed Permissions for borrowed objects.
+		 */
+		public CallPostPredicateMerger(ASTNode astNode,
+				TensorPluralTupleLE value, Map<Aliasing, FractionalPermissions> borrowed) {
+			super(astNode, value);
+			this.borrowed = borrowed;
+		}
+
+		@Override
+		public void finishMerge() {
+			if(borrowed != null) {
+				// simply replace the current (after split and merge) permissions
+				// with the given permissions for borrowed locations
+				// (assuming the given locations are what we had before splitting and merging)
+				// but use the new state information after forgetting and merging
+				// TODO this is suboptimal because in theory we could have merged in permissions
+				// in addition to the borrowed ones, but we'll ignore this for now
+				for(Map.Entry<Aliasing, FractionalPermissions> b : borrowed.entrySet()) {
+					Aliasing var = b.getKey();
+					FractionalPermissions p = value.get(var);
+					List<String> virtStates = p.getStateInfo(false);
+					List<String> frameStates = p.getStateInfo(true);
+					p = b.getValue().withoutStateInfo();
+					for(String s : virtStates)
+						p = p.learnTemporaryStateInfo(s, false);
+					for(String s : frameStates)
+						p = p.learnTemporaryStateInfo(s, true);
+					value.put(var, p);
+				}
+			}
+			super.finishMerge();
 		}
 		
 	}

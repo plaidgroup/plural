@@ -44,13 +44,11 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.tac.TACInvocation;
 import edu.cmu.cs.plural.alias.ParamVariable;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
-import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 
 /**
@@ -63,7 +61,7 @@ import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
  */
 public class DefaultPredicateMerger implements MergeIntoTuple {
 
-	private TensorPluralTupleLE value;
+	protected TensorPluralTupleLE value;
 	private boolean isVoid = false;
 	private ASTNode astNode;
 
