@@ -95,96 +95,7 @@ import edu.cmu.cs.plural.util.SimpleMap;
 public class ConcreteAnnotationUtils {
 
 	private static final Logger log = Logger.getLogger(FractionalTransfer.class.getName());
-		
-	/**
-	 * Return a list of variables (which are fields) that must be null when the
-	 * receiver is in the state specified by thisPerm, according to the invariant
-	 * annotations.
-	 * 
-	 * @param this_type
-	 * @param thisPerm
-	 * @param stateRepo
-	 * @param annotationDB
-	 * @return
-	 */
-	public static List<Variable> getFieldsThatMustBeNonNull(ITypeBinding this_type,
-			FractionalPermission thisPerm, StateSpaceRepository stateRepo,
-			AnnotationDatabase annotationDB) {
-		return nullFieldInvariantHelper(this_type, thisPerm, false, stateRepo, annotationDB);
-	}
 	
-	/**
-	 * Return a list of variables (which are fields) that must not be null when the
-	 * receiver is in the state specified by thisPerm, according to the invariant
-	 * annotations.
-	 * 
-	 * @param this_type
-	 * @param thisPerm
-	 * @param stateRepo
-	 * @param annotationDB
-	 * @return
-	 */
-	public static List<Variable> getFieldsThatMustBeNull(ITypeBinding this_type,
-			FractionalPermission thisPerm, StateSpaceRepository stateRepo,
-			AnnotationDatabase annotationDB) {
-		return nullFieldInvariantHelper(this_type, thisPerm, true, stateRepo, annotationDB);
-	}
-	
-	// Helper method to be called by the above public methods.
-	private static List<Variable> nullFieldInvariantHelper(ITypeBinding this_type,
-			FractionalPermission thisPerm, boolean mustBeNull,
-			StateSpaceRepository stateRepo,
-			AnnotationDatabase annotationDB) {
-
-		/*
-		 * Build field mapping.
-		 */
-		final Map<String, IVariableBinding> fields = 
-			new HashMap<String, IVariableBinding>(this_type.getDeclaredFields().length);
-		for( IVariableBinding var : this_type.getDeclaredFields() ) {
-			fields.put(var.getName(), var);
-		}
-		final SimpleMap<String, Variable> vars = new SimpleMap<String,Variable>() {
-			@Override
-			public Variable get(String key) {
-				return new FieldVariable(fields.get(key));
-			}
-		};
-
-		List<Variable> result = new LinkedList<Variable>();
-
-		/*
-		 * Get all state invariant information from the annotation database.
-		 */
-		for( ICrystalAnnotation csda : annotationDB.getAnnosForType(this_type)) {
-			if( csda instanceof ClassStateDeclAnnotation ) {
-				final List<StateDeclAnnotation> decls = 
-					((ClassStateDeclAnnotation)csda).getStates();
-
-				for( StateDeclAnnotation decl : decls ) {
-					/*
-					 * Is this declaration applicable to the current recvr state?
-					 * We want the annotation state to be between the this state and
-					 * the this root state, inclusive.
-					 */
-					final boolean applies =
-						thisPerm.impliesState(decl.getStateName()) &&
-								(thisPerm.coversNode(decl.getStateName()) || 
-										thisPerm.getStateSpace().firstBiggerThanSecond(decl.getStateName(), thisPerm.getRootNode()));
-
-					if( applies ) {
-						String perm_string = decl.getInv();
-
-						result.addAll(mustBeNull ? 
-								PermParser.parseMustBeNullFromString(perm_string, vars) :
-								PermParser.parseMustNotBeNullFromString(perm_string, vars));
-					}
-				}
-			}
-		}
-
-		return result;
-	}
 	
 	public static NullPredicate createNull(Aliasing v, boolean negate) {
 		return negate ? NullPredicate.createNonNullVarPred(v) : NullPredicate.createNullVarPred(v);
@@ -195,51 +106,6 @@ public class ConcreteAnnotationUtils {
 		return bool ? BooleanPredicate.createTrueVarPred(v) : BooleanPredicate.createFalseVarPred(v);
 	}
 
-	public static StateImplication createBooleanStateImpl(Aliasing anteVar,
-			boolean result, Aliasing describedVar, String state) {
-		return result ? 
-				StateImplication.createTrueVarImplies(anteVar, describedVar, state) :
-				StateImplication.createFalseVarImplies(anteVar, describedVar, state);
-	}
-
-	public static Set<Aliasing> addConcreteFieldInvariants(
-			PluralTupleLatticeElement tuple,
-			ITypeBinding this_type, String assignedField,
-			FractionalPermission thisPerm, SimpleMap<String, Aliasing> vars,
-			AnnotationDatabase annotationDB) {
-		
-		Set<Aliasing> result = new LinkedHashSet<Aliasing>();
-
-		/*
-		 * Get all state invariant information from the annotation database.
-		 */
-		for( ICrystalAnnotation csda : annotationDB.getAnnosForType(this_type)) {
-			if( csda instanceof ClassStateDeclAnnotation ) {
-				final List<StateDeclAnnotation> decls = 
-					((ClassStateDeclAnnotation)csda).getStates();
-
-				for( StateDeclAnnotation decl : decls ) {
-					/*
-					 * Is this declaration applicable to the current recvr state?
-					 * We want the annotation state to be between the this state and
-					 * the this root state, inclusive.
-					 */
-					final boolean applies =
-						thisPerm.impliesState(decl.getStateName()) &&
-								(thisPerm.coversNode(decl.getStateName()) || 
-										thisPerm.getStateSpace().firstBiggerThanSecond(decl.getStateName(), thisPerm.getRootNode()));
-
-					if( applies ) {
-						String perm_string = decl.getInv();
-						result.addAll(addConcreteFromString(perm_string, tuple, assignedField, vars));
-					}
-				}
-			}
-		}
-
-		return result;
-	}
-	
 	/**
 	 * Returns a violated field invariant, if any.
 	 * @param value
@@ -285,22 +151,6 @@ public class ConcreteAnnotationUtils {
 		}
 
 		return null;
-	}
-	
-	public static Set<Aliasing> addConcreteFromString(
-			String perm_string, PluralTupleLatticeElement tuple, String assignedField,
-			SimpleMap<String, Aliasing> vars) {
-		final ConcreteVisitor v = new ConcreteVisitor(vars, assignedField);
-		
-		PermParser.accept(perm_string, v);
-			
-		for(Pair<Aliasing, ? extends VariablePredicate> p : v.preds) {
-			p.snd().putIntoLattice(tuple);
-		}
-		for(Pair<Aliasing, ? extends Implication> i : v.impls) {
-			tuple.addImplication(i.fst(), i.snd());
-		}
-		return v.result;
 	}
 	
 	/**

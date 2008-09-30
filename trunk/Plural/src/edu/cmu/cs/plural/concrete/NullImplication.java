@@ -82,16 +82,6 @@ public class NullImplication implements Implication {
 	}
 	
 	@Override
-	public boolean supportsMatch() {
-		return true;
-	}
-
-	@Override
-	public boolean match(VariablePredicate pred) {
-		return this.antecedantPred.equals(pred);
-	}
-
-	@Override
 	public ImplicationResult result() {
 		return new ImplicationResult() {
 			@Override

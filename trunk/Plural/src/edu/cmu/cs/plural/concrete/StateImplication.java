@@ -88,21 +88,6 @@ public final class StateImplication implements Implication {
 	 * The state of the describedVar. Closed or Open from above.
 	 */
 	private final String varState;
-
-	@Override
-	public boolean supportsMatch() {
-		return true;
-	}
-
-	/**
-	 * Would the given predicate eliminate this implication?
-	 * @param pred
-	 * @return
-	 */
-	@Override
-	public boolean match(VariablePredicate pred) {
-		return pred.equals(antecedantPred);
-	}
 	
 	/**
 	 * Returns the right hand side of the implication, assuming

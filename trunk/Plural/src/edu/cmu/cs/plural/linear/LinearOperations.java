@@ -725,6 +725,7 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @return The new lattice information after the invocation.
 	 * @deprecated Use {@link #fancyHandleInvocation(TACInvocation,TensorPluralTupleLE,Variable,Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>,Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[],Variable,PermissionSetFromAnnotations,boolean,boolean,boolean[])} instead
 	 */
+	@Deprecated
 	public DisjunctiveLE fancyHandleInvocation(
 			final TACInvocation instr,
 			IMethodBinding binding,
@@ -771,6 +772,7 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @deprecated Use {@link #handleInvocation(TACInvocation, TensorPluralTupleLE, IInvocationCaseInstance, boolean, SimpleMap)}
 	 * instead.
 	 */
+	@Deprecated
 	public DisjunctiveLE fancyHandleInvocation(
 			final TACInvocation instr,
 			final IMethodBinding binding, TensorPluralTupleLE value,
@@ -809,7 +811,7 @@ class LinearOperations extends TACAnalysisHelper {
 		}
 		for(int arg = 0; arg < argCount; arg++) {
 			PermissionSetFromAnnotations pre = argPrePost[arg].fst();
-			Variable x = (Variable) instr.getArgOperands().get(arg);
+			Variable x = instr.getArgOperands().get(arg);
 			if(mayBeAnalyzedMethodReceiver(value, instr, x)) {
 				mustPack = true;
 				neededAnalyzedMethodReceiverState.addAll(pre.getStateInfo(true));
@@ -872,7 +874,7 @@ class LinearOperations extends TACAnalysisHelper {
 		
 		// 1.2 arguments
 		for(int arg = 0; arg < argCount; arg++) {
-			Variable x = (Variable) instr.getArgOperands().get(arg);
+			Variable x = instr.getArgOperands().get(arg);
 			PermissionSetFromAnnotations pre = argPrePost[arg].fst();
 
 			Aliasing x_loc = value.getLocationsAfter(instr.getNode(), x);
@@ -1045,7 +1047,7 @@ class LinearOperations extends TACAnalysisHelper {
 				
 				// 3.2 arguments
 				for(int arg = 0; arg < argCount; arg++) {
-					Variable x = (Variable) instr.getArgOperands().get(arg);
+					Variable x = instr.getArgOperands().get(arg);
 					Aliasing x_loc = tuple.getLocationsAfter(instr.getNode(), x);
 					if(borrowed_locs.get(x_loc) == null)
 						tuple = mergeIn(instr, tuple, x, argPrePost[arg].snd());
@@ -2067,72 +2069,6 @@ class LinearOperations extends TACAnalysisHelper {
 			// ignore
 		}
 
-	}
-	
-	/**
-	 * @param curLattice
-	 * @param paramPost
-	 * @param resultVar
-	 * @param resultPost
-	 * @param stateTests (possibly empty) map from return values to the 
-	 * receiver state being tested.
-	 * @return An error message or <code>null</code> if no errors were found.
-	 * @deprecated Use {@link LinearOperations#checkPostCondition(ASTNode, TensorPluralTupleLE, Variable, PredicateChecker, SimpleMap, Map)} instead.
-	 */
-	public String fancyCheckPostConditions(
-			final ASTNode node,
-			TensorPluralTupleLE curLattice,
-			final Map<Aliasing, PermissionSetFromAnnotations> paramPost,
-			final Variable resultVar,
-			final PermissionSetFromAnnotations resultPost, 
-			final Map<Boolean, String> stateTests) {
-		// 0. determine result location
-		Aliasing res_loc;
-		if(resultVar == null) {
-			res_loc = null;
-			assert stateTests.isEmpty(); // can't have state tests without result
-		}
-		else {
-			res_loc = curLattice.getLocationsAfter(node, resultVar);
-			assert res_loc != null; // make sure result location exists
-		}
-
-		// 1. Check every state test separately
-		for(boolean result : stateTests.keySet()) {
-			if(resultVar == null) 
-				throw new IllegalArgumentException("No result given for state test: " + node);
-			if(getThisVar() == null) {
-				if(log.isLoggable(Level.WARNING))
-					log.warning("Ignoring state test method without receiver: " + node);
-				break;
-			}
-			
-			if(result == true && curLattice.isBooleanFalse(res_loc))
-				// skip state indicated with TRUE only if we know result is FALSE
-				continue;
-			if(result == false && curLattice.isBooleanTrue(res_loc))
-				// skip state indicated with FALSE only if we know result is TRUE
-				continue;
-			
-			final Map<Aliasing, StateImplication> indicated_states;
-			Aliasing this_loc = curLattice.getLocationsAfter(node, getThisVar());
-			indicated_states = Collections.singletonMap(this_loc, 
-					ConcreteAnnotationUtils.createBooleanStateImpl(
-							res_loc, result, this_loc,
-							stateTests.get(result)));
-			
-			String checkTest = checkPostConditionOption(
-					node, curLattice, paramPost, res_loc, resultPost, 
-					indicated_states);
-
-			if(checkTest != null)
-				return checkTest;
-		}
-	
-		// 2. Check without state tests
-		return checkPostConditionOption(
-				node, curLattice, paramPost, res_loc, resultPost, 
-				Collections.<Aliasing, StateImplication> emptyMap());
 	}
 
 	/**

@@ -181,46 +181,6 @@ public class PermParser {
 	}
 	
 	/**
-	 * Given a string from a permission annotation, this method will return a list
-	 * of variables that the string indicates must be null. Because of caching,
-	 * repeated calls to this method on the same string do not re-parse, as long as
-	 * the calls occur in a row. 
-	 * 
-	 * @param perm_string
-	 * @param vars
-	 * @return
-	 */
-	public static List<Variable>
-	parseMustBeNullFromString(String perm_string, SimpleMap<String,Variable> vars) {
-		
-		Option<TopLevelPred> parsed_pred = parse(perm_string);
-		return 
-			(parsed_pred.isNone() || parsed_pred.unwrap() instanceof TopLevelPred.Impossible ?
-					Collections.<Variable>emptyList() :
-					((AccessPred) parsed_pred.unwrap()).accept(new NullVisitorConj(true, vars)));
-	}
-	
-	/**
-	 * Given a string from a permission annotation, this method will return a list
-	 * of variables that the string indicates must NOT be null. Because of caching,
-	 * repeated calls to this method on the same string do not re-parse, as long as
-	 * the calls occur in a row.
-	 * 
-	 * @param perm_string
-	 * @param vars
-	 * @return
-	 */
-	public static List<Variable>
-	parseMustNotBeNullFromString(String perm_string, SimpleMap<String,Variable> vars) {
-
-		Option<TopLevelPred> parsed_pred = parse(perm_string);
-		return 
-			(parsed_pred.isNone() || parsed_pred.unwrap() instanceof TopLevelPred.Impossible ?
-					Collections.<Variable>emptyList() :
-					((AccessPred) parsed_pred.unwrap()).accept(new NullVisitorConj(false, vars)));
-	}
-	
-	/**
 	 * Giving a string from a permission annotation, this method
 	 * will return all of the 'more specific state information'
 	 * that we find. In other words, when 'var in OPEN' is
