@@ -115,7 +115,7 @@ public class ModifyingIterator<T> {
 	}
 	
 	// this is correct iterator usage
-	public static void removeBeforeNext(@Unique ModifyingIterator<String> it) {
+	public static void removeBeforeNext(@Full ModifyingIterator<String> it) {
 		if(it.hasNext()) {
 			it.next();
 			while(it.hasNext()) {
