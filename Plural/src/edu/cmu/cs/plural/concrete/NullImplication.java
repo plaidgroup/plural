@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 public class NullImplication implements Implication {
@@ -103,6 +104,17 @@ public class NullImplication implements Implication {
 					value.addNonNullVariable(consequencePred.getVariable());
 				}
 				return value;
+			}
+
+			@Override
+			public boolean splitOffResult(SplitOffTuple tuple) {
+				if( consequencePred.denotesNullVar() ) {
+					return tuple.checkNull(consequencePred.getVariable());
+				}
+				else if( consequencePred.denotesNonNullVariable() ) {
+					return tuple.checkNonNull(consequencePred.getVariable());
+				}
+				return true;
 			}
 		};
 	}

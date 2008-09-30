@@ -47,6 +47,7 @@ import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.linear.PermissionPredicate;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
@@ -151,12 +152,12 @@ public class ParamInfoHolder {
 		return new ReleaseHolder(perms, releasedFromState);
 	}
 	
-	public VariablePredicate createPredicate(Aliasing var) {
-		return createInfoPredicate(var);
+	public VariablePredicate createPredicate(String paramName, Aliasing var) {
+		return createInfoPredicate(paramName, var);
 	}
 	
-	InfoHolderPredicate createInfoPredicate(Aliasing var) {
-		return new InfoHolderPredicate(perms, prim, stateInfo, var);
+	InfoHolderPredicate createInfoPredicate(String paramName, Aliasing var) {
+		return new InfoHolderPredicate(perms, prim, stateInfo, paramName, var);
 	}
 	
 	/**
@@ -170,10 +171,11 @@ public class ParamInfoHolder {
 
 		private final Set<String> stateInfo;
 		private final Primitive prim;
+		private String paramName;
 		
 		
 		public InfoHolderPredicate(PermissionSetFromAnnotations perms,
-				Primitive prim, Set<String> stateInfo, Aliasing var) {
+				Primitive prim, Set<String> stateInfo, String paramName, Aliasing var) {
 			super(var, perms);
 			assert perms != null || prim != null || (stateInfo != null && !stateInfo.isEmpty()); 
 			this.prim = prim;
@@ -181,16 +183,17 @@ public class ParamInfoHolder {
 					// force the field to be non-null
 					Collections.<String>emptySet() : 
 						Collections.unmodifiableSet(stateInfo);
+			this.paramName = paramName;
 		}
 
 		@Override
 		public InfoHolderPredicate createIdenticalPred(Aliasing other) {
-			return new InfoHolderPredicate(getPerms(), prim, stateInfo, other);
+			return new InfoHolderPredicate(getPerms(), prim, stateInfo, paramName, other);
 		}
 
 		@Override
 		public InfoHolderPredicate createOppositePred(Aliasing other) {
-			return new InfoHolderPredicate(null, prim.getOpposite(), null, other);
+			return new InfoHolderPredicate(null, prim.getOpposite(), null, paramName, other);
 		}
 
 		@Override
@@ -284,7 +287,7 @@ public class ParamInfoHolder {
 			for(String s : stateInfo) {
 				changed = true;
 				// TODO learn all states at once
-				ps = ps.learnTemporaryStateInfo(s);
+				ps = ps.learnTemporaryStateInfo(s, isFramePredicate());
 			}
 			
 			if(changed)
@@ -321,7 +324,7 @@ public class ParamInfoHolder {
 			
 			if(!stateInfo.isEmpty()) {
 				FractionalPermissions ps = value.get(getVariable());
-				if(! ps.isInStates(stateInfo))
+				if(! ps.isInStates(stateInfo, isFramePredicate()))
 					return false;
 			}
 			
@@ -363,9 +366,55 @@ public class ParamInfoHolder {
 				// ignore state info in this test 'cause it's dropped anyway
 				return null; // nothing left in this predicate
 			
-			return new InfoHolderPredicate(newPs, prim, null /* drop state info */, getVariable());
+			return new InfoHolderPredicate(newPs, prim, null /* drop state info */, paramName, getVariable());
 		}
 		
+		public boolean splitOff(SplitOffTuple tuple) {
+			if(prim != null) {
+				switch(prim) {
+				case NULL: 
+					if(! tuple.checkNull(getVariable())) 
+						return false;
+					break;
+				case NONNULL: 
+					if(! tuple.checkNonNull(getVariable())) 
+						return false;
+					break;
+				case TRUE: 
+					if(! tuple.checkTrue(getVariable())) 
+						return false;
+					break;
+				case FALSE: 
+					if(! tuple.checkFalse(getVariable())) 
+						return false;
+					break;
+				default: 
+					// can't satisfy multiple at once
+					return false;
+				}
+			}
+			
+			if(!stateInfo.isEmpty()) {
+				boolean state_info_correct = tuple.checkStateInfo(getVariable(), 
+						stateInfo, isFramePredicate());
+				
+				if( !state_info_correct )
+					return false;
+			}
+			
+			if(getPerms() != null) {
+				boolean split_worked =
+					tuple.splitOffPermission(getVariable(), getPerms());
+				
+				return split_worked;
+			}
+			return true;
+		}
+
+		private boolean isFramePredicate() {
+			return "this!fr".equals(paramName);
+		}
+
 		@Override
 		public String toString() {
 			String result = null;
@@ -387,11 +436,13 @@ public class ParamInfoHolder {
 				return "EMP"; // this shouldn't happen
 			return result;
 		}
-		
+
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = super.hashCode();
+			result = prime * result
+					+ ((paramName == null) ? 0 : paramName.hashCode());
 			result = prime * result + ((prim == null) ? 0 : prim.hashCode());
 			result = prime * result
 					+ ((stateInfo == null) ? 0 : stateInfo.hashCode());
@@ -407,6 +458,11 @@ public class ParamInfoHolder {
 			if (getClass() != obj.getClass())
 				return false;
 			InfoHolderPredicate other = (InfoHolderPredicate) obj;
+			if (paramName == null) {
+				if (other.paramName != null)
+					return false;
+			} else if (!paramName.equals(other.paramName))
+				return false;
 			if (prim == null) {
 				if (other.prim != null)
 					return false;
@@ -419,7 +475,7 @@ public class ParamInfoHolder {
 				return false;
 			return true;
 		}
-
+		
 	}
 
 }

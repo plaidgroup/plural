@@ -47,6 +47,7 @@ import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
 import edu.cmu.cs.plural.concrete.VariablePredicate;
 import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.util.Pair;
 
@@ -103,6 +104,11 @@ public class ReleasePermissionImplication implements Implication {
 					c.snd().putIntoLattice(value, c.fst(), capturing_var, false);
 				}
 				return value;
+			}
+
+			@Override
+			public boolean splitOffResult(SplitOffTuple tuple) {
+				throw new UnsupportedOperationException();
 			}
 			
 		};
