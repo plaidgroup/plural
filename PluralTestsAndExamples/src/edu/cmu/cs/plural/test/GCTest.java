@@ -44,6 +44,7 @@ import edu.cmu.cs.plural.annot.Capture;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Lend;
+import edu.cmu.cs.plural.annot.Param;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
@@ -52,6 +53,7 @@ import edu.cmu.cs.plural.annot.Unique;
 @FailingTest(3)
 @UseAnalyses("FractionalAnalysis")
 @ClassStates(@State(name = "alive", inv = "full(gct)"))
+@Param(name = "p", releasedFrom = "alive")
 public class GCTest {
 	
 	private final GCTest gct;
@@ -75,7 +77,7 @@ public class GCTest {
 	}
 	
 	@Perm(requires = "unique(this!fr)", ensures = "full(result)")
-	@Lend(param = "outer")
+	@Lend /* is actually the "p" parameter, but that confuses the GC logic */
 	public GCTest getGct() {
 		return gct; // error here b/c we pack before checking result
 		// shouldn't pack at all here
