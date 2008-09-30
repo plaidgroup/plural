@@ -71,8 +71,6 @@ import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.alias.FrameLabel;
 import edu.cmu.cs.plural.alias.ParamVariable;
-import edu.cmu.cs.plural.concrete.ConcreteAnnotationUtils;
-import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.StateImplication;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.Fraction;
@@ -92,6 +90,7 @@ import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.track.FieldVariable;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
+import edu.cmu.cs.plural.track.Permission.PermissionKind;
 import edu.cmu.cs.plural.util.Pair;
 import edu.cmu.cs.plural.util.SimpleMap;
 import edu.cmu.cs.plural.util.TACAnalysisHelper;
@@ -520,7 +519,7 @@ class LinearOperations extends TACAnalysisHelper {
 		@Override
 		public boolean finishSplit() {
 			result = prepareAnalyzedMethodReceiverForCall(node, value,
-					getNeededReceiverStates(), !getNeededReceiverStates().isEmpty());
+					getNeededReceiverStates());
 			
 			final boolean forceFail = !ContextFactory.isSingleContext(result);
 			
@@ -800,20 +799,16 @@ class LinearOperations extends TACAnalysisHelper {
 		
 		// 0. make unpacked receiver modifiable and pack, if necessary
 
-		// must pack because receiver is involved in call 
-		boolean mustPack = false; 
 		// needed receiver states, if frame permission in needed this call
 		// this will rarely be the case, e.g., for calls to private methods
 		Set<String> neededAnalyzedMethodReceiverState = new LinkedHashSet<String>();  
 		if(mayBeAnalyzedMethodReceiver(value, instr, rcvrInstanceVar)) {
-			mustPack = true;
 			neededAnalyzedMethodReceiverState.addAll(rcvrPrePost.fst().getStateInfo(true));
 		}
 		for(int arg = 0; arg < argCount; arg++) {
 			PermissionSetFromAnnotations pre = argPrePost[arg].fst();
 			Variable x = instr.getArgOperands().get(arg);
 			if(mayBeAnalyzedMethodReceiver(value, instr, x)) {
-				mustPack = true;
 				neededAnalyzedMethodReceiverState.addAll(pre.getStateInfo(true));
 			}
 		}
@@ -939,7 +934,7 @@ class LinearOperations extends TACAnalysisHelper {
 		//     we also split it off.
 		DisjunctiveLE result;
 		result = prepareAnalyzedMethodReceiverForCall(instr.getNode(), value,
-				neededAnalyzedMethodReceiverState, mustPack);
+				neededAnalyzedMethodReceiverState);
 		
 		// make a final copy for inner class
 		final boolean this_is_borrowed = this_borrowed; 
@@ -1112,131 +1107,41 @@ class LinearOperations extends TACAnalysisHelper {
 	}
 
 	/**
-	 * Attempts, among other things, to pack the current method receiver before a call
-	 * occurs inside the method.
+	 * Attempts to pack the current method receiver before a call occurs inside the method
+	 * being checked (if needed).
+	 * May not pack if receiver has unique or immutable unpacked or {@link #packBeforeCall}
+	 * is <code>false</code>.
 	 * @param node
-	 * @param value
-	 * @param modifiesAnalyzedMethodReceiverField
-	 * @param neededAnalyzedMethodReceiverState Receiver <i>frame</i> states needed in the called method's pre-condition 
-	 * @param mustPack <code>true</code> forces packing the receiver
-	 * even if {@link #packBeforeCall} is <code>false</code>.
+	 * @param value Tuple before packing; <i>do not use after this method returns</i>.
+	 * @param neededAnalyzedMethodReceiverState Receiver <i>frame</i> states needed in the 
+	 * called method's pre-condition.  Guaranteed to pack if this set is non-empty.
+	 * @return Context(s) after preparing the receiver
+	 * @see #wrangleIntoPackedStates(ASTNode, TensorPluralTupleLE, Set, boolean)  
 	 */
 	private DisjunctiveLE prepareAnalyzedMethodReceiverForCall(
 			final ASTNode node,
 			final TensorPluralTupleLE value,
-			Set<String> neededAnalyzedMethodReceiverState, boolean mustPack) {
-
-		// make unpacked permission modifiable, if necessary
-//		if(modifiesAnalyzedMethodReceiverField) {
-//			if(value.isRcvrPacked()) {
-//				// TODO figure out what to do here
-//				log.warning("Can't force receiver permission to be modifiable at call site that requires modifying field permission.");
-//			}
-//			else {
-//				ThisVariable rcvr = getAnalysisContext().getThisVariable();
-//				FractionalPermissions rcvrPerms = value.get(instr, rcvr);
-//				value.put(instr, rcvr, rcvrPerms.makeUnpackedPermissionModifiable());
-//			}
-//		}
-//		
-		DisjunctiveLE result;
-		if(neededAnalyzedMethodReceiverState.isEmpty()) {
-			/*
-			 * The receiver is not a
-			 * parameter to the method and we have to search for a state that is
-			 * suitable to pack to.
-			 */
-			if( value.isRcvrPacked() ) {
-				result = ContextFactory.tensor(value);
-			}
-			else {
-				/*
-				 * Try the post-condition and the pre-condition as better guesses.
-				 */
-				if(! mustPack && (! packBeforeCall || isUniqueUnpacked(value, node, getThisVar())))
-					// flag says we don't pack before calls (unless unpacked object is used in the call)
-					// this is probably because of @NonReentrant
-					return ContextFactory.tensor(value);
-				
-				List<String> states_to_try = new LinkedList<String>();
-				// TODO do we need this?  Add states of currently analyzed case, if any
-				// try post-condition states
-//				states_to_try.addAll(fractContext.getAnalyzedCase().getEnsuredReceiverPermissions().getStateInfo(true));
-				// throw in the pre-condition, for good measure
-//				if(! sig.isConstructorSignature())
-//					states_to_try.addAll(sig.getMethodSignature().getRequiredReceiverStateOptions());
-				result = value.fancyPackReceiverToBestGuess(getThisVar(), 
-							getRepository(), 
-							new SimpleMap<Variable,Aliasing>() {
-								@Override
-								public Aliasing get(Variable key) {
-									return value.getLocationsAfter(node, key);
-								}},
-							states_to_try.toArray(new String[states_to_try.size()])
-							);
-				boolean pack_worked = ! ContextFactory.isImpossible(result);
-				if( !pack_worked ) {
-					if(log.isLoggable(Level.FINE))
-						log.fine("Pack before method call, where we tried to pack to any state failed. " +
-								"\nLattice:\n" + value.toString() + 
-								"" + "\nNode:"+node);
-				}
-			}
-			// do nothing if receiver already packed
-		}
-		else {
-			// try to pack receiver to needed state
-			if(value.isRcvrPacked()) {
-				// do nothing for now--this may result in a pre-condition violation
-				// TODO try unpack and re-pack if receiver is in wrong state...
-				return wrangleIntoPackedStates(node, value, neededAnalyzedMethodReceiverState);
-			}
-			else {
-				StateSpace thisSpace = getStateSpace(getThisVar().resolveType());
-				Set<String> cleanedNeededState = AbstractFractionalPermission.cleanStateInfo(
-						thisSpace, 
-						value.get(node, getThisVar()).getUnpackedPermission().getRootNode(), 
-						neededAnalyzedMethodReceiverState, true);
-				boolean pack_worked = 
-					value.packReceiver(getThisVar(), 
-						getRepository(),
-						new SimpleMap<Variable, Aliasing>() {
-							@Override
-							public Aliasing get(Variable key) {
-								return value.getLocationsAfter(node, key);
-							}},
-						cleanedNeededState);
-				if( !pack_worked ) {
-					if(log.isLoggable(Level.FINE))
-						log.fine("Pack before method call, where we knew what state we had to pack (" +
-								neededAnalyzedMethodReceiverState + 
-								")to failed. " +
-								"\nLattice:\n" + value.toString() + 
-								"" + "\nNode:"+node);
-				}
-			}
-			result = ContextFactory.tensor(value);
-		}
-		
-		return result;
+			Set<String> neededAnalyzedMethodReceiverState) {
+		return wrangleIntoPackedStates(node, value, neededAnalyzedMethodReceiverState,
+				!packBeforeCall);
 	}
 
 	/**
-	 * Determine if the unpacked permission of the given variable is unique.
+	 * Determine if the unpacked permission of the given variable is unique / immutable.
+	 * This is interesting because we don't need to pack these guys.
 	 * @param value
 	 * @param node
 	 * @param thisVar
-	 * @return <code>true</code> if the unpacked permission is guaranteed unique, 
+	 * @return <code>true</code> if the unpacked permission is guaranteed unique or immutable, 
 	 * <code>false</code> otherwise.
 	 */
-	private boolean isUniqueUnpacked(TensorPluralTupleLE value,
+	private boolean isUniqueOrImmutableUnpacked(TensorPluralTupleLE value,
 			ASTNode node, Variable thisVar) {
 		FractionalPermission unp = value.get(node, thisVar).getUnpackedPermission();
 		if(unp == null) 
 			return false;
-		if(unp.getFractions().get(unp.getStateSpace().getRootState()).isOne())
-			return true;
-		return false;
+		PermissionKind up_kind = unp.getKind(value.get(node, thisVar).getConstraints());
+		return PermissionKind.UNIQUE == up_kind || PermissionKind.IMMUTABLE == up_kind;
 	}
 
 	private StateSpaceRepository getRepository() {
@@ -1277,7 +1182,7 @@ class LinearOperations extends TACAnalysisHelper {
 		FractionalPermissions this_perms = value.get(instr, thisVar);
 		FractionalPermission this_unp = this_perms.getUnpackedPermission();
 
-		if( this_unp != null && ( ! packBeforeCall || isUniqueUnpacked(value, instr.getNode(), thisVar) ))
+		if( this_unp != null && ( ! packBeforeCall || isUniqueOrImmutableUnpacked(value, instr.getNode(), thisVar) ))
 			// thisVar is unpacked and either we're not packing or unique is unpacked
 			// --> no need to forget at all because fields are fully protected
 			return value;
@@ -1697,7 +1602,7 @@ class LinearOperations extends TACAnalysisHelper {
 						checks.getErrors().iterator().next();
 		}
 		
-		// 3. Check true state test
+		// 3. Check false state test
 		if(falseTest != null && ! curLattice.isBooleanTrue(res_loc)) {
 			// checker makes a copy of the lattice
 			PredicateErrorReporter checks = new PredicateErrorReporter(true, // return checker 
@@ -1914,14 +1819,14 @@ class LinearOperations extends TACAnalysisHelper {
 			if(this_loc == null) {
 				// no receiver
 				assert getNeededReceiverStates().isEmpty();
-				return true;
+				return hasErrors();
 			}
 			
 			DisjunctiveLE packed_lattice = isReturnCheck ?
 					// TODO combine wrangle and prepare
-					wrangleIntoPackedStates(node, value, getNeededReceiverStates()) :
+					prepareAnalyzedMethodReceiverForReturn(node, value, getNeededReceiverStates()) :
 						prepareAnalyzedMethodReceiverForCall(node, value, 
-								getNeededReceiverStates(), ! getNeededReceiverStates().isEmpty());
+								getNeededReceiverStates());
 			
 			// fail right away if wrangling was unsuccessful
 			if( !hasErrors() /* only check this if previously no error */ && 
@@ -1979,8 +1884,9 @@ class LinearOperations extends TACAnalysisHelper {
 		@Override
 		public boolean splitOffPermission(Aliasing var, String var_name,
 				PermissionSetFromAnnotations perms) {
-			boolean result = super.splitOffPermission(var, var_name, perms);
-			return true;
+			super.splitOffPermission(var, var_name, perms);
+			// error reporting happens in splitOffInternal
+			return true; // keep going to collect more errors
 		}
 
 		@Override
@@ -1989,7 +1895,7 @@ class LinearOperations extends TACAnalysisHelper {
 			if(! result)
 				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
 						" false: " + getSourceString(var, var_name));
-			return true;
+			return true; // keep going to collect more errors
 		}
 
 		@Override
@@ -1998,7 +1904,7 @@ class LinearOperations extends TACAnalysisHelper {
 			if(! result)
 				errors.add("Must not " + (isReturnCheck ? "return" : "be") + 
 						" null: " + getSourceString(var, var_name));
-			return true;
+			return true; // keep going to collect more errors
 		}
 
 		@Override
@@ -2007,7 +1913,7 @@ class LinearOperations extends TACAnalysisHelper {
 			if(! result)
 				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
 						" null: " + getSourceString(var, var_name));
-			return true;
+			return true; // keep going to collect more errors
 		}
 
 		@Override
@@ -2023,7 +1929,7 @@ class LinearOperations extends TACAnalysisHelper {
 					errors.add(getSourceString(var, var_name) + " must " + (isReturnCheck ? "return" : "be") + 
 						" in state(s) " + stateInfo + " but is in " + actual);
 			}
-			return true;
+			return true; // keep going to collect more errors
 		}
 
 		@Override
@@ -2032,7 +1938,7 @@ class LinearOperations extends TACAnalysisHelper {
 			if(! result)
 				errors.add("Must " + (isReturnCheck ? "return" : "be") + 
 						" true: " + getSourceString(var, var_name));
-			return result;
+			return true; // keep going to collect more errors
 		}
 		
 		@Override
@@ -2067,7 +1973,7 @@ class LinearOperations extends TACAnalysisHelper {
 						" permissions " + perms.getUserString() + 
 						" but it has " + beforeSplit.getUserString());
 			}
-			return true; // keep going....
+			return true; // keep going to collect more errors
 		}
 
 		@Override
@@ -2139,7 +2045,7 @@ class LinearOperations extends TACAnalysisHelper {
 			
 			// pack receiver, if necessary
 			packed_lattice =
-				this.wrangleIntoPackedStates(node, curLattice, needed_rcvr_states);
+				this.prepareAnalyzedMethodReceiverForReturn(node, curLattice, needed_rcvr_states);
 			
 			// fail right away if wrangling was unsuccessful
 			if( ContextFactory.isImpossible(packed_lattice) ) {
@@ -2315,19 +2221,41 @@ class LinearOperations extends TACAnalysisHelper {
 //	}
 	
 	/**
+	 * Attempts to pack the current method receiver for a return from the method being analyzed.
+	 * May not pack if receiver has unique or immutable unpacked.
+	 * @param node
+	 * @param neededStates States needed for the receiver <i>frame</i>; wrangling cannot
+	 * be used to get virtual permissions into desired states.s
+	 * @param value Tuple before packing; <i>do not use after this call returns</i>.
+	 * @return Possible contexts after packing, including {@link ContextFactory#trueContext()}
+	 * if packing was unsuccessful, but the resulting permissions need not be in the right state.
+	 * {@link #wrangleIntoPackedStates(ASTNode, TensorPluralTupleLE, Set, boolean)} 
+	 */
+	private DisjunctiveLE prepareAnalyzedMethodReceiverForReturn(
+			final ASTNode node, 
+			final TensorPluralTupleLE value, 
+			final Set<String> neededStates) {
+		return wrangleIntoPackedStates(node, value, neededStates, false);
+	}
+	/**
 	 * When the receiver is in some dubious state, this method packs/unpacks the
 	 * lattice and tries to wrangle it into the given set of states.
 	 * @param node
 	 * @param neededStates States needed for the receiver <i>frame</i>; wrangling cannot
 	 * be used to get virtual permissions into desired states.s
 	 * @param value
+	 * @param needNotPack If <code>true</code>, this method only tries to pack if
+	 * <code>neededStates</code> is non-empty.  This is useful for checking calls
+	 * inside non-reentrant methods. 
 	 * @return Possible contexts after packing, including {@link ContextFactory#trueContext()}
-	 * if packing was unsuccessful, but the resulting permissions need not be in the right state. 
+	 * if packing was unsuccessful, but the resulting permissions need not be in the right state.
+	 * @see #prepareAnalyzedMethodReceiverForCall(ASTNode, TensorPluralTupleLE, Set)
+	 * @see #prepareAnalyzedMethodReceiverForReturn(ASTNode, TensorPluralTupleLE, Set) 
 	 */
 	private DisjunctiveLE wrangleIntoPackedStates(
 			final ASTNode node, 
 			final TensorPluralTupleLE value, 
-			final Set<String> neededStates) {
+			final Set<String> neededStates, boolean needNotPack) {
 		
 		final SimpleMap<Variable, Aliasing> loc_map = new SimpleMap<Variable, Aliasing>() {
 			@Override
@@ -2341,13 +2269,21 @@ class LinearOperations extends TACAnalysisHelper {
 			 * Make sure we can pack to SOMETHING. Go home.
 			 */
 			if( value.isRcvrPacked() )
+				// already packed -> done
+				return ContextFactory.tensor(value);
+			else if(needNotPack || isUniqueOrImmutableUnpacked(value, node, getThisVar()))
+				// don't have to pack if needNotPack true or unique / immutable
 				return ContextFactory.tensor(value);
 			else
+				// try packing to any state
 				return value.fancyPackReceiverToBestGuess(getThisVar(),
 						getRepository(), loc_map) ;
 		}
 
-		// this code used to be in wrangleToPackedState--but now we can pack to multiple states at the same time
+		/*
+		 * we have needed states.
+		 * must pack no matter what (ignoring needNotPack).
+		 */
 		final ThisVariable this_var = getThisVar();
 		final Aliasing this_loc = loc_map.get(this_var);
 		final StateSpace rcvr_state_space = getRepository().getStateSpace(this_var.resolveType());
@@ -2371,11 +2307,15 @@ class LinearOperations extends TACAnalysisHelper {
 				value.packReceiver(getThisVar(),
 					getRepository(), loc_map, packToStates);
 			if(! packed)
+				// couldn't pack to needed states -> fail
 				return ContextFactory.trueContext();
 			// else see if all states are satisfied below
 		}
-		
 		// we're definitely packed here
+		
+		/*
+		 * See if needed states are satisfied, un- and re-pack if not 
+		 */
 		FractionalPermissions this_perms = value.get(value.getLocationsBefore(node, this_var));
 		Set<String> unsatStates = filterFrameUnsatisfied(this_perms, states);
 		if( unsatStates.isEmpty() ) {
@@ -2406,7 +2346,7 @@ class LinearOperations extends TACAnalysisHelper {
 				}
 			}
 			if(unpack_state == null)
-				// no permission could be unpacked to reach desired state
+				// no permission could be unpacked to reach desired state -> fail
 				return ContextFactory.trueContext();
 			
 			/*
@@ -2424,19 +2364,6 @@ class LinearOperations extends TACAnalysisHelper {
 					neededStates,
 					true,
 					true);
-
-//			value.unpackReceiver(this_var, getRepository(),
-//					loc_map, unpack_state, null /* no assigned field */);
-//			
-//			if(value.packReceiver(
-//					this_var, 
-//					getRepository(), 
-//					loc_map, 
-//					packToStates
-//					))
-//				return ContextFactory.tensor(value);
-//			else
-//				return ContextFactory.falseContext();
 
 			unpacked = unpacked.dispatch(new RewritingVisitor() {
 				@Override
@@ -2469,16 +2396,6 @@ class LinearOperations extends TACAnalysisHelper {
 				}
 			});
 			return unpacked.compact(node, false);
-			
-//					boolean packed =
-//						value.packReceiver(tf.getAnalysisContext().getThisVariable(),
-//								getRepository(), loc_map, states);
-//					if( !packed ) {
-//						return null;
-//					}
-//					else {
-//						// PASSED!
-//					}
 		}
 	}
 
