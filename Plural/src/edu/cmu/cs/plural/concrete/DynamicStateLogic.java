@@ -72,6 +72,8 @@ import edu.cmu.cs.plural.util.Pair;
 final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 
 	/**
+	 * a filter is just a lambda that returns true or false
+	 * 
 	 * @author Kevin Bierhoff
 	 * @since 8/13/2008
 	 */
@@ -138,15 +140,8 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 			
 			List<Implication> impls = knownImplications.get(var);
 			for(Implication impl : impls ) {
-				if( impl.supportsMatch() ) {
-					if( impl.match(pred) ) {
-						result.add(impl.result());
-					}
-				}
-				else {
-					if( impl.getAntecedant().isSatisfied(value) ) {
-						result.add(impl.result());
-					}
+				if( impl.getAntecedant().isSatisfied(value) ) {
+					result.add(impl.result());
 				}
 			}
 		}
@@ -178,15 +173,8 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		List<Implication> impls = knownImplications.get(v);
 		
 		for( Implication impl : impls ) {
-			if( impl.supportsMatch() ) {
-				if( impl.match(pred) ) {
-					result.add(impl.result());
-				}
-			}
-			else {
-				if( impl.getAntecedant().isSatisfied(value) ) {
-					result.add(impl.result());
-				}
+			if( impl.getAntecedant().isSatisfied(value) ) {
+				result.add(impl.result());
 			}
 		}
 		
@@ -227,20 +215,20 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		return result;
 	}
 	
+	/**
+	 * the idea is to pass a filter, and the DSL solves for all locations for which 
+	 * the filter returns true in the GC case, the filter returns true iff the 
+	 * location is dead i do it this way because i don't want to find out beforehand
+	 * all locations that are dead, and instead have the DSL ask me about the
+	 * locations it actually has facts for
+	 */
 	public List<ImplicationResult> solveFilteredVariables(PluralTupleLatticeElement value, AliasingFilter liveness) {
 		List<ImplicationResult> result = new LinkedList<ImplicationResult>();
 		for(Map.Entry<Aliasing, ConsList<Implication>> impls : knownImplications.entrySet()) {
 			if(liveness.isConsidered(impls.getKey())) {
 				for(Implication impl : impls.getValue()) {
-					if(impl.supportsMatch()) {
-						VariablePredicate pred = knownPredicates.get(impls.getKey());
-						if(pred != null && impl.match(pred))
-							result.add(impl.result());
-					}
-					else {
-						if(impl.getAntecedant().isSatisfied(value))
-							result.add(impl.result());
-					}
+					if(impl.getAntecedant().isSatisfied(value))
+						result.add(impl.result());
 				}
 			}
 		}

@@ -202,7 +202,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		
 		final ITypeBinding class_decl = rcvrVar.resolveType();
 		final FractionalPermission unpacked_perm = this_perms.getUnpackedPermission();
-		final SimpleMap<String,StateSpace> field_spaces = getFieldStateSpaces(class_decl, stateRepo);
+		final SimpleMap<String,StateSpace> field_spaces = getFieldAndObjStateSpaces(class_decl, stateRepo);
 		
 		for( Pair<String,String> state_and_inv : getStatesAndInvs(class_decl, unpacked_perm, getAnnotationDB()) ) {
 			// foreach invariant string:
@@ -244,7 +244,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			rcvr_perms.getUnpackedPermission().copyNewState(desiredState);
 
 		// Get state spaces for field types
-		final SimpleMap<String,StateSpace> field_spaces = getFieldStateSpaces(rcvr_type, stateRepo);
+		final SimpleMap<String,StateSpace> field_spaces = getFieldAndObjStateSpaces(rcvr_type, stateRepo);
 		
 		for( Pair<String,String> state_and_inv : getStatesAndInvs(rcvr_type, new_rcvr_perm, getAnnotationDB()) ) {
 			// foreach invariant string
@@ -287,16 +287,20 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	
 	/**
 	 * Given a class, create a mapping from field name to state space.
-	 * The state space comes from the type of each field.
+	 * Includes 'this.' The state space comes from the type of each field.
 	 */
-	private static SimpleMap<String, StateSpace> getFieldStateSpaces(
+	private static SimpleMap<String, StateSpace> getFieldAndObjStateSpaces(
 			ITypeBinding class_decl, final StateSpaceRepository stateRepo) {
 		// Build field mapping.
 		final Map<String, IVariableBinding> fields = createFieldNameToBindingMapping(class_decl);
+		final StateSpace this_space = stateRepo.getStateSpace(class_decl);
 		
 		return new SimpleMap<String,StateSpace>() {
 			@Override public StateSpace get(String key) {
-				return stateRepo.getStateSpace(fields.get(key).getType());
+				if( "this".equals(key) )
+					return this_space;
+				else
+					return stateRepo.getStateSpace(fields.get(key).getType());
 			}};
 	}
 

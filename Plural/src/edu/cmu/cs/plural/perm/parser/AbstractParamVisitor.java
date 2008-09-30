@@ -128,18 +128,8 @@ public abstract class AbstractParamVisitor
 		}
 
 		@Override
-		public boolean match(VariablePredicate pred) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
 		public ImplicationResult result() {
 			return this;
-		}
-
-		@Override
-		public boolean supportsMatch() {
-			return false;
 		}
 
 		@Override
