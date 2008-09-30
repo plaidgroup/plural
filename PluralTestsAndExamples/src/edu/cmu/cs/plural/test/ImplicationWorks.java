@@ -56,10 +56,12 @@ public class ImplicationWorks {
 	
 	LastObject data;
 	
+	@Perm(ensures = "unique(this!fr)")
 	ImplicationWorks(Object o) { // ERROR: Since we are setting the field to true
 		this.hasFull = true;     // we should have to come up with the permission too.
 	}
 	
+	@Perm(ensures = "unique(this!fr)")
 	ImplicationWorks() {
 		this.hasFull = true;
 		this.data = new LastObject();
