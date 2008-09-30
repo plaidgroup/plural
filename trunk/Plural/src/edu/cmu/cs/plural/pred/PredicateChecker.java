@@ -116,7 +116,8 @@ public interface PredicateChecker {
 		boolean splitOffPermission(Aliasing var, PermissionSetFromAnnotations perms);
 
 		/**
-		 * Post-processing, e.g., of delayed checks.
+		 * Post-processing, e.g., of delayed checks.  No other methods will be called
+		 * after this one.
 		 * @return <code>true</code> if checking should continue, 
 		 * <code>false</code> to fail the check.
 		 */
@@ -125,6 +126,8 @@ public interface PredicateChecker {
 		/**
 		 * The given set of objects are borrowed in the method call being processed.
 		 * This information may allow special treatment of borrowed objects.
+		 * This method will be called before any calls to 
+		 * {@link #splitOffPermission(Aliasing, PermissionSetFromAnnotations)}.
 		 * @param borrowedVars
 		 */
 		void announceBorrowed(Set<Aliasing> borrowedVars);

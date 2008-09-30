@@ -542,12 +542,12 @@ implements LatticeElement<FractionalPermissions> {
 	 * For each permission, this method returns a new FractionalPermissions
 	 * object that has all of the same permissions except with the given
 	 * temporary state information.
-	 * 
-	 * Nels is doing this, so it may be wrong if I don't understand how
-	 * things work.
 	 *  
 	 * @param new_state
-	 * @return
+	 * @param forFrame <code>true</code> to learn frame state information, 
+	 * <code>false</code> otherwise.
+	 * @return Permissions with the new state information added
+	 * @see FractionalPermission#addStateInfo(String)
 	 */
 	public FractionalPermissions learnTemporaryStateInfo(String new_state, boolean forFrame) {
 		if(isBottom())
