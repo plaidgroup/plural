@@ -49,3 +49,8 @@ import edu.cmu.cs.plural.annot.State;
 public class InvariantFieldIsntReal {
 
 }
+
+@ClassStates(@State(name="alive", inv="fakeField == true => full(real)"))
+class MoreFakeFields {
+	private Object real;
+}
