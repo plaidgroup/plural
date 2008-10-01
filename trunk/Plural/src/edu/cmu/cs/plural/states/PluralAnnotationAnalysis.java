@@ -61,14 +61,39 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 
 import edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis;
+import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.internal.Box;
 import edu.cmu.cs.crystal.internal.Option;
+import edu.cmu.cs.crystal.internal.Utilities;
+import edu.cmu.cs.plural.concrete.Implication;
+import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.perm.parser.AccessPredVisitor;
+import edu.cmu.cs.plural.perm.parser.BinaryExprAP;
+import edu.cmu.cs.plural.perm.parser.BoolLiteral;
+import edu.cmu.cs.plural.perm.parser.Conjunction;
+import edu.cmu.cs.plural.perm.parser.Disjunction;
+import edu.cmu.cs.plural.perm.parser.EqualsExpr;
+import edu.cmu.cs.plural.perm.parser.Identifier;
+import edu.cmu.cs.plural.perm.parser.NotEqualsExpr;
+import edu.cmu.cs.plural.perm.parser.Null;
+import edu.cmu.cs.plural.perm.parser.ParamReference;
 import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.perm.parser.PermissionImplication;
+import edu.cmu.cs.plural.perm.parser.PrimaryExpr;
+import edu.cmu.cs.plural.perm.parser.PrimaryExprVisitor;
+import edu.cmu.cs.plural.perm.parser.RefExpr;
+import edu.cmu.cs.plural.perm.parser.StateOnly;
+import edu.cmu.cs.plural.perm.parser.TempPermission;
+import edu.cmu.cs.plural.perm.parser.Withing;
+import edu.cmu.cs.plural.pred.PredicateChecker;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateInvAnnotation;
 import edu.cmu.cs.plural.util.Pair;
+import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * An analysis that examines user annotations to ensure that they have been
@@ -239,6 +264,45 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	}
 
 	/**
+	 * Given a reference, make sure it's a field and that it exists
+	 * in the given set of field_names.
+	 */
+	private static Option<String> checkField(PrimaryExpr expr, final Set<String> field_names) {
+		return
+		expr.dispatch(new PrimaryExprVisitor<Option<String>>() {
+
+			@Override
+			public Option<String> visitBool(BoolLiteral bool) {
+				return Option.none();
+			}
+
+			@Override
+			public Option<String> visitId(Identifier id) {
+				if( !field_names.contains(id.getName()) )
+					return Option.some(id.getName());
+				else
+					return Option.none();
+			}
+
+			@Override
+			public Option<String> visitNull(Null nul) {
+				return Option.none();
+			}
+
+			@Override
+			public Option<String> visitParam(ParamReference paramReference) {
+				return Option.some(paramReference.toString());
+			}});
+	}
+	
+	private static Option<String> checkField(RefExpr ref, Set<String> field_names) {
+		if( ref instanceof PrimaryExpr )
+			return checkField((PrimaryExpr)ref, field_names);
+		else
+			return Utilities.nyi();
+	}
+	
+	/**
 	 * This method checks the well-formedness of a ClassStates annotation. It does so
 	 * given a type declaration, so it is entirely possible that no annotations of this
 	 * type will even exist.
@@ -257,6 +321,8 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		for( IVariableBinding field : node.resolveBinding().getDeclaredFields() ) {
 			field_names.add(field.getName());
 		}
+		field_names.add("this");
+		field_names.add("this!fr");
 		
 		/*
 		 * First check to see that problems even exist, which they may not.
@@ -270,17 +336,19 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		for( ICrystalAnnotation anno : annos ) {
 			if( anno instanceof ClassStateDeclAnnotation ) {
 				for( StateDeclAnnotation sda : ((ClassStateDeclAnnotation)anno).getStates() ) {
-					for( StateInvAnnotation inv : sda.getInvs() ) {
-						if( !field_names.contains(inv.getField()) ) {
-							/*
-							 * We don't catch all incorrect fields, only the first one.
-							 * For now....
-							 */
+					// Get invariant string
+					String inv = sda.getInv();
+					Option<String> problem =
+					PermParser.accept(inv, new InvariantFieldVisitor(field_names));
+						
+						if( problem == null ) {
+							continue;
+						}
+						else if( problem.isSome() ) {
 							is_problem = true;
-							problem_field = inv.getField();
+							problem_field = problem.unwrap();
 							break outer_loop;
 						}
-					}
 				}
 			}
 		}
@@ -378,4 +446,117 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		return null;
 	}
 	
+	/**
+	 * A visitor to check that the fields actually exist.
+	 */
+	static class InvariantFieldVisitor implements AccessPredVisitor<Option<String>> {
+		private final Set<String> field_names; 
+
+		InvariantFieldVisitor(Set<String> field_names) {
+			this.field_names = field_names;
+		}
+
+		@Override
+		public Option<String> visit(TempPermission perm) {
+			if( perm.getRef() instanceof Identifier )
+				return checkField(perm.getRef(), field_names);
+			else if( perm.getRef() instanceof ParamReference ) 
+				return checkField(perm.getRef(), field_names);
+			else
+				return Utilities.nyi();
+		}
+
+		@Override
+		public Option<String> visit(Disjunction disj) {
+			Option<String> c_1 = disj.getP1().accept(this);
+			Option<String> c_2 = disj.getP2().accept(this);
+
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+
+		@Override
+		public Option<String> visit(Conjunction conj) {
+			Option<String> c_1 = conj.getP1().accept(this);
+			Option<String> c_2 = conj.getP2().accept(this);
+
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+
+		@Override
+		public Option<String> visit(Withing withing) {
+			Option<String> c_1 = withing.getP1().accept(this);
+			Option<String> c_2 = withing.getP2().accept(this);
+
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+
+		@Override
+		public Option<String> visit(BinaryExprAP binaryExpr) {
+			Option<String> c_1 = checkField(binaryExpr.getBinExpr().getE1(), field_names);
+			Option<String> c_2 = checkField(binaryExpr.getBinExpr().getE2(), field_names);
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+
+		@Override
+		public Option<String> visit(EqualsExpr equalsExpr) {
+			Option<String> c_1 = checkField(equalsExpr.getE1(), field_names);
+			Option<String> c_2 = checkField(equalsExpr.getE2(), field_names);
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+
+		@Override
+		public Option<String> visit(NotEqualsExpr notEqualsExpr) {
+			Option<String> c_1 = checkField(notEqualsExpr.getE1(), field_names);
+			Option<String> c_2 = checkField(notEqualsExpr.getE2(), field_names);
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+
+		@Override
+		public Option<String> visit(StateOnly stateOnly) {
+			return checkField(stateOnly.getVar(), field_names);
+		}
+
+		@Override
+		public Option<String> visit(PermissionImplication permissionImplication) {
+			Option<String> c_1 = permissionImplication.ant().accept(this);
+			Option<String> c_2 = permissionImplication.cons().accept(this);
+
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+	}
 }
