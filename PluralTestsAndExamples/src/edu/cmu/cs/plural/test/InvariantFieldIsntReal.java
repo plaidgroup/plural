@@ -43,7 +43,7 @@ import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.State;
 
-@FailingTest(1)
+@FailingTest(2)
 @UseAnalyses("PluralAnnotationAnalysis")
 @ClassStates(@State(name="alive", inv="fakeField == true"))
 public class InvariantFieldIsntReal {
