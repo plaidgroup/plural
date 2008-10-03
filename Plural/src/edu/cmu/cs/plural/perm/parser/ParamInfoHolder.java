@@ -422,15 +422,15 @@ public class ParamInfoHolder {
 				result = prim + "(" + getVariable() + ")";
 			if(stateInfo != null && !stateInfo.isEmpty()) {
 				if(result == null)
-					result = getVariable() + " IN " + stateInfo;
+					result = getVariable() + " in " + stateInfo;
 				else
-					result+= " && " + getVariable() + " IN " + stateInfo;
+					result+= " && " + getVariable() + " in " + stateInfo;
 			}
 			if(getPerms() != null) {
 				if(result == null)
 					result = getVariable() + " : " + getPerms();
 				else
-					result+= " && " + getVariable() + " : " + getPerms();
+					result+= " && " + getVariable() + " has " + getPerms();
 			}
 			if(result == null)
 				return "EMP"; // this shouldn't happen

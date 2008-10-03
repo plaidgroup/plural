@@ -144,6 +144,11 @@ public class PermissionPredicate implements VariablePredicate {
 		} // else nothing to remove
 		return value;
 	}
+	
+	@Override
+	public String toString() {
+		return var + " has " + perms;
+	}
 
 	@Override
 	public int hashCode() {
