@@ -82,7 +82,8 @@ public class DefaultInvariantMerger extends DefaultPredicateMerger {
 	
 	@Override public void mergeInPermission(Aliasing a, String var_name,
 			PermissionSetFromAnnotations perms) {
-		if( !isAssigned(var_name) )
+		// perms can be null if this is a field that has no perms; int, boolean, etc.
+		if( !isAssigned(var_name) && perms != null )
 			// Purify the permission if necessary
 			super.mergeInPermission(a, var_name, purify ? perms.purify() : perms);
 	}
