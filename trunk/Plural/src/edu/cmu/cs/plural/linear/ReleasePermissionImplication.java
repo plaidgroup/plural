@@ -108,10 +108,12 @@ public class ReleasePermissionImplication implements Implication {
 	public boolean isSatisfied(PluralTupleLatticeElement value) {
 		throw new UnsupportedOperationException();
 	}
+	
+	@Override
+	public String toString() {
+		return ant + " implies " + cons;
+	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -121,9 +123,6 @@ public class ReleasePermissionImplication implements Implication {
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
