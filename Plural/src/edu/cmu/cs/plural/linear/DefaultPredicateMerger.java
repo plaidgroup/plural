@@ -141,7 +141,7 @@ public class DefaultPredicateMerger implements MergeIntoTuple {
 
 	@Override
 	public void addNonNull(Aliasing var, String var_name) {
-		value.addTrueVarPredicate(var);
+		value.addNonNullVariable(var);
 	}
 
 	@Override
@@ -151,7 +151,7 @@ public class DefaultPredicateMerger implements MergeIntoTuple {
 
 	@Override
 	public void addTrue(Aliasing var, String var_name) {
-		value.addNonNullVariable(var);
+		value.addTrueVarPredicate(var);
 	}
 
 }

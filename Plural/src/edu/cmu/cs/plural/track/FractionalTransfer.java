@@ -612,6 +612,11 @@ public class FractionalTransfer extends
 			new_value.addNullVariable(target);
 		}
 		else {
+			// Ugh! I'm just doing this for one example... NEB
+			// TODO: We need the ability to arbitrarily map a field to a
+			// dimension if it's not mentioned in any invariant.
+			new_value.addNonNullVariable(target); 
+			
 			if( instr.getLiteral() instanceof Boolean ) {
 				boolean bool_value = ((Boolean)instr.getLiteral()).booleanValue();
 				
