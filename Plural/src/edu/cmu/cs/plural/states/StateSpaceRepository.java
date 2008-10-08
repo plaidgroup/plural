@@ -451,25 +451,8 @@ public class StateSpaceRepository {
 					String state = stateAnno.getStateName();
 					if(! result.isKnown(state))
 						result.addAnonymousState(state);
-//					for(StateInvAnnotation inv : stateAnno.getInvs()) {
-//						String field = inv.getField();
-//						String oldNode = fieldMap.get(field);
-//						if(oldNode == null)
-//							fieldMap.put(field, state);
-//						else {
-//							if(result.firstBiggerThanSecond(state, oldNode)) {
-//								fieldMap.put(field, state);
-//							}
-//							else if(result.firstBiggerThanSecond(oldNode, state)) {
-//								// nothing!
-//							}
-//							else {
-//								// find some mutual super-state
-//								String parent = result.getLowestCommonParent(state, oldNode);
-//								fieldMap.put(field, parent);
-//							}
-//						}
-//					}
+					// FIXME We really need to add fields to create the 
+					// field mapping.
 				}
 			}
 		}
