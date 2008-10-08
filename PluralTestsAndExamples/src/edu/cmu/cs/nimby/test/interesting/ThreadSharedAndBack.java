@@ -38,17 +38,24 @@
 
 package edu.cmu.cs.nimby.test.interesting;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Capture;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.FalseIndicates;
+import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
+import edu.cmu.cs.plural.annot.Refine;
 import edu.cmu.cs.plural.annot.Release;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
 
+@PassingTest
+@UseAnalyses("NIMBYChecker")
 public class ThreadSharedAndBack {
 
 	public static void foo() {
@@ -58,7 +65,7 @@ public class ThreadSharedAndBack {
 		// Other thread 'captured' the permission to ping pong, so
 		// we will get back exactly 1/2 when we call join.
 		
-		other_thread.start();
+		other_thread.start(); // take full(INSIDE), leaves full(OUTSIDE)
 		
 		for( int i=0; i<5; i++ ) {
 			atomic: {
@@ -72,7 +79,8 @@ public class ThreadSharedAndBack {
 		}
 		
 		try {
-			other_thread.myJoin(); // Gives us back share(ping_pong,1/2)
+			other_thread.myJoin(); // Gives us back share(ping_pong,1/2), but we
+			                       // need full(OUTSIDE) to ensure we only do it once.
 			ping_pong.requiresUnique();
 		} catch (InterruptedException e) {}
 		
@@ -110,11 +118,14 @@ class PingPong {
 	}
 	
 	@Unique void requiresUnique() {}
-	
 }
 
+@Refine({
+	@States(dim="INSIDE", value="INSIDESTATE"),
+	@States(dim="OUTSIDE", value= "OUTSIDESTATE")
+})
 @ClassStates(
-    @State(name="alive", inv="share(myPingPong)")
+    @State(name="INSIDE", inv="share(myPingPong)")
 )
 class OtherThread extends java.lang.Thread {
 	final PingPong myPingPong;
@@ -125,7 +136,7 @@ class OtherThread extends java.lang.Thread {
 	}
 
 	@Override
-	@Unique(fieldAccess=true)
+	@Full(fieldAccess=true,value="INSIDE")
 	public void run() {
 		for( int i=0; i<5; i++ ) {
 			atomic: {
@@ -140,13 +151,21 @@ class OtherThread extends java.lang.Thread {
 	}
 
 	@Override
-	@Perm(requires="unique(this)")
+	@Full(value="INSIDE", returned=false)
 	public synchronized void start() {
 		super.start();
 	}
 	
 	@Release(value="p")
+	@Full(value="OUTSIDE", returned=false)
 	public void myJoin() throws InterruptedException {
+		/*
+		 * In a fully-verified version of this program,
+		 * the join method would check and retry to see
+		 * if the thread itself was dead. When the thread
+		 * has died, giving it full to the outside will
+		 * return the share(myPingPong,1/2).
+		 */
 		this.join();
 	}
 }
