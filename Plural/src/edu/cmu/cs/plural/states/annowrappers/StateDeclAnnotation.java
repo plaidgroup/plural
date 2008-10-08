@@ -82,24 +82,4 @@ final public class StateDeclAnnotation implements ICrystalAnnotation {
 	public String getInv() {
 		return crystalAnnotation.getObject("inv").toString();
 	}
-	
-	private List<StateInvAnnotation> invsCache = null;
-	public List<StateInvAnnotation> getInvs() {
-		
-		if( invsCache != null ) return invsCache;
-
-		final Object some_thing = crystalAnnotation.getObject("invs");
-		if( some_thing instanceof Object[] ) {
-			Object[] os = (Object[])some_thing;
-			List<StateInvAnnotation> result = new ArrayList<StateInvAnnotation>(os.length);
-			
-			for(Object o : os) {
-				result.add((StateInvAnnotation)o);
-			}
-			return (invsCache = Collections.unmodifiableList(result));
-		}
-		else {
-			return (invsCache = Collections.singletonList((StateInvAnnotation)some_thing));
-		}
-	}
 }
