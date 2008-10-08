@@ -40,15 +40,22 @@ package edu.cmu.cs.plural.track;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PostfixExpression;
 import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.ThisExpression;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
@@ -59,18 +66,32 @@ import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
  *
  */
 public class EffectChecker extends AbstractCrystalMethodAnalysis {
-
+	
 	@Override
 	public void analyzeMethod(MethodDeclaration d) {
-		boolean pure = analysisInput.getAnnoDB().getSummaryForMethod(d.resolveBinding()).
+		if(isPure(d.resolveBinding()))
+			d.accept(new PurityVisitor(d.resolveBinding().getDeclaringClass(),
+					d.isConstructor() /* permit receiver assignment in constructor */));
+	}
+	
+	private boolean isPure(IMethodBinding methodBinding) {
+		boolean pure = analysisInput.getAnnoDB().getSummaryForMethod(methodBinding).
 				getReturn("edu.cmu.cs.plural.annot.NoEffects") != null;
-		if(pure)
-			d.accept(new PurityVisitor());
+		return pure;
 	}
 	
 	private class PurityVisitor extends ASTVisitor {
 		
-		private ITypeBinding declaringType;
+		private final ITypeBinding declaringType;
+		private final boolean permitReceiverAssignment;
+		
+		public PurityVisitor(ITypeBinding declaringType) {
+			this(declaringType, false);
+		}
+		public PurityVisitor(ITypeBinding declaringType, boolean permitReceiverAssignment) {
+			this.declaringType = declaringType;
+			this.permitReceiverAssignment = permitReceiverAssignment;
+		}
 
 		@Override
 		public void endVisit(Assignment node) {
@@ -91,6 +112,9 @@ public class EffectChecker extends AbstractCrystalMethodAnalysis {
 		}
 		
 		/**
+		 * Checks whether the given assignment target represents a memory location
+		 * and reports a warning if so.
+		 * In other words, this method checks whether the given assignment is a store.
 		 * @param target
 		 * @param assignment
 		 */
@@ -102,8 +126,9 @@ public class EffectChecker extends AbstractCrystalMethodAnalysis {
 				if(b instanceof IVariableBinding) {
 					IVariableBinding var = (IVariableBinding) b;
 					if(var.isField()) {
-						// TODO make sure this is an implicit access to unqualified "this"
-						receiver = true;
+						receiver = ! Modifier.isStatic(var.getModifiers()) &&
+								isDefinedInDeclaringType(var);
+						// error: assignment to field
 						break;
 					}
 				}
@@ -114,6 +139,7 @@ public class EffectChecker extends AbstractCrystalMethodAnalysis {
 					IVariableBinding var = (IVariableBinding) b;
 					if(var.isField()) {
 						receiver = false; // cannot be this.f
+						// error: assignment to field
 						break;
 					}
 				}
@@ -127,13 +153,74 @@ public class EffectChecker extends AbstractCrystalMethodAnalysis {
 				receiver = true; // receiver access by definition
 				// error by definition
 				break;
+			case ASTNode.ARRAY_ACCESS:
+				receiver = false; // receiver cannot be array
+				// error by definition
+				break;
 			default:
 				return;
 			}
-			EffectChecker.this.reporter.reportUserProblem(
-					"Assignment in method with no effects forbidden", assignment, EffectChecker.this.getName());
+			
+			if(!receiver || !permitReceiverAssignment) {
+				EffectChecker.this.reporter.reportUserProblem(
+						"Assignment in method with no effects forbidden", 
+						assignment, 
+						EffectChecker.this.getName());
+			}
 		}
 
+		/**
+		 * Walks {@link #declaringType} and its super-classes to
+		 * find the given field declaration 
+		 * @param var
+		 * @return <code>true</code> if {@link #declaringType} or its
+		 * superclasses declare the given field, <code>false</code> otherwise.
+		 */
+		private boolean isDefinedInDeclaringType(
+				IVariableBinding var) {
+			ITypeBinding type = declaringType;
+			while(type != null) {
+				for(IVariableBinding f : type.getDeclaredFields()) {
+					if(f.equals(var))
+						return true;
+				}
+				type = type.getSuperclass();
+			}
+			return false;
+		}
+		@Override
+		public void endVisit(ClassInstanceCreation node) {
+			checkInvocation(node.resolveConstructorBinding(), node);
+			super.endVisit(node);
+		}
+		@Override
+		public void endVisit(ConstructorInvocation node) {
+			checkInvocation(node.resolveConstructorBinding(), node);
+			super.endVisit(node);
+		}
+		@Override
+		public void endVisit(MethodInvocation node) {
+			checkInvocation(node.resolveMethodBinding(), node);
+			super.endVisit(node);
+		}
+		@Override
+		public void endVisit(SuperConstructorInvocation node) {
+			checkInvocation(node.resolveConstructorBinding(), node);
+			super.endVisit(node);
+		}
+		@Override
+		public void endVisit(SuperMethodInvocation node) {
+			checkInvocation(node.resolveMethodBinding(), node);
+			super.endVisit(node);
+		}
+		
+		private void checkInvocation(IMethodBinding methodBinding, ASTNode invocation) {
+			if(!EffectChecker.this.isPure(methodBinding))
+				EffectChecker.this.reporter.reportUserProblem(
+						"Effectful invocation in method with no effects forbidden", 
+						invocation, EffectChecker.this.getName());
+		}
+		
 	}
 
 }
