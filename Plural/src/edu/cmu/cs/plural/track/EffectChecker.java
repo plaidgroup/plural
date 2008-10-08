@@ -103,7 +103,7 @@ public class EffectChecker extends AbstractCrystalMethodAnalysis {
 					IVariableBinding var = (IVariableBinding) b;
 					if(var.isField()) {
 						// TODO make sure this is an implicit access to unqualified "this"
-						receiver = declaringType.isSubTypeCompatible(var.getDeclaringClass());
+						receiver = true;
 						break;
 					}
 				}
