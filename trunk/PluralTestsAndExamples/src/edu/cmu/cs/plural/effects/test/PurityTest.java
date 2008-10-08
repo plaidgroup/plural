@@ -9,6 +9,20 @@ import edu.cmu.cs.plural.annot.NoEffects;
 public class PurityTest {
 	
 	int val = 0;
+	
+	@NoEffects
+	PurityTest() {
+	}
+	
+	@NoEffects
+	PurityTest(int val) {
+		this.val = val;
+	}
+	
+	@NoEffects
+	PurityTest(PurityTest original) {
+		val = original.val;
+	}
 
 	@NoEffects
 	int getVal() {
@@ -21,8 +35,17 @@ public class PurityTest {
 		return x;
 	}
 	
-	void setVal(int val) {
-		this.val = val;
+	void setVal(int newVal) {
+		val = newVal;
+	}
+	
+	int inc() {
+		return ++val;
+	}
+
+	@NoEffects
+	public PurityTest clone() {
+		return new PurityTest(this);
 	}
 	
 }
