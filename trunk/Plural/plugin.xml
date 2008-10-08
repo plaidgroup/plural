@@ -55,6 +55,10 @@
             name="Regression Permission Analysis"/>
             -->
       <analysis
+            class="edu.cmu.cs.plural.track.EffectChecker"
+            name="Effect checker">
+      </analysis>
+      <analysis
             class="edu.cmu.cs.plural.track.FractionalAnalysis"
             name="Fractional Analysis">
       </analysis>
