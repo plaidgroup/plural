@@ -168,7 +168,7 @@ class Connection {
 		}
 	}
 	
-	@Share(requires="CONNECTED", ensures="CONNECTED")
+	@Share(fieldAccess = true, requires="CONNECTED", ensures="CONNECTED")
 	void send(String txt) throws IOException {
 		atomic: synchronized(Chat.class) {
 			this.socket.write(txt + "\n");

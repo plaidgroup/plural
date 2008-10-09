@@ -62,7 +62,7 @@ public class SourceVariablesOkay {
 	
 	private BufferedWriter socket;
 	
-	@Share(requires="CONNECTED", ensures="CONNECTED")
+	@Share(fieldAccess = true, requires="CONNECTED", ensures="CONNECTED")
 	void send(String txt) throws IOException {
 		atomic: {
 			this.socket.write(txt + "\n");

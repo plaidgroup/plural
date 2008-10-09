@@ -189,7 +189,7 @@ class RequestPipe {
 		}
 	}
 	
-	@Pure(requires="open", ensures="open")
+	@Pure(requires="open", ensures="open", fieldAccess = true)
 	String get() {
 		atomic: {
 			return this.queue.poll();
