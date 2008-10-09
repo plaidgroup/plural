@@ -44,12 +44,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.antlr.runtime.RecognitionException;
 import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.Modifier;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
@@ -74,7 +70,6 @@ import edu.cmu.cs.plural.util.SimpleMap;
 abstract class AbstractBindingSignature extends AbstractBinding 
 		implements IInvocationSignature {
 	
-	private static final Logger log = Logger.getLogger(AbstractBindingSignature.class.getName());
 	private Map<String, String> capturedParams;
 	private Map<String, String> releasedParams;
 	private Set<String> notReturned;
@@ -82,11 +77,11 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	/**
 	 * @param crystal
 	 * @param binding The binding that contains specs to be used
-	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
-	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
+	 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+	 * which can be different from <code>specBinding</code> if specifications are inherited.
 	 */
-	protected AbstractBindingSignature(AnnotationDatabase annoDB, IMethodBinding binding, ITypeBinding staticallyInvokedType) {
-		super(annoDB, binding, staticallyInvokedType);
+	protected AbstractBindingSignature(AnnotationDatabase annoDB, IMethodBinding binding, IMethodBinding staticallyInvokedBinding) {
+		super(annoDB, binding, staticallyInvokedBinding);
 	}
 
 	/* (non-Javadoc)

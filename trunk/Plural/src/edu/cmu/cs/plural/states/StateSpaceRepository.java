@@ -39,6 +39,7 @@ package edu.cmu.cs.plural.states;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -57,7 +58,6 @@ import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
-import edu.cmu.cs.plural.states.annowrappers.StateInvAnnotation;
 import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
 
 /**
@@ -243,23 +243,23 @@ public class StateSpaceRepository {
 			if(perm == null) {
 				// no @Perm
 				return binding.isConstructor() ? 
-						new MultiCaseConstructorSignature(adb, specBinding, binding.getDeclaringClass()) : 
-							new MultiCaseMethodSignature(adb, specBinding, binding.getDeclaringClass());
+						new MultiCaseConstructorSignature(adb, specBinding, binding) : 
+							new MultiCaseMethodSignature(adb, specBinding, binding);
 			}
 			else {
 				// @Perm on method
 				return binding.isConstructor() ? 
-						new MultiCaseConstructorSignature(adb, specBinding, binding.getDeclaringClass(), (PermAnnotation) perm) : 
-							new MultiCaseMethodSignature(adb, specBinding, binding.getDeclaringClass(), (PermAnnotation) perm);
+						new MultiCaseConstructorSignature(adb, specBinding, binding, (PermAnnotation) perm) : 
+							new MultiCaseMethodSignature(adb, specBinding, binding, (PermAnnotation) perm);
 			}
 		}
 		else
 			// @Cases on method
 			return binding.isConstructor() ? 
-					new MultiCaseConstructorSignature(adb, specBinding, binding.getDeclaringClass(), 
+					new MultiCaseConstructorSignature(adb, specBinding, binding, 
 							downcast((Object[]) cases.getObject("value"), PermAnnotation.class))
 					:
-					new MultiCaseMethodSignature(adb, specBinding, binding.getDeclaringClass(),
+					new MultiCaseMethodSignature(adb, specBinding, binding,
 							downcast((Object[]) cases.getObject("value"), PermAnnotation.class));
 	}
 	
@@ -269,7 +269,7 @@ public class StateSpaceRepository {
 	 * @return Method binding with specs or <code>binding</code> if no spec was found anywhere.
 	 */
 	private IMethodBinding findSpecificationMethod(IMethodBinding binding) {
-		if(binding.isConstructor() /* TODO static methods */)
+		if(binding.isConstructor() || Modifier.isStatic(binding.getModifiers()))
 			// constructors do not inherit specs
 			return binding;
 		

@@ -59,21 +59,21 @@ abstract class AbstractMultiCaseSignature<T extends IInvocationCase> extends Abs
 
 	/**
 	 * @param crystal
-	 * @param binding The binding that contains specs to be used
-	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
-	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
+	 * @param specBinding The binding that contains specs to be used
+	 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+	 * which can be different from <code>specBinding</code> if specifications are inherited.
 	 * @param cases
 	 */
-	protected AbstractMultiCaseSignature(AnnotationDatabase annoDB, IMethodBinding binding,
-			ITypeBinding staticallyInvokedType, PermAnnotation... cases) {
-		super(annoDB, binding, staticallyInvokedType);
+	protected AbstractMultiCaseSignature(AnnotationDatabase annoDB, IMethodBinding specBinding,
+			IMethodBinding staticallyInvokedBinding, PermAnnotation... cases) {
+		super(annoDB, specBinding, staticallyInvokedBinding);
 		if(cases.length == 0) {
-			this.cases = Collections.singletonList(createCase(annoDB, binding, null, staticallyInvokedType));
+			this.cases = Collections.singletonList(createCase(annoDB, specBinding, null, staticallyInvokedBinding));
 		}
 		else { 
 			this.cases = new ArrayList<T>(cases.length);
 			for(PermAnnotation perm : cases) {
-				this.cases.add(createCase(annoDB, binding, perm, staticallyInvokedType));
+				this.cases.add(createCase(annoDB, specBinding, perm, staticallyInvokedBinding));
 			}
 		}
 	}
@@ -83,11 +83,12 @@ abstract class AbstractMultiCaseSignature<T extends IInvocationCase> extends Abs
 	 * @param annoDB
 	 * @param binding
 	 * @param perm @Perm annotation or <code>null</code> if no such annotation is given.
-	 * @param staticallyInvokedType
+	 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+	 * which can be different from <code>specBinding</code> if specifications are inherited.
 	 * @return
 	 */
 	abstract protected T createCase(AnnotationDatabase annoDB, IMethodBinding binding,
-			PermAnnotation perm, ITypeBinding staticallyInvokedType);
+			PermAnnotation perm, IMethodBinding staticallyInvokedBinding);
 
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.plural.states.IInvocationSignature#cases()

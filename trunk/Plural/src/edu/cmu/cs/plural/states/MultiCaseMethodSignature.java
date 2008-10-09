@@ -44,7 +44,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
@@ -65,20 +64,22 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 		implements IMethodSignature {
 
 	/**
-	 * @param crystal
-	 * @param binding
+	 * @param annoDB
+	 * @param specBinding
+	 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+	 * which can be different from <code>specBinding</code> if specifications are inherited.
 	 */
-	public MultiCaseMethodSignature(AnnotationDatabase annoDB, IMethodBinding binding,
-			ITypeBinding staticallyInvokedType, PermAnnotation... cases) {
-		super(annoDB, binding, staticallyInvokedType, cases);
+	public MultiCaseMethodSignature(AnnotationDatabase annoDB, IMethodBinding specBinding,
+			IMethodBinding staticallyInvokedBinding, PermAnnotation... cases) {
+		super(annoDB, specBinding, staticallyInvokedBinding, cases);
 	}
 
 	@Override
 	protected IMethodCase createCase(AnnotationDatabase annoDB, IMethodBinding binding,
-			PermAnnotation perm, ITypeBinding staticallyInvokedType) {
+			PermAnnotation perm, IMethodBinding staticallyInvokedBinding) {
 		if(perm == null)
-			return new MultiMethodCase(annoDB, binding, staticallyInvokedType);
-		return new MultiMethodCase(annoDB, binding, staticallyInvokedType, perm);
+			return new MultiMethodCase(annoDB, binding, staticallyInvokedBinding);
+		return new MultiMethodCase(annoDB, binding, staticallyInvokedBinding, perm);
 	}
 
 	/* (non-Javadoc)
@@ -142,12 +143,13 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 	IMethodCase {
 
 		public MultiMethodCase(AnnotationDatabase annoDB,
-				IMethodBinding binding, ITypeBinding staticallyInvokedType) {
-			super(annoDB, binding, staticallyInvokedType);
+				IMethodBinding specBinding, IMethodBinding staticallyInvokedBinding) {
+			super(annoDB, specBinding, staticallyInvokedBinding);
 		}
 
-		public MultiMethodCase(AnnotationDatabase annoDB, IMethodBinding binding, ITypeBinding staticallyInvokedType, PermAnnotation perm) {
-			super(annoDB, binding, staticallyInvokedType, perm);
+		public MultiMethodCase(AnnotationDatabase annoDB, IMethodBinding specBinding, 
+				IMethodBinding staticallyInvokedBinding, PermAnnotation perm) {
+			super(annoDB, specBinding, staticallyInvokedBinding, perm);
 		}
 
 		/* Change visibility of inherited method
@@ -202,7 +204,8 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 
 				@Override
 				public boolean isEffectFree() {
-					return preAndPost.fst().isReadOnly();
+					return MultiMethodCase.this.isEffectFree();
+//					return preAndPost.fst().isReadOnly();
 				}
 
 				@Override
