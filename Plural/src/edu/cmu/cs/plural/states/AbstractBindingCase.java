@@ -39,12 +39,8 @@ package edu.cmu.cs.plural.states;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.antlr.runtime.RecognitionException;
 import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
@@ -60,34 +56,32 @@ import edu.cmu.cs.plural.util.Pair;
  */
 public abstract class AbstractBindingCase extends AbstractBinding implements IInvocationCase {
 
-	private static final Logger log = Logger.getLogger(AbstractBindingCase.class.getName());
-	
 	protected Pair<String, String> preAndPostString;
 	
 	/**
 	 * Creates a case without an @Perm annotation.
 	 * @param crystal
 	 * @param binding The binding that contains specs to be used
-	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
-	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
+	 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+	 * which can be different from <code>specBinding</code> if specifications are inherited.
 	 */
 	protected AbstractBindingCase(AnnotationDatabase annoDB, IMethodBinding binding, 
-			ITypeBinding staticallyInvokedType) {
-		super(annoDB, binding, staticallyInvokedType);
+			IMethodBinding staticallyInvokedBinding) {
+		super(annoDB, binding, staticallyInvokedBinding);
 		preAndPostString = Pair.create("", "");
 	}
 
 	/**
 	 * Creates a case for the given @Perm annotation
 	 * @param crystal
-	 * @param binding The binding that contains specs to be used
+	 * @param specBinding The binding that contains specs to be used
 	 * @param perm @Perm annotation
-	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
-	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
+	 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+	 * which can be different from <code>specBinding</code> if specifications are inherited.
 	 */
-	protected AbstractBindingCase(AnnotationDatabase annoDB, IMethodBinding binding, 
-			ITypeBinding staticallyInvokedType, PermAnnotation perm) {
-		super(annoDB, binding, staticallyInvokedType);
+	protected AbstractBindingCase(AnnotationDatabase annoDB, IMethodBinding specBinding, 
+			IMethodBinding staticallyInvokedBinding, PermAnnotation perm) {
+		super(annoDB, specBinding, staticallyInvokedBinding);
 		preAndPostString = Pair.create(perm.getRequires(), perm.getEnsures());
 	}
 

@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
@@ -62,23 +61,23 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 		implements IConstructorSignature {
 
 	/**
-	 * @param crystal
-	 * @param binding The binding that contains specs to be used
-	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
-	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
-	 * @param cases
+	 * @param annoDB
+	 * @param specBinding The binding that contains specs to be used
+	 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+	 * which can be different from <code>specBinding</code> if specifications are inherited.
+	 * @param permAnnotation
 	 */
-	public MultiCaseConstructorSignature(AnnotationDatabase annoDB, IMethodBinding binding, 
-			ITypeBinding staticallyInvokedType, PermAnnotation... cases) {
-		super(annoDB, binding, staticallyInvokedType, cases);
+	public MultiCaseConstructorSignature(AnnotationDatabase annoDB, IMethodBinding specBinding, 
+			IMethodBinding staticallyInvokedBinding, PermAnnotation... permAnnotation) {
+		super(annoDB, specBinding, staticallyInvokedBinding, permAnnotation);
 	}
 
 	@Override
 	protected IConstructorCase createCase(AnnotationDatabase annoDB,
-			IMethodBinding binding, PermAnnotation perm, ITypeBinding staticallyInvokedType) {
+			IMethodBinding binding, PermAnnotation perm, IMethodBinding staticallyInvokedBinding) {
 		if(perm == null)
-			return new MultiConstructorCase(annoDB, binding, staticallyInvokedType);
-		return new MultiConstructorCase(annoDB, binding, staticallyInvokedType, perm);
+			return new MultiConstructorCase(annoDB, binding, staticallyInvokedBinding);
+		return new MultiConstructorCase(annoDB, binding, staticallyInvokedBinding, perm);
 	}
 
 	@Override
@@ -111,25 +110,25 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 		/**
 		 * Creates a case without an @Perm annotation.
 		 * @param crystal
-		 * @param binding The binding that contains specs to be used
-		 * @param staticallyInvokedType The statically invoked type of this binding, which can 
-		 * be different from <code>binding</code>'s declaring class if this is an inherited binding
+		 * @param specBinding The binding that contains specs to be used
+		 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+		 * which can be different from <code>specBinding</code> if specifications are inherited.
 		 */
 		public MultiConstructorCase(AnnotationDatabase annoDB,
-				IMethodBinding binding, ITypeBinding staticallyInvokedType) {
-			super(annoDB, binding, staticallyInvokedType);
+				IMethodBinding specBinding, IMethodBinding staticallyInvokedBinding) {
+			super(annoDB, specBinding, staticallyInvokedBinding);
 		}
 
 		/**
 		 * @param crystal
-		 * @param binding The binding that contains specs to be used
-		 * @param staticallyInvokedType The statically invoked type of this binding, which can 
-		 * be different from <code>binding</code>'s declaring class if this is an inherited binding
+		 * @param specBinding The binding that contains specs to be used
+		 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+		 * which can be different from <code>specBinding</code> if specifications are inherited.
 		 * @param perm
 		 */
-		public MultiConstructorCase(AnnotationDatabase annoDB, IMethodBinding binding, 
-				ITypeBinding staticallyInvokedType, PermAnnotation perm) {
-			super(annoDB, binding, staticallyInvokedType, perm);
+		public MultiConstructorCase(AnnotationDatabase annoDB, IMethodBinding specBinding, 
+				IMethodBinding staticallyInvokedBinding, PermAnnotation perm) {
+			super(annoDB, specBinding, staticallyInvokedBinding, perm);
 		}
 		
 		/**
@@ -167,7 +166,8 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 
 				@Override
 				public boolean isEffectFree() {
-					return preAndPost.fst().isReadOnly();
+					return MultiConstructorCase.this.isEffectFree();
+//					return preAndPost.fst().isReadOnly();
 				}
 
 				@Override

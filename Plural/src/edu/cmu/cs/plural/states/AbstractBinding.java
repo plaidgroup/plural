@@ -48,29 +48,41 @@ import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 
 public class AbstractBinding {
 
+	/** Binding carrying the invoked method's specification. */
 	protected final IMethodBinding binding;
-	private final ITypeBinding staticallyInvokedType;
+	
+	/** The invoked method according to the type checker. */
+	private final IMethodBinding staticallyInvokedBinding;
 	
 	/** 
 	 * Weakly reference annoDB as to not interfere with its garbage-collection.
 	 * @see StateSpaceRepository
 	 */
 	protected final WeakReference<AnnotationDatabase> annoDB;
+	
+	/** <code>false</code> if the method declared to be non-reentrant, <code>true</code> otherwise. */ 
 	private final boolean reentrant;
+	
+	/** <code>true</code> if the invoked method or an overridden method is declared as such. */
+	private final boolean pure;
 
 	/**
-	 * @param crystal
-	 * @param binding The binding that contains specs to be used
-	 * @param staticallyInvokedType The statically invoked type of this binding, which can 
-	 * be different from <code>binding</code>'s declaring class if this is an inherited binding
+	 * @param annoDB
+	 * @param specBinding The binding that contains specs to be used
+	 * @param staticallyInvokedBinding The invoked binding according to the type checker, 
+	 * which can be different from <code>specBinding</code> if specifications are inherited.
 	 */
-	public AbstractBinding(AnnotationDatabase annoDB, IMethodBinding binding, ITypeBinding staticallyInvokedType) {
+	public AbstractBinding(AnnotationDatabase annoDB, IMethodBinding specBinding, IMethodBinding staticallyInvokedBinding) {
 		assert annoDB != null;
 		this.annoDB = new WeakReference<AnnotationDatabase>(annoDB);
-		this.binding = binding;
-		this.staticallyInvokedType = staticallyInvokedType;
+		this.binding = specBinding;
+		
+		// TODO may want to move the following code to AbstractBindingSignature
+		// As-is, this is evaluated again for every method case
+		this.staticallyInvokedBinding = staticallyInvokedBinding;
+		this.pure = EffectDeclarations.isPure(staticallyInvokedBinding, annoDB);
 		// determine reentrancy from @NonReentrant annotation of invoked type
-		for(ICrystalAnnotation a : getAnnoDB().getAnnosForType(staticallyInvokedType)) {
+		for(ICrystalAnnotation a : annoDB.getAnnosForType(staticallyInvokedBinding.getDeclaringClass())) {
 			if(a.getName().equals("edu.cmu.cs.plural.annot.NonReentrant")) {
 				reentrant = false;
 				return;
@@ -99,6 +111,10 @@ public class AbstractBinding {
 	
 	public boolean isReentrant() {
 		return reentrant;
+	}
+	
+	public boolean isEffectFree() {
+		return pure;
 	}
 
 }
