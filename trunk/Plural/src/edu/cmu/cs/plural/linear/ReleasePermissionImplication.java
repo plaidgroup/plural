@@ -43,13 +43,13 @@ import java.util.List;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
 import edu.cmu.cs.plural.concrete.VariablePredicate;
 import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * @author Kevin Bierhoff

@@ -50,7 +50,9 @@ import org.antlr.runtime.RecognitionException;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.internal.Option;
+import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.concrete.PluralParseError;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
@@ -60,8 +62,6 @@ import edu.cmu.cs.plural.pred.MethodPrecondition;
 import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.states.StateSpace;
-import edu.cmu.cs.plural.util.Pair;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * This code allows you to take a string and get back a list of fractional permissions.

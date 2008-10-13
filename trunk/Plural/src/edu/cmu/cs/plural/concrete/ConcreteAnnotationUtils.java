@@ -54,6 +54,8 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.perm.parser.AbstractAccessPredVisitor;
 import edu.cmu.cs.plural.perm.parser.AccessPredVisitor;
@@ -80,8 +82,6 @@ import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.track.FieldVariable;
 import edu.cmu.cs.plural.track.FractionalTransfer;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
-import edu.cmu.cs.plural.util.Pair;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * This class holds various utility methods used for getting concrete state

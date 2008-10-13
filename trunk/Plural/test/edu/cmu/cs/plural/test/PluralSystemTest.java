@@ -54,9 +54,9 @@ import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.IAnalysisReporter;
 import edu.cmu.cs.crystal.IRunCrystalCommand;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
-import edu.cmu.cs.crystal.internal.Utilities;
 import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.crystal.test.SystemTestUtils;
+import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.track.FractionalAnalysis;
 
 /**

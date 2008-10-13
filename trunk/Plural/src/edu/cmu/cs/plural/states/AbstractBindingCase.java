@@ -43,12 +43,12 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermParser;
 import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * @author Kevin Bierhoff

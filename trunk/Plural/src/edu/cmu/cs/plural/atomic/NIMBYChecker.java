@@ -47,8 +47,8 @@ import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 
-import edu.cmu.cs.crystal.internal.Option;
-import edu.cmu.cs.crystal.internal.Utilities;
+import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionalAnalysis;
 import edu.cmu.cs.plural.track.FractionalTransfer;

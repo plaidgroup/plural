@@ -51,6 +51,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeoutException;
 
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionAssignment;
 import edu.cmu.cs.plural.fractions.FractionConstraint;
@@ -63,7 +64,6 @@ import edu.cmu.cs.plural.fractions.ImpossibleConstraint;
 import edu.cmu.cs.plural.fractions.NamedFraction;
 import edu.cmu.cs.plural.fractions.VariableFraction;
 import edu.cmu.cs.plural.fractions.FractionRelation.Relop;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * @author Kevin Bierhoff

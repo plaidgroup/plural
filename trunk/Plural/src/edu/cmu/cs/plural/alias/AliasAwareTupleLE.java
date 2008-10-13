@@ -54,12 +54,12 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.flow.LatticeElement;
-import edu.cmu.cs.crystal.internal.Freezable;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.Variable;
-import edu.cmu.cs.plural.util.CollectionMethods;
-import edu.cmu.cs.plural.util.ExtendedIterator;
+import edu.cmu.cs.crystal.util.CollectionMethods;
+import edu.cmu.cs.crystal.util.ExtendedIterator;
+import edu.cmu.cs.crystal.util.Freezable;
 import edu.cmu.cs.plural.util.ReplacementGenerator;
 
 /**

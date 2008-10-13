@@ -44,11 +44,11 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.NamedFraction;
 import edu.cmu.cs.plural.fractions.OneFraction;
 import edu.cmu.cs.plural.fractions.FractionRelation.Relop;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * @author Kevin Bierhoff

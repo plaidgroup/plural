@@ -48,8 +48,8 @@ import java.util.logging.Logger;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.states.StateSpace;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * @author Kevin

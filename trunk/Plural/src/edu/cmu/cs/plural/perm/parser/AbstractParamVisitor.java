@@ -49,6 +49,8 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
 import edu.cmu.cs.plural.concrete.VariablePredicate;
@@ -61,8 +63,6 @@ import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
-import edu.cmu.cs.plural.util.Pair;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * Common helper methods for parsing method parameter annotations

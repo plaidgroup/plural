@@ -40,9 +40,9 @@ package edu.cmu.cs.plural.linear;
 import java.util.Iterator;
 import java.util.Set;
 
+import edu.cmu.cs.crystal.util.CollectionMethods;
 import edu.cmu.cs.plural.fractions.FractionConstraints;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
-import edu.cmu.cs.plural.util.CollectionMethods;
 
 /**
  * Factory methods to create linear logic connectives.

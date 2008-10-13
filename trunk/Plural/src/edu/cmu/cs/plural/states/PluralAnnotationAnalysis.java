@@ -64,9 +64,11 @@ import edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.internal.Box;
-import edu.cmu.cs.crystal.internal.Option;
-import edu.cmu.cs.crystal.internal.Utilities;
+import edu.cmu.cs.crystal.util.Box;
+import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
+import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.AccessPredVisitor;
@@ -92,8 +94,6 @@ import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateInvAnnotation;
-import edu.cmu.cs.plural.util.Pair;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * An analysis that examines user annotations to ensure that they have been

@@ -38,19 +38,19 @@
 
 package edu.cmu.cs.plural.linear;
 
-import static edu.cmu.cs.plural.util.ConsList.cons;
-import static edu.cmu.cs.plural.util.ConsList.empty;
+import static edu.cmu.cs.crystal.util.ConsList.cons;
+import static edu.cmu.cs.crystal.util.ConsList.empty;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.util.ConsList;
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
-import edu.cmu.cs.plural.util.ConsList;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * Abstract base class for checking / splitting a predicate in

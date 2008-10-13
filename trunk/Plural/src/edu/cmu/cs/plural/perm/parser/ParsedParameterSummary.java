@@ -46,11 +46,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.cmu.cs.crystal.util.CollectionMethods;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
-import edu.cmu.cs.plural.util.CollectionMethods;
 
 /**
  * This class is a temporary holding location for data that is being converted

@@ -42,14 +42,14 @@ import java.util.LinkedList;
 import java.util.Map;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.linear.PermissionPredicate;
 import edu.cmu.cs.plural.linear.ReleasePermissionImplication;
 import edu.cmu.cs.plural.perm.parser.ParamInfoHolder.InfoHolderPredicate;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.states.StateSpace;
-import edu.cmu.cs.plural.util.Pair;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * This class is will parse and create permissions from @Perm annotations,
