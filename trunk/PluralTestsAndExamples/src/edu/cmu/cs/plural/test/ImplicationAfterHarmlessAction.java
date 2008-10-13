@@ -51,7 +51,7 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
  *
  */
 @FailingTest(1)
-@UseAnalyses({ "EffectChecker, FractionalAnalysis" })
+@UseAnalyses({ "EffectChecker", "FractionalAnalysis" })
 public class ImplicationAfterHarmlessAction {
 	
 	@SuppressWarnings("unused")
@@ -82,7 +82,7 @@ public class ImplicationAfterHarmlessAction {
 		boolean r = isReady();
 		impureOtherAction();
 		if(r)
-			makeItHappen();
+			makeItHappen(); // ERROR! This line should report an error.	
 	}
 	
 	@NoEffects
