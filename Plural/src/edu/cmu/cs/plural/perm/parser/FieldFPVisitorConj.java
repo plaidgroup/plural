@@ -41,12 +41,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
-import edu.cmu.cs.plural.util.Pair;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 
 /**

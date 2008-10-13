@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import edu.cmu.cs.plural.util.Pair;
+import edu.cmu.cs.crystal.util.Pair;
 
 /**
  * If an access permission contains state info ast nodes,

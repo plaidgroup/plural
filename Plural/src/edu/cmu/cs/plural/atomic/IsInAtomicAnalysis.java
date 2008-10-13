@@ -46,9 +46,9 @@ import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
-import edu.cmu.cs.crystal.internal.Option;
-import edu.cmu.cs.crystal.internal.Utilities;
-import edu.cmu.cs.plural.util.ConsList;
+import edu.cmu.cs.crystal.util.ConsList;
+import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.crystal.util.Utilities;
 
 /**
  * This analysis is a wrapper for a visitor that records whether or not a

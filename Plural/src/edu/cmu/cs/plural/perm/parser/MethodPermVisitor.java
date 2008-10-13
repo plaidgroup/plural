@@ -43,11 +43,11 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.concrete.VariablePredicate;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
-import edu.cmu.cs.plural.util.Pair;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * @author Kevin Bierhoff

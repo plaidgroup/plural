@@ -49,11 +49,11 @@ import java.util.logging.Logger;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import edu.cmu.cs.crystal.internal.Freezable;
+import edu.cmu.cs.crystal.util.ConsList;
+import edu.cmu.cs.crystal.util.Freezable;
 import edu.cmu.cs.plural.fractions.elim.VariableElimination;
 import edu.cmu.cs.plural.fractions.solver.SmtLibPrinter;
-import edu.cmu.cs.plural.util.ConsList;
-import static edu.cmu.cs.plural.util.ConsList.cons;
+import static edu.cmu.cs.crystal.util.ConsList.cons;
 
 /**
  * Collects sets of constraints on fractions and tests them for consistency.  To increase

@@ -48,8 +48,8 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.flow.LatticeElement;
-import edu.cmu.cs.crystal.internal.Freezable;
 import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.util.Freezable;
 
 /**
  * @author Kevin Bierhoff

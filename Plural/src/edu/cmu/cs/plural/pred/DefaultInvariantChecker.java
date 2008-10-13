@@ -40,7 +40,7 @@ package edu.cmu.cs.plural.pred;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.internal.Utilities;
+import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.linear.AbstractPredicateChecker;
 import edu.cmu.cs.plural.linear.TensorPluralTupleLE;

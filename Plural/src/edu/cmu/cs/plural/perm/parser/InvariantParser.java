@@ -3,10 +3,10 @@ package edu.cmu.cs.plural.perm.parser;
 import java.util.Collections;
 import java.util.Map;
 
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.pred.InvariantMergerChecker;
 import edu.cmu.cs.plural.states.StateSpace;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * This class will create permissions from field invariants. It will both

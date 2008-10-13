@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.fractions.solver;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionConstraint;
 import edu.cmu.cs.plural.fractions.FractionConstraintVisitor;
@@ -55,7 +56,6 @@ import edu.cmu.cs.plural.fractions.OneFraction;
 import edu.cmu.cs.plural.fractions.VariableFraction;
 import edu.cmu.cs.plural.fractions.ZeroFraction;
 import edu.cmu.cs.plural.fractions.FractionRelation.Relop;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * @author Kevin Bierhoff

@@ -43,8 +43,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.states.StateSpace;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * @author Kevin Bierhoff

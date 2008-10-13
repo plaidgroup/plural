@@ -37,7 +37,7 @@
  */
 package edu.cmu.cs.plural.concrete;
 
-import static edu.cmu.cs.plural.util.ConsList.cons;
+import static edu.cmu.cs.crystal.util.ConsList.cons;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,14 +52,14 @@ import java.util.WeakHashMap;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.internal.Freezable;
 import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.util.ConsList;
+import edu.cmu.cs.crystal.util.Freezable;
+import edu.cmu.cs.crystal.util.Lambda2;
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.linear.ReleasePermissionImplication;
 import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
-import edu.cmu.cs.plural.util.ConsList;
-import edu.cmu.cs.plural.util.Lambda2;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * This type is in charge of keeping track of facts about variables and state

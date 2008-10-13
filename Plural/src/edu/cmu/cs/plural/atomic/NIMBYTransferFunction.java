@@ -48,7 +48,6 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
-import edu.cmu.cs.crystal.internal.Utilities;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.BinaryOperation;
 import edu.cmu.cs.crystal.tac.CastInstruction;
@@ -69,13 +68,14 @@ import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
 import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.util.ExtendedIterator;
+import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.FractionalTransfer;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 import edu.cmu.cs.plural.track.SingleTruthFractionalTransfer;
-import edu.cmu.cs.plural.util.ExtendedIterator;
 
 /**
  * This class is the transfer function for my analysis of type-state in the

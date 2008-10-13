@@ -40,7 +40,7 @@ package edu.cmu.cs.plural.linear;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.flow.LatticeElement;
-import edu.cmu.cs.crystal.internal.Freezable;
+import edu.cmu.cs.crystal.util.Freezable;
 
 /**
  * This interface represents the abstract super-type of classes used for

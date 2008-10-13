@@ -46,13 +46,13 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.pred.MethodPrecondition;
 import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.pred.PredicateMerger;
-import edu.cmu.cs.plural.util.Pair;
 
 /**
  * Signature for methods with multiple cases defined.

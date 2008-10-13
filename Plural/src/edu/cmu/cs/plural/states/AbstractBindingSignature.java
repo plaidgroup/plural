@@ -50,6 +50,8 @@ import org.eclipse.jdt.core.dom.Modifier;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
@@ -60,8 +62,6 @@ import edu.cmu.cs.plural.perm.parser.PermParser;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.pred.MethodPrecondition;
 import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
-import edu.cmu.cs.plural.util.Pair;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * @author Kevin Bierhoff

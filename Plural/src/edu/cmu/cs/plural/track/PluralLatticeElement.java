@@ -46,10 +46,10 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.util.ExtendedIterator;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
-import edu.cmu.cs.plural.util.ExtendedIterator;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * @author Kevin Bierhoff

@@ -84,6 +84,8 @@ import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
 import edu.cmu.cs.crystal.tac.UnaryOperator;
 import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.LivenessProxy;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
@@ -98,8 +100,6 @@ import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IMethodSignature;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
-import edu.cmu.cs.plural.util.Pair;
-import edu.cmu.cs.plural.util.SimpleMap;
 
 /**
  * The transfer function for the PLURAL analysis.
