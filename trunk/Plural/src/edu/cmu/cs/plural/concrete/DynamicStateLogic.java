@@ -482,12 +482,37 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 			result.knownPredicates.put(entry.getKey(), entry.getValue());
 		}
 		
-		Set<Map.Entry<Aliasing, ConsList<Implication>>> impl_intersection =
-			new HashSet<Map.Entry<Aliasing, ConsList<Implication>>>(this.knownImplications.entrySet());
-		impl_intersection.retainAll(other.knownImplications.entrySet());
-		for( Map.Entry<Aliasing, ConsList<Implication>> entry : impl_intersection ) {
-			result.knownImplications.put(entry.getKey(), entry.getValue());
+		for(Map.Entry<Aliasing, ConsList<Implication>> thisE : this.knownImplications.entrySet()) {
+			ConsList<Implication> thisImpls = thisE.getValue();
+			if(thisImpls == null || thisImpls.isEmpty())
+				continue;
+			Aliasing var = thisE.getKey();
+			final ConsList<Implication> otherImpls = other.knownImplications.get(var);
+			if(otherImpls == null || otherImpls.isEmpty())
+				continue;
+			ConsList<Implication> resultImpls;
+			if(thisImpls == otherImpls)
+				// need not filter identical lists
+				resultImpls = thisImpls;
+			else
+				resultImpls = thisImpls.filter(new edu.cmu.cs.crystal.util.Lambda<Implication, Boolean>() {
+					@Override
+					public Boolean call(Implication i) {
+						if(otherImpls.contains(i))
+							return true;
+						else
+							return false;
+					}
+				});
+			result.knownImplications.put(var, resultImpls);
 		}
+		
+//		Set<Map.Entry<Aliasing, ConsList<Implication>>> impl_intersection =
+//			new HashSet<Map.Entry<Aliasing, ConsList<Implication>>>(this.knownImplications.entrySet());
+//		impl_intersection.retainAll(other.knownImplications.entrySet());
+//		for( Map.Entry<Aliasing, ConsList<Implication>> entry : impl_intersection ) {
+//			result.knownImplications.put(entry.getKey(), entry.getValue());
+//		}
 		
 //		Set<Map.Entry<Aliasing, List<DelayedImplication>>> delayed_intersection =
 //			new HashSet<Map.Entry<Aliasing, List<DelayedImplication>>>(this.delayedImplications.entrySet());
@@ -516,17 +541,32 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		if( other.isBottom() )
 			return false;
 		
-		if( !this.knownPredicates.keySet().containsAll(other.knownPredicates.keySet()) )
+		if( !this.knownPredicates.entrySet().containsAll(other.knownPredicates.entrySet()) )
 			return false;
 		
-		if( !this.knownPredicates.values().containsAll(other.knownPredicates.values()) )
-			return false;
+//		if( !this.knownPredicates.values().containsAll(other.knownPredicates.values()) )
+//			return false;
 		
-		if( !this.knownImplications.keySet().containsAll(other.knownImplications.keySet()) )
-			return false;
+		for(Map.Entry<Aliasing, ConsList<Implication>> otherE : other.knownImplications.entrySet()) {
+			ConsList<Implication> otherImpls = otherE.getValue();
+			if(otherImpls == null || otherImpls.isEmpty())
+				// ignore empty list
+				continue;
+			Aliasing var = otherE.getKey();
+			ConsList<Implication> thisImpls = this.knownImplications.get(var);
+			if(thisImpls == null || thisImpls.isEmpty())
+				// no implications for var -> fail
+				return false;
+			if(! thisImpls.containsAll(otherImpls))
+				// TODO make sure duplicate implications in other are also duplicate in this
+				return false;
+		}
 		
-		if( !this.knownImplications.values().containsAll(other.knownImplications.values()))
-			return false;
+//		if( !this.knownImplications.keySet().containsAll(other.knownImplications.keySet()) )
+//			return false;
+//		
+//		if( !this.knownImplications.values().containsAll(other.knownImplications.values()))
+//			return false;
 			
 //		if( !this.delayedImplications.keySet().containsAll(other.delayedImplications.keySet()) )
 //			return false;
