@@ -12,7 +12,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.jface.text,
  edu.cmu.cs.crystal,
  org.junit4
-Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: edu.cmu.cs.plural/,
  antlr-3.0.1/lib/antlr-runtime-3.0.1.jar
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
