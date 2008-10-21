@@ -17,7 +17,10 @@ import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 
 /***********************************************************************
- * This is a thread-safe queue that blocks automatically if you
+ *  NEB: Note! This class is used with permission of Allen I. Holub.
+ *  We are extremely grateful for his permission!
+ *  
+ *  This is a thread-safe queue that blocks automatically if you
  *	try to dequeue from an empty queue. It's based on a linked list,
  *  so will never fill. (You'll never block on a queue-full condition
  *	because there isn't one.)
