@@ -1334,8 +1334,8 @@ class LinearOperations extends TACAnalysisHelper {
 			PermissionSetFromAnnotations toMerge) {
 		if(a.getLabels().isEmpty()) 
 			throw new IllegalArgumentException("Empty aliasing provided");
-		if(toMerge == null || toMerge.isEmpty())
-			return value;
+//		if(toMerge == null || toMerge.isEmpty())
+//			return value;
 		
 		FractionalPermissions permissions = value.get(a);
 		permissions = permissions.mergeIn(toMerge);
