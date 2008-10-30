@@ -1388,7 +1388,18 @@ class LinearOperations extends TACAnalysisHelper {
 			TensorPluralTupleLE value,
 			final Variable assignmentSource,
 			final TACFieldAccess instr) {
-		if(getThisVar() != null) {
+		if("length".equals(instr.getFieldName()) &&
+				instr.getAccessedObjectOperand().resolveType().isArray()) {
+			// reading the array length
+			// do nothing--that's always ok
+			assert assignmentSource == null;
+			
+			// could enforce that there must be a permission for the accessed array:
+//			FractionalPermissions array_perms = value.get(loc);
+//			array_perms = array_perms.makeNonZero(array_perms.getStateSpace().getRootState());
+//			value.put(loc, array_perms);
+		}
+		else if(getThisVar() != null) {
 			/*
 			 * We may need to unpack...
 			 * Check if field is from the receiver.
@@ -1456,23 +1467,14 @@ class LinearOperations extends TACAnalysisHelper {
 				
 				return result;
 			}
-			else if(instr.getAccessedObjectOperand().resolveType().isArray() &&
-					"length".equals(instr.getFieldName())) {
-				// reading the array length
-				// do nothing--that's always ok
-				assert assignmentSource == null;
-				
-				// could enforce that there must be a permission for the accessed array:
-//				FractionalPermissions array_perms = value.get(loc);
-//				array_perms = array_perms.makeNonZero(array_perms.getStateSpace().getRootState());
-//				value.put(loc, array_perms);
-			}
 			else {
+				// not a receiver field
 				if(log.isLoggable(Level.WARNING))
 					log.warning("Unsupported field access: " + instr.getNode());
 			}
 		}
 		else {
+			// static method--cannot be a receiver field access
 			if(log.isLoggable(Level.WARNING))
 				log.warning("Unsupported field access: " + instr.getNode());
 		}
