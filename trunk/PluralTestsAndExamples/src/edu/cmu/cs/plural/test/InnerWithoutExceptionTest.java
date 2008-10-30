@@ -37,6 +37,10 @@
  */
 package edu.cmu.cs.plural.test;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
+
 /**
  * This test case simply ensures that inner classes don't cause Plural to throw
  * exceptions.
@@ -45,6 +49,8 @@ package edu.cmu.cs.plural.test;
  * @since Oct 30, 2008
  * 
  */
+@PassingTest
+@UseAnalyses(PluralAnalysis.PLURAL)
 public class InnerWithoutExceptionTest {
 
 	void m1() {
