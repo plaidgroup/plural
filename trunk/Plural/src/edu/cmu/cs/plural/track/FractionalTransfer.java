@@ -566,13 +566,13 @@ public class FractionalTransfer extends
 				value.put(instr, instr.getTarget(), perms.toLatticeElement());
 			}
 		}
-		else if(inStaticMethod() == false) {
+		else /*if(inStaticMethod() == false)*/ {
 			value.prepareForFieldRead(instr);
 		}
-		else {
-			if(log.isLoggable(Level.WARNING))
-				log.warning("Unsupported field assignment to foreign object: " + instr.getNode());
-		}
+//		else {
+//			if(log.isLoggable(Level.WARNING))
+//				log.warning("Unsupported field load from foreign object: " + instr.getNode());
+//		}
 		return finishTransfer(instr, labels, value);
 	}
 

@@ -44,10 +44,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.flow.LatticeElement;
+import edu.cmu.cs.crystal.tac.KeywordVariable;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.util.Freezable;
 
@@ -104,12 +106,25 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 		if(isBottom())
 			return AliasLE.bottom();
 		AliasLE result = locs.get(key);
-		if(result == null)
-			return AliasLE.bottom();
-		else
+		if(result != null)
 			return result;
+		if(key instanceof KeywordVariable) {
+			KeywordVariable outer = (KeywordVariable) key;
+			if(outer.isQualified()) {
+				return outerLocation(outer);
+			}
+		}
+		return AliasLE.bottom();
 	}
 	
+	/**
+	 * @param outer
+	 * @return
+	 */
+	private AliasLE outerLocation(final KeywordVariable outer) {
+		return AliasLE.create(new OuterLabel(outer.resolveType()));
+	}
+
 	public AliasLE put(Variable key, AliasLE le) {
 		if( this.frozen )
 			throw new IllegalStateException("This lattice element is frozen!");
@@ -304,4 +319,54 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 		return locs == null ? "BOTTOM" : locs.toString();
 	}
 
+	/**
+	 * Labels for qualified this and super variables.
+	 * @author Kevin Bierhoff
+	 * @since Oct 30, 2008
+	 *
+	 */
+	private static class OuterLabel implements ObjectLabel {
+		private final ITypeBinding outerType;
+		
+		public OuterLabel(ITypeBinding outerType) {
+			this.outerType = outerType;
+		}
+
+		@Override 
+		public ITypeBinding getType() { 
+			return outerType;
+		}
+
+		@Override 
+		public boolean isSummary() {
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((outerType == null) ? 0 : outerType.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			OuterLabel other = (OuterLabel) obj;
+			if (outerType == null) {
+				if (other.outerType != null)
+					return false;
+			} else if (!outerType.equals(other.outerType))
+				return false;
+			return true;
+		}
+		
+	}
 }
