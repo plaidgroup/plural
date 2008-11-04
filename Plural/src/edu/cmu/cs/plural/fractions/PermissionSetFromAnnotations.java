@@ -57,8 +57,16 @@ public class PermissionSetFromAnnotations extends
 		return new PermissionSetFromAnnotations(stateSpace);
 	}
 
-	public static PermissionSetFromAnnotations createSingleton(PermissionFromAnnotation singleton) {
-		FractionConstraints constraints = new FractionConstraints();
+	public static PermissionSetFromAnnotations createSingleton(
+			PermissionFromAnnotation singleton, boolean isNamedUniversal) {
+		FractionConstraints constraints;
+		if(isNamedUniversal) {
+			Set<NamedFraction> universals = singleton.getFractions().getAllFractionsOfType(NamedFraction.class);
+			constraints = FractionConstraints.createMutable(universals);
+		}
+		else
+			constraints = FractionConstraints.createMutable();
+		
 		singleton.registerFractions(constraints);
 		singleton.addIsUsedConstraints(constraints);
 		singleton.addIsFunctionConstraints(constraints);
@@ -82,14 +90,25 @@ public class PermissionSetFromAnnotations extends
 
 	public static Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> splitPermissionSets(
 			PermissionSetFromAnnotations perms) {
-		PermissionSetFromAnnotations virt = PermissionSetFromAnnotations.createEmpty(perms.getStateSpace());
-		PermissionSetFromAnnotations frame = PermissionSetFromAnnotations.createEmpty(perms.getStateSpace());
-		for(PermissionFromAnnotation v : perms.getPermissions()) {
-			virt = virt.combine(v);
-		}
-		for(PermissionFromAnnotation f : perms.getFramePermissions()) {
-			frame = frame.combine(f);
-		}
+		PermissionSetFromAnnotations virt = new PermissionSetFromAnnotations(
+				perms.getStateSpace(),
+				perms.getPermissions(), 
+				Collections.<PermissionFromAnnotation>emptyList(), 
+				perms.getConstraints());
+		PermissionSetFromAnnotations frame = new PermissionSetFromAnnotations(
+				perms.getStateSpace(),
+				Collections.<PermissionFromAnnotation>emptyList(), 
+				perms.getFramePermissions(), 
+				perms.getConstraints());
+		
+//		PermissionSetFromAnnotations virt = PermissionSetFromAnnotations.createEmpty(perms.getStateSpace());
+//		PermissionSetFromAnnotations frame = PermissionSetFromAnnotations.createEmpty(perms.getStateSpace());
+//		for(PermissionFromAnnotation v : perms.getPermissions()) {
+//			virt = virt.combine(v);
+//		}
+//		for(PermissionFromAnnotation f : perms.getFramePermissions()) {
+//			frame = frame.combine(f);
+//		}
 		return Pair.create(virt, frame);
 	}
 	
@@ -119,10 +138,18 @@ public class PermissionSetFromAnnotations extends
 	 * If a permission with the same root as the given permission is already
 	 * in the set then these two permissions will be coalesced immediately.
 	 * @param permission New permission to be added to the set.
+	 * @param isNamedUniversal 
 	 * @return New permission set with <code>permission</code> added.
 	 */
-	public PermissionSetFromAnnotations combine(PermissionFromAnnotation permission) {
-		FractionConstraints constraints = this.constraints.mutableCopy();
+	public PermissionSetFromAnnotations combine(PermissionFromAnnotation permission, 
+			boolean isNamedUniversal) {
+		FractionConstraints constraints;
+		if(isNamedUniversal) {
+			Set<NamedFraction> universals = permission.getFractions().getAllFractionsOfType(NamedFraction.class);
+			constraints = this.constraints.mutableCopy(universals);
+		}
+		else
+			constraints = this.constraints.mutableCopy();
 		
 		// maybe it would be better to use the permission factory to create
 		// this permission in place

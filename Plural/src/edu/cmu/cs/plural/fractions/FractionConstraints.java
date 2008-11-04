@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.fractions;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TreeSet;
@@ -79,12 +80,38 @@ import static edu.cmu.cs.crystal.util.ConsList.cons;
  * @see #isConsistent() test for consistency
  * @see #simplify() find equalities between fractions and terms
  */
-public class FractionConstraints implements Freezable<FractionConstraints> {
+public final class FractionConstraints implements Freezable<FractionConstraints> {
 	
 	private static final Logger log = Logger.getLogger(FractionConstraints.class.getName());
+
+	/**
+	 * Returns a new (mutable) constraint object with no universal parameters.
+	 * @return
+	 */
+	public static FractionConstraints createMutable() {
+		return new FractionConstraints();
+	}
+	
+	/**
+	 * Returns a new (mutable) constraint object with the given universals.
+	 * @param universalParameters
+	 * @return
+	 */
+	public static FractionConstraints createMutable(Set<NamedFraction> universalParameters) {
+		return new FractionConstraints(Collections.unmodifiableSet(universalParameters));
+	}
 	
 	/** Constraint set.  This is what this class is all about. */
 	private ConsList<FractionConstraint> constraints;
+	
+	/**
+	 * The set of named fractions used in the constraints that represent
+	 * instantiated universal quantifiers.  These typically come from
+	 * method pre-conditions.  Named fractions that are not in this set
+	 * are assumed to be existentially quantified.  They may be made
+	 * subject to alpha-conversion during permission comparison.
+	 */
+	private final Set<NamedFraction> universalParameters;
 	
 	/** 
 	 * Fraction variables used in the constraint.  We're currently making
@@ -121,10 +148,19 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	/**
 	 * Creates an empty constraint set.
 	 */
-	public FractionConstraints() {
-		constraints = ConsList.empty();
-		variables = new LinkedHashSet<VariableFraction>();
-		constants = new LinkedHashSet<NamedFraction>();
+	private FractionConstraints() {
+		this(Collections.<NamedFraction>emptySet());
+	}
+	
+	/**
+	 * Creates an empty constraint set with the given universal parameters.
+	 * @param universalParameters Should be immutable. 
+	 */
+	private FractionConstraints(Set<NamedFraction> universalParameters) {
+		this.constraints = ConsList.empty();
+		this.universalParameters = universalParameters;
+		this.variables = new LinkedHashSet<VariableFraction>();
+		this.constants = new LinkedHashSet<NamedFraction>();
 	}
 	
 	/**
@@ -259,7 +295,29 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	}
 
 	public FractionConstraints mutableCopy() {
-		FractionConstraints result = new FractionConstraints();
+		return mutableCopy(Collections.<NamedFraction>emptySet());
+//		FractionConstraints result = new FractionConstraints(this.universalParameters);
+//		result.constraints = this.constraints;
+//		result.variables.addAll(this.variables);
+//		result.constants.addAll(this.constants);
+//		result.consistent = consistent;
+//		return result;
+	}
+
+	/**
+	 * @param universals
+	 * @return
+	 */
+	public FractionConstraints mutableCopy(Set<NamedFraction> universals) {
+		FractionConstraints result;
+		if(universals.isEmpty())
+			result = new FractionConstraints(this.universalParameters);
+		else {
+			universals = new HashSet<NamedFraction>(universals);
+			universals.addAll(this.universalParameters);
+			result = new FractionConstraints(Collections.unmodifiableSet(universals));
+		}
+			
 		result.constraints = this.constraints;
 		result.variables.addAll(this.variables);
 		result.constants.addAll(this.constants);
@@ -277,7 +335,20 @@ public class FractionConstraints implements Freezable<FractionConstraints> {
 	 * @see #addAll(FractionConstraints)
 	 */
 	public FractionConstraints concat(FractionConstraints other) {
-		FractionConstraints result = new FractionConstraints();
+		Set<NamedFraction> universals;
+		if(this.universalParameters == other.universalParameters ||
+				this.universalParameters.containsAll(other.universalParameters)) {
+			universals = this.universalParameters;
+		}
+		else if(other.universalParameters.containsAll(this.universalParameters)) {
+			universals = other.universalParameters;
+		}
+		else {
+			universals = new HashSet<NamedFraction>(this.universalParameters);
+			universals.addAll(other.universalParameters);
+			universals = Collections.unmodifiableSet(universals);
+		}
+		FractionConstraints result = new FractionConstraints(universals);
 		
 		// Just an optimization...
 		if( other.constraints == this.constraints )

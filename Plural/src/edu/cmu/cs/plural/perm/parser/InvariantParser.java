@@ -1,7 +1,6 @@
 package edu.cmu.cs.plural.perm.parser;
 
 import java.util.Collections;
-import java.util.Map;
 
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
@@ -16,21 +15,21 @@ public class InvariantParser extends AbstractParamVisitor implements
 		AccessPredVisitor<Boolean>, InvariantMergerChecker {
 
 	static InvariantParser createUnpackInvariantParser(SimpleMap<String, StateSpace> spaces) {
-		return new InvariantParser(spaces, true);
+		return new InvariantParser(spaces, FractionCreation.NAMED_EXISTENTIAL);
 	}
 	
 	static InvariantParser createPackInvariantParser(SimpleMap<String,StateSpace> spaces) {
-		return new InvariantParser(spaces, false);
+		return new InvariantParser(spaces, FractionCreation.VARIABLE_EXISTENTIAL);
 	}
 	
 	private InvariantParser(SimpleMap<String, StateSpace> spaces,
-			boolean namedFractions) {
+			FractionCreation namedFractions) {
 		super(Collections.<String,PermissionSetFromAnnotations>emptyMap(), 
 				spaces, false, namedFractions);
 	}
 
 	@Override
-	protected AbstractParamVisitor createSubParser(boolean namedFraction) {
+	protected AbstractParamVisitor createSubParser(FractionCreation namedFraction) {
 		return new InvariantParser(getSpaces(), namedFraction);
 	}
 

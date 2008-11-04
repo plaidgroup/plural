@@ -38,6 +38,7 @@
 package edu.cmu.cs.plural.fractions;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -74,21 +75,30 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 		super();
 		this.permissions = Collections.emptyList();
 		this.framePermissions = Collections.emptyList();
-		this.constraints = new FractionConstraints().freeze();
+		this.constraints = FractionConstraints.createMutable().freeze();
 	}
 	
-	protected AbstractFractionalPermissionSet(List<? extends P> permissions) {
+	protected AbstractFractionalPermissionSet(List<? extends P> permissions, boolean isNamedUniversal) {
 		super();
 		if(permissions == null) {
 			this.permissions = null;
 			this.framePermissions = null;
+			this.constraints = FractionConstraints.createMutable().freeze();
 		}
 		else {
 			this.permissions = Collections.unmodifiableList(permissions);
 			this.framePermissions = Collections.emptyList();
 			assert checkPermissionSet(permissions);
+			if(isNamedUniversal) {
+				Set<NamedFraction> universals = new HashSet<NamedFraction>();
+				for(P p : permissions) {
+					universals.addAll(p.getFractions().getAllFractionsOfType(NamedFraction.class));
+				}
+				this.constraints = FractionConstraints.createMutable(universals).freeze();
+			}
+			else
+				this.constraints = FractionConstraints.createMutable().freeze();
 		}
-		this.constraints = new FractionConstraints().freeze();
 	}
 
 	protected AbstractFractionalPermissionSet(

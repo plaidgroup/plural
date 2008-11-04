@@ -59,6 +59,7 @@ import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.perm.parser.AbstractParamVisitor.FractionCreation;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.pred.MethodPrecondition;
 import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
@@ -109,6 +110,9 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		Map<String, PermissionSetFromAnnotations> post = 
 			new HashMap<String, PermissionSetFromAnnotations>();
 		
+		FractionCreation namedFractions = 
+			forAnalyzingBody ? FractionCreation.NAMED_UNIVERSAL : FractionCreation.VARIABLE_UNIVERSAL;
+		
 		/*
 		 * 1. receiver
 		 */
@@ -121,7 +125,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> rcvr_borrowed = 
 				prePostFromAnnotations(rcvr_space, 
 						CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding), 
-						forAnalyzingBody, 
+						namedFractions, 
 						frameAsVirtual,
 						noReceiverPre);
 			
@@ -154,7 +158,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> param_borrowed = 
 				prePostFromAnnotations(space, 
 					CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), 
-					forAnalyzingBody,
+					namedFractions,
 					false, false);
 			pre.put(paramName, param_borrowed.fst());
 			post.put(paramName, param_borrowed.snd());
@@ -179,7 +183,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			PermissionSetFromAnnotations result = PermissionSetFromAnnotations.createEmpty(space);
 			for(ResultPermissionAnnotation a : CrystalPermissionAnnotation.resultAnnotations(getAnnoDB(), binding)) {
 				PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(space, a.getRootNode(), a.getKind(), a.isFramePermission(), a.getEnsures(), ! forAnalyzingBody);
-				result = result.combine(p);
+				result = result.combine(p, forAnalyzingBody /* named means universal */);
 			}
 			post.put("result", result);
 		}
@@ -273,55 +277,8 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		notReturned = Collections.unmodifiableSet(notReturned);
 	}
 
-	/**
-	 * Returns the pre and post condition permissions for the receiver of the
-	 * method call, given the method binding.
-	 * @param namedFractions
-	 * @param preAndPostString Pre- and post-condition from {@link PermAnnotation}.
-	 * @param frameAsVirtual If <code>true</code>, frame permissions are coerced into
-	 * virtual permissions.  This can only be done for receiver permissions and should
-	 * only be used at virtual method call sites.
-	 */
-	protected Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> 
-	receiverPermissions(boolean namedFractions, Pair<String, String> preAndPostString, 
-			boolean frameAsVirtual, boolean ignoreVirtual) {
-		if(isStaticMethod(binding))
-			return null;
-		StateSpace space = getStateSpace(binding.getDeclaringClass());
-		Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> result = 
-			prePostFromAnnotations(space, 
-					CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding), 
-					namedFractions, 
-					frameAsVirtual,
-					ignoreVirtual);
-		
-		result = mergeWithParsedRcvrPermissions(result, preAndPostString, space, namedFractions, frameAsVirtual, ignoreVirtual);
-//		if(binding.isConstructor())
-//			result = Pair.create(null, result.snd());
-		return result;
-	}
-
 	private boolean isStaticMethod(IMethodBinding binding) {
 		return Modifier.isStatic(binding.getModifiers());
-	}
-
-	/**
-	 * Returns the pre and post condition permissions for the paramIndex-th 
-	 * parameter of the binding method.
-	 */
-	protected Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> 
-	parameterPermissions(int paramIndex, boolean namedFractions, 
-			Pair<String, String> preAndPostString) {
-		
-		StateSpace space = getStateSpace(binding.getParameterTypes()[paramIndex]);
-		Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> result = 
-			prePostFromAnnotations(space, 
-				CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), 
-				namedFractions,
-				false, false);
-		
-		result = mergeWithParsedParamPermissions(result, preAndPostString, space, paramIndex, namedFractions);
-		return result;
 	}
 
 	/**
@@ -334,7 +291,8 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	 * @return
 	 */
 	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> prePostFromAnnotations(
-			StateSpace space, List<ParameterPermissionAnnotation> annos, boolean namedFractions, 
+			StateSpace space, List<ParameterPermissionAnnotation> annos, 
+			FractionCreation namedFractions, 
 			boolean frameAsVirtual, boolean ignoreVirtual) {
 		PermissionSetFromAnnotations pre = PermissionSetFromAnnotations.createEmpty(space);
 		PermissionSetFromAnnotations post = PermissionSetFromAnnotations.createEmpty(space);
@@ -344,122 +302,12 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(
 					space, a.getRootNode(), a.getKind(), 
 					a.isFramePermission() && !frameAsVirtual, 
-					a.getRequires(), namedFractions);
-			pre = pre.combine(p);
+					a.getRequires(), namedFractions.createNamed());
+			pre = pre.combine(p, namedFractions.isNamedUniversal());
 			if(a.isReturned())
-				post = post.combine(p.copyNewState(a.getEnsures()));
+				post = post.combine(p.copyNewState(a.getEnsures()), namedFractions.isNamedUniversal());
 		}
 		return Pair.create(pre, post);
-	}
-
-	/**
-	 * This method takes receiver permissions that came from the old-style
-	 * permission annotations on a method and combines them with permissions from
-	 * the new-style annotations.
-	 */
-	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> mergeWithParsedRcvrPermissions(
-			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> preAndPost,
-			Pair<String, String> preAndPostString, StateSpace space, boolean namedFractions,
-			boolean frameAsVirtual, boolean ignoreVirtual) {
-//		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
-		
-		if( preAndPostString == null ) {
-			return preAndPost;
-		}
-			
-		PermissionSetFromAnnotations prePerm = preAndPost.fst();
-		PermissionSetFromAnnotations postPerm = preAndPost.snd();
-		
-		Pair<List<PermissionFromAnnotation>,
-		List<PermissionFromAnnotation>> prePostPerms = 
-			PermParser.parseReceiverPermissions(preAndPostString.fst(), preAndPostString.snd(),
-					space, namedFractions);
-		for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
-			if(!pre_p.isFramePermission() && ignoreVirtual)
-				continue;
-			if(frameAsVirtual)
-				pre_p = pre_p.asVirtual();
-			prePerm = prePerm.combine(pre_p);
-		}
-		for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
-			if(!post_p.isFramePermission() && ignoreVirtual)
-				continue;
-			if(frameAsVirtual)
-				post_p = post_p.asVirtual();
-			postPerm = postPerm.combine(post_p);
-		}		
-
-		return Pair.create(prePerm, postPerm);
-	}
-	/**
-	 * This method merges takes the pre and post permission for a parameter from the old style annotations and
-	 * merges in the permissions from the new-style annotations.
-	 */
-	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> mergeWithParsedParamPermissions(
-			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> preAndPost,
-			Pair<String, String> preAndPostString,
-			StateSpace space, int paramIndex, boolean namedFractions) {
-//		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
-		
-		if( preAndPostString == null ) {
-			return preAndPost;
-		}
-			
-		PermissionSetFromAnnotations prePerm = preAndPost.fst();
-		PermissionSetFromAnnotations postPerm = preAndPost.snd();
-
-		Pair<List<PermissionFromAnnotation>,
-		List<PermissionFromAnnotation>> prePostPerms = 
-			PermParser.parseParameterPermissions(preAndPostString.fst(), preAndPostString.snd(),
-					space, paramIndex, namedFractions);
-		for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
-			prePerm = prePerm.combine(pre_p);
-		}
-		for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
-			postPerm = postPerm.combine(post_p);
-		}
-
-		return Pair.create(prePerm, postPerm);
-	}
-	/**
-	 * This method takes the result permission for a parameter from the old style
-	 * annotations and merges in the permissions from the new-style annotations.
-	 */
-	private PermissionSetFromAnnotations mergeWithParsedResultPermissions(
-			PermissionSetFromAnnotations result, String postString,
-			StateSpace space, boolean namedFractions) {
-//		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
-		
-		if( postString == null ) {
-			return result;
-		}
-			
-		List<PermissionFromAnnotation> postPerms = 
-			PermParser.parseResultPermissions(postString,
-					space, namedFractions);
-		for( PermissionFromAnnotation pre_p : postPerms ) {
-			result = result.combine(pre_p);
-		}
-
-		return result;
-	}
-	
-//	private PermissionSetFromAnnotations 
-//	resultPermissions(IMethodBinding binding) {
-//		PermissionSetFromAnnotations result = resultPermissions(binding, true);
-//		return result;
-//	}
-	
-	protected PermissionSetFromAnnotations 
-	resultPermissions(boolean namedFractions, String postString) {
-		StateSpace space = getStateSpace(binding.getReturnType());
-		PermissionSetFromAnnotations result = PermissionSetFromAnnotations.createEmpty(space);
-		for(ResultPermissionAnnotation a : CrystalPermissionAnnotation.resultAnnotations(getAnnoDB(), binding)) {
-			PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(space, a.getRootNode(), a.getKind(), a.isFramePermission(), a.getEnsures(), namedFractions);
-			result = result.combine(p);
-		}
-		result = mergeWithParsedResultPermissions(result, postString, space, namedFractions);
-		return result;
 	}
 
 }

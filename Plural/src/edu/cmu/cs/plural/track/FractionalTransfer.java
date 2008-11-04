@@ -589,7 +589,9 @@ public class FractionalTransfer extends
 		StateSpace space = getStateSpace(fieldBinding.getType());
 		PermissionSetFromAnnotations perms = PermissionSetFromAnnotations.createEmpty(space);
 		for(ParameterPermissionAnnotation a : annos) {
-			perms = perms.combine(pf.createOrphan(space, a.getRootNode(), a.getKind(), new String[] { a.getRootNode() }, true));
+			perms = perms.combine(
+					pf.createOrphan(space, a.getRootNode(), a.getKind(), new String[] { a.getRootNode() }, true /* named fractions */),
+					false /* named fractions are existentials */);
 		}
 		return perms;
 	}
@@ -724,7 +726,8 @@ public class FractionalTransfer extends
 		StateSpace arraySpace = getStateSpace(instr.getArrayType().resolveBinding());
 		value.put(instr, instr.getTarget(), PermissionSetFromAnnotations.createSingleton(
 				pf.createUniqueOrphan(arraySpace, arraySpace.getRootState(), 
-						false /* not a frame perm */, arraySpace.getRootState())).toLatticeElement());
+						false /* not a frame perm */, arraySpace.getRootState()), 
+				false /* named is existential */).toLatticeElement());
 		// TODO consider arrays as frames?  may affect array assignment and checking
 		
 		// After instantiation, we know the target to not be null! 
@@ -791,7 +794,7 @@ public class FractionalTransfer extends
 			PermissionFactory.INSTANCE.createImmutableOrphan(space, space.getRootState(), 
 					false /* not a frame permission */, new String[] { space.getRootState() }, true);
 		PermissionSetFromAnnotations result = 
-			PermissionSetFromAnnotations.createSingleton(p);
+			PermissionSetFromAnnotations.createSingleton(p, false /* named is existential */);
 		return result.toLatticeElement();
 	}
 

@@ -108,6 +108,7 @@ import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.perm.parser.AbstractParamVisitor.FractionCreation;
 import edu.cmu.cs.plural.states.IInvocationSignature;
 import edu.cmu.cs.plural.states.StateSpace;
 
@@ -196,7 +197,7 @@ public class SingleTruthFractionalTransfer extends
 					pf.createUniqueOrphan(thisSpace, thisSpace.getRootState(), 
 							true /* frame permission */, thisSpace.getRootState());
 				FractionalPermissions this_initial = 
-					PermissionSetFromAnnotations.createSingleton(thisPre).toLatticeElement();
+					PermissionSetFromAnnotations.createSingleton(thisPre, true).toLatticeElement();
 				this_initial = this_initial.unpack(thisSpace.getRootState());
 				start.put(thisLocation, this_initial);
 
@@ -533,7 +534,7 @@ public class SingleTruthFractionalTransfer extends
 					StateSpace.STATE_ALIVE, 
 					false, // not a frame permission
 					new String[] { StateSpace.STATE_ALIVE }, 
-					true));
+					true), false);
 			new_value.put(instr, instr.getTarget(), new_perms.toLatticeElement());
 			return LabeledSingleResult.createResult(new_value, labels);
 		}
@@ -1041,13 +1042,12 @@ public class SingleTruthFractionalTransfer extends
 			NewArrayInstruction instr, List<ILabel> labels,
 			PluralTupleLatticeElement value) {
 		StateSpace arraySpace = getStateSpace(instr.getArrayType().resolveBinding());
-		FractionConstraints newConstraints = new FractionConstraints();
 		
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 		value.put(instr, instr.getTarget(), PermissionSetFromAnnotations.createSingleton(
 				pf.createUniqueOrphan(arraySpace, arraySpace.getRootState(), 
 						false /* not a frame permission */, 
-						arraySpace.getRootState())).toLatticeElement());
+						arraySpace.getRootState()), false).toLatticeElement());
 		
 		// After insantiation, we know the target to not be null! 
 		value.addNonNullVariable(value.getLocationsAfter(instr.getNode(), instr.getTarget()));
@@ -1185,7 +1185,7 @@ public class SingleTruthFractionalTransfer extends
 			PermissionFactory.INSTANCE.createImmutableOrphan(space, space.getRootState(), 
 					false /* not a frame permission */, new String[] { space.getRootState() }, true);
 		PermissionSetFromAnnotations result = 
-			PermissionSetFromAnnotations.createSingleton(p);
+			PermissionSetFromAnnotations.createSingleton(p, false);
 		return result.toLatticeElement();
 	}
 
@@ -1371,12 +1371,13 @@ public class SingleTruthFractionalTransfer extends
 	receiverPermissions(IMethodBinding binding, boolean namedFractions, boolean frameAsVirtual) {
 		if(isStaticMethod(binding))
 			return null;
+		FractionCreation fc = namedFractions ? FractionCreation.NAMED_UNIVERSAL : FractionCreation.VARIABLE_UNIVERSAL;
 		StateSpace space = getStateSpace(binding.getDeclaringClass());
 		Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> result = 
 			prePostFromAnnotations(space, 
-					CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding), namedFractions, frameAsVirtual);
+					CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding), fc, frameAsVirtual);
 		
-		result = mergeWithParsedRcvrPermissions(result, binding, space, namedFractions);
+		result = mergeWithParsedRcvrPermissions(result, binding, space, fc);
 		if(binding.isConstructor())
 			result = Pair.create(null, result.snd());
 		return result;
@@ -1397,12 +1398,12 @@ public class SingleTruthFractionalTransfer extends
 	
 	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> 
 	parameterPermissions(IMethodBinding binding, int paramIndex, boolean namedFractions) {
-		
+		FractionCreation fc = namedFractions ? FractionCreation.NAMED_UNIVERSAL : FractionCreation.VARIABLE_UNIVERSAL;
 		StateSpace space = getStateSpace(binding.getParameterTypes()[paramIndex]);
 		Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> result = prePostFromAnnotations(space, 
-				CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), namedFractions, false);
+				CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), fc, false);
 		
-		result = mergeWithParsedParamPermissions(result, binding, space, paramIndex, namedFractions);
+		result = mergeWithParsedParamPermissions(result, binding, space, paramIndex, fc);
 		return result;
 	}
 
@@ -1414,14 +1415,14 @@ public class SingleTruthFractionalTransfer extends
 	 * @return
 	 */
 	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> prePostFromAnnotations(
-			StateSpace space, List<ParameterPermissionAnnotation> annos, boolean namedFractions, boolean frameAsVirtual) {
+			StateSpace space, List<ParameterPermissionAnnotation> annos, FractionCreation namedFractions, boolean frameAsVirtual) {
 		PermissionSetFromAnnotations pre = PermissionSetFromAnnotations.createEmpty(space);
 		PermissionSetFromAnnotations post = PermissionSetFromAnnotations.createEmpty(space);
 		for(ParameterPermissionAnnotation a : annos) {
-			PermissionFromAnnotation p = pf.createOrphan(space, a.getRootNode(), a.getKind(), !frameAsVirtual && a.isFramePermission(), a.getRequires(), namedFractions);
-			pre = pre.combine(p);
+			PermissionFromAnnotation p = pf.createOrphan(space, a.getRootNode(), a.getKind(), !frameAsVirtual && a.isFramePermission(), a.getRequires(), namedFractions.createNamed());
+			pre = pre.combine(p, namedFractions.isNamedUniversal());
 			if(a.isReturned())
-				post = post.combine(p.copyNewState(a.getEnsures()));
+				post = post.combine(p.copyNewState(a.getEnsures()), namedFractions.isNamedUniversal());
 		}
 		return Pair.create(pre, post);
 	}
@@ -1433,7 +1434,7 @@ public class SingleTruthFractionalTransfer extends
 	 */
 	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> mergeWithParsedRcvrPermissions(
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> preAndPost,
-			IMethodBinding binding, StateSpace space, boolean namedFractions) {
+			IMethodBinding binding, StateSpace space, FractionCreation namedFractions) {
 		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
 		
 		if( preAndPostString == null ) {
@@ -1446,12 +1447,12 @@ public class SingleTruthFractionalTransfer extends
 		Pair<List<PermissionFromAnnotation>,
 		List<PermissionFromAnnotation>> prePostPerms = 
 			PermParser.parseReceiverPermissions(preAndPostString.fst(), preAndPostString.snd(),
-					space, namedFractions);
+					space, namedFractions.createNamed());
 		for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
-			prePerm = prePerm.combine(pre_p);
+			prePerm = prePerm.combine(pre_p, namedFractions.isNamedUniversal());
 		}
 		for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
-			postPerm = postPerm.combine(post_p);
+			postPerm = postPerm.combine(post_p, namedFractions.isNamedUniversal());
 		}
 		return Pair.create(prePerm, postPerm);
 	}
@@ -1461,7 +1462,7 @@ public class SingleTruthFractionalTransfer extends
 	 */
 	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> mergeWithParsedParamPermissions(
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> preAndPost,
-			IMethodBinding binding, StateSpace space, int paramIndex, boolean namedFractions) {
+			IMethodBinding binding, StateSpace space, int paramIndex, FractionCreation namedFractions) {
 		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
 		
 		if( preAndPostString == null ) {
@@ -1474,12 +1475,12 @@ public class SingleTruthFractionalTransfer extends
 		Pair<List<PermissionFromAnnotation>,
 		List<PermissionFromAnnotation>> prePostPerms = 
 			PermParser.parseParameterPermissions(preAndPostString.fst(), preAndPostString.snd(),
-					space, paramIndex, namedFractions);
+					space, paramIndex, namedFractions.createNamed());
 		for( PermissionFromAnnotation pre_p : prePostPerms.fst() ) {
-			prePerm = prePerm.combine(pre_p);
+			prePerm = prePerm.combine(pre_p, namedFractions.isNamedUniversal());
 		}
 		for( PermissionFromAnnotation post_p : prePostPerms.snd() ) {
-			postPerm = postPerm.combine(post_p);
+			postPerm = postPerm.combine(post_p, namedFractions.isNamedUniversal());
 		}
 
 		return Pair.create(prePerm, postPerm);
@@ -1490,7 +1491,7 @@ public class SingleTruthFractionalTransfer extends
 	 */
 	private PermissionSetFromAnnotations mergeWithParsedResultPermissions(
 			PermissionSetFromAnnotations result, IMethodBinding binding,
-			StateSpace space, boolean namedFractions) {
+			StateSpace space, FractionCreation namedFractions) {
 		Pair<String, String> preAndPostString = PermParser.getPermAnnotationStrings(getAnnoDB().getSummaryForMethod(binding));
 		
 		if( preAndPostString == null ) {
@@ -1499,9 +1500,9 @@ public class SingleTruthFractionalTransfer extends
 			
 		List<PermissionFromAnnotation> postPerms = 
 			PermParser.parseResultPermissions(preAndPostString.snd(),
-					space, namedFractions);
+					space, namedFractions.createNamed());
 		for( PermissionFromAnnotation pre_p : postPerms ) {
-			result = result.combine(pre_p);
+			result = result.combine(pre_p, namedFractions.isNamedUniversal());
 		}
 
 		return result;
@@ -1515,13 +1516,14 @@ public class SingleTruthFractionalTransfer extends
 	
 	private PermissionSetFromAnnotations 
 	resultPermissions(IMethodBinding binding, boolean namedFractions) {
+		FractionCreation fc = namedFractions ? FractionCreation.NAMED_EXISTENTIAL : FractionCreation.VARIABLE_EXISTENTIAL;
 		StateSpace space = getStateSpace(binding.getReturnType());
 		PermissionSetFromAnnotations result = PermissionSetFromAnnotations.createEmpty(space);
 		for(ResultPermissionAnnotation a : CrystalPermissionAnnotation.resultAnnotations(getAnnoDB(), binding)) {
 			PermissionFromAnnotation p = pf.createOrphan(space, a.getRootNode(), a.getKind(), a.getEnsures(), namedFractions);
-			result = result.combine(p);
+			result = result.combine(p, fc.isNamedUniversal());
 		}
-		result = mergeWithParsedResultPermissions(result, binding, space, namedFractions);
+		result = mergeWithParsedResultPermissions(result, binding, space, fc);
 		return result;
 	}
 

@@ -69,7 +69,7 @@ class MethodPreconditionParser extends AbstractParamVisitor
 			Set<String> notBorrowed) {
 		return new MethodPreconditionParser(perms, spaces, 
 				frameToVirtual /* chosen by caller */, 
-				false /* variable fractions */,
+				FractionCreation.VARIABLE_UNIVERSAL /* variable fractions */,
 				new LinkedHashSet<String>(notBorrowed));
 	}	
 	
@@ -79,14 +79,14 @@ class MethodPreconditionParser extends AbstractParamVisitor
 			Set<String> notBorrowed) {
 		return new MethodPreconditionParser(perms, spaces, 
 				false /* no frame-to-virtual coercion */, 
-				true /* named fractions */,
+				FractionCreation.NAMED_UNIVERSAL /* named fractions */,
 				new LinkedHashSet<String>(notBorrowed));
 	}	
 	
 	private MethodPreconditionParser(
 			Map<String, PermissionSetFromAnnotations> perms,
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual, boolean namedFractions, 
+			boolean frameToVirtual, FractionCreation namedFractions, 
 			Set<String> notBorrowed) {
 		super(perms, spaces, frameToVirtual, namedFractions);
 		this.notBorrowed = notBorrowed;
@@ -129,7 +129,7 @@ class MethodPreconditionParser extends AbstractParamVisitor
 	}
 
 	@Override
-	protected AbstractParamVisitor createSubParser(boolean namedFraction) {
+	protected AbstractParamVisitor createSubParser(FractionCreation namedFraction) {
 		return new MethodPreconditionParser(Collections.<String, PermissionSetFromAnnotations>emptyMap(),
 				getSpaces(),
 				isFrameToVirtual(),
