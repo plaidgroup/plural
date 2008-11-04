@@ -72,6 +72,80 @@ import edu.cmu.cs.plural.track.Permission.PermissionKind;
  */
 public abstract class AbstractParamVisitor 
 		implements AccessPredVisitor<Boolean>, PredicateChecker, PredicateMerger {
+	
+	/**
+	 * Determines how quantified fractions should be created.
+	 * @author Kevin Bierhoff
+	 * @since Nov 4, 2008
+	 *
+	 */
+	public enum FractionCreation {
+		/** 
+		 * Creates {@link edu.cmu.cs.plural.fractions.VariableFraction}s
+		 * representing existentially quantified fractions.  
+		 * {@link edu.cmu.cs.plural.fractions.NamedFraction}s therefore
+		 * represent universally quantified fractions.
+		 */
+		VARIABLE_EXISTENTIAL {
+			@Override public boolean createNamed() { return false; }
+			@Override public boolean isNamedUniversal() { return true; }
+			@Override public FractionCreation opposite() { return NAMED_UNIVERSAL; }
+		}, 
+		/** 
+		 * Creates {@link edu.cmu.cs.plural.fractions.VariableFraction}s
+		 * representing universally quantified fractions.  
+		 * {@link edu.cmu.cs.plural.fractions.NamedFraction}s therefore
+		 * represent existentially quantified fractions.
+		 */
+		VARIABLE_UNIVERSAL {
+			@Override public boolean createNamed() { return false; }
+			@Override public boolean isNamedUniversal() { return false; }
+			@Override public FractionCreation opposite() { return NAMED_EXISTENTIAL; }
+		}, 
+		/** 
+		 * Creates {@link edu.cmu.cs.plural.fractions.NamedFraction}s
+		 * representing existentially quantified fractions.  
+		 * {@link edu.cmu.cs.plural.fractions.VariableFraction}s therefore
+		 * represent universally quantified fractions.
+		 */
+		NAMED_EXISTENTIAL {
+			@Override public boolean createNamed() { return true; }
+			@Override public boolean isNamedUniversal() { return false; }
+			@Override public FractionCreation opposite() { return VARIABLE_UNIVERSAL; }
+		}, 
+		/** 
+		 * Creates {@link edu.cmu.cs.plural.fractions.NamedFraction}s
+		 * representing universally quantified fractions.  
+		 * {@link edu.cmu.cs.plural.fractions.VariableFraction}s therefore
+		 * represent existentially quantified fractions.
+		 */
+		NAMED_UNIVERSAL {
+			@Override public boolean createNamed() { return true; }
+			@Override public boolean isNamedUniversal() { return true; }
+			@Override public FractionCreation opposite() { return VARIABLE_EXISTENTIAL; }
+		};
+		
+		/** 
+		 * Indicates whether fraction names are turned into 
+		 * {@link edu.cmu.cs.plural.fractions.NamedFraction}s.
+		 * @return <code>true</code> if fraction names are turned into
+		 * {@link edu.cmu.cs.plural.fractions.NamedFraction}s, 
+		 * <code>false</code> if they are turned into
+		 * {@link edu.cmu.cs.plural.fractions.VariableFraction}s.
+		 */
+		public abstract boolean createNamed();
+		
+		/**
+		 * Indicates whether {@link edu.cmu.cs.plural.fractions.NamedFraction}s 
+		 * represent universally quantified fractions. 
+		 * @return <code>true</code> if {@link edu.cmu.cs.plural.fractions.NamedFraction}s
+		 * represent universally quantified fractions, <code>false</code> if they
+		 * represent existentially quantified fractions.
+		 */
+		public abstract boolean isNamedUniversal();
+		
+		public abstract FractionCreation opposite();
+	}
 
 	/**
 	 * This class allows us to have implications in the post-conditions of methods.
@@ -229,11 +303,11 @@ public abstract class AbstractParamVisitor
 	protected final Set<Pair<AbstractParamVisitor, AbstractParamVisitor>> impls = 
 		new LinkedHashSet<Pair<AbstractParamVisitor, AbstractParamVisitor>>();
 
-	private final boolean named;
+	private final FractionCreation named;
 
 	protected AbstractParamVisitor(Map<String, PermissionSetFromAnnotations> perms, 
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual, boolean namedFractions) {
+			boolean frameToVirtual, FractionCreation namedFractions) {
 		this.params = new LinkedHashMap<String, ParamInfoHolder>(perms.size());
 		for(Map.Entry<String, PermissionSetFromAnnotations> p : perms.entrySet()) {
 			ParamInfoHolder h = new ParamInfoHolder();
@@ -441,7 +515,7 @@ public abstract class AbstractParamVisitor
 			Pair<String, Boolean> refPair = getRefPair(ref);
 			boolean isFrame = refPair.snd();
 			PermissionFromAnnotation pa = 
-				pf.createOrphan(space, perm.getRoot(), p_type, isFrame, perm.getStateInfo(), named);
+				pf.createOrphan(space, perm.getRoot(), p_type, isFrame, perm.getStateInfo(), named.createNamed());
 			addPerm(refPair.fst(), pa);
 		}
 		return null;
@@ -476,7 +550,7 @@ public abstract class AbstractParamVisitor
 	 */
 	protected void addPerm(String param, PermissionFromAnnotation pa) {
 		ParamInfoHolder ps = getInfoHolder(param);
-		ps.addPerm(pa);
+		ps.addPerm(pa, named.isNamedUniversal());
 	}
 
 	/**
@@ -678,12 +752,12 @@ public abstract class AbstractParamVisitor
 
 	@Override
 	public Boolean visit(PermissionImplication permissionImplication) {
-		AbstractParamVisitor anteVisitor = createSubParser(!isNamedFractions()); 
+		AbstractParamVisitor anteVisitor = createSubParser(named.opposite()); 
 			
 //			new MethodPostconditionParser(
 //				getSpaces(), isFrameToVirtual(), 
 //				! isNamedFractions() /* negate for antecedent */);
-		AbstractParamVisitor consVisitor = createSubParser(isNamedFractions()); 
+		AbstractParamVisitor consVisitor = createSubParser(named); 
 //			new MethodPostconditionParser(
 //				getSpaces(), isFrameToVirtual(), isNamedFractions());
 		permissionImplication.ant().accept(anteVisitor);
@@ -692,7 +766,7 @@ public abstract class AbstractParamVisitor
 		return null;
 	}
 
-	protected abstract AbstractParamVisitor createSubParser(boolean namedFraction);
+	protected abstract AbstractParamVisitor createSubParser(FractionCreation named);
 
 	protected InfoHolderPredicate createPredicate(SimpleMap<String, Aliasing> vars) {
 		assert impls.isEmpty();
@@ -709,10 +783,6 @@ public abstract class AbstractParamVisitor
 			cons.add(h.getValue().createInfoPredicate(h.getKey(), vars.get(h.getKey())));
 		}
 		return new ParamImplication(antecedant, cons);
-	}
-
-	protected boolean isNamedFractions() {
-		return named;
 	}
 
 }

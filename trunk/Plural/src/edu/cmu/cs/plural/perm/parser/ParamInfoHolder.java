@@ -108,12 +108,13 @@ public class ParamInfoHolder {
 
 	/**
 	 * @param pa
+	 * @param isNamedUniversal 
 	 */
-	public void addPerm(PermissionFromAnnotation pa) {
+	public void addPerm(PermissionFromAnnotation pa, boolean isNamedUniversal) {
 		if(perms == null)
-			perms = PermissionSetFromAnnotations.createSingleton(pa);
+			perms = PermissionSetFromAnnotations.createSingleton(pa, isNamedUniversal);
 		else
-			perms = perms.combine(pa);
+			perms = perms.combine(pa, isNamedUniversal);
 	}
 
 	public void addNull(boolean nonnull) {

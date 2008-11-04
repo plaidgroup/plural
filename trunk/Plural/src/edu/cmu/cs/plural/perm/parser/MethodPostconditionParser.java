@@ -47,7 +47,6 @@ import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.linear.PermissionPredicate;
 import edu.cmu.cs.plural.linear.ReleasePermissionImplication;
-import edu.cmu.cs.plural.perm.parser.ParamInfoHolder.InfoHolderPredicate;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.states.StateSpace;
 
@@ -72,7 +71,7 @@ class MethodPostconditionParser extends AbstractParamVisitor
 				captured, capturing, released,
 				spaces,
 				frameToVirtual /* chosen by caller */, 
-				true /* named fractions */);
+				FractionCreation.NAMED_EXISTENTIAL /* named fractions */);
 	}
 
 	public static MethodPostconditionParser createPostconditionForAnalyzingBody(
@@ -85,7 +84,7 @@ class MethodPostconditionParser extends AbstractParamVisitor
 				captured, capturing, released,
 				spaces,
 				false /* no frame-to-virtual coercion */, 
-				false /* variable fractions */);
+				FractionCreation.VARIABLE_EXISTENTIAL /* variable fractions */);
 	}
 
 	private final Map<String, ReleaseHolder> captured;
@@ -110,7 +109,7 @@ class MethodPostconditionParser extends AbstractParamVisitor
 			String capturing, 
 			Map<String, String> released,
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual, boolean namedFractions) {
+			boolean frameToVirtual, FractionCreation namedFractions) {
 		super(perms, spaces, frameToVirtual, namedFractions);
 		this.captured = captured;
 		this.capturing = capturing;
@@ -125,7 +124,7 @@ class MethodPostconditionParser extends AbstractParamVisitor
 	 */
 	private MethodPostconditionParser(
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual, boolean namedFractions) {
+			boolean frameToVirtual, FractionCreation namedFractions) {
 		super(new LinkedHashMap<String, PermissionSetFromAnnotations>(), 
 				spaces, frameToVirtual, namedFractions);
 		this.captured = null;
@@ -171,7 +170,7 @@ class MethodPostconditionParser extends AbstractParamVisitor
 	}
 
 	@Override
-	protected AbstractParamVisitor createSubParser(boolean namedFraction) {
+	protected AbstractParamVisitor createSubParser(FractionCreation namedFraction) {
 		return new MethodPostconditionParser(getSpaces(),isFrameToVirtual(),namedFraction);
 	}
 

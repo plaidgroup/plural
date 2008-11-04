@@ -73,6 +73,14 @@ public class FractionFunction {
 		return new FractionFunction(stateSpace, rootNode, namedFractions, values, belowFraction);
 	}
 
+	/**
+	 * Creates a new fraction function based on the existing one
+	 * but with the given fraction values, where defined.
+	 * @param base
+	 * @param values
+	 * @param below
+	 * @return
+	 */
 	public static FractionFunction create(
 			FractionFunction base,
 			HashMap<String, Fraction> values,
@@ -198,6 +206,7 @@ public class FractionFunction {
 	}
 
 	/**
+	 * Creates a new fraction function with the given information.
 	 * @param stateSpace
 	 * @param rootNode
 	 * @param values
@@ -210,7 +219,31 @@ public class FractionFunction {
 		this.values = values;
 		this.belowFraction = belowFraction;
 	}
+	
+	/**
+	 * Returns the fraction function's root node, which
+	 * is the most precise node in the state space for which
+	 * this fraction function holds a fraction.
+	 * @return the fraction function's root node.
+	 */
+	public String getRootNode() {
+		return rootNode;
+	}
 
+	/**
+	 * Returns the fraction held by this fraction function for
+	 * the given node.
+	 * This is:
+	 * <ul>
+	 * <li>The fraction stored for the given node, if defined.</li>
+	 * <li>The {@link #getBelowFraction() below fraction}, if the given
+	 * node is strictly inside the {@link #getRootNode() root node}.</li>
+	 * <li>Zero otherwise.</li>
+	 * </ul>
+	 * @param node A node in the state space.
+	 * @return the fraction held by this fraction function for
+	 * the given node.
+	 */
 	public Fraction get(String node) {
 		if(values.containsKey(node))
 			return values.get(node);
@@ -219,6 +252,10 @@ public class FractionFunction {
 		return Fraction.zero();
 	}
 
+	/**
+	 * Returns the below fraction of this fraction function.
+	 * @return the below fraction.
+	 */
 	public Fraction getBelowFraction() {
 		return belowFraction;
 	}
@@ -233,20 +270,65 @@ public class FractionFunction {
 		return result;
 	}
 	
+	/**
+	 * Returns the number of nodes in this fraction function, excluding
+	 * the {@link #getBelowFraction() below fraction}.
+	 * @return the number of nodes in this fraction function.
+	 */
 	public int size() {
 		return values.size();
 	}
 
+	/**
+	 * Tests if this fraction function is guaranteed bigger than the argument.
+	 * It does so by comparing pointwise comparison of fractions for the same
+	 * node from the two functions.
+	 * This is a very conservative test and probably rarely useful.
+	 * @param other Another fraction function with the same 
+	 * {@link #getRootNode root node} as this fraction function.
+	 * @return <code>true</code> if this fraction function is guaranteed bigger
+	 * than <code>other</code>.
+	 */
 	public boolean isBiggerThan(FractionFunction other) {
 		if(rootNode.equals(other.rootNode) == false)
 			throw new IllegalArgumentException("Cannot compare functions with different roots");
 		Iterator<String> it = stateSpace.stateIterator(rootNode);
 		while(it.hasNext()) {
 			String s = it.next();
-			if(values.get(s).isPossiblyGreaterOrEqual(other.values.get(s)))
+			if(other.values.get(s).isPossiblyGreaterOrEqual(this.values.get(s)))
 				return false;
 		}
-		return true;
+		return !other.belowFraction.isPossiblyGreaterOrEqual(this.belowFraction);
+	}
+	
+	/**
+	 * Returns all fractions used in this fraction function that are of the given
+	 * type.  
+	 * This is useful to, e.g., filter out all {@link NamedFraction} instances
+	 * used in this fraction function.
+	 * @param <T> Type parameter for better typing the returned set.
+	 * @param fractionType Desired fraction type.
+	 * @return Set of all all fractions used in this fraction function that are 
+	 * of the given type.
+	 */
+	public <T extends Fraction> Set<T> getAllFractionsOfType(Class<T> fractionType) {
+		Set<T> result = new HashSet<T>();
+		for(Fraction f : values.values()) {
+			if(fractionType.isInstance(f))
+				result.add(fractionType.cast(f));
+		}
+		if(fractionType.isInstance(belowFraction))
+			result.add(fractionType.cast(belowFraction));
+		return result;
+	}
+
+	/**
+	 * Returns a new fraction function that uses Zero as the below fraction,
+	 * to indicate a <i>pure</i> permission.
+	 * @return a new fraction function that uses Zero as the below fraction.
+	 */
+	public FractionFunction purify() {
+		return new FractionFunction(stateSpace, rootNode, values, Fraction.zero());
 	}
 
 	@Override
@@ -299,13 +381,6 @@ public class FractionFunction {
 		} else if (!values.equals(other.values))
 			return false;
 		return true;
-	}
-
-	/**
-	 * @return
-	 */
-	public FractionFunction purify() {
-		return new FractionFunction(stateSpace, rootNode, values, Fraction.zero());
 	}
 
 }

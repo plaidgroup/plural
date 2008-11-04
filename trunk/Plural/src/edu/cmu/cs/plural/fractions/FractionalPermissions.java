@@ -62,7 +62,7 @@ public class FractionalPermissions
 extends AbstractFractionalPermissionSet<FractionalPermission> 
 implements LatticeElement<FractionalPermissions> {
 	
-	private static final FractionalPermissions BOTTOM = new FractionalPermissions(null);
+	private static final FractionalPermissions BOTTOM = new FractionalPermissions(null, false);
 	private static final Logger log = Logger.getLogger(FractionalPermissions.class.getName());
 
 	private final FractionalPermission unpackedPermission;
@@ -91,8 +91,9 @@ implements LatticeElement<FractionalPermissions> {
 	 * This constructor can be used to create bottom by passing in <code>null</code> permissions.
 	 * @param permissions
 	 */
-	protected FractionalPermissions(List<? extends FractionalPermission> permissions) {
-		super(permissions);
+	protected FractionalPermissions(List<? extends FractionalPermission> permissions, 
+			boolean isNamedUniversal) {
+		super(permissions, isNamedUniversal);
 //		this.parameters = Collections.emptyMap();
 //		this.parameterPermissions = Collections.emptyMap();
 		this.unpackedPermission = null;
@@ -177,7 +178,7 @@ implements LatticeElement<FractionalPermissions> {
 			return this;
 		
 		return splitOff(
-				PermissionSetFromAnnotations.createSingleton(permissionToSplitOff), 
+				PermissionSetFromAnnotations.createSingleton(permissionToSplitOff, false), 
 				constraints.mutableCopy());
 	}
 	
