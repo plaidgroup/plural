@@ -164,7 +164,8 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 	public String getRootNode() {
 		String result = (String) getObject("guarantee");
 		// give "guarantee" attribute precedence over "value"
-		return result.isEmpty() ? (String) getObject("value") : result;
+		// backwards compatibility: ignore if null (unknown attribute)
+		return result == null || result.isEmpty() ? (String) getObject("value") : result;
 	}
 	
 	public String[] getRequires() {
