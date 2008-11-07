@@ -58,11 +58,15 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 	private static final Logger log = Logger.getLogger(AbstractFractionalPermissionSet.class.getName());
 
 	/**
-	 * Immutable list of permissions, must have orthogonal roots.
+	 * Immutable list of virtual permissions, must have orthogonal roots.
 	 * @see StateSpace#areOrthogonal(String, String)
 	 */
 	protected final List<P> permissions;	         // immutable
 	
+	/**
+	 * Immutable list of frame permissions, must have orthogonal roots.
+	 * @see StateSpace#areOrthogonal(String, String)
+	 */
 	protected final List<P> framePermissions;		 // immutable
 	
 	/**
@@ -71,6 +75,9 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 	 */
 	protected final FractionConstraints constraints; // frozen; make a mutable copy to modify
 
+	/**
+	 * Creates an empty permission set.
+	 */
 	protected AbstractFractionalPermissionSet() {
 		super();
 		this.permissions = Collections.emptyList();
@@ -78,6 +85,12 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 		this.constraints = FractionConstraints.createMutable().freeze();
 	}
 	
+	/**
+	 * Creates a permission set with the given <i>virtual</i> permissions.		
+	 * @param permissions <b>virtual</b> permission set or <code>null</code>.
+	 * @param isNamedUniversal Set to <code>true</code> to interpret
+	 * {@link NamedFraction named fractions} as universal parameters.
+	 */
 	protected AbstractFractionalPermissionSet(List<? extends P> permissions, boolean isNamedUniversal) {
 		super();
 		if(permissions == null) {
@@ -101,6 +114,12 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 		}
 	}
 
+	/**
+	 * Creates a new permission set with the given permissions and constraints.
+	 * @param permissions
+	 * @param framePermissions
+	 * @param constraints
+	 */
 	protected AbstractFractionalPermissionSet(
 			List<? extends P> permissions,
 			List<? extends P> framePermissions,
@@ -113,6 +132,12 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 		assert checkPermissionSet(framePermissions);
 	}
 	
+	/**
+	 * Checks that the given permission set has permissions with orthogonal roots.
+	 * @param <P>
+	 * @param perms
+	 * @return
+	 */
 	private static <P extends AbstractFractionalPermission> boolean checkPermissionSet(List<P> perms) {
 		if(perms.size() <= 1)
 			return true; // cannot be wrong
@@ -140,21 +165,62 @@ public abstract class AbstractFractionalPermissionSet<P extends AbstractFraction
 		return permissions.isEmpty() && framePermissions.isEmpty();
 	}
 
+	/**
+	 * Returns the virtual permissions held in this set.
+	 * @return the virtual permissions held in this set.
+	 */
 	public List<P> getPermissions() {
 		return permissions;
 	}
 	
 	/**
-	 * @return
+	 * Returns the frame permissions held in this set.
+	 * @return the frame permissions held in this set.
 	 */
 	public List<P> getFramePermissions() {
 		return framePermissions;
 	}
 
+	/**
+	 * Returns the (frozen) constraints associated with this permission set. 
+	 * @return the (frozen) constraints associated with this permission set.
+	 */
 	public FractionConstraints getConstraints() {
 		return constraints;
 	}
-
+	
+	/**
+	 * Returns the list of free existentially quantified fractions, which
+	 * can relatively easily be made subject to alpha-conversion.
+	 * These are {@link NamedFraction named fractions} used directly in permissions
+	 * that are <i>not</i> universal parameters (from a method pre-condition).
+	 * Named fractions used in permissions can be considered free because nothing
+	 * was split off from them or merged with them; once they are are split or merged,
+	 * new permissions with {@link VariableFraction variable fractions} are created,
+	 * which binds the previously free existentials because new constraints will depend
+	 * on their name.
+	 * @return the list of free existentially quantified fractions.
+	 */
+	protected Set<NamedFraction> getFreeExistentials() {
+		Set<NamedFraction> result = new HashSet<NamedFraction>();
+		for(P p : permissions) {
+			result.addAll(p.getFractions().getAllFractionsOfType(NamedFraction.class));
+		}
+		for(P p : framePermissions) {
+			result.addAll(p.getFractions().getAllFractionsOfType(NamedFraction.class));
+		}
+		result.removeAll(constraints.getUniversalParameters());
+		return result;
+	}
+	
+	/**
+	 * Returns the state space for which this permission set was created.
+	 * 
+	 * <i>Note:</i> This method is abstract simply because 
+	 * {@link FractionalPermissions} lazily determines the state space from
+	 * the constituent permissions.
+	 * @return the state space for which this permission set was created.
+	 */
 	public abstract StateSpace getStateSpace();
 
 	/**

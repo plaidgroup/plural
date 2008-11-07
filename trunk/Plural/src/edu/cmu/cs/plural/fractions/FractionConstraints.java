@@ -224,6 +224,10 @@ public final class FractionConstraints implements Freezable<FractionConstraints>
 		return constants;
 	}
 	
+	public Set<NamedFraction> getUniversalParameters() {
+		return universalParameters;
+	}
+	
 	/**
 	 * Adds variables and constants in the given fraction set to the respective
 	 * sets, if this constraint set is not frozen.
