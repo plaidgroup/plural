@@ -284,9 +284,6 @@ implements LatticeElement<FractionalPermissions> {
 		if(! this.constraints.seemsConsistent())
 			return false;
 		
-//		if(this.constraints.atLeastAsPrecise(other.constraints) == false)
-//			return false;
-		
 		FractionConstraints constraints = this.constraints.concat(other.constraints).freeze();
 		
 		/*
@@ -305,26 +302,6 @@ implements LatticeElement<FractionalPermissions> {
 			}
 		}
 		
-		/*
-		 * For parameters. 
-		 */
-//		for(String x : other.parameters.keySet()) {
-//			if(this.parameters.containsKey(x) == false)
-//				return false;
-//			Aliasing thisLoc = this.parameters.get(x);
-//			Aliasing otherLoc = other.parameters.get(x);
-//			if(thisLoc.getLabels().containsAll(otherLoc.getLabels()) == false)
-//				return false;
-//			PermissionSetFromAnnotations thisParamPerms = this.parameterPermissions.get(thisLoc);
-//			PermissionSetFromAnnotations otherParamPerms = other.parameterPermissions.get(otherLoc);
-//			if(thisParamPerms == null)
-//				continue;
-//			if(otherParamPerms == null)
-//				return false;
-//			if(thisParamPerms != otherParamPerms)
-//				return false;
-//		}
-
 		if(! PermissionSet.atLeastAsPrecise(this.permissions, other.permissions, node, constraints))
 			return false;
 		if(! PermissionSet.atLeastAsPrecise(this.framePermissions, other.framePermissions, node, constraints))

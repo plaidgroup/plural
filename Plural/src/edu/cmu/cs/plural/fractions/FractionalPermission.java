@@ -217,7 +217,9 @@ public class FractionalPermission extends AbstractFractionalPermission {
 				String n = it.next();
 				Fraction thisF = this.fractions.get(n);
 				Fraction otherF = other.fractions.get(n);
-				if(otherF instanceof NamedFraction && ((NamedFraction) otherF).isVariable(node)) {
+				if(otherF instanceof NamedFraction && 
+						! constraints.getUniversalParameters().contains(((NamedFraction) otherF))) {
+//				if(otherF instanceof NamedFraction && ((NamedFraction) otherF).isVariable(node)) {
 					if(a.isZero(thisF))
 						// zero can't instantiate a named fraction
 						return false;
@@ -239,8 +241,9 @@ public class FractionalPermission extends AbstractFractionalPermission {
 			}
 			Fraction otherBelow = other.fractions.getBelowFraction();
 			boolean below_okay = (otherBelow instanceof NamedFraction
-//					&& ((NamedFraction) otherBelow).isJoinVariable()) 
-						&& ((NamedFraction) otherBelow).isVariable(node) && !a.isZero(thisBelow)) 
+//						&& ((NamedFraction) otherBelow).isVariable(node) 
+						&& ! constraints.getUniversalParameters().contains(((NamedFraction) otherBelow))
+						&& ! a.isZero(thisBelow)) 
 					|| a.areEquivalent(thisBelow, otherBelow);
 			return below_okay;
 		}
@@ -304,12 +307,14 @@ public class FractionalPermission extends AbstractFractionalPermission {
 			}
 			else if(thisF instanceof NamedFraction 
 					&& constraints.isKnown(thisF)
-					&& ((NamedFraction) thisF).isVariable(node)) {
+					&& ! constraints.getUniversalParameters().contains(((NamedFraction) thisF))) {
+//					&& ((NamedFraction) thisF).isVariable(node)) {
 				fracts.put(s, thisF);
 			}
 			else if(otherF instanceof NamedFraction 
 					&& constraints.isKnown(otherF)
-					&& ((NamedFraction) otherF).isVariable(node)) {
+					&& ! constraints.getUniversalParameters().contains(((NamedFraction) otherF))) {
+//					&& ((NamedFraction) otherF).isVariable(node)) {
 				fracts.put(s, otherF);
 			}
 			else if(!a.isZero(thisF) && !a.isZero(otherF)) {
@@ -323,11 +328,21 @@ public class FractionalPermission extends AbstractFractionalPermission {
 				if(constraints.isKnown(thisF)) {
 					// thisF must be > 0 in order to coalesce it into an existential
 					constraints.addConstraint(FractionConstraint.createLessThan(Fraction.zero(), thisF));
-				} // TODO else test on the spot?
+				}
+				else {
+					// TODO else test on the spot?
+					if(log.isLoggable(Level.WARNING))
+						log.warning("Cannot ensure " + thisF + " > 0");
+				}
 				if(constraints.isKnown(otherF)) {
 					// otherF must be > 0 in order to coalesce it into an existential
 					constraints.addConstraint(FractionConstraint.createLessThan(Fraction.zero(), otherF));
-				} // TODO else test on the spot?
+				} 
+				else {
+					// TODO else test on the spot?
+					if(log.isLoggable(Level.WARNING))
+						log.warning("Cannot ensure " + otherF + " > 0");
+				}
 			}
 			else {
 				// They weren't greater than zero
@@ -373,12 +388,14 @@ public class FractionalPermission extends AbstractFractionalPermission {
 			}
 			else if(thisF instanceof NamedFraction 
 					&& constraints.isKnown(thisF)
-					&& ((NamedFraction) thisF).isVariable(node)) {
+					&& ! constraints.getUniversalParameters().contains(((NamedFraction) thisF))) {
+//					&& ((NamedFraction) thisF).isVariable(node)) {
 				blw = thisF;
 			}
 			else if(otherF instanceof NamedFraction 
 					&& constraints.isKnown(otherF)
-					&& ((NamedFraction) otherF).isVariable(node)) {
+					&& ! constraints.getUniversalParameters().contains(((NamedFraction) otherF))) {
+//					&& ((NamedFraction) otherF).isVariable(node)) {
 				blw = otherF;
 			}
 			else if(!a.isZero(thisF) && !a.isZero(otherF)) { 
@@ -390,11 +407,21 @@ public class FractionalPermission extends AbstractFractionalPermission {
 				if(constraints.isKnown(thisF)) {
 					// thisF must be > 0 in order to coalesce it into an existential
 					constraints.addConstraint(FractionConstraint.createLessThan(Fraction.zero(), thisF));
-				} // TODO else test on the spot?
+				}
+				else {
+					// TODO else test on the spot?
+					if(log.isLoggable(Level.WARNING))
+						log.warning("Cannot ensure " + thisF + " > 0");
+				}
 				if(constraints.isKnown(otherF)) {
 					// otherF must be > 0 in order to coalesce it into an existential
 					constraints.addConstraint(FractionConstraint.createLessThan(Fraction.zero(), otherF));
-				} // TODO else test on the spot?
+				}
+				else {
+					// TODO else test on the spot?
+					if(log.isLoggable(Level.WARNING))
+						log.warning("Cannot ensure " + otherF + " > 0");
+				}
 			}
 			else {
 				// constraints weren't greater than zero
@@ -427,12 +454,6 @@ public class FractionalPermission extends AbstractFractionalPermission {
 			// we're not doing that for now.
 		}
 
-//		String newState = rootNode;
-//		if(getStateSpace().firstBiggerThanSecond(other.getStateInfo(), this.getStateInfo()))
-//			newState = other.getStateInfo();
-//		else if(getStateSpace().firstBiggerThanSecond(this.getStateInfo(), other.getStateInfo()))
-//			newState = this.getStateInfo();
-		
 		return createPermission(
 				this.stateSpace, 
 				this.rootNode, 
