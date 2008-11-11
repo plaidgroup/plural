@@ -55,7 +55,7 @@ import edu.cmu.cs.plural.annot.States;
  * that is required for all modifying methods. 
  * Marker states cannot be forgotten once established, but this
  * approach means that without explicit knowledge that a collection is
- * {@link http://java.sun.com/javase/6/docs/technotes/guides/collections/overview.html modifiable}, 
+ * <a href="http://java.sun.com/javase/6/docs/technotes/guides/collections/overview.html"><i>modifiable</i></a>, 
  * no modifying operations can be used.
  * 
  * Notice that the {@link PluralCollection#MODIFIABLE} marker also lets us
@@ -92,7 +92,7 @@ public interface PluralCollection<E> extends Collection<E> {
 	@Pure
     boolean isEmpty();
 
-	@Imm
+	@Pure
     boolean contains(Object o);
 
 	@Cases({
@@ -102,10 +102,10 @@ public interface PluralCollection<E> extends Collection<E> {
 	@Capture(param = "underlying")
     PluralIterator<E> iterator();
 
-	@Imm
+	@Pure
     Object[] toArray();
 
-	@Imm
+	@Pure
     <T> T[] toArray(T[] a);
 
     // Modification Operations
@@ -119,7 +119,7 @@ public interface PluralCollection<E> extends Collection<E> {
 
     // Bulk Operations
 
-	@Imm
+	@Pure
     boolean containsAll(@Imm Collection<?> c);
 
 	@Full(requires = MODIFIABLE)
