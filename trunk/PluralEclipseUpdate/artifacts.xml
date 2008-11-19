@@ -3,14 +3,20 @@
 <repository name='Plural Object Protocol Checker - artifacts' type='org.eclipse.equinox.p2.artifact.repository.simpleRepository' version='1'>
   <properties size='2'>
     <property name='p2.compressed' value='false'/>
-    <property name='p2.timestamp' value='1225465950075'/>
+    <property name='p2.timestamp' value='1227118008213'/>
   </properties>
   <mappings size='3'>
     <rule filter='(&amp; (classifier=osgi.bundle))' output='${repoUrl}/plugins/${id}_${version}.jar'/>
     <rule filter='(&amp; (classifier=binary))' output='${repoUrl}/binary/${id}_${version}'/>
     <rule filter='(&amp; (classifier=org.eclipse.update.feature))' output='${repoUrl}/features/${id}_${version}.jar'/>
   </mappings>
-  <artifacts size='4'>
+  <artifacts size='6'>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.3'>
+      <properties size='2'>
+        <property name='artifact.size' value='8481'/>
+        <property name='download.size' value='8481'/>
+      </properties>
+    </artifact>
     <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.2'>
       <properties size='3'>
         <property name='artifact.size' value='746369'/>
@@ -29,6 +35,13 @@
       <properties size='2'>
         <property name='artifact.size' value='8455'/>
         <property name='download.size' value='8455'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.3'>
+      <properties size='3'>
+        <property name='artifact.size' value='753445'/>
+        <property name='download.size' value='753445'/>
+        <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
     <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.2'>
