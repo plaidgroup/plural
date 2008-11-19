@@ -40,10 +40,12 @@ package edu.cmu.cs.plural.test;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.plural.annot.FalseIndicates;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.States;
+import edu.cmu.cs.plural.annot.TrueIndicates;
 
 @FailingTest(5) 
 //  7 when not using borrowing optimization
@@ -71,13 +73,20 @@ public class StreamProtocol {
 	public void close() {
 	}
 	
+	@Pure(fieldAccess = true)
+	@TrueIndicates("closed")
+	@FalseIndicates("open")
+	public boolean isClosed() {
+		return false;
+	}
+	
 	public static void process(@Full("open") StreamProtocol s) {
 		System.out.println(s.read());
 	}
 	
-	private static void dangerousProcess(@Full StreamProtocol s) {
-		System.out.println(s.read()); // error: s not open 
-		// -> may cause post-condition failure
+	private static void dangerousProcess(@Full(requires = "open") StreamProtocol s) {
+		System.out.println(s.read()); 
+		s.close();
 	}
 	
 	public static void streamTest() {
