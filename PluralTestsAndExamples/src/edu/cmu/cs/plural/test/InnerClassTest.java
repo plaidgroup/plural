@@ -38,16 +38,16 @@
 package edu.cmu.cs.plural.test;
 
 /**
- * This test file simply ensures that Plural doesn't crash on 
- * inner classes.
+ * This test file simply ensures that Plural doesn't crash on inner classes.
+ * 
  * @author Kevin Bierhoff
  * @since Nov 19, 2008
- *
+ * 
  */
 public class InnerClassTest {
-	
+
 	private int x;
-	
+
 	public void add(final int y) {
 		new Runnable() {
 
@@ -55,20 +55,26 @@ public class InnerClassTest {
 			public void run() {
 				x += y;
 			}
-			
+
 		}.run();
 	}
-	
+
 	public int getX() {
 		return new XBox().getX();
 	}
-	
+
 	private class XBox {
-		
+
 		public int getX() {
 			return x;
 		}
-		
+
 	}
 
+	class Runner implements Runnable {
+		@Override
+		public void run() {
+			add(0);
+		}
+	}
 }
