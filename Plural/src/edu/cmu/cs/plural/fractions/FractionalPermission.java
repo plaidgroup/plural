@@ -226,15 +226,7 @@ public class FractionalPermission extends AbstractFractionalPermission {
 					else
 						// instantiate otherF with thisF
 						continue;
-//					if(! a.isZero(thisF))
-//						continue;
-//					else
-//						if(log.isLoggable(Level.FINER))
-//							log.finer("Assume " + thisF + " can be non-zero, therefore " + this + " implies " + other + " with " + constraints);
 				}
-//				if(otherF instanceof NamedFraction && ((NamedFraction) otherF).isJoinVariable())
-//					// TODO ensure that thisF satisfies all of otherF's constraints
-//					continue;
 				if(a.areEquivalent(thisF, otherF) == false)
 					return false;
 				// TODO compare thisF and otherF structurally ? e.g. thisF is half of X, and so is otherF?

@@ -45,11 +45,13 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.flow.LatticeElement;
 import edu.cmu.cs.crystal.tac.KeywordVariable;
+import edu.cmu.cs.crystal.tac.SourceVariable;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.util.Freezable;
 
@@ -114,14 +116,33 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 				return outerLocation(outer);
 			}
 		}
+		if(key instanceof SourceVariable) {
+			// variable from outer scope?
+			SourceVariable fromouter = (SourceVariable) key;
+			if(fromouter.isCapturedFromOuterScope()) {
+				return capturedLocation(fromouter);
+			}
+		}
 		return AliasLE.bottom();
 	}
 	
 	/**
-	 * @param outer
-	 * @return
+	 * Create location for captured variable.
+	 * @param fromouter a variable captured from an outer scope
+	 * @return location for given captured variable.
+	 */
+	private AliasLE capturedLocation(SourceVariable fromouter) {
+		assert fromouter.isCapturedFromOuterScope();
+		return AliasLE.create(new CapturedVariableLabel(fromouter.getBinding()));
+	}
+
+	/**
+	 * Create location for outer this or super.
+	 * @param outer qualified this or super variable.
+	 * @return location for given outer this or super.
 	 */
 	private AliasLE outerLocation(final KeywordVariable outer) {
+		assert outer.isQualified();
 		return AliasLE.create(new OuterLabel(outer.resolveType()));
 	}
 
@@ -199,17 +220,6 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 		}
 	}
 
-//	public boolean isLive(AliasLE le) {
-//		if(isBottom())
-//			return false;
-//		if(le.getLabels().isEmpty())
-//			return true;
-//		for(ObjectLabel l : le.getLabels())
-//			if(isLive(l))
-//				return true;
-//		return false;
-//	}
-	
 	public Set<Variable> getVariables(ObjectLabel l) {
 		if(isBottom())
 			return Collections.emptySet();
@@ -219,19 +229,6 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 		return Collections.unmodifiableSet(result);
 	}
 	
-//	/**
-//	 * @param l
-//	 * @return
-//	 */
-//	public boolean isLive(ObjectLabel l) {
-//		if(isBottom())
-//			return true;
-//		Set<Variable> vars = refMap.get(l);
-//		if(vars == null || vars.isEmpty())
-//			return false;
-//		return true;
-//	}
-
 	public boolean isBottom() {
 		return locs == null;
 	}
@@ -286,13 +283,64 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 		
 		for(Map.Entry<Variable, AliasLE> thisE : this.locs.entrySet()) {
 			AliasLE otherInfo = other.get(thisE.getKey());
-			result.put(thisE.getKey(), thisE.getValue().copy().join(otherInfo.copy(), node));
+			result.put(thisE.getKey(), smartJoin(thisE.getKey(), thisE.getValue(), otherInfo, node));
+			//result.put(thisE.getKey(), thisE.getValue().copy().join(otherInfo.copy(), node));
 		}
 		for(Map.Entry<Variable, AliasLE> otherE : other.locs.entrySet()) {
 			if(! this.locs.containsKey(otherE.getKey()))
 				result.put(otherE.getKey(), otherE.getValue().copy());
 		}
 		
+		return result;
+	}
+
+	/**
+	 * @param key
+	 * @param value
+	 * @param otherInfo
+	 * @param node
+	 * @return
+	 */
+	private AliasLE smartJoin(Variable x, AliasLE thisInfo, AliasLE otherInfo, ASTNode node) {
+		if(thisInfo == otherInfo)
+			return thisInfo;
+		
+		if(! thisInfo.hasAnyLabels(otherInfo.getLabels()) && ! otherInfo.hasAnyLabels(thisInfo.getLabels())) {
+			// disjoint location sets
+			Set<Variable> thisV = getAllReferencingVariables(thisInfo);
+			Set<Variable> otherV = getAllReferencingVariables(otherInfo);
+			
+			if(thisV.size() == 1 && otherV.size() == 1 /* thisV and otherV only contain x */) {
+				assert thisV.contains(x);
+				assert otherV.contains(x);
+				return thisInfo;
+			}
+		}
+		// normal join
+		return thisInfo.copy().join(otherInfo.copy(), node);
+	}
+
+	/**
+	 * @param otherInfo
+	 * @return
+	 */
+	private Set<Variable> getAllReferencingVariables(AliasLE locs) {
+		Set<Variable> result = new HashSet<Variable>();
+		Set<ObjectLabel> labels = new HashSet<ObjectLabel>(locs.getLabels());
+		boolean changed;
+		do {
+			changed = false;
+			for(ObjectLabel l : labels) {
+				Set<Variable> l_vars = getVariables(l);
+				if(result.addAll(l_vars)) {
+					for(Variable x : l_vars) {
+						if(labels.addAll(get(x).getLabels()))
+							changed = true;
+					}
+				}
+			}
+		}
+		while(changed);
 		return result;
 	}
 
@@ -364,6 +412,51 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 				if (other.outerType != null)
 					return false;
 			} else if (!outerType.equals(other.outerType))
+				return false;
+			return true;
+		}
+		
+	}
+	
+	private static class CapturedVariableLabel implements ObjectLabel {
+		
+		private final IVariableBinding var;
+		
+		public CapturedVariableLabel(IVariableBinding var) {
+			this.var = var;
+		}
+
+		@Override
+		public ITypeBinding getType() {
+			return var.getType();
+		}
+
+		@Override
+		public boolean isSummary() {
+			return false;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + ((var == null) ? 0 : var.hashCode());
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			CapturedVariableLabel other = (CapturedVariableLabel) obj;
+			if (var == null) {
+				if (other.var != null)
+					return false;
+			} else if (!var.equals(other.var))
 				return false;
 			return true;
 		}
