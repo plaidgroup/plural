@@ -35,7 +35,6 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-
 package edu.cmu.cs.plural.test;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
@@ -106,9 +105,9 @@ public class ArrayIterator<T> {
 	
 	public static void arrayTest() {
 		String[] strings = createArray();
+		strings[0] = "hello";
 		ArrayIterator<String> it = 
 			new ArrayIterator<String>(strings);
-//		strings[0] = "goodbye";
 		while(it.hasNext()) {
 //			concat(it, it);
 			System.out.println(it.next());
@@ -124,6 +123,7 @@ public class ArrayIterator<T> {
 
 	public static void correctArrayTest() {
 		String[] strings = createArray();
+		strings[0] = "hello";
 		ArrayIterator<String> it = 
 			new ArrayIterator<String>(strings);
 		while(it.hasNext()) {
@@ -135,6 +135,7 @@ public class ArrayIterator<T> {
 
 	public static void concurrentModification() {
 		String[] strings = createArray();
+		strings[0] = "hello";
 		ArrayIterator<String> it = 
 			new ArrayIterator<String>(strings);
 		strings[0] = "goodbye"; // error: concurrent modification
