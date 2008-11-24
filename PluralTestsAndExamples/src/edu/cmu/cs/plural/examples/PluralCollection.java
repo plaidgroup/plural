@@ -50,7 +50,7 @@ import edu.cmu.cs.plural.annot.States;
 /**
  * This interface illustrates how the (optional) modifying methods in the
  * {@link java.util.Collection Java Collections API} can be expressed with
- * Plural marker states, aka, type qualifiers.  
+ * Plural <i>marker states</i>, aka, type qualifiers.  
  * We simply introduce a marker {@link PluralCollection#MODIFIABLE} 
  * that is required for all modifying methods. 
  * Marker states cannot be forgotten once established, but this
@@ -63,7 +63,7 @@ import edu.cmu.cs.plural.annot.States;
  * be created on a modifiable collection.
  * @author Kevin Bierhoff
  * @since Oct 24, 2008
- *
+ * @see PluralIterator
  */
 @States(value = {PluralCollection.MODIFIABLE, PluralCollection.UNMODIFIABLE}, marker = true)
 public interface PluralCollection<E> extends Collection<E> {
@@ -100,6 +100,7 @@ public interface PluralCollection<E> extends Collection<E> {
 		@Perm(requires = "full(this) in modifiable", ensures = "unique(result) in modifying")
 	})
 	@Capture(param = "underlying")
+    // receiver permission is captured in result's "underlying" parameter
     PluralIterator<E> iterator();
 
 	@Pure

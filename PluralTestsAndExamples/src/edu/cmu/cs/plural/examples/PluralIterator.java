@@ -60,6 +60,7 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
 	@States(value = {PluralIterator.RETRIEVED, PluralIterator.REMOVED}, dim = PluralIterator.CURRENT)
 })
 @Param(name = "underlying", releasedFrom = "alive")
+// parameterize iterators with the data source they iterate over
 public interface PluralIterator<E> extends Iterator<E> {
 
 	/** 
