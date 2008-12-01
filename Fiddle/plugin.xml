@@ -10,7 +10,7 @@
       </category>
       <view
             name="Statechart View"
-            icon="icons/sample.gif"
+            icon="icons/plural.gif"
             category="Fiddle"
             class="fiddle.views.StatechartView"
             id="fiddle.views.StatechartView">
