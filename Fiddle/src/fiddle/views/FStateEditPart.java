@@ -41,5 +41,7 @@ package fiddle.views;
 import com.evelopers.unimod.plugin.eclipse.editpart.StateEditPart;
 
 public class FStateEditPart extends StateEditPart {
-    protected void sendProblems() {}
+	@Override
+	protected void sendProblems() {}
+
 }
