@@ -36,10 +36,46 @@
  * release a modified version which carries forward this exception.
  */
 
-package fiddle.views;
+package fiddle.parts;
 
-import com.evelopers.unimod.plugin.eclipse.editpart.TopStateEditPart;
+import java.beans.PropertyChangeEvent;
 
-public class FTopStateEditPart extends TopStateEditPart {
-    protected void sendProblems() {}
+import com.evelopers.unimod.core.stateworks.State;
+import com.evelopers.unimod.plugin.eclipse.editpart.NormalStateEditPart;
+import com.evelopers.unimod.plugin.eclipse.model.GState;
+
+public class FNormalStateEditPart extends NormalStateEditPart {
+    @Override
+	protected void sendProblems() {}
+    
+    /* 
+	 * We want to get rid of the calls to remove on the breakpoint manager.
+	 * This is a hack, and we need a better general solution for things
+	 * to do when an Editor is required. Maybe storing one in StatechartView
+	 * is the right way to go...
+	 */
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		String property_name = evt.getPropertyName();
+		
+		if(property_name.equals(GState.NAME_PROPERTY) || 
+		   property_name.equals(GState.SIZE_PROPERTY) ||
+		   property_name.equals(GState.LOCATION_PROPERTY)) {
+			// just delegate
+			super.propertyChange(evt);
+		}
+		else if(property_name.equals(equals(State.SUBSTATES_PROPERTY)) ) {
+			this.refreshChildren();
+		}
+		else if(property_name.equals(State.OUTGOING_TRANSITIONS_PROPERTY) ) {
+			this.refreshSourceConnections();
+		}
+		else if(property_name.equals(State.INCOMING_TRANSITIONS_PROPERTY) ) {
+			this.refreshTargetConnections();
+		}
+		else {
+			// In case of any future developments...
+			super.propertyChange(evt);
+		}
+	}
 }

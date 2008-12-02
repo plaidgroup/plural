@@ -36,7 +36,7 @@
  * release a modified version which carries forward this exception.
  */
 
-package fiddle.views;
+package fiddle.parts;
 
 import com.evelopers.unimod.plugin.eclipse.editpart.TransitionEditPart;
 
