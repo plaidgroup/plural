@@ -37,6 +37,10 @@
  */
 package edu.cmu.cs.plural.test;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
+
 /**
  * This test file simply ensures that Plural doesn't crash on inner classes.
  * 
@@ -44,10 +48,16 @@ package edu.cmu.cs.plural.test;
  * @since Nov 19, 2008
  * 
  */
+@PassingTest
+@UseAnalyses(PluralAnalysis.PLURAL)
 public class InnerClassTest {
 
 	private int x;
-
+	
+	public InnerClassTest(int x) {
+		this.x = x;
+	}
+	
 	public void add(final int y) {
 		new Runnable() {
 
@@ -76,5 +86,17 @@ public class InnerClassTest {
 		public void run() {
 			add(0);
 		}
+	}
+	
+	class SubclassConstructorTest extends InnerClassTest {
+		
+		void addMe() {
+			add(x);
+		}
+		
+		SubclassConstructorTest() {
+			super(x);
+		}
+		
 	}
 }
