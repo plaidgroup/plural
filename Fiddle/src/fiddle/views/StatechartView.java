@@ -40,11 +40,11 @@ package fiddle.views;
 
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.gef.editparts.FreeformGraphicalRootEditPart;
+import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.internal.core.SourceMethod;
-import org.eclipse.jdt.internal.core.SourceType;
+import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jface.action.Action;
 //import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
@@ -62,7 +62,7 @@ import com.evelopers.unimod.core.stateworks.Transition;
 import com.evelopers.unimod.plugin.eclipse.model.GModel;
 import com.evelopers.unimod.plugin.eclipse.model.GNormalState;
 import com.evelopers.unimod.plugin.eclipse.model.GStateMachine;
-import com.evelopers.unimod.plugin.eclipse.model.GTransition;
+//import com.evelopers.unimod.plugin.eclipse.model.GTransition;
 //import com.evelopers.unimod.plugin.eclipse.model.GTransition;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyEditDomain;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyScrollingGraphicalViewer;
@@ -88,6 +88,7 @@ import fiddle.parts.FStatechartPartFactory;
  * <p>
  */
 
+@SuppressWarnings("restriction")
 public class StatechartView extends ViewPart implements ISelectionListener{
 
 	private MyEditDomain editDomain;
@@ -119,7 +120,7 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 		GNormalState my_second_state = new GNormalState(new_state_machine);
 		new_state_machine.getTop().addSubstate(my_second_state);
 		
-		GTransition my_transition = (GTransition) new_state_machine.createTransition(
+		/*GTransition my_transition = (GTransition) */new_state_machine.createTransition(
 				my_first_state, my_second_state, new_state_machine.createGuard("o1.x1"), new_state_machine.createEvent("e1"));
 		
 		return new_state_machine;
@@ -217,17 +218,21 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 		    	Object fe = ss.getFirstElement();
 		        System.out.println("First selected element is " + fe.getClass());
 		        if (fe instanceof IJavaElement) {
-		        	IType it = null;
+		        	ICompilationUnit icu = null;
 		        	IJavaElement ije = (IJavaElement) fe;
-		        	if (ije instanceof IMethod) {
+		        	
+		        	if (ije instanceof CompilationUnit) {
+			        	icu = (CompilationUnit) fe;
+		        	} else if (ije instanceof IMethod) {
 		        		IMethod im = (IMethod) ije;
-		        		it = im.getDeclaringType();
+		        		icu = im.getCompilationUnit();
 		        	} else if (ije instanceof IType) {
-		        		it = (IType) ije;
+		        		IType it = (IType) ije;
+		        		icu = it.getCompilationUnit();
 		        	}
-		        	if (it != null && stateMachine.getAllTransition().get(0) != null){
+		        	if (icu!=null && stateMachine.getAllTransition().get(0) != null){
 		        		Transition t = (Transition) stateMachine.getAllTransition().get(0);
-		        		t.setName(it.getElementName());
+		        		t.setName(icu.getElementName());
 		        	}
 		        }
 		      }
