@@ -36,37 +36,10 @@
  * release a modified version which carries forward this exception.
  */
 
-package fiddle.views;
+package fiddle.parts;
 
-import org.eclipse.gef.EditPart;
+import com.evelopers.unimod.plugin.eclipse.editpart.TopStateEditPart;
 
-import com.evelopers.unimod.plugin.eclipse.editpart.StatechartPartFactory;
-import com.evelopers.unimod.plugin.eclipse.model.GNormalState;
-import com.evelopers.unimod.plugin.eclipse.model.GState;
-import com.evelopers.unimod.plugin.eclipse.model.GTopState;
-import com.evelopers.unimod.plugin.eclipse.model.GTransition;
-
-public class FStatechartPartFactory extends StatechartPartFactory {
-
-	public EditPart createEditPart(EditPart context, Object model) {
-
-		EditPart editPart = null;
-
-		if (model instanceof GTopState) {
-			editPart = new FTopStateEditPart();
-		} else if (model instanceof GNormalState) {
-			editPart = new FNormalStateEditPart();
-		} else if (model instanceof GState) {
-			editPart = new FStateEditPart();
-		} else if (model instanceof GTransition) {
-			editPart = new FTransitionEditPart();
-		}
-
-		if (editPart != null) {
-			editPart.setModel(model);
-		}
-
-		return editPart;
-	}
-	
+public class FTopStateEditPart extends TopStateEditPart {
+    protected void sendProblems() {}
 }

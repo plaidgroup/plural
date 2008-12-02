@@ -13,4 +13,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Import-Package: org.eclipse.draw2d,
  org.eclipse.gef.commands,
  org.eclipse.gef.ui.actions,
- org.eclipse.gef.ui.parts
+ org.eclipse.gef.ui.parts,
+ org.eclipse.jdt.core,
+ org.eclipse.jdt.internal.core,
+ org.eclipse.jface.text

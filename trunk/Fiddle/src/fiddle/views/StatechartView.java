@@ -40,13 +40,25 @@ package fiddle.views;
 
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.gef.editparts.FreeformGraphicalRootEditPart;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.internal.core.SourceMethod;
+import org.eclipse.jdt.internal.core.SourceType;
 import org.eclipse.jface.action.Action;
+//import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 
+import com.evelopers.unimod.core.stateworks.Transition;
 import com.evelopers.unimod.plugin.eclipse.model.GModel;
 import com.evelopers.unimod.plugin.eclipse.model.GNormalState;
 import com.evelopers.unimod.plugin.eclipse.model.GStateMachine;
@@ -54,6 +66,8 @@ import com.evelopers.unimod.plugin.eclipse.model.GTransition;
 //import com.evelopers.unimod.plugin.eclipse.model.GTransition;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyEditDomain;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyScrollingGraphicalViewer;
+
+import fiddle.parts.FStatechartPartFactory;
 
 
 /**
@@ -74,7 +88,7 @@ import com.evelopers.unimod.plugin.eclipse.ui.base.MyScrollingGraphicalViewer;
  * <p>
  */
 
-public class StatechartView extends ViewPart {
+public class StatechartView extends ViewPart implements ISelectionListener{
 
 	private MyEditDomain editDomain;
 
@@ -131,6 +145,8 @@ public class StatechartView extends ViewPart {
 		
 		// Add the menu that performs graph layout
 		addGraphLayoutAction();
+		
+		getViewSite().getPage().addPostSelectionListener(this);
 	}
 
 	private void addGraphLayoutAction() {
@@ -189,4 +205,41 @@ public class StatechartView extends ViewPart {
 		this.graphicalViewer = viewer;
 	}
 
+	@Override
+	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
+		  System.out.println("==========> selectionChanged");
+		  if (selection != null) {
+		    if (selection instanceof IStructuredSelection) {
+		      IStructuredSelection ss = (IStructuredSelection) selection;
+		      if (ss.isEmpty())
+		        System.out.println("<empty selection>");
+		      else {
+		    	Object fe = ss.getFirstElement();
+		        System.out.println("First selected element is " + fe.getClass());
+		        if (fe instanceof IJavaElement) {
+		        	IType it = null;
+		        	IJavaElement ije = (IJavaElement) fe;
+		        	if (ije instanceof IMethod) {
+		        		IMethod im = (IMethod) ije;
+		        		it = im.getDeclaringType();
+		        	} else if (ije instanceof IType) {
+		        		it = (IType) ije;
+		        	}
+		        	if (it != null && stateMachine.getAllTransition().get(0) != null){
+		        		Transition t = (Transition) stateMachine.getAllTransition().get(0);
+		        		t.setName(it.getElementName());
+		        	}
+		        }
+		      }
+		    } else if (selection instanceof ITextSelection) {
+		      ITextSelection ts = (ITextSelection) selection;
+		      System.out.println("Selected text is <" + ts.getText() + ">");
+		    } else {
+		    	System.out.println("Selection is " + selection.getClass());
+		    }
+		  } else {
+		    System.out.println("<empty selection>");
+		  }	
+	}
+	
 }
