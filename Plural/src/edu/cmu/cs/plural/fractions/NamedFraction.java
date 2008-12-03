@@ -93,7 +93,9 @@ public class NamedFraction extends Fraction {
 
 	@Override
 	public String toString() {
-		return joiningNode == null ? getVarName() : getVarName() + " [" + joiningNode + "]";
+		return joiningNode == null ? 
+				getVarName() : 
+					getVarName() + " [" + joiningNode.toString().replaceAll("\n", "") + "]";
 	}
 
 	@Override

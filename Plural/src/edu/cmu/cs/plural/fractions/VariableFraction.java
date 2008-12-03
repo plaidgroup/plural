@@ -46,29 +46,16 @@ import edu.cmu.cs.plural.fractions.elim.NormalizedFractionVisitor;
 public class VariableFraction extends Fraction {
 	
 	private static long nextID = 0;
-	private String varName;
-	private Fraction value;
+	private long id;
 	
 	public VariableFraction() {
-		this.varName = "VAR" + (nextID++);
+		this.id = nextID++;
 	}
 
 	public String getVarName() {
-		return varName;
+		return "VAR" + id;
 	}
 	
-	public boolean isSolved() {
-		return value != null;
-	}
-
-	public Fraction getValue() {
-		return value;
-	}
-
-	public void setValue(Fraction value) {
-		this.value = value;
-	}
-
 	@Override
 	public boolean isVariable() {
 		return true;
@@ -83,11 +70,23 @@ public class VariableFraction extends Fraction {
 	public <T> T dispatch(NormalizedFractionVisitor<T> visitor) {
 		return visitor.var(this);
 	}
+	
+	/**
+	 * Implementation of {@link Comparable#compareTo(Object)} with
+	 * different name due to Java restriction to one polymorphic type instantiation.
+	 * @param other the object to be compared.
+	 * @return a negative integer, zero, or a positive integer as this 
+	 * object is less than, equal to, or greater than the specified object.
+	 * @throws NullPointerException if <code>other</code> is <code>null</code>.
+	 */
+	public int compareToVar(VariableFraction other) {
+		long otherID = other.id; // throws NPE as required by comparator contract
+		long thisID = this.id;
+		return Long.signum(thisID - otherID);
+	}
 
 	@Override
 	public String toString() {
-		if(isSolved())
-			return getVarName() + "[" + getValue() + "]";
 		return getVarName();
 	}
 
@@ -95,7 +94,7 @@ public class VariableFraction extends Fraction {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((varName == null) ? 0 : varName.hashCode());
+		result = prime * result + (int) (id ^ (id >>> 32));
 		return result;
 	}
 
@@ -107,11 +106,8 @@ public class VariableFraction extends Fraction {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		final VariableFraction other = (VariableFraction) obj;
-		if (varName == null) {
-			if (other.varName != null)
-				return false;
-		} else if (!varName.equals(other.varName))
+		VariableFraction other = (VariableFraction) obj;
+		if (id != other.id)
 			return false;
 		return true;
 	}

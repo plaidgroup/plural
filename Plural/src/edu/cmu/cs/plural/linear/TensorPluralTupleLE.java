@@ -444,7 +444,11 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			// try all states implied by receiver's state info inside the requested root
 			Set<String> tried_nodes = new HashSet<String>();
 //			FractionAssignment a = rcvrPerms.getConstraints().simplify();
-			for(String n : rcvrPerms.getStateInfo(true)) {
+			
+			List<String> infoToTry = new LinkedList<String>();
+			infoToTry.add(rcvrRoot); // try root node (and bigger) first
+			infoToTry.addAll(rcvrPerms.getStateInfo(true));
+			for(String n : infoToTry) {
 				if(rcvr_space.firstBiggerThanSecond(rcvrRoot, n) == false)
 					continue;
 				state_iter:
