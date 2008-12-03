@@ -3,8 +3,12 @@
    <description url="http://pluralism.googlecode.com/svn/trunk/PluralEclipseUpdate/">
       The Eclipse update site for Plural.
    </description>
-   <feature url="features/edu.cmu.cs.plural.feature_1.0.3.jar" id="edu.cmu.cs.plural.feature" version="1.0.3">
-      <category name="Plural"/>
+   <feature url="features/edu.cmu.cs.plural.feature_1.0.4.jar" id="edu.cmu.cs.plural.feature" version="1.0.4">
+      <category name="Plural (required)"/>
    </feature>
-   <category-def name="Plural" label="Plural"/>
+   <category-def name="Plural (required)" label="Plural">
+      <description>
+         Contains the Plural and NIMBY object protocol checking tools.
+      </description>
+   </category-def>
 </site>
