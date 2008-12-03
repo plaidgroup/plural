@@ -282,8 +282,7 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 		AliasingLE result = new AliasingLE();
 		
 		for(Map.Entry<Variable, AliasLE> thisE : this.locs.entrySet()) {
-			AliasLE otherInfo = other.get(thisE.getKey());
-			result.put(thisE.getKey(), smartJoin(thisE.getKey(), thisE.getValue(), otherInfo, node));
+			result.put(thisE.getKey(), smartJoin(thisE.getKey(), thisE.getValue(), other, node));
 			//result.put(thisE.getKey(), thisE.getValue().copy().join(otherInfo.copy(), node));
 		}
 		for(Map.Entry<Variable, AliasLE> otherE : other.locs.entrySet()) {
@@ -297,22 +296,23 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 	/**
 	 * @param key
 	 * @param value
-	 * @param otherInfo
+	 * @param other
 	 * @param node
 	 * @return
 	 */
-	private AliasLE smartJoin(Variable x, AliasLE thisInfo, AliasLE otherInfo, ASTNode node) {
+	private AliasLE smartJoin(Variable x, AliasLE thisInfo, AliasingLE other, ASTNode node) {
+		AliasLE otherInfo = other.get(x);
 		if(thisInfo == otherInfo)
 			return thisInfo;
 		
 		if(! thisInfo.hasAnyLabels(otherInfo.getLabels()) && ! otherInfo.hasAnyLabels(thisInfo.getLabels())) {
 			// disjoint location sets
-			Set<Variable> thisV = getAllReferencingVariables(thisInfo);
-			Set<Variable> otherV = getAllReferencingVariables(otherInfo);
+			Set<Variable> thisV = this.getAllReferencingVariables(thisInfo);
+			Set<Variable> otherV = other.getAllReferencingVariables(otherInfo);
 			
-			if(thisV.size() == 1 && otherV.size() == 1 /* thisV and otherV only contain x */) {
-				assert thisV.contains(x);
-				assert otherV.contains(x);
+			if(thisV.size() == 1 && otherV.size() == 1 &&
+					thisV.contains(x) && otherV.contains(x) 
+					/* thisV and otherV only contain x */) {
 				return thisInfo;
 			}
 		}
@@ -326,21 +326,23 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 	 */
 	private Set<Variable> getAllReferencingVariables(AliasLE locs) {
 		Set<Variable> result = new HashSet<Variable>();
-		Set<ObjectLabel> labels = new HashSet<ObjectLabel>(locs.getLabels());
-		boolean changed;
-		do {
-			changed = false;
-			for(ObjectLabel l : labels) {
+		Set<ObjectLabel> allLabels = new HashSet<ObjectLabel>(locs.getLabels());
+		Set<ObjectLabel> newLabels = locs.getLabels();
+		while(!newLabels.isEmpty()) {
+			Set<ObjectLabel> iterLabels = newLabels;
+			// avoiding concurrent modification...
+			newLabels = new HashSet<ObjectLabel>();
+			for(ObjectLabel l : iterLabels) {
 				Set<Variable> l_vars = getVariables(l);
 				if(result.addAll(l_vars)) {
 					for(Variable x : l_vars) {
-						if(labels.addAll(get(x).getLabels()))
-							changed = true;
+						if(allLabels.addAll(get(x).getLabels()))
+							// some label not seen before
+							newLabels.addAll(get(x).getLabels());
 					}
 				}
 			}
 		}
-		while(changed);
 		return result;
 	}
 
