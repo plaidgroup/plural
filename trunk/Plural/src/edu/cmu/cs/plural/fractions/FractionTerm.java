@@ -104,7 +104,7 @@ public abstract class FractionTerm implements Comparable<FractionTerm> {
 							if(f instanceof ZeroFraction || f instanceof OneFraction || f instanceof NamedFraction)
 								return 1;
 							else
-								return fract.getVarName().compareTo(((VariableFraction) f).getVarName());
+								return fract.compareToVar((VariableFraction) f);
 						}
 						@Override public Integer zero(ZeroFraction fract) {
 							return f instanceof ZeroFraction ? 0 : -1;

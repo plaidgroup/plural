@@ -188,7 +188,7 @@ public class VariableElimination {
 				Integer tier2 = variableTiers.get(o2);
 				if(tier1 == null) {
 					if(tier2 == null)
-						return 0;
+						return o2.compareTo(o1);
 					return 1;
 				}
 				if(tier2 == null)
