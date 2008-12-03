@@ -471,6 +471,8 @@ public class StateSpaceImpl implements StateSpace {
 		// otherwise, node is a dimension or undeclared state
 		while(node != null && isDimension(node))
 			node = getParent(node);
+		if(node != null)
+			result = statesMarked.get(assertKnown(node));
 		if(result != null)
 			// declared dimension
 			return result;
