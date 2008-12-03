@@ -43,45 +43,45 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 
 /**
- * @author Kevin
- * 
+ * The state space for a given type.  It can be acquired through a
+ * {@link StateSpaceRepository}.
+ * @author Kevin Bierhoff
+ * @see StateSpaceRepository#getStateSpace(org.eclipse.jdt.core.dom.ITypeBinding)
  */
 public interface StateSpace {
 
+	/** Root state of all state spaces. */
 	public static final String STATE_ALIVE = "alive";
 
+	/** 
+	 * Default state space; intended for types that are not classes or interfaces,
+	 * e.g. arrays and annotations. 
+	 */
 	public static final StateSpace SPACE_TOP = new StupidStateSpace();
 
+	/**
+	 * Returns this state space's root state.
+	 * @return currently, always {@link #STATE_ALIVE}.
+	 */
 	public String getRootState();
 
 	/**
 	 * The contract for
 	 * <code>StateSpace.firstBiggerThanSecond(first, second)</code> is to
-	 * return true iff first "contains" second, i.e. second is a substate of
-	 * first in the state hierarchy. StateSpace is supposed to represent that
-	 * type hierarchy. For example, for a hierarchy where [open, closed] refine
+	 * return true iff first "contains" second, i.e. second is a subnode of
+	 * first in the state hierarchy. For example, for a hierarchy where [open, closed] refine
 	 * alive and [within, eof] refine open, firstBiggerThanSecond(alive,
 	 * open)==true, firstBiggerThanSecond(alive, eof)==true,
 	 * firstBiggerThanSecond(closed, closed)==true, firstBiggerThanSecond(open,
-	 * closed)==false, firstBiggerThanSecond(within, open)==false. Thus you're
-	 * essentially asking, is second at least as precise a state as first.<br>
+	 * closed)==false, firstBiggerThanSecond(within, open)==false. 
 	 * 
 	 * Thus, to find out whether some state s is "inside" a permission p, you
 	 * want to compare s to p's "root node", let's call it t, with
 	 * firstBiggerThanSecond(t, s).<br>
-	 * 
-	 * <code>firstBiggerThanSecond</code> (and the <code>StateSpace</code>
-	 * class as a whole) is really simple right now: It just treats any state s !=
-	 * alive as immediate substate of alive. That's why it's doing this funny
-	 * comparison. In a sense this is the approach that your formal system for
-	 * the ECOOP paper takes, I think. StateSpace doesn't even know what the set
-	 * of allowed states is; thus if you pass in some "bogus" state, say, due to
-	 * a typo, that will still be a substate of alive and of itself.<br>
-	 * 
-	 * I'm planning on fixing this mess when implementing support for state
-	 * dimensions, because then StateSpace has to really know the exact state
-	 * hierarchy. But (hopefully) the contract for firstBiggerThanSecond
-	 * remains.
+	 * @param node1 A state or dimension in this state space.
+	 * @param node2 A state or dimension in this state space.
+	 * @return <code>true</code> iff <code>node1</code> contains <code>node2</code>,
+	 * i.e., <code>node2</code> is (transitively a refinement of <code>node1</code>. 
 	 */
 	public boolean firstBiggerThanSecond(String node1, String node2);
 
@@ -94,8 +94,8 @@ public interface StateSpace {
 	 * state and bigger states.  Thus, this method is less
 	 * restrictive than {@link #firstBiggerThanSecond(String, String)}.
 	 *     
-	 * @param known
-	 * @param unknown
+	 * @param known A state or dimension in this state space.
+	 * @param unknown A state or dimension in this state space.
 	 * @return <code>true</code> iff the first node implies
 	 * the second node.
 	 */
@@ -104,14 +104,14 @@ public interface StateSpace {
 	/**
 	 * Returns an iterator to walk <b>up</b> the state space from the
 	 * given start node to the state space's root node.
-	 * @param startNode
+	 * @param startNode A state or dimension in this state space.
 	 * @return an iterator to walk <b>up</b> the state space.
 	 */
 	public Iterator<String> stateIterator(String startNode);
 
 	/**
 	 * Indicates whether a given node is a state or a dimension.
-	 * @param n
+	 * @param n A state or dimension in this state space.
 	 * @return <code>true</code> if the given node is a dimension and 
 	 * <code>false</code> if the node is a state.
 	 */
@@ -127,7 +127,8 @@ public interface StateSpace {
 	public Set<String> getDimensions(String state);
 
 	/**
-	 * @return Returns the set of all nodes in this state space.
+	 * Returns the set of all nodes in this state space.
+	 * @return the set of all nodes in this state space.
 	 */
 	public Set<String> getAllNodes();
 	
@@ -140,7 +141,9 @@ public interface StateSpace {
 	public Set<String> getChildNodes(String parent);
 	
 	/**
-	 * @return Returns a set of all of the states in this state space, but
+	 * Returns a set of all of the states in this state space, but
+	 * not dimensions.
+	 * @return a set of all of the states in this state space, but
 	 * not dimensions.
 	 */
 	public Set<String> getAllStates();
@@ -148,16 +151,17 @@ public interface StateSpace {
 	/**
 	 * Return the lowest node in the state hierarchy that completely covers
 	 * all references to the given field.
-	 * @param resolveFieldBinding
-	 * @return
+	 * @param field a field defined in this state space's class.
+	 * @return the lowest node in the state hierarchy that completely covers
+	 * all references to the given field.
 	 */
 	public String getFieldRootNode(IVariableBinding field);
 
 	/**
 	 * Indicates whether the two given nodes are defined in orthogonal
 	 * state dimensions.
-	 * @param node1
-	 * @param node2
+	 * @param node1 A state or dimension in this state space.
+	 * @param node2 A state or dimension in this state space.
 	 * @return <code>true</code> if the two nodes are defined in orthogonal
 	 * state dimensions, <code>false</code> otherwise.
 	 */
@@ -166,7 +170,7 @@ public interface StateSpace {
 	/**
 	 * Indicates whether the given node is a marker node, i.e., cannot be
 	 * forgotten once established.
-	 * @param node
+	 * @param node A state or dimension in this state space.
 	 * @return <code>true</code> if the given node is a marker node, 
 	 * <code>false</code> otherwise.
 	 */
