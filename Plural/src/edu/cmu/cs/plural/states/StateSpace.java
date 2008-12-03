@@ -132,6 +132,14 @@ public interface StateSpace {
 	public Set<String> getAllNodes();
 	
 	/**
+	 * @return Returns the set of nodes that are direct child nodes
+	 * of the given parent. If the parent is unknown, this method will
+	 * return the empty set. Note that this method will only return
+	 * <i>known</i> subnodes.
+	 */
+	public Set<String> getChildNodes(String parent);
+	
+	/**
 	 * @return Returns a set of all of the states in this state space, but
 	 * not dimensions.
 	 */

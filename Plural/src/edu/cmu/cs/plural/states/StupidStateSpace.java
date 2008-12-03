@@ -178,4 +178,9 @@ public class StupidStateSpace implements StateSpace {
 	public boolean isMarker(String node) {
 		return node.equals(getRootState());
 	}
+
+	@Override
+	public Set<String> getChildNodes(String parent) {
+		return Collections.emptySet();
+	}
 }
