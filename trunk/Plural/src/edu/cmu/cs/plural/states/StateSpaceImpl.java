@@ -479,4 +479,11 @@ public class StateSpaceImpl implements StateSpace {
 			return false;
 	}
 
+	@Override
+	public Set<String> getChildNodes(String parent) {
+		if( subnodes.containsKey(parent) )
+			return Collections.unmodifiableSet(subnodes.get(parent));
+		else
+			return Collections.emptySet();
+	}
 }
