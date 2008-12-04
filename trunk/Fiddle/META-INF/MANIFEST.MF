@@ -7,7 +7,10 @@ Bundle-Activator: fiddle.Activator
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.gef,
- com.evelopers.unimod;bundle-version="1.3.39"
+ com.evelopers.unimod;bundle-version="1.3.39",
+ edu.cmu.cs.plural;bundle-version="1.0.5",
+ edu.cmu.cs.crystal,
+ org.eclipse.jdt.core
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Import-Package: org.eclipse.draw2d,
