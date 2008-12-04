@@ -110,11 +110,11 @@ public abstract class ConsList<T> implements List<T> {
 		if( ts.length == 0 ) 
 			return empty();
 		else if( ts.length == 1 )
-			return singleton(ts[0]);
+			return singleton(ts[0]); // NEB: We cannot specify arrays...
 		else {
 			ConsList<T> cur_list = empty();
 			for( int i = ts.length - 1; i >= 0; i-- ) {
-				cur_list = cons(ts[i], cur_list);
+				cur_list = cons(ts[i], cur_list); // NEB: We cannot specify arrays...
 			}
 			return cur_list;
 		}
@@ -261,7 +261,7 @@ public abstract class ConsList<T> implements List<T> {
 	@Pure
 	public abstract int size();	
 	
-	@Pure
+	@Pure(fieldAccess=true)
 	@TrueIndicates("EMPTY")
 	@FalseIndicates("NONEMPTY")
 	public abstract boolean isEmpty();
@@ -285,7 +285,7 @@ public abstract class ConsList<T> implements List<T> {
 		return listIterator(0);
 	}
 	
-	@Imm
+	@Imm(requires="NONEMPTY", ensures="NONEMPTY")
 	@ResultImm
 	public final T get(int index) {
 		if( index == 0 ) {
@@ -384,7 +384,7 @@ public abstract class ConsList<T> implements List<T> {
 			return this.tl().subList(fromIndex - 1, toIndex - 1);
 		}
 		else {
-			return cons(hd(), this.tl().subList(0, toIndex - 1));
+			return cons(hd(), this.tl().subList(0, toIndex - 1)); // NEB: We would need a pre-condition saying, "toIndex <= this.size()".
 		}
 	}
 	
@@ -596,7 +596,7 @@ public abstract class ConsList<T> implements List<T> {
 				curElement = startingPoint.subListSameTail(curIndex - 1);
 				curIndex--;
 
-				// Fails because of an invariant that I cannot specify:
+				// NEB: Fails because of an invariant that I cannot specify:
 				// If we have a previous element, then 
 				// subListSameTail(curIndex - 1) must be non-empty.
 				return curElement.hd();
@@ -718,6 +718,7 @@ final class Nonempty<T> extends ConsList<T> {
 	}
 
 	@Override
+	@Pure(requires="NONEMPTY", ensures="NONEMPTY")
 	protected int indexOfHelper(int cur_index, Object o) {
 		if( this.hd().equals(o) ) {
 			return cur_index;
