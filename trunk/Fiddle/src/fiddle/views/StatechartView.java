@@ -68,7 +68,9 @@ import com.evelopers.unimod.plugin.eclipse.model.GStateMachine;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyEditDomain;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyScrollingGraphicalViewer;
 
+import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
 import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
@@ -128,7 +130,7 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	public void createPartControl(Composite parent) {
+	public void createPartControl(Composite parent) {		
 		setEditDomain(new MyEditDomain(null)); // NEB: Normally takes an editor
 		setGraphicalViewer(new MyScrollingGraphicalViewer());
 		getGraphicalViewer().createControl(parent);
@@ -206,9 +208,16 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 
 	// Hey Paul, here's a start on using this method...
 	private boolean doesParseWork(IType type) {
+		// Setup interaction with Crystal
+		Crystal crystal = AbstractCrystalPlugin.getCrystalInstance();
 		ITypeBinding binding = WorkspaceUtilities.getDeclNodeFromType(type);
-		StateSpaceRepository ssr = StateSpaceRepository.getInstance(new AnnotationDatabase());
+		final AnnotationDatabase annoDB = new AnnotationDatabase();
+		crystal.registerAnnotationsWithDatabase(annoDB);
+		StateSpaceRepository ssr = StateSpaceRepository.getInstance(annoDB);
 		StateSpace space = ssr.getStateSpace(binding);
+		
+		//StateSpace space = ssr.getStateSpace(type);
+		System.out.println(space);
 		return true;
 	}
 	
