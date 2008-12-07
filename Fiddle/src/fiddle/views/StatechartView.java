@@ -210,13 +210,16 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	private boolean doesParseWork(IType type) {
 		// Setup interaction with Crystal
 		Crystal crystal = AbstractCrystalPlugin.getCrystalInstance();
-		ITypeBinding binding = WorkspaceUtilities.getDeclNodeFromType(type);
+		//ITypeBinding binding = WorkspaceUtilities.getDeclNodeFromType(type);
+		
 		final AnnotationDatabase annoDB = new AnnotationDatabase();
 		crystal.registerAnnotationsWithDatabase(annoDB);
-		StateSpaceRepository ssr = StateSpaceRepository.getInstance(annoDB);
-		StateSpace space = ssr.getStateSpace(binding);
 		
-		//StateSpace space = ssr.getStateSpace(type);
+		StateSpaceRepository ssr = StateSpaceRepository.getInstance(annoDB);
+		//StateSpace space = ssr.getStateSpace(binding);
+		
+		StateSpace space = ssr.getStateSpace(type);
+		
 		System.out.println(space);
 		return true;
 	}
