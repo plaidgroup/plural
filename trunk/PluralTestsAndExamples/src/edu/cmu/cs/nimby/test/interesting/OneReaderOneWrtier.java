@@ -39,12 +39,17 @@
 package edu.cmu.cs.nimby.test.interesting;
 import com.holub.asynch.Blocking_queue;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.Unique;
 
 
+@PassingTest
+@UseAnalyses(PluralAnalysis.NIMBY)
 public class OneReaderOneWrtier {
 
 	public static void main(String[] args) {
