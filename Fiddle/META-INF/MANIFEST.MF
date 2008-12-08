@@ -8,12 +8,13 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
  org.eclipse.gef,
  com.evelopers.unimod;bundle-version="1.3.39",
- edu.cmu.cs.plural;bundle-version="1.0.5",
- edu.cmu.cs.crystal,
- org.eclipse.jdt.core
+ edu.cmu.cs.plural;bundle-version="1.0.5"
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Import-Package: org.eclipse.draw2d,
+Import-Package: edu.cmu.cs.crystal,
+ edu.cmu.cs.crystal.annotations,
+ edu.cmu.cs.crystal.internal,
+ org.eclipse.draw2d,
  org.eclipse.gef.commands,
  org.eclipse.gef.ui.actions,
  org.eclipse.gef.ui.parts,

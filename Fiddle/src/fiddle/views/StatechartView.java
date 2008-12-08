@@ -44,7 +44,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jface.action.Action;
 //import org.eclipse.jface.action.IAction;
@@ -71,7 +70,6 @@ import com.evelopers.unimod.plugin.eclipse.ui.base.MyScrollingGraphicalViewer;
 import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
-import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import fiddle.parts.FStatechartPartFactory;
@@ -210,13 +208,11 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	private boolean doesParseWork(IType type) {
 		// Setup interaction with Crystal
 		Crystal crystal = AbstractCrystalPlugin.getCrystalInstance();
-		//ITypeBinding binding = WorkspaceUtilities.getDeclNodeFromType(type);
 		
 		final AnnotationDatabase annoDB = new AnnotationDatabase();
 		crystal.registerAnnotationsWithDatabase(annoDB);
 		
 		StateSpaceRepository ssr = StateSpaceRepository.getInstance(annoDB);
-		//StateSpace space = ssr.getStateSpace(binding);
 		
 		StateSpace space = ssr.getStateSpace(type);
 		
