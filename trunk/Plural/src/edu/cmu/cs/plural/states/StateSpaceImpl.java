@@ -312,6 +312,13 @@ public class StateSpaceImpl implements StateSpace {
 	Set<String> addNamedDimension(String dimName, String[] states,
 			String refined, boolean marker) {
 		Set<String> problems = new LinkedHashSet<String>();
+		
+		// You can't refine yourself...
+		if( refined.equals(dimName) ) {
+			problems.add("Dimension " + dimName + " is attempting to refine itself!");
+			return problems;
+		}
+		
 		// find guaranteed-unique name for dimension
 		if (parents.containsKey(dimName)) {
 			problems.add("Dimension already defined: " + dimName);
