@@ -46,24 +46,21 @@ import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jface.action.Action;
-//import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
-import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 
-import com.evelopers.unimod.core.stateworks.Transition;
+import com.evelopers.unimod.core.stateworks.State;
+import com.evelopers.unimod.core.stateworks.StateMachine;
 import com.evelopers.unimod.plugin.eclipse.model.GModel;
 import com.evelopers.unimod.plugin.eclipse.model.GNormalState;
 import com.evelopers.unimod.plugin.eclipse.model.GStateMachine;
-//import com.evelopers.unimod.plugin.eclipse.model.GTransition;
-//import com.evelopers.unimod.plugin.eclipse.model.GTransition;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyEditDomain;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyScrollingGraphicalViewer;
 
@@ -95,12 +92,21 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	
 	private GStateMachine stateMachine;
 	
+	private boolean pin = false;
+	
+	private LayoutAction lact;
+	
 	public GStateMachine getStateMachine() {
 		return stateMachine;
 	}
 
 	public void setStateMachine(GStateMachine stateMachine) {
 		this.stateMachine = stateMachine;
+	}
+	
+	protected void setPin(boolean b){
+		this.pin = b;
+		System.err.println("pin = " + pin);
 	}
 
 	// Just create some simple model, like we always do.
@@ -144,12 +150,23 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 		
 		// Add the menu that performs graph layout
 		addGraphLayoutAction();
+		addGraphPinAction();
 		
 		getViewSite().getPage().addPostSelectionListener(this);
 	}
 
 	private void addGraphLayoutAction() {
 		Action action = new LayoutAction(this);
+		IActionBars actionBars = getViewSite().getActionBars();
+		IMenuManager dropDownMenu = actionBars.getMenuManager();
+		IToolBarManager toolBar = actionBars.getToolBarManager();
+		dropDownMenu.add(action);
+		toolBar.add(action);
+		lact = (LayoutAction)action;
+	}
+	
+	private void addGraphPinAction() {
+		Action action = new PinAction(this);
 		IActionBars actionBars = getViewSite().getActionBars();
 		IMenuManager dropDownMenu = actionBars.getMenuManager();
 		IToolBarManager toolBar = actionBars.getToolBarManager();
@@ -203,64 +220,67 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 		getEditDomain().addViewer(viewer);
 		this.graphicalViewer = viewer;
 	}
-
-	// Hey Paul, here's a start on using this method...
-	private boolean doesParseWork(IType type) {
-		// Setup interaction with Crystal
+	
+	private StateSpace getSpaceFromIType(IType type) {
 		Crystal crystal = AbstractCrystalPlugin.getCrystalInstance();
-		
 		final AnnotationDatabase annoDB = new AnnotationDatabase();
 		crystal.registerAnnotationsWithDatabase(annoDB);
-		
 		StateSpaceRepository ssr = StateSpaceRepository.getInstance(annoDB);
-		
 		StateSpace space = ssr.getStateSpace(type);
 		
-		System.out.println(space);
-		return true;
+		return space;
+	}
+	
+	private GStateMachine getStateMachineFromIType(IType type) {
+		StateSpace space = getSpaceFromIType(type);
+		GModel m = new GModel();
+		GStateMachine machine = new GStateMachine(m);
+		m.addStateMachine(machine);
+		addChildNodes( machine.getTop(), machine, space.getRootState(), space);
+		
+		return machine;
+	}
+	
+	private void addChildNodes(State state, StateMachine machine, String str, StateSpace space) {
+		State newState = new GNormalState((GStateMachine) machine);
+		newState.setName(str);
+		state.addSubstate(newState);
+		for(String s: space.getChildNodes(str)) {
+			addChildNodes(newState, machine, s, space);
+		}
 	}
 	
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
-		  System.out.println("==========> selectionChanged");
-		  if (selection != null) {
-		    if (selection instanceof IStructuredSelection) {
+		if(!pin && selection != null && selection instanceof IStructuredSelection) {
 		      IStructuredSelection ss = (IStructuredSelection) selection;
-		      if (ss.isEmpty())
-		        System.out.println("<empty selection>");
-		      else {
+		      if (!ss.isEmpty()) {
 		    	Object fe = ss.getFirstElement();
-		        System.out.println("First selected element is " + fe.getClass());
 		        if (fe instanceof IJavaElement) {
-		        	ICompilationUnit icu = null;
+		        	IType type = null;
 		        	IJavaElement ije = (IJavaElement) fe;
 		        	
 		        	if (ije instanceof CompilationUnit) {
-			        	icu = (CompilationUnit) fe;
+		        		ICompilationUnit icu = (CompilationUnit) fe;
+			        	type = icu.findPrimaryType();
 		        	} else if (ije instanceof IMethod) {
 		        		IMethod im = (IMethod) ije;
-		        		icu = im.getCompilationUnit();
+		        		type = im.getDeclaringType();
 		        	} else if (ije instanceof IType) {
-		        		IType it = (IType) ije;
-		        		icu = it.getCompilationUnit();
-		        		
-		        		this.doesParseWork(it);
+		        		type = (IType) ije;
 		        	}
-		        	if (icu!=null && stateMachine.getAllTransition().get(0) != null){
-		        		Transition t = (Transition) stateMachine.getAllTransition().get(0);
-		        		t.setName(icu.getElementName());
+		        	if (type!=null){
+		        		GStateMachine machine = getStateMachineFromIType(type);
+		        		setStateMachine(machine);
+		        		getGraphicalViewer().setContents(getStateMachine().getTop());
+		        		getGraphicalViewer().getControl().setBackground(
+		        				ColorConstants.listBackground);
+		        		getViewSite().getPage().addPostSelectionListener(this);
+		        		lact.layoutStatechartPage();
 		        	}
 		        }
 		      }
-		    } else if (selection instanceof ITextSelection) {
-		      ITextSelection ts = (ITextSelection) selection;
-		      System.out.println("Selected text is <" + ts.getText() + ">");
-		    } else {
-		    	System.out.println("Selection is " + selection.getClass());
 		    }
-		  } else {
-		    System.out.println("<empty selection>");
-		  }	
 	}
 	
 }
