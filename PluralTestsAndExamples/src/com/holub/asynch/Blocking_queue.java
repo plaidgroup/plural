@@ -4,10 +4,13 @@ package com.holub.asynch;
 //import java.util.LinkedList; NEB: I use my own, annotated LinkedList.
 import java.util.NoSuchElementException;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.FalseIndicates;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.Pures;
 import edu.cmu.cs.plural.annot.Refine;
@@ -54,6 +57,8 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
 	@State(name="OPEN", inv="closed == false"), 
 	@State(name="CLOSED", inv="closed == true")
 })
+@PassingTest
+@UseAnalyses(PluralAnalysis.NIMBY)
 public class Blocking_queue
 {
 	private LinkedList elements 				= new LinkedList();
@@ -201,7 +206,7 @@ public class Blocking_queue
 	 */
 	 @Pures({
 		 @Pure("STRUCTURE"),
-		 @Pure(requires="OPEN",ensures="OPEN",value="PROTOCOL")
+		 @Pure(requires="OPEN",value="PROTOCOL")
 	 })
 	 public final boolean is_empty()
 	 {	
@@ -212,7 +217,7 @@ public class Blocking_queue
 
 	/*******************************************************************
 	 * Return the number of threads waiting for a message on the
-	 * current queue. See {@link is_empty} for warnings about
+	 * current queue. See {@link #is_empty} for warnings about
 	 * synchronization.
 	 */
      @Pure("STRUCTURE")
