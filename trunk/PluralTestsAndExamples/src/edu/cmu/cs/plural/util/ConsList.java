@@ -90,6 +90,7 @@ public abstract class ConsList<T> implements List<T> {
 	 */
 	@SuppressWarnings("unchecked")
 	@Perm(ensures="immutable(result) in EMPTY")
+	@ResultImm(ensures="EMPTY")
 	public static <T> ConsList<T> empty() {
 		return EMPTY_CONS_LIST;
 	}
@@ -258,19 +259,16 @@ public abstract class ConsList<T> implements List<T> {
 	/*
 	 * List methods
 	 */
-	@Pure
-	public abstract int size();	
+	@Pure public abstract int size();	
 	
 	@Pure(fieldAccess=true)
 	@TrueIndicates("EMPTY")
 	@FalseIndicates("NONEMPTY")
 	public abstract boolean isEmpty();
 	
-	@Pure
-	public abstract int indexOf(Object o);
+	@Pure public abstract int indexOf(Object o);
 	
-	@Pure
-	public abstract int lastIndexOf(Object o);
+	@Pure public abstract int lastIndexOf(Object o);
 		
 	/**
 	 * Note: For {@code ConsList<T>}, this method is less efficient
@@ -285,7 +283,7 @@ public abstract class ConsList<T> implements List<T> {
 		return listIterator(0);
 	}
 	
-	@Imm(requires="NONEMPTY", ensures="NONEMPTY")
+	@Imm // NEB: The right specification here is index < size, and then we need an implication.
 	@ResultImm
 	public final T get(int index) {
 		if( index == 0 ) {
@@ -718,9 +716,9 @@ final class Nonempty<T> extends ConsList<T> {
 	}
 
 	@Override
-	@Pure(requires="NONEMPTY", ensures="NONEMPTY")
+	@Pure
 	protected int indexOfHelper(int cur_index, Object o) {
-		if( this.hd().equals(o) ) {
+		if( this.hd().equals(o) ) { // NEB: We need to somehow know this subclass is always in NONEMPTY
 			return cur_index;
 		}
 		else {
@@ -757,7 +755,7 @@ final class Nonempty<T> extends ConsList<T> {
 
 	@Override
 	protected int lastIndexOfHelper(boolean found, int cur_index, int cur_last, Object o) {
-		if( this.hd().equals(o) ) {
+		if( this.hd().equals(o) ) { // NEB: We need to somehow know this subclass is always in NONEMPTY 
 			return this.tl().lastIndexOfHelper(true, cur_index + 1, cur_index, o);
 		}
 		else {
@@ -768,7 +766,7 @@ final class Nonempty<T> extends ConsList<T> {
 	@Override
 	@Pure
 	public String toString() {
-		return "(" + this.hd().toString() + ")::" + this.tl().toString();
+		return "(" + this.hd().toString() + ")::" + this.tl().toString(); // NEB: We need to somehow know this subclass is always in NONEMPTY
 	}
 
 	@Override
