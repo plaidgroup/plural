@@ -226,9 +226,8 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 		this.graphicalViewer = viewer;
 	}
 	
-	private StateSpaceRepository getSpaceRepo() {
+	private StateSpaceRepository getSpaceRepo(AnnotationDatabase annoDB) {
 		Crystal crystal = AbstractCrystalPlugin.getCrystalInstance();
-		final AnnotationDatabase annoDB = new AnnotationDatabase();
 		crystal.registerAnnotationsWithDatabase(annoDB);
 		StateSpaceRepository ssr = StateSpaceRepository.getInstance(annoDB);
 		
@@ -236,7 +235,8 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	}
 	
 	private GStateMachine getStateMachineFromIType(IType type) {
-		StateSpaceRepository ssr = getSpaceRepo();
+		final AnnotationDatabase annoDB = new AnnotationDatabase();
+		StateSpaceRepository ssr = getSpaceRepo(annoDB);
 		
 		
 		// Testing out my code so that we can get the transitions
