@@ -85,9 +85,12 @@ public class StateSpaceRepository {
 	 * Returns the singleton instance of the state space repository.
 	 * If none exists, one is created with the provided Crystal object.
 	 * The Crystal object is needed for accessing the annotation
-	 * database.
-	 * @param crystal The Crystal instance, for retrieving the annotation database
-	 * (and recognizing that a new Crystal run has begun).
+	 * database. Note that the annotation database that provided must
+	 * be held on to by the client until the point that this repository
+	 * will no longer be used. This is necessary b/c the state space 
+	 * repository refers to the annotation database with a weak reference.
+	 * 
+	 * @param annoDB The annotation database for this run.
 	 * @return the singleton instance of the state space repository.
 	 */
 	public static StateSpaceRepository getInstance(AnnotationDatabase annoDB) {
@@ -709,7 +712,9 @@ public class StateSpaceRepository {
 	}
 
 	/**
-	 * Returns the annotation database.
+	 * Returns the annotation database. See {@link StateSpaceRepository#getInstance(AnnotationDatabase)}
+	 * for a note about the annotation database, which is referred to by a
+	 * weak reference.
 	 * @return The Crystal annotation database used by this repository.
 	 */
 	private AnnotationDatabase getAnnotationDB() {
