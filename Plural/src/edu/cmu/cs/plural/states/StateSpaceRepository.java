@@ -152,7 +152,8 @@ public class StateSpaceRepository {
 	 * {@link #getStateSpace(ITypeBinding)} except that it only needs
 	 * a type from the model, so parsing is not necessary.
 	 */
-	public StateSpace getStateSpace(IType type) {
+	@Deprecated
+	private StateSpace getStateSpace(IType type) {
 		StateSpace result = getStateSpaceIfDefined(type);
 		return result == null ? StateSpace.SPACE_TOP : result;
 	}
