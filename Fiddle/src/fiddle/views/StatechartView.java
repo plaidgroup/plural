@@ -44,6 +44,8 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
@@ -67,6 +69,9 @@ import com.evelopers.unimod.plugin.eclipse.ui.base.MyScrollingGraphicalViewer;
 import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
+import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
+import edu.cmu.cs.plural.states.IInvocationSignature;
+import edu.cmu.cs.plural.states.IMethodSignature;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import fiddle.parts.FStatechartPartFactory;
@@ -221,18 +226,42 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 		this.graphicalViewer = viewer;
 	}
 	
-	private StateSpace getSpaceFromIType(IType type) {
+	private StateSpaceRepository getSpaceRepo() {
 		Crystal crystal = AbstractCrystalPlugin.getCrystalInstance();
 		final AnnotationDatabase annoDB = new AnnotationDatabase();
 		crystal.registerAnnotationsWithDatabase(annoDB);
 		StateSpaceRepository ssr = StateSpaceRepository.getInstance(annoDB);
-		StateSpace space = ssr.getStateSpace(type);
 		
-		return space;
+		return ssr;
 	}
 	
 	private GStateMachine getStateMachineFromIType(IType type) {
-		StateSpace space = getSpaceFromIType(type);
+		StateSpaceRepository ssr = getSpaceRepo();
+		
+		
+		// Testing out my code so that we can get the transitions
+		ITypeBinding binding = WorkspaceUtilities.getDeclNodeFromType(type);
+		for( IMethodBinding method : binding.getDeclaredMethods() ) {
+			IInvocationSignature sig = ssr.getSignature(method);
+			
+			// Results...
+			sig.getRequiredReceiverStateOptions();
+			sig.getEnsuredReceiverStateOptions();
+		}
+		
+		// That's good, but we also need the methods from all supertypes
+		for( ITypeBinding face_bind : binding.getInterfaces() ) {
+			
+		}
+		ITypeBinding super_type = binding.getSuperclass();
+		// And we need to do this recursively...
+		// Just so we don't miss any methods...
+		
+		
+		// END NEB
+		
+		StateSpace space = ssr.getStateSpace(binding);
+		
 		GModel m = new GModel();
 		GStateMachine machine = new GStateMachine(m);
 		m.addStateMachine(machine);
