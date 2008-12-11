@@ -48,9 +48,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.core.ITypeHierarchy;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -151,17 +148,6 @@ public class StateSpaceRepository {
 	}
 	
 	/**
-	 * Returns the state space for the given type. Is very similar to
-	 * {@link #getStateSpace(ITypeBinding)} except that it only needs
-	 * a type from the model, so parsing is not necessary.
-	 */
-	@Deprecated
-	private StateSpace getStateSpace(IType type) {
-		StateSpace result = getStateSpaceIfDefined(type);
-		return result == null ? StateSpace.SPACE_TOP : result;
-	}
-	
-	/**
 	 * Retrieves an existing state space or creates a new one, 
 	 * if possible.
 	 * @param type Type binding for the requested state space
@@ -175,28 +161,6 @@ public class StateSpaceRepository {
 		if(result != null)
 			return result;
 		result = buildStateSpace(type, new HashMap<ICrystalAnnotation, Set<String>>());
-		if(result != null) 
-			spaces.put(key, result);
-		return result;
-	}
-	
-	/**
-	 * Builds a state space or returns one that was already defined.
-	 * Very similar to {@link #getStateSpaceIfDefined(ITypeBinding)}
-	 * except that it can be called on the Java model element, and
-	 * therefore ultimately does not require parsing.
-	 */
-	private StateSpaceImpl getStateSpaceIfDefined(IType type) {
-		Map<String, StateSpaceImpl> spaces = getSpaces();
-		String key = type.getKey();
-		StateSpaceImpl result = spaces.get(key);
-		if(result != null)
-			return result;
-		
-		try {
-			result = buildStateSpace(type, new HashMap<ICrystalAnnotation, Set<String>>());
-		} catch (JavaModelException e) { /* Result will equal null */ }
-		
 		if(result != null) 
 			spaces.put(key, result);
 		return result;
@@ -501,78 +465,6 @@ public class StateSpaceRepository {
 	}
 	
 	/**
-	 * Returns a state space for the given type. Very similar to 
-	 * {@link #buildStateSpace(ITypeBinding, Map)} except that it works
-	 * on the Java model element, and therefore does not require a parse.
-	 * @throws JavaModelException 
-	 */
-	private StateSpaceImpl buildStateSpace(IType type, 
-			Map<ICrystalAnnotation, Set<String>> problemsOut) throws JavaModelException {
-		
-		if(type.isAnnotation())
-			return null;
-		
-		StateSpaceImpl result = new StateSpaceImpl(type.getTypeQualifiedName('.'));
-		
-		// process annotations on supertypes
-		visitSupertypes(type, result);
-		// process state annotations on this type, if any
-		if(getAnnotationDB().getAnnosForType(type) != null) {
-			Map<String, ICrystalAnnotation> refinedStates = new HashMap<String, ICrystalAnnotation>();
-			for(ICrystalAnnotation a : getAnnotationDB().getAnnosForType(type)) {
-				if("edu.cmu.cs.plural.annot.States".equals(a.getName())) {
-					String[] states = downcast((Object[]) a.getObject("value"), String.class);
-					String dimName = (String) a.getObject("dim");
-					String refined = (String) a.getObject("refined");
-					boolean marker = (Boolean) a.getObject("marker");
-					
-					if("".equals(dimName)) {
-						problemsOut.put(a, 
-								result.addAnonymousDimension(states, refined, marker));
-					}
-					else {
-						problemsOut.put(a, 
-								result.addNamedDimension(dimName, states, refined, marker));
-					}
-					refinedStates.put(refined, a);
-				}
-			}
-			// make sure all refined states are defined
-			for(String refined : refinedStates.keySet()) {
-				if(result.isKnown(refined) == false) {
-					Set<String> annoProblems = problemsOut.get(refinedStates.get(refined));
-					if(annoProblems == null) {
-						annoProblems = new LinkedHashSet<String>();
-						problemsOut.put(refinedStates.get(refined), annoProblems);
-					}
-					annoProblems.add("Refined state unknown: " + refined);
-					// slam in unknown states...
-					result.addAnonymousState(refined);
-				}
-			}
-		}
-		
-		// traverse defined state invariants to infer root node for fields
-		// this must happen after processing @States annotations
-		// because we need to compare states
-		Map<String, String> fieldMap = new HashMap<String, String>();
-		for(ICrystalAnnotation a : getAnnotationDB().getAnnosForType(type)) {
-			if(a instanceof ClassStateDeclAnnotation) {
-				ClassStateDeclAnnotation csda = (ClassStateDeclAnnotation) a;
-				for(StateDeclAnnotation stateAnno : csda.getStates()) {
-					String state = stateAnno.getStateName();
-					if(! result.isKnown(state))
-						result.addAnonymousState(state);
-					// FIXME We really need to add fields to create the 
-					// field mapping.
-				}
-			}
-		}
-		result.setFieldMap(fieldMap);
-		return result;
-	}
-	
-	/**
 	 * Entry method for depth-first search traversal of supertypes of the given type
 	 * to populate the given state space object with state dimensions
 	 * defined in supertypes.
@@ -587,66 +479,6 @@ public class StateSpaceRepository {
 		for(ITypeBinding itf : type.getInterfaces() /* may not be null */) {
 			visitSupertype(itf, seen, result);
 		}
-	}
-	
-	/**
-	 * Very similar to {@link #visitSupertypes(ITypeBinding, StateSpaceImpl)}
-	 * except works on the Java model element.
-	 * @throws JavaModelException 
-	 */
-	private void visitSupertypes(IType type, StateSpaceImpl result) throws JavaModelException {
-		Set<IType> seen = new HashSet<IType>();
-		seen.add(type);
-		
-		ITypeHierarchy hierarchy = type.newSupertypeHierarchy(null);
-		
-		visitSupertype(hierarchy.getSuperclass(type)/* may be null */, hierarchy, seen, result);
-		for(IType itf : hierarchy.getSuperInterfaces(type) /* may not be null */) {
-			visitSupertype(itf, hierarchy, seen, result);
-		}
-	}
-	
-	/**
-	 * Very similar to {@link #visitSupertype(ITypeBinding, Set, StateSpaceImpl)}
-	 * except that it works on the Java model element instead of the type
-	 * binding.
-	 * @throws JavaModelException 
-	 */
-	private void visitSupertype(IType type, ITypeHierarchy hierarchy, Set<IType> seen, StateSpaceImpl result) throws JavaModelException {
-		if(type == null || seen.contains(type))
-			return;
-		seen.add(type);
-		visitSupertype(hierarchy.getSuperclass(type) /* may be null */, hierarchy, seen, result);
-		for(IType itf : hierarchy.getSuperInterfaces(type) /* may not be null */) {
-			visitSupertype(itf, hierarchy, seen, result);
-		}
-		
-		if(getAnnotationDB().getAnnosForType(type) == null)
-			return;
-		for(ICrystalAnnotation a : getAnnotationDB().getAnnosForType(type)) {
-			if("edu.cmu.cs.plural.annot.States".equals(a.getName())) {
-				String[] states = downcast((Object[]) a.getObject("value"), String.class);
-				String dimName = (String) a.getObject("dim");
-				String refined = (String) a.getObject("refined");
-				boolean marker = (Boolean) a.getObject("marker");
-				
-				if("".equals(dimName)) {
-					// anonymous dimension: try to look up existing name for it in inherited state space
-					if(states.length == 0)
-						continue;
-					StateSpaceImpl superSpace = getStateSpaceIfDefined(type);
-					if(superSpace.isDimension(superSpace.getParent(states[0])))
-						dimName = superSpace.getParent(states[0]);
-				}
-				if("".equals(dimName)) {
-					result.addAnonymousDimension(states, refined, marker);
-				}
-				else {
-					result.addNamedDimension(dimName, states, refined, marker);
-				}
-			}
-		}
-		// TODO check for undefined refined states
 	}
 	
 	/**
