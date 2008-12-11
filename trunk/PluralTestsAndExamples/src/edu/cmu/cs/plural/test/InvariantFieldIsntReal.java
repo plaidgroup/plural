@@ -41,10 +41,11 @@ package edu.cmu.cs.plural.test;
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.State;
 
 @FailingTest(2)
-@UseAnalyses("PluralAnnotationAnalysis")
+@UseAnalyses(PluralAnalysis.SYNTAX)
 @ClassStates(@State(name="alive", inv="fakeField == true"))
 public class InvariantFieldIsntReal {
 
