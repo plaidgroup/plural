@@ -175,4 +175,14 @@ public interface StateSpace {
 	 * <code>false</code> otherwise.
 	 */
 	public boolean isMarker(String node);
+	
+	/**
+	 * Find the lowest node in the state hierarchy that is an ancestor
+	 * of all of the nodes in the given set. If the nodes are all
+	 * orthogonal, "alive" will be returned. If one of the nodes in the
+	 * set is a super-node of the other nodes, that node will be returned.
+	 * This method is not really meant to be called on empty sets, but
+	 * if it is, the root node will be returned. 
+	 */
+	public String findLeastCommonAncestor(Set<String> states);
 }
