@@ -495,4 +495,26 @@ public class StateSpaceImpl implements StateSpace {
 		else
 			return Collections.emptySet();
 	}
+
+	@Override
+	public String findLeastCommonAncestor(Set<String> states) {
+		// Well if the root state's already inside...
+		if( states.contains(this.getRootState()) )
+			return this.getRootState();
+
+		// As specified in contract...
+		if( states.isEmpty() )
+			return this.getRootState();
+		
+		// But otherwise, go through the states one at a time
+		// and see if it's greater than the current least...
+		Iterator<String> iter = states.iterator();
+		String least = iter.next();
+		
+		while( iter.hasNext() ) {
+			String cur_state = iter.next();
+			least = this.getLowestCommonParent(cur_state, least);
+		}
+		return least;
+	}
 }

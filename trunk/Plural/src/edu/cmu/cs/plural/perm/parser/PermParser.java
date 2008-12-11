@@ -38,6 +38,7 @@
 package edu.cmu.cs.plural.perm.parser;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,6 +125,28 @@ public class PermParser {
 	 */
 	public static boolean willParse(String str) {
 		return parse(str).isSome();
+	}
+	
+	/**
+	 * Returns a collection of strings that are the names of fields
+	 * mentioned in the given invariant. This method will parse the
+	 * invariant, search in every subexpression and find any field
+	 * (not this and not super) that  it finds.
+	 */
+	public static Iterable<String>
+	getFieldsMentionedInString(String inv) {
+		Option<TopLevelPred> parsed = parse(inv);
+		
+		if( parsed.isNone() )
+			return Collections.emptySet();
+		
+		TopLevelPred pred = parsed.unwrap();
+		if( pred instanceof Impossible )
+			return Collections.emptySet();
+		
+		AccessPred a_pred = (AccessPred)pred;
+		
+		return	a_pred.accept(new FieldFinderVisitor());
 	}
 	
 	/**

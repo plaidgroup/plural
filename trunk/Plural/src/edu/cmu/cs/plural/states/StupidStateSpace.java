@@ -183,4 +183,9 @@ public class StupidStateSpace implements StateSpace {
 	public Set<String> getChildNodes(String parent) {
 		return Collections.emptySet();
 	}
+
+	@Override
+	public String findLeastCommonAncestor(Set<String> states) {
+		return this.getRootState();
+	}
 }

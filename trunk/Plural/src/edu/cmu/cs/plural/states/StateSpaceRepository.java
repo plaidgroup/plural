@@ -56,6 +56,7 @@ import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
+import edu.cmu.cs.plural.perm.parser.PermParser;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
@@ -447,23 +448,49 @@ public class StateSpaceRepository {
 		// traverse defined state invariants to infer root node for fields
 		// this must happen after processing @States annotations
 		// because we need to compare states
-		Map<String, String> fieldMap = new HashMap<String, String>();
+		
+		// Map fields to the nodes in which they appear in an inv...
+		// In this map, the field may appear many times.
+		Map<String,Set<String>> field_to_node = new HashMap<String,Set<String>>();
+		
 		for(ICrystalAnnotation a : getAnnotationDB().getAnnosForType(type)) {
 			if(a instanceof ClassStateDeclAnnotation) {
 				ClassStateDeclAnnotation csda = (ClassStateDeclAnnotation) a;
+								
 				for(StateDeclAnnotation stateAnno : csda.getStates()) {
-					String state = stateAnno.getStateName();
+					final String state = stateAnno.getStateName();
 					if(! result.isKnown(state))
 						result.addAnonymousState(state);
-					// FIXME We really need to add fields to create the 
-					// field mapping.
+					
+					// Get the invariant & fields
+					String inv = stateAnno.getInv();
+					Iterable<String> fields = PermParser.getFieldsMentionedInString(inv);
+					for( String field : fields ) {
+						if( field_to_node.containsKey(field) ) { 
+							field_to_node.get(field).add(state);
+						}
+						else {
+							Set<String> set = new HashSet<String>();
+							set.add(state);
+							field_to_node.put(field, set);
+						}
+					}
+					
 				}
 			}
 		}
+		
+		// Now find the least common root node for each field... 
+		Map<String, String> fieldMap = new HashMap<String, String>();
+		for( Map.Entry<String, Set<String>> field_entry : field_to_node.entrySet() ) {
+			fieldMap.put(field_entry.getKey(), 
+					result.findLeastCommonAncestor(field_entry.getValue()));
+		}
+		
 		result.setFieldMap(fieldMap);
 		return result;
 	}
-	
+
 	/**
 	 * Entry method for depth-first search traversal of supertypes of the given type
 	 * to populate the given state space object with state dimensions
