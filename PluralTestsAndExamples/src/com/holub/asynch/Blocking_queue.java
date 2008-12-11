@@ -57,7 +57,7 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
 	@State(name="OPEN", inv="closed == false"), 
 	@State(name="CLOSED", inv="closed == true")
 })
-@PassingTest
+//@PassingTest
 @UseAnalyses(PluralAnalysis.NIMBY)
 public class Blocking_queue
 {
