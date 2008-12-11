@@ -38,6 +38,7 @@
 package fiddle.views;
 
 
+import java.util.Set;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.gef.editparts.FreeformGraphicalRootEditPart;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -60,6 +61,8 @@ import org.eclipse.ui.part.ViewPart;
 
 import com.evelopers.unimod.core.stateworks.State;
 import com.evelopers.unimod.core.stateworks.StateMachine;
+import com.evelopers.unimod.core.stateworks.StateType;
+import com.evelopers.unimod.plugin.eclipse.model.GInitialState;
 import com.evelopers.unimod.plugin.eclipse.model.GModel;
 import com.evelopers.unimod.plugin.eclipse.model.GNormalState;
 import com.evelopers.unimod.plugin.eclipse.model.GStateMachine;
@@ -94,13 +97,13 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	private MyEditDomain editDomain;
 
 	private MyScrollingGraphicalViewer graphicalViewer;
-	
+
 	private GStateMachine stateMachine;
-	
+
 	private boolean pin = false;
-	
+
 	private LayoutAction lact;
-	
+
 	public GStateMachine getStateMachine() {
 		return stateMachine;
 	}
@@ -108,55 +111,54 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	public void setStateMachine(GStateMachine stateMachine) {
 		this.stateMachine = stateMachine;
 	}
-	
+
 	protected void setPin(boolean b){
 		this.pin = b;
-		System.err.println("pin = " + pin);
 	}
 
 	// Just create some simple model, like we always do.
-	private GStateMachine createModelForTestPurposes() {
-		GModel m = new GModel();
-		
-		GStateMachine new_state_machine = new GStateMachine(m);
-		new_state_machine.setName("Nels state machine #" +  
-		    System.currentTimeMillis());
-		m.addStateMachine(new_state_machine);
-						
-		GNormalState my_first_state = new GNormalState(new_state_machine);
-		new_state_machine.getTop().addSubstate(my_first_state);
-		
-		GNormalState my_second_state = new GNormalState(new_state_machine);
-		new_state_machine.getTop().addSubstate(my_second_state);
-		
-		/*GTransition my_transition = (GTransition) */new_state_machine.createTransition(
-				my_first_state, my_second_state, new_state_machine.createGuard("o1.x1"), new_state_machine.createEvent("e1"));
-		
-		return new_state_machine;
-	}
-	
+//	private GStateMachine createModelForTestPurposes() {
+//		GModel m = new GModel();
+//
+//		GStateMachine new_state_machine = new GStateMachine(m);
+//		new_state_machine.setName("Nels state machine #" +  
+//				System.currentTimeMillis());
+//		m.addStateMachine(new_state_machine);
+//
+//		GNormalState my_first_state = new GNormalState(new_state_machine);
+//		new_state_machine.getTop().addSubstate(my_first_state);
+//
+//		GNormalState my_second_state = new GNormalState(new_state_machine);
+//		new_state_machine.getTop().addSubstate(my_second_state);
+//
+//		/*GTransition my_transition = (GTransition) */new_state_machine.createTransition(
+//				my_first_state, my_second_state, new_state_machine.createGuard("o1.x1"), new_state_machine.createEvent("e1"));
+//
+//		return new_state_machine;
+//	}
+
 	/*
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
-	public void createPartControl(Composite parent) {		
+	public void createPartControl(Composite parent) {
 		setEditDomain(new MyEditDomain(null)); // NEB: Normally takes an editor
 		setGraphicalViewer(new MyScrollingGraphicalViewer());
 		getGraphicalViewer().createControl(parent);
 		getGraphicalViewer().setRootEditPart(
 				new FreeformGraphicalRootEditPart());
 		getGraphicalViewer().setEditPartFactory(new FStatechartPartFactory());
-		
-		setStateMachine(createModelForTestPurposes());
+
+		setStateMachine(new GStateMachine(new GModel()));
 		getGraphicalViewer().setContents(getStateMachine().getTop());
-		
+
 		getGraphicalViewer().getControl().setBackground(
 				ColorConstants.listBackground);
-		
+
 		// Add the menu that performs graph layout
 		addGraphLayoutAction();
 		addGraphPinAction();
-		
+
 		getViewSite().getPage().addPostSelectionListener(this);
 	}
 
@@ -169,7 +171,7 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 		toolBar.add(action);
 		lact = (LayoutAction)action;
 	}
-	
+
 	private void addGraphPinAction() {
 		Action action = new PinAction(this);
 		IActionBars actionBars = getViewSite().getActionBars();
@@ -234,42 +236,74 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 		return ssr;
 	}
 	
+	private void addTransitions(ITypeBinding binding, StateMachine machine, StateSpaceRepository ssr){
+		for( IMethodBinding method : binding.getDeclaredMethods() ) {
+			IInvocationSignature sig = ssr.getSignature(method);
+			String start = "";
+			String finish = "";
+			
+			// Results...
+			for(Set<String> set : sig.getRequiredReceiverStateOptions()){
+				for(String s : set){
+					start = s;
+				}
+			}
+			
+			if(method.isConstructor()) start = "Initial";
+			
+			for(Set<String> set : sig.getEnsuredReceiverStateOptions()){
+				for(String s : set){
+					finish = s;
+				}
+			}
+
+			State s1 = machine.findState(start);
+			State s2 = machine.findState(finish);
+			if(null != s1 && null != s2)
+				machine.createTransition(s1, s2, machine.createGuard("o1.x1"), ((GStateMachine) machine).createEvent("e1"));
+		}
+		
+		for( ITypeBinding face_bind : binding.getInterfaces() ) {
+			addTransitions(face_bind, machine, ssr);
+		}
+		
+		ITypeBinding super_type = binding.getSuperclass();
+		if (super_type!=null) addTransitions(super_type, machine, ssr);
+	}
+	
 	private GStateMachine getStateMachineFromIType(IType type) {
 		final AnnotationDatabase annoDB = new AnnotationDatabase();
 		StateSpaceRepository ssr = getSpaceRepo(annoDB);
-		
-		
-		// Testing out my code so that we can get the transitions
 		ITypeBinding binding = WorkspaceUtilities.getDeclNodeFromType(type);
-		for( IMethodBinding method : binding.getDeclaredMethods() ) {
-			IInvocationSignature sig = ssr.getSignature(method);
-			
-			// Results...
-			sig.getRequiredReceiverStateOptions();
-			sig.getEnsuredReceiverStateOptions();
-		}
-		
-		// That's good, but we also need the methods from all supertypes
-		for( ITypeBinding face_bind : binding.getInterfaces() ) {
-			
-		}
-		ITypeBinding super_type = binding.getSuperclass();
-		// And we need to do this recursively...
-		// Just so we don't miss any methods...
-		
-		
-		// END NEB
-		
 		StateSpace space = ssr.getStateSpace(binding);
 		
 		GModel m = new GModel();
 		GStateMachine machine = new GStateMachine(m);
 		m.addStateMachine(machine);
+		
+		machine.createState("Initial", StateType.INITIAL);
+		
+		State newState = new GInitialState((GStateMachine) machine);
+		newState.setName("Initial");
+		machine.getTop().addSubstate(newState);
+		
 		addChildNodes( machine.getTop(), machine, space.getRootState(), space);
 		
+		addTransitions(binding, machine, ssr);
+
 		return machine;
 	}
 	
+//	private StateSpace getSpaceFromIType(IType type) {
+//		Crystal crystal = AbstractCrystalPlugin.getCrystalInstance();
+//		final AnnotationDatabase annoDB = new AnnotationDatabase();
+//		crystal.registerAnnotationsWithDatabase(annoDB);
+//		StateSpaceRepository ssr = StateSpaceRepository.getInstance(annoDB);
+//		StateSpace space = ssr.getStateSpace(type);
+//
+//		return space;
+//	}
+
 	private void addChildNodes(State state, StateMachine machine, String str, StateSpace space) {
 		State newState = new GNormalState((GStateMachine) machine);
 		newState.setName(str);
@@ -278,38 +312,38 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 			addChildNodes(newState, machine, s, space);
 		}
 	}
-	
+
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
 		if(!pin && selection != null && selection instanceof IStructuredSelection) {
-		      IStructuredSelection ss = (IStructuredSelection) selection;
-		      if (!ss.isEmpty()) {
-		    	Object fe = ss.getFirstElement();
-		        if (fe instanceof IJavaElement) {
-		        	IType type = null;
-		        	IJavaElement ije = (IJavaElement) fe;
-		        	
-		        	if (ije instanceof CompilationUnit) {
-		        		ICompilationUnit icu = (CompilationUnit) fe;
-			        	type = icu.findPrimaryType();
-		        	} else if (ije instanceof IMethod) {
-		        		IMethod im = (IMethod) ije;
-		        		type = im.getDeclaringType();
-		        	} else if (ije instanceof IType) {
-		        		type = (IType) ije;
-		        	}
-		        	if (type!=null){
-		        		GStateMachine machine = getStateMachineFromIType(type);
-		        		setStateMachine(machine);
-		        		getGraphicalViewer().setContents(getStateMachine().getTop());
-		        		getGraphicalViewer().getControl().setBackground(
-		        				ColorConstants.listBackground);
-		        		getViewSite().getPage().addPostSelectionListener(this);
-		        		lact.layoutStatechartPage();
-		        	}
-		        }
-		      }
-		    }
+			IStructuredSelection ss = (IStructuredSelection) selection;
+			if (!ss.isEmpty()) {
+				Object fe = ss.getFirstElement();
+				if (fe instanceof IJavaElement) {
+					IType type = null;
+					IJavaElement ije = (IJavaElement) fe;
+
+					if (ije instanceof CompilationUnit) {
+						ICompilationUnit icu = (CompilationUnit) fe;
+						type = icu.findPrimaryType();
+					} else if (ije instanceof IMethod) {
+						IMethod im = (IMethod) ije;
+						type = im.getDeclaringType();
+					} else if (ije instanceof IType) {
+						type = (IType) ije;
+					}
+					if (type!=null){
+						GStateMachine machine = getStateMachineFromIType(type);
+						setStateMachine(machine);
+						getGraphicalViewer().setContents(getStateMachine().getTop());
+						getGraphicalViewer().getControl().setBackground(
+								ColorConstants.listBackground);
+						getViewSite().getPage().addPostSelectionListener(this);
+						lact.layoutStatechartPage();
+					}
+				}
+			}
+		}
 	}
-	
+
 }
