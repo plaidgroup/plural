@@ -38,10 +38,34 @@
 
 package fiddle.parts;
 
+import java.beans.PropertyChangeEvent;
+
+import com.evelopers.unimod.core.stateworks.State;
 import com.evelopers.unimod.plugin.eclipse.editpart.StateEditPart;
+import com.evelopers.unimod.plugin.eclipse.model.GState;
 
 public class FStateEditPart extends StateEditPart {
 	@Override
-	protected void sendProblems() {}
+	public void propertyChange(PropertyChangeEvent evt) {
+		String prop = evt.getPropertyName();
 
+		if (prop.equals(GState.NAME_PROPERTY)) { 
+			refreshVisuals();
+		} else if (prop.equals(GState.SIZE_PROPERTY)) {
+			refreshVisuals();
+		} else if (prop.equals(GState.LOCATION_PROPERTY)) {
+			refreshVisuals();
+		} else if (prop.equals(State.SUBSTATES_PROPERTY)) {
+			refreshChildren();
+		} else if (prop.equals(State.OUTGOING_TRANSITIONS_PROPERTY)) {
+			refreshSourceConnections();
+		} else if (prop.equals(State.INCOMING_TRANSITIONS_PROPERTY)) {
+			refreshTargetConnections();
+		} else {
+			super.propertyChange(evt);
+		}
+	}
+
+	@Override
+	protected void sendProblems() {}
 }
