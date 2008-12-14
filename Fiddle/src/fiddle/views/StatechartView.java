@@ -39,6 +39,7 @@ package fiddle.views;
 
 
 import java.util.Set;
+
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.gef.editparts.FreeformGraphicalRootEditPart;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -74,7 +75,6 @@ import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
 import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.plural.states.IInvocationSignature;
-import edu.cmu.cs.plural.states.IMethodSignature;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import fiddle.parts.FStatechartPartFactory;
