@@ -6,9 +6,17 @@
    <feature url="features/edu.cmu.cs.plural.feature_1.0.5.jar" id="edu.cmu.cs.plural.feature" version="1.0.5">
       <category name="Plural (required)"/>
    </feature>
+   <feature url="features/edu.cmu.cs.fiddle.feature_1.0.0.jar" id="edu.cmu.cs.fiddle.feature" version="1.0.0">
+      <category name="Optional"/>
+   </feature>
    <category-def name="Plural (required)" label="Plural">
       <description>
          Contains the Plural and NIMBY object protocol checking tools.
+      </description>
+   </category-def>
+   <category-def name="Optional" label="Optional">
+      <description>
+         Optional features. Note that optional features may require additional plugins.
       </description>
    </category-def>
 </site>
