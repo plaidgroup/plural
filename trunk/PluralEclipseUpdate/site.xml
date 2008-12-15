@@ -3,7 +3,7 @@
    <description url="http://pluralism.googlecode.com/svn/trunk/PluralEclipseUpdate/">
       The Eclipse update site for Plural.
    </description>
-   <feature url="features/edu.cmu.cs.plural.feature_1.0.4.jar" id="edu.cmu.cs.plural.feature" version="1.0.4">
+   <feature url="features/edu.cmu.cs.plural.feature_1.0.5.jar" id="edu.cmu.cs.plural.feature" version="1.0.5">
       <category name="Plural (required)"/>
    </feature>
    <category-def name="Plural (required)" label="Plural">
