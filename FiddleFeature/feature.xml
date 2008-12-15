@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
       id="edu.cmu.cs.fiddle.feature"
-      label="Fiddle Feature"
+      label="Fiddle Feature (Optional)"
       version="1.0.0"
       provider-name="Carnegie Mellon University">
 
