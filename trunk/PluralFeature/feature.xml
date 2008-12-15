@@ -42,12 +42,6 @@ Copyright 2008 by Carnegie Mellon University.
       <discovery label="Crystal Update site" url="http://crystalsaf.googlecode.com/svn/trunk/EclipseUpdate/"/>
    </url>
 
-   <includes
-         id="edu.cmu.cs.fiddle.feature"
-         version="0.0.0"
-         name="Fiddle (Requires UniMod)"
-         optional="true"/>
-
    <requires>
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
