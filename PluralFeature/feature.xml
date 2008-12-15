@@ -40,6 +40,7 @@ Copyright 2008 by Carnegie Mellon University.
    <url>
       <update label="Plural update site" url="http://pluralism.googlecode.com/svn/trunk/PluralEclipseUpdate/"/>
       <discovery label="Crystal Update site" url="http://crystalsaf.googlecode.com/svn/trunk/EclipseUpdate/"/>
+      <discovery label="PLAID Annotations Update Site" url="http://plaidannotations.googlecode.com/svn/trunk/PlaidAnnotationsUpdateSite/"/>
    </url>
 
    <requires>

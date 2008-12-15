@@ -3,13 +3,15 @@
 <repository name='file:/D:/workspace-for-crystal-library/PluralEclipseUpdate/ - metadata' type='org.eclipse.equinox.internal.p2.metadata.repository.LocalMetadataRepository' version='1'>
   <properties size='2'>
     <property name='p2.compressed' value='false'/>
-    <property name='p2.timestamp' value='1229357741730'/>
+    <property name='p2.timestamp' value='1229357861606'/>
   </properties>
-  <references size='4'>
+  <references size='6'>
     <repository url='http://pluralism.googlecode.com/svn/trunk/PluralEclipseUpdate/' type='1' options='0'/>
     <repository url='http://pluralism.googlecode.com/svn/trunk/PluralEclipseUpdate/' type='0' options='0'/>
     <repository url='http://crystalsaf.googlecode.com/svn/trunk/EclipseUpdate/' type='1' options='0'/>
     <repository url='http://crystalsaf.googlecode.com/svn/trunk/EclipseUpdate/' type='0' options='0'/>
+    <repository url='http://plaidannotations.googlecode.com/svn/trunk/PlaidAnnotationsUpdateSite/' type='0' options='0'/>
+    <repository url='http://plaidannotations.googlecode.com/svn/trunk/PlaidAnnotationsUpdateSite/' type='1' options='0'/>
   </references>
   <units size='23'>
     <unit id='edu.cmu.cs.plural.feature.feature.jar' version='1.0.3'>
