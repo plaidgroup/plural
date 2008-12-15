@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="edu.cmu.cs.plural.feature"
-      label="Plural"
-      version="1.0.5">
+      id="edu.cmu.cs.fiddle.feature"
+      label="Fiddle Feature"
+      version="1.0.0"
+      provider-name="Carnegie Mellon University">
 
-   <description url="http://code.google.com/p/pluralism/">
-      Modular object protocol checking for Java.
+   <description url="http://www.example.com/description">
+      [Enter Feature Description here.]
    </description>
 
    <copyright url="http://code.google.com/p/pluralism/">
@@ -21,53 +22,32 @@ LEGAL ACTION AGAINST YOU “LICENSEE”.  IF YOU “LICENSEE” HAVE
 ANY QUESTIONS AS TO THESE TERMS AND CONDITIONS, WE ENCOURAGE
 YOU “LICENSEE” TO SEEK INDEPENDENT COUNSEL PRIOR TO CLICKING
 ON THE “ACCEPT” OR “CONTINUE” BUTTON.
-
 These terms and conditions constitute a legally binding agreement
 (“Agreement”) between (a) you, the “Licensee”, and (b) Carnegie
 Mellon University (“Carnegie Mellon”).
-
 This software is available under a dual license agreement. To
 download under the GPL v2 license (http://www.gnu.org/licenses/gpl-2.0.html),
 please click here.
-
 To obtain this software under a commercial license, please contact
 the Carnegie Mellon University Center for Technology Transfer
 at innovation@cmu.edu.
-
 Copyright 2008 by Carnegie Mellon University.
    </license>
 
    <url>
       <update label="Plural update site" url="http://pluralism.googlecode.com/svn/trunk/PluralEclipseUpdate/"/>
-      <discovery label="Crystal Update site" url="http://crystalsaf.googlecode.com/svn/trunk/EclipseUpdate/"/>
+      <discovery label="Crystal Update Site" url="http://crystalsaf.googlecode.com/svn/trunk/EclipseUpdate/"/>
    </url>
 
-   <includes
-         id="edu.cmu.cs.fiddle.feature"
-         version="0.0.0"
-         name="Fiddle (Requires UniMod)"
-         optional="true"/>
-
    <requires>
-      <import plugin="org.eclipse.ui"/>
-      <import plugin="org.eclipse.core.runtime"/>
-      <import plugin="org.eclipse.jdt.core"/>
-      <import plugin="org.eclipse.ui.console"/>
-      <import plugin="org.eclipse.core.resources"/>
-      <import plugin="org.eclipse.jface.text"/>
-      <import plugin="edu.cmu.cs.crystal" version="3.3.1" match="greaterOrEqual"/>
-      <import plugin="org.junit4"/>
+      <import feature="com.evelopers.unimod" version="1.3.39" match="greaterOrEqual"/>
    </requires>
 
    <plugin
-         id="edu.cmu.cs.plural"
+         id="Fiddle"
          download-size="0"
          install-size="0"
-         version="1.0.4"/>
-
-   <data
-         id="COPYING"
-         download-size="0"
-         install-size="0"/>
+         version="0.0.0"
+         unpack="false"/>
 
 </feature>
