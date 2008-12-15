@@ -3,7 +3,7 @@
 <repository name='file:/D:/workspace-for-crystal-library/PluralEclipseUpdate/ - artifacts' type='org.eclipse.equinox.p2.artifact.repository.simpleRepository' version='1'>
   <properties size='2'>
     <property name='p2.compressed' value='false'/>
-    <property name='p2.timestamp' value='1229357741730'/>
+    <property name='p2.timestamp' value='1229357861606'/>
   </properties>
   <mappings size='3'>
     <rule filter='(&amp; (classifier=osgi.bundle))' output='${repoUrl}/plugins/${id}_${version}.jar'/>
@@ -51,12 +51,6 @@
         <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.5'>
-      <properties size='2'>
-        <property name='artifact.size' value='8484'/>
-        <property name='download.size' value='8484'/>
-      </properties>
-    </artifact>
     <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.1'>
       <properties size='2'>
         <property name='artifact.size' value='8455'/>
@@ -68,6 +62,12 @@
         <property name='artifact.size' value='15694'/>
         <property name='download.size' value='15694'/>
         <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.5'>
+      <properties size='2'>
+        <property name='artifact.size' value='8519'/>
+        <property name='download.size' value='8519'/>
       </properties>
     </artifact>
     <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.3'>
