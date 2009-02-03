@@ -592,13 +592,13 @@ public class FractionalPermission extends AbstractFractionalPermission {
 			// no permissions for other dimensions needed 
 			// --> simplification: reuse old fraction function
 			FractionFunction newF = new FractionFunction(fractions, newRootNode, Fraction.one());
-			// state info should be unchanged, because there are no orthogonal dimensions
-			assert filterStateInfo(newRootNode).containsAll(stateInfo);
+			// state info should only change insofar as nodes above newRootNode are dropped (now implicit)
+			Set<String> filteredInfo = filterStateInfo(newRootNode);
 			// create desired permission
 			FractionalPermission wanted = createPermission(
 					stateSpace, newRootNode, newF, 
 					true /* can only move down full permission */, 
-					stateInfo, // state info unchanged because no orthogonal dimensions 
+					filteredInfo,  
 					constraints);
 			return Pair.create(wanted, Collections.<FractionalPermission>emptyList());
 		}
