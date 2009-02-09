@@ -38,19 +38,13 @@
 
 package fiddle.parts;
 
-import org.eclipse.draw2d.IFigure;
-
 import java.beans.PropertyChangeEvent;
 
 import com.evelopers.unimod.core.stateworks.State;
-import com.evelopers.unimod.core.stateworks.StateType;
 import com.evelopers.unimod.plugin.eclipse.editpart.NormalStateEditPart;
-import com.evelopers.unimod.plugin.eclipse.figures.FNormalStateFigure;
-import com.evelopers.unimod.plugin.eclipse.figures.FigureFactory;
-import com.evelopers.unimod.plugin.eclipse.figures.NormalStateFigure;
 import com.evelopers.unimod.plugin.eclipse.model.GState;
 
-public class FNormalStateEditPart extends NormalStateEditPart {
+public class FDimensionEditPart extends NormalStateEditPart {
     @Override
 	protected void sendProblems() {}
     
@@ -85,24 +79,4 @@ public class FNormalStateEditPart extends NormalStateEditPart {
 		}
 	}
 	
-	public IFigure getContentPane() {
-		return super.getContentPane();
-	}
-	
-    protected NormalStateFigure getNormalStateFigure() {
-        return ((NormalStateFigure) getFigure());
-    }
-    
-	protected IFigure createFigure() {
-		StateType st = ((State)getModel()).getType();
-		
-		if (StateType.INITIAL.equals(st)) {
-			return FigureFactory.createInitialStateFigure();
-		} else if (StateType.FINAL.equals(st)) {
-			return FigureFactory.createFinalStateFigure();
-		} else {
-			return new FNormalStateFigure();
-		}
-	}
-
 }
