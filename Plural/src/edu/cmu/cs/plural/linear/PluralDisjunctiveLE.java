@@ -604,6 +604,10 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 				}
 			}
 		});
+		
+		// stop True from poisoning the remainder of the method or the surrounding loop
+		if(ContextFactory.isTrueContext(le))
+			le = ContextFactory.falseContext();
 	}
 
 	public void handleNewObject(			
@@ -644,6 +648,10 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 				}
 			}
 		});
+
+		// stop True from poisoning the remainder of the method or the surrounding loop
+		if(ContextFactory.isTrueContext(le))
+			le = ContextFactory.falseContext();
 	}
 
 	public void handleConstructorCall(
@@ -681,6 +689,10 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 				}
 			}
 		});
+
+		// stop True from poisoning the remainder of the method or the surrounding loop
+		if(ContextFactory.isTrueContext(le))
+			le = ContextFactory.falseContext();
 	}
 
 	public void prepareForFieldRead(final LoadFieldInstruction instr) {
