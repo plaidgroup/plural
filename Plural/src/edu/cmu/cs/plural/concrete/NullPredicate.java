@@ -176,5 +176,10 @@ final public class NullPredicate implements VariablePredicate {
 	public boolean denotesNullVariable() {
 		return this.isNull;
 	}
+
+	@Override
+	public boolean isAlwaysTrue() {
+		return false;
+	}
 	
 }

@@ -179,4 +179,9 @@ final class BooleanPredicate implements VariablePredicate {
 	public boolean denotesNullVariable() {
 		return false;
 	}
+
+	@Override
+	public boolean isAlwaysTrue() {
+		return false;
+	}
 }

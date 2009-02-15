@@ -288,7 +288,8 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		List<Implication> impls = knownImplications.get(known);
 		for( Implication impl : impls ) {
 			Implication new_impl = impl.createCopyWithOppositeAntecedant(other);
-			this.addImplication(other, new_impl);
+			if(new_impl != null)
+				this.addImplication(other, new_impl);
 		}
 	}
 
@@ -307,7 +308,8 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		List<Implication> impls = knownImplications.get(known);
 		for( Implication impl : impls ) {
 			Implication new_impl = impl.createCopyWithNewAntecedant(other);
-			this.addImplication(other, new_impl);
+			if(new_impl != null)
+				this.addImplication(other, new_impl);
 		}
 	}
 
@@ -624,15 +626,6 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		}
 	}
 
-	void addImplications(Set<Pair<Aliasing, ? extends Implication>> impls) {
-		if( frozen ) 
-			throw new IllegalStateException("Cannot change frozen object. Get a mutable copy to do this.");
-		
-		for(Pair<Aliasing, ? extends Implication> impl : impls) {
-			addImplication(impl.fst(), impl.snd());
-		}
-	}
-	
 	/**
 	 * Remove one of the given implication with the given object location as its
 	 * antecedent.

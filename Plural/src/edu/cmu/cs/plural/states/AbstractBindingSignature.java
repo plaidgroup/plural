@@ -152,7 +152,8 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		 */
 		for(int paramIndex = 0; paramIndex < binding.getParameterTypes().length; paramIndex++) {
 			String paramName = "#" + paramIndex;
-			StateSpace space = getStateSpace(binding.getParameterTypes()[paramIndex]);
+			// use possibly more precise parameter type from typechecking
+			StateSpace space = getStateSpace(staticallyInvokedBinding.getParameterTypes()[paramIndex]);
 			spaces.put(paramName, space);
 			
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> param_borrowed = 
@@ -177,7 +178,8 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		else { // regular method
 			capturing = "result";
 			
-			StateSpace space = getStateSpace(binding.getReturnType());
+			// use possibly more precise return type from typechecking
+			StateSpace space = getStateSpace(staticallyInvokedBinding.getReturnType());
 			spaces.put("result", space);
 			
 			PermissionSetFromAnnotations result = PermissionSetFromAnnotations.createEmpty(space);

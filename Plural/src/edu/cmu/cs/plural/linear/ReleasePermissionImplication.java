@@ -72,7 +72,7 @@ public class ReleasePermissionImplication implements Implication {
 
 	@Override
 	public Implication createCopyWithOppositeAntecedant(Aliasing other) {
-		throw new UnsupportedOperationException();
+		return null;
 	}
 
 	@Override

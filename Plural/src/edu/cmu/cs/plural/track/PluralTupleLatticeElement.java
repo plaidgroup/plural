@@ -268,7 +268,13 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	}
 	
 	public void addImplication(Aliasing var, Implication impl) {
-		dynamicStateLogic.addImplication(var, impl);
+		if(impl.getAntecedant().isAlwaysTrue()) {
+			// antecedent is "true" -> apply implication right away
+			impl.result().putResultIntoLattice(this);
+		}
+		else {
+			dynamicStateLogic.addImplication(var, impl);
+		}
 	}
 	
 	public void removeImplication(Aliasing var, Implication impl) {

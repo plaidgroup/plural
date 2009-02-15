@@ -59,8 +59,26 @@ public interface Implication extends Predicate {
 
 	ImplicationResult result();
 
+	/**
+	 * Creates a new implication based on this one but with the
+	 * antecedent negated and written in terms of the given
+	 * object, if that is possible.
+	 * @param other
+	 * @return a new implication based on this one but with the
+	 * antecedent negated, or <code>null</code> if the current
+	 * antecedent cannot be negated (e.g., if the antecedent
+	 * includes a permission).
+	 */
 	Implication createCopyWithOppositeAntecedant(Aliasing other);
 
+	/**
+	 * Creates a new implication based on this one but with the
+	 * antecedent written in terms of the given object, if that is possible.
+	 * @param other
+	 * @return Creates a new implication based on this one but with the
+	 * antecedent written in terms of the given object, or <code>null</code> 
+	 * if that is not possible (not sure if that can happen).
+	 */
 	Implication createCopyWithNewAntecedant(Aliasing other);
 
 	/**
