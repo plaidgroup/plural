@@ -335,6 +335,11 @@ public class ParamInfoHolder {
 			return true;
 		}
 
+		@Override
+		public boolean isAlwaysTrue() {
+			return (getPerms() == null || super.isAlwaysTrue()) && (stateInfo == null || stateInfo.isEmpty()) && prim == null;
+		}
+		
 		/**
 		 * @see edu.cmu.cs.plural.concrete.Implication#hasTemporaryState()
 		 * @return <code>true</code> if this predicate carries temporary state, 
@@ -476,7 +481,7 @@ public class ParamInfoHolder {
 				return false;
 			return true;
 		}
-		
+
 	}
 
 }

@@ -52,7 +52,7 @@ public class AbstractBinding {
 	protected final IMethodBinding binding;
 	
 	/** The invoked method according to the type checker. */
-	private final IMethodBinding staticallyInvokedBinding;
+	protected final IMethodBinding staticallyInvokedBinding;
 	
 	/** 
 	 * Weakly reference annoDB as to not interfere with its garbage-collection.

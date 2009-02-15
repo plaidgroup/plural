@@ -286,15 +286,17 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 * Includes 'this.' The state space comes from the type of each field.
 	 */
 	private static SimpleMap<String, StateSpace> getFieldAndObjStateSpaces(
-			ITypeBinding class_decl, final StateSpaceRepository stateRepo) {
+			final ITypeBinding class_decl, final StateSpaceRepository stateRepo) {
 		// Build field mapping.
 		final Map<String, IVariableBinding> fields = createFieldNameToBindingMapping(class_decl);
-		final StateSpace this_space = stateRepo.getStateSpace(class_decl);
+//		final StateSpace this_space = stateRepo.getStateSpace(class_decl);
 		
 		return new SimpleMap<String,StateSpace>() {
 			@Override public StateSpace get(String key) {
 				if( "this".equals(key) || "this!fr".equals(key) )
-					return this_space;
+					return stateRepo.getStateSpace(class_decl);
+				else if ("super".equals(key))
+					return stateRepo.getStateSpace(class_decl.getSuperclass());
 				else
 					return stateRepo.getStateSpace(fields.get(key).getType());
 			}};

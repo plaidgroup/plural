@@ -157,6 +157,8 @@ public class StateSpaceRepository {
 	 */
 	private StateSpaceImpl getStateSpaceIfDefined(ITypeBinding type) {
 		Map<String, StateSpaceImpl> spaces = getSpaces();
+		while(type != type.getTypeDeclaration())
+			type = type.getTypeDeclaration();
 		String key = type.getKey();
 		StateSpaceImpl result = spaces.get(key);
 		if(result != null)
@@ -193,10 +195,6 @@ public class StateSpaceRepository {
 	 * @see #getConstructorSignature(IMethodBinding)
 	 */
 	public IInvocationSignature getSignature(IMethodBinding binding) {
-		// TODO special treatment of annotation members?  Like, result is immutable? 
-		while(binding != binding.getMethodDeclaration())
-			binding = binding.getMethodDeclaration();
-		
 		Map<String, IInvocationSignature> signatures = getSignatures();
 		String key = binding.getKey();
 		IInvocationSignature result = signatures.get(key);
@@ -273,6 +271,10 @@ public class StateSpaceRepository {
 	 * @return Method binding with specs or <code>binding</code> if no spec was found anywhere.
 	 */
 	private IMethodBinding findSpecificationMethod(IMethodBinding binding) {
+		while(binding != binding.getMethodDeclaration())
+			// strip type instantiations
+			binding = binding.getMethodDeclaration();
+
 		if(binding.isConstructor() || Modifier.isStatic(binding.getModifiers()))
 			// constructors do not inherit specs
 			return binding;

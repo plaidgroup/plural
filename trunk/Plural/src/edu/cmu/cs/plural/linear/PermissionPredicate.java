@@ -133,6 +133,11 @@ public class PermissionPredicate implements VariablePredicate {
 //		return false;
 	}
 
+	@Override
+	public boolean isAlwaysTrue() {
+		return perms.isEmpty();
+	}
+
 	/**
 	 * @param value
 	 */

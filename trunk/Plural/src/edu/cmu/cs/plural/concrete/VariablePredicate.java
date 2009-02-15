@@ -83,4 +83,13 @@ public interface VariablePredicate extends Predicate {
 	 * @see #isSatisfied(PluralTupleLatticeElement) to test for truth
 	 */
 	boolean isUnsatisfiable(PluralTupleLatticeElement value);	
+
+	/**
+	 * Indicates whether this predicate will always be <b>true</b>,
+	 * regardless of the current analysis context (linear logic <b>1</b>).
+	 * In other words, this method indicates whether the predicate is a tautology.
+	 * @return <code>true</code> if this predicate is always <b>true</b>,
+	 * <code>false</code> otherwise.
+	 */
+	boolean isAlwaysTrue();
 }

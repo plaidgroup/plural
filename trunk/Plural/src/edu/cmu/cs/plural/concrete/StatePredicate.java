@@ -179,4 +179,9 @@ public class StatePredicate implements VariablePredicate {
 		return true;
 	}
 
+	@Override
+	public boolean isAlwaysTrue() {
+		return false;
+	}
+
 }
