@@ -38,16 +38,12 @@
 
 package com.evelopers.unimod.plugin.eclipse.figures;
 
-import org.eclipse.draw2d.IFigure;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.graphics.Color;
-
 public class FNormalStateFigure extends NormalStateFigure {
 
 	public FNormalStateFigure() {
 		super();
 	
-		IFigure fig = this.getContents();
+		//IFigure fig = this.getContents();
 		//Color c = new Color(Display.getCurrent(), 255, 204, 0);
 		//fig.setBackgroundColor(c);
 		
