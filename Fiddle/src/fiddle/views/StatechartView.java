@@ -38,6 +38,8 @@
 package fiddle.views;
 
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Set;
 
 import org.eclipse.draw2d.ColorConstants;
@@ -237,7 +239,9 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	}
 	
 	private void addTransitions(ITypeBinding binding, StateMachine machine, StateSpaceRepository ssr){
-		for( IMethodBinding method : binding.getDeclaredMethods() ) {
+		ArrayList<IMethodBinding> methods = getClassMethods(binding, ssr);
+		
+		for( IMethodBinding method : methods ) {
 			IInvocationSignature sig = ssr.getSignature(method);
 			String start = "";
 			String finish = "";
@@ -259,16 +263,50 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 
 			State s1 = machine.findState(start);
 			State s2 = machine.findState(finish);
-			if(null != s1 && null != s2)
-				machine.createTransition(s1, s2, machine.createGuard("o1.x1"), ((GStateMachine) machine).createEvent("e1"));
+			if(null != s1 && null != s2) {
+				machine.createTransition(s1, s2, machine.createGuard(""), ((GStateMachine) machine).createEvent(method.getName()));
+			}
 		}
 		
-		for( ITypeBinding face_bind : binding.getInterfaces() ) {
-			addTransitions(face_bind, machine, ssr);
+//		for( ITypeBinding face_bind : binding.getInterfaces() ) {
+//			addTransitions(face_bind, machine, ssr);
+//		}
+//		
+//		ITypeBinding super_type = binding.getSuperclass();
+//		if (super_type!=null) addTransitions(super_type, machine, ssr);
+	}
+	
+	private ArrayList <IMethodBinding> getClassMethods( ITypeBinding binding, StateSpaceRepository ssr ) {
+		ArrayList <IMethodBinding> methods = new ArrayList <IMethodBinding> ();
+		ArrayList <String> names = new ArrayList <String> ();
+		IMethodBinding[] arr = binding.getDeclaredMethods();	
+		
+		for( IMethodBinding met : arr ) {
+			methods.add(met);
+			names.add(met.getName());
 		}
 		
-		ITypeBinding super_type = binding.getSuperclass();
-		if (super_type!=null) addTransitions(super_type, machine, ssr);
+		if( binding.getSuperclass() != null ) {
+			for( IMethodBinding met : getClassMethods(binding.getSuperclass(), ssr) ){
+				if ( (! names.contains(met.getName())) && (! methods.contains(met)) ) {
+					methods.add(met);
+					names.add(met.getName());
+				}
+			}
+		}
+		
+		if( Array.getLength(binding.getInterfaces()) != 0 ) {
+			for(ITypeBinding it : binding.getInterfaces() ) {
+				for( IMethodBinding met : getClassMethods(it, ssr) ){
+					if ( (! names.contains(met.getName())) && (! methods.contains(met)) ) {
+						methods.add(met);
+						names.add(met.getName());
+					}
+				}
+			}
+		}
+		
+		return methods;
 	}
 	
 	private GStateMachine getStateMachineFromIType(IType type) {
