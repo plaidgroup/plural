@@ -40,6 +40,7 @@ package fiddle.views;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.draw2d.ColorConstants;
@@ -239,7 +240,7 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	}
 	
 	private void addTransitions(ITypeBinding binding, StateMachine machine, StateSpaceRepository ssr){
-		ArrayList<IMethodBinding> methods = getClassMethods(binding, ssr);
+		List<IMethodBinding> methods = getClassMethods(binding, ssr);
 		
 		for( IMethodBinding method : methods ) {
 			IInvocationSignature sig = ssr.getSignature(method);
@@ -276,9 +277,9 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 //		if (super_type!=null) addTransitions(super_type, machine, ssr);
 	}
 	
-	private ArrayList <IMethodBinding> getClassMethods( ITypeBinding binding, StateSpaceRepository ssr ) {
-		ArrayList <IMethodBinding> methods = new ArrayList <IMethodBinding> ();
-		ArrayList <String> names = new ArrayList <String> ();
+	private List <IMethodBinding> getClassMethods( ITypeBinding binding, StateSpaceRepository ssr ) {
+		List <IMethodBinding> methods = new ArrayList <IMethodBinding> ();
+		List <String> names = new ArrayList <String> ();
 		IMethodBinding[] arr = binding.getDeclaredMethods();	
 		
 		for( IMethodBinding met : arr ) {
