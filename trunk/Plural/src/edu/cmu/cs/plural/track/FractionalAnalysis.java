@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -134,12 +135,15 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		else {
 			// only analyze methods with code in them; skip abstract methods
 			IInvocationSignature sig = getRepository().getSignature(d.resolveBinding());
-			
 			for(IInvocationCase c : sig.cases()) {
 				analyzedCase = c.createPermissions(true, false);
 				tf = createNewFractionalTransfer();
-				fa = new TACFlowAnalysis<PluralDisjunctiveLE>(getTf(),
+				
+				// need local to be able to set monitor
+				TACFlowAnalysis<PluralDisjunctiveLE> temp; 
+				fa = temp = new TACFlowAnalysis<PluralDisjunctiveLE>(getTf(),
 						this.analysisInput.getComUnitTACs().unwrap());
+				temp.setMonitor(analysisInput.getProgressMonitor());
 				
 				FractionalChecker checker = createASTWalker();
 				if(sig.cases().size() > 1)
@@ -161,6 +165,11 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	@Override
 	public Option<CompilationUnitTACs> getComUnitTACs() {
 		return analysisInput.getComUnitTACs();
+	}
+	
+	@Override
+	public Option<IProgressMonitor> getProgressMonitor() {
+		return analysisInput.getProgressMonitor();
 	}
 
 	@Override

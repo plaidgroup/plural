@@ -43,6 +43,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -162,6 +163,11 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 	@Override
 	public AnnotationDatabase getAnnoDB() {
 		return analysisInput.getAnnoDB();
+	}
+
+	@Override
+	public Option<IProgressMonitor> getProgressMonitor() {
+		return analysisInput.getProgressMonitor();
 	}
 
 	@Override
