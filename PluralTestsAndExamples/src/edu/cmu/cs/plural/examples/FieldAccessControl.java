@@ -57,24 +57,27 @@ import edu.cmu.cs.plural.annot.States;
  * (Notice that without the invariants, Plural would currently map both
  * fields into the root state, <i>alive</i>, but it would be better to
  * also have a way of explicitly mapping fields into dimensions for the
- * purpose of just controlling which methods access which fields. 
+ * purpose of just controlling which methods access which fields.
+ * This example is inspired by Daniel Popescu.
  * @author Kevin Bierhoff
  * @since Feb 18, 2009
  */
 @Refine({
 	@States(dim = "A", value = {}),  // dimension A, do not care about states within A
-	@States(dim = "B", value = {})   // dimension B, do not care about states within B
+	@States(dim = "B", value = {"B1", "B2"}),  // dimension B, do not care about states within B
+	
 })
 @ClassStates({
 	@State(name = "A", inv = "a != null"),  // force a to be mapped into A
-	@State(name = "B", inv = "b != null")   // force b to be mapped into B
+	@State(name = "B1", inv = "b == null"),  
+	@State(name = "B2", inv = "b != null")   // force b to be mapped into B
 })
 @PassingTest
 @UseAnalyses({PluralAnalysis.SYNTAX, PluralAnalysis.EFFECT, PluralAnalysis.PLURAL})
 public class FieldAccessControl {
 
 	private Object a;
-	private Object b;
+	private int b;
 	
 	@Perm(requires = "#0 != null")
 	@Full(value = "A", fieldAccess = true)
@@ -89,16 +92,14 @@ public class FieldAccessControl {
 		return a;
 	}
 	
-	@Perm(requires = "#0 != null")
 	@Full(value = "B", fieldAccess = true)
-	public void setB(Object b) {
+	public void setB(int b) {
 		this.b = b;
 	}
 	
 	@NoEffects // pure method--not necessary for checking
-	@Perm(ensures = "result != null")
 	@Pure(value = "B", fieldAccess = true)
-	public Object getB() {
+	public int getB() {
 		return b;
 	}
 	
