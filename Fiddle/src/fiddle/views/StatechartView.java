@@ -66,6 +66,7 @@ import org.eclipse.ui.part.ViewPart;
 import com.evelopers.unimod.core.stateworks.State;
 import com.evelopers.unimod.core.stateworks.StateMachine;
 import com.evelopers.unimod.core.stateworks.StateType;
+import com.evelopers.unimod.core.stateworks.Transition;
 import com.evelopers.unimod.plugin.eclipse.model.GInitialState;
 import com.evelopers.unimod.plugin.eclipse.model.GModel;
 import com.evelopers.unimod.plugin.eclipse.model.GNormalState;
@@ -265,7 +266,7 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 			State s1 = machine.findState(start);
 			State s2 = machine.findState(finish);
 			if(null != s1 && null != s2) {
-				machine.createTransition(s1, s2, machine.createGuard(""), ((GStateMachine) machine).createEvent(method.getName()));
+				createTransition(s1, s2, machine, method);
 			}
 		}
 		
@@ -275,6 +276,30 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 //		
 //		ITypeBinding super_type = binding.getSuperclass();
 //		if (super_type!=null) addTransitions(super_type, machine, ssr);
+	}
+	
+	private void createTransition(State s1, State s2, StateMachine machine, IMethodBinding method) {
+		String sig = extractSignature(method);
+		machine.createTransition(s1, s2, machine.createGuard(sig), ((GStateMachine) machine).createEvent(method.getName()));
+	}
+	
+	private String extractSignature(IMethodBinding method){
+		if(method == null) return "";
+		StringBuffer sb = new StringBuffer();
+		//sb.append(method.getReturnType() + " ");
+		sb.append(method.getName() + "(");
+		
+		ITypeBinding[] pt = method.getParameterTypes();
+		if(Array.getLength(pt) != 0) {
+			for (ITypeBinding itb: pt) {
+				sb.append(itb.getName() + ", ");
+			}
+			sb.deleteCharAt(sb.length()-1);
+			sb.deleteCharAt(sb.length()-1);
+		}
+		sb.append(")");
+		
+		return sb.toString();
 	}
 	
 	private List <IMethodBinding> getClassMethods( ITypeBinding binding, StateSpaceRepository ssr ) {
