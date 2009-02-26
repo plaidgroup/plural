@@ -75,7 +75,7 @@ import com.evelopers.unimod.plugin.eclipse.ui.base.MyEditDomain;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyScrollingGraphicalViewer;
 
 import edu.cmu.cs.crystal.Crystal;
-import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.annotationprocesssing.AnnotationDatabase;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
 import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.plural.states.IInvocationSignature;
@@ -286,7 +286,6 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 	private String extractSignature(IMethodBinding method){
 		if(method == null) return "";
 		StringBuffer sb = new StringBuffer();
-		//sb.append(method.getReturnType() + " ");
 		sb.append(method.getName() + "(");
 		
 		ITypeBinding[] pt = method.getParameterTypes();
@@ -298,6 +297,8 @@ public class StatechartView extends ViewPart implements ISelectionListener{
 			sb.deleteCharAt(sb.length()-1);
 		}
 		sb.append(")");
+		sb.append(" : ");
+		sb.append(method.getReturnType().getName());
 		
 		return sb.toString();
 	}
