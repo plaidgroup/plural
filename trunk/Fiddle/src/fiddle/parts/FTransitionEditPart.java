@@ -38,8 +38,74 @@
 
 package fiddle.parts;
 
+import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.Label;
+
+import com.evelopers.unimod.core.stateworks.Transition;
 import com.evelopers.unimod.plugin.eclipse.editpart.TransitionEditPart;
+import com.evelopers.unimod.plugin.eclipse.figures.IEdgeFigure;
+import com.evelopers.unimod.plugin.eclipse.figures.LabelFigure;
+import com.evelopers.unimod.plugin.eclipse.figures.LabeledConnectionFigure;
+import com.evelopers.unimod.plugin.eclipse.model.GTransition;
 
 public class FTransitionEditPart extends TransitionEditPart {
     protected void sendProblems() {}
+    
+    String hover = null;
+    String label = "Yay!";
+    
+    protected void setHover(String h) {
+    	hover = h;
+    }
+    
+    protected void setLabel(String l) {
+    	label = l;
+    }
+    
+    private void refreshHover() {
+    	if (hover == null) return;
+    	IFigure fig = this.figure;
+    	
+    	if (fig instanceof IEdgeFigure) {
+    		IFigure toolTip = ((IEdgeFigure) fig).getLabelFigure().getToolTip();
+    		if (toolTip instanceof Label) {
+    			((Label) toolTip).setText(hover);
+    		}
+    	}
+    }
+    
+    private void refreshLabel() {
+    	if (label == null) return;
+    	IFigure fig = this.figure;
+    	
+    	if(fig instanceof LabeledConnectionFigure) {
+    		LabelFigure lf = ((LabeledConnectionFigure)fig).getLabelFigure();
+    		lf.setText(label);
+    	}
+    }
+    
+    @Override
+    public void setModel(Object model) {
+    	super.setModel(model);
+    	if(model instanceof Transition) {
+    		setHover(((Transition) model).getGuard().getExpr());
+    		setLabel(((Transition) model).getEvent().getName());
+    	}
+    }
+    
+    @Override
+    protected IFigure createFigure() {
+    	IFigure fig = super.createFigure();
+    	refreshHover();
+    	refreshLabel();
+    	return fig;
+    }
+    
+    @Override
+    protected void refreshVisuals() {
+    	super.refreshVisuals();
+    	refreshHover();
+    	refreshLabel();
+    }
+    
 }
