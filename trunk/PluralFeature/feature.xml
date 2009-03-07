@@ -2,7 +2,7 @@
 <feature
       id="edu.cmu.cs.plural.feature"
       label="Plural"
-      version="1.0.6">
+      version="1.0.5">
 
    <description url="http://code.google.com/p/pluralism/">
       Modular object protocol checking for Java.
