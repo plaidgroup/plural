@@ -183,7 +183,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			checkCasesAndPermOnSameMethod(node);
 
 			// check that @Cases is not empty, i.e., prevent @Cases({ })
-			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName()))
+			if(isCasesAnno(node))
 				reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
 			// check that @ResultXxx is not on constructor or void method
 			else if(isPermAnnotation(node)) {
@@ -212,7 +212,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			checkCasesAndPermOnSameMethod(node);
 
 			// check that @Cases is not empty, i.e., prevent @Cases({ })
-			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) {
+			if(isCasesAnno(node)) {
 				if(! checkValueArrayNonEmpty(node.resolveAnnotationBinding()))
 					reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
 			}
@@ -366,11 +366,11 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		}
 
 		@Override
-		public boolean visit(SingleMemberAnnotation node) {
+		public void endVisit(SingleMemberAnnotation node) {
 			checkCasesAndPermOnSameMethod(node);
-			
+
 			// check that @Cases is not empty, i.e., prevent @Cases({ })
-			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) {
+			if(isCasesAnno(node)) {
 				if(! checkValueArrayNonEmpty(node.resolveAnnotationBinding()))
 					reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
 			}
@@ -394,18 +394,6 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 				}
 			}
 
-			return super.visit(node);
-		}
-
-		@Override
-		public void endVisit(SingleMemberAnnotation node) {
-			checkCasesAndPermOnSameMethod(node);
-
-			// check that @Cases is not empty, i.e., prevent @Cases({ })
-			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) {
-				if(! checkValueArrayNonEmpty(node.resolveAnnotationBinding()))
-					reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
-			}
 			super.endVisit(node);
 		}
 
@@ -457,11 +445,23 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		 * @param node
 		 */
 		private void checkCasesAndPermOnSameMethod(Annotation node) {
-			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) 
+			if(sawCases && sawPerm)
+				// already reported error about this
+				return;
+			
+			if(isCasesAnno(node)) 
 				sawCases = true;
 			
-			if("edu.cmu.cs.plural.annot.Perm".equals(node.resolveTypeBinding().getQualifiedName()))
+			if("edu.cmu.cs.plural.annot.Perm".equals(node.resolveTypeBinding().getQualifiedName())) {
+				// only count @Perm annotations outside @Cases
+				ASTNode n = node.getParent();
+				while(n != null && ! (n instanceof MethodDeclaration)) {
+					if(n instanceof Annotation && isCasesAnno((Annotation) n))
+						return;
+					n = n.getParent();
+				}
 				sawPerm = true;
+			}
 			
 			// check if there is both a @Cases and a @Perm on this method
 			if(sawCases && sawPerm) {
@@ -480,6 +480,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		}
 		
 		private ASTNode getAnnotatedElement(Annotation node) {
+			// FIXME this doesn't work b/c of the intermediate value nodes between annotation nodes
 			ASTNode result = node;
 			while(result != null && result instanceof Annotation)
 				result = result.getParent();
@@ -492,6 +493,14 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		if(!t.isPrimitive())
 			return false;
 		return "void".equals(t.getName());
+	}
+
+	/**
+	 * @param node
+	 * @return
+	 */
+	private boolean isCasesAnno(Annotation node) {
+		return "edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName());
 	}
 
 	/**
