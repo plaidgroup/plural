@@ -38,39 +38,42 @@
 package edu.cmu.cs.plural.states;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
 import org.eclipse.jdt.core.dom.IMemberValuePairBinding;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MarkerAnnotation;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
 import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis;
-import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.util.Box;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
-import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.concrete.Implication;
-import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.AccessPredVisitor;
 import edu.cmu.cs.plural.perm.parser.BinaryExprAP;
 import edu.cmu.cs.plural.perm.parser.BoolLiteral;
@@ -85,15 +88,11 @@ import edu.cmu.cs.plural.perm.parser.PermParser;
 import edu.cmu.cs.plural.perm.parser.PermissionImplication;
 import edu.cmu.cs.plural.perm.parser.PrimaryExpr;
 import edu.cmu.cs.plural.perm.parser.PrimaryExprVisitor;
-import edu.cmu.cs.plural.perm.parser.RefExpr;
 import edu.cmu.cs.plural.perm.parser.StateOnly;
 import edu.cmu.cs.plural.perm.parser.TempPermission;
 import edu.cmu.cs.plural.perm.parser.Withing;
-import edu.cmu.cs.plural.pred.PredicateChecker;
-import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
-import edu.cmu.cs.plural.states.annowrappers.StateInvAnnotation;
 
 /**
  * An analysis that examines user annotations to ensure that they have been
@@ -103,6 +102,9 @@ import edu.cmu.cs.plural.states.annowrappers.StateInvAnnotation;
  *
  */
 public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
+	
+	private Set<String> permAnnos;
+	private HashSet<String> resultAnnos;
 	
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis#analyzeCompilationUnit(org.eclipse.jdt.core.dom.CompilationUnit)
@@ -118,6 +120,18 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	
 	private class AnnotationVisitor extends ASTVisitor {
 		
+		/** 
+		 * <code>true</code> when Cases annotation seen on current method
+		 * @see #checkCasesAndPermOnSameMethod(Annotation) 
+		 */
+		private boolean sawCases = false;
+		
+		/** 
+		 * <code>true</code> when Perm annotation seen on current method
+		 * @see #checkCasesAndPermOnSameMethod(Annotation) 
+		 */
+		private boolean sawPerm = false;
+
 		//
 		// Declaration checks
 		// 
@@ -150,8 +164,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			 * Get all errors of ClassStates annotations, and print them out.
 			 */
 			final List<Pair<ASTNode, String>> errors = 
-				PluralAnnotationAnalysis.checkClassStatesAnnot(analysisInput.getAnnoDB(),
-						node);
+				checkClassStatesAnnot(analysisInput.getAnnoDB(), node);
 			for( Pair<ASTNode, String> error : errors ) {
 				reporter.reportUserProblem(error.snd(), error.fst(),
 						PluralAnnotationAnalysis.this.getName());
@@ -167,14 +180,37 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 
 		@Override
 		public void endVisit(MarkerAnnotation node) {
+			checkCasesAndPermOnSameMethod(node);
+
 			// check that @Cases is not empty, i.e., prevent @Cases({ })
 			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName()))
 				reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
+			// check that @ResultXxx is not on constructor or void method
+			else if(isPermAnnotation(node)) {
+				ASTNode annotated = getAnnotatedElement(node);
+				if(annotated != null && annotated instanceof MethodDeclaration) {
+					if(isResultAnnotation(node)) { 
+						if(isVoid(((MethodDeclaration) annotated).resolveBinding().getReturnType())) 
+							reportUserProblem("@ResultXxx annotations must be on non-void method", node);
+					}
+					else {
+						if(Modifier.isStatic(((MethodDeclaration) annotated).getModifiers())) {
+							PluralAnnotationAnalysis.this.reportUserProblem(
+									"Receiver annotation must be on non-static method", node);
+						}
+					}
+				}
+				else if(isResultAnnotation(node)) {
+					reportUserProblem("@ResultXxx annotations must be on non-void method", node);
+				}
+			}
 			super.endVisit(node);
 		}
 
 		@Override
 		public void endVisit(NormalAnnotation node) {
+			checkCasesAndPermOnSameMethod(node);
+
 			// check that @Cases is not empty, i.e., prevent @Cases({ })
 			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) {
 				if(! checkValueArrayNonEmpty(node.resolveAnnotationBinding()))
@@ -190,10 +226,17 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 						reporter.reportUserProblem("Parse error in annotation string: " + parse_error.unwrap(), 
 								node, PluralAnnotationAnalysis.this.getName());
 					}
+					// TODO check invariant string from here??
 				}
 				
 			}
 			else if( "edu.cmu.cs.plural.annot.Perm".equals(node.resolveTypeBinding().getQualifiedName()) ) {
+				MethodDeclaration m = getSurroundingMethod(node);
+				if(m == null) {
+					reporter.reportUserProblem("@Perm annotation must be for a method", 
+							node, PluralAnnotationAnalysis.this.getName());
+				}
+
 				Option<Object> req_ = getAnnotationParam(node.resolveAnnotationBinding(), "requires");
 				Option<Object> ens_ = getAnnotationParam(node.resolveAnnotationBinding(), "ensures");
 				
@@ -204,6 +247,13 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 						reporter.reportUserProblem("Parse error in annotation string: " + parse_error.unwrap(), 
 								node, PluralAnnotationAnalysis.this.getName());
 					}
+					else if(!"".equals(perm)) {
+						Option<String> problem = 
+						PermParser.accept(perm, new PreconditionParamVisitor(m.resolveBinding()));
+						if(problem.isSome())
+							reporter.reportUserProblem(problem.unwrap(), 
+									node, PluralAnnotationAnalysis.this.getName());
+					}
 				}
 				if( ens_.isSome() ) {
 					String perm = (String)ens_.unwrap();
@@ -212,13 +262,145 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 						reporter.reportUserProblem("Parse error in annotation string: " + parse_error.unwrap(), 
 								node, PluralAnnotationAnalysis.this.getName());
 					}
+					else if(!"".equals(perm)) {
+						Option<String> problem = 
+							PermParser.accept(perm, new PostconditionParamVisitor(m.resolveBinding()));
+							if(problem.isSome())
+								reporter.reportUserProblem(problem.unwrap(), 
+										node, PluralAnnotationAnalysis.this.getName());
+					}
+				}
+			}
+			else if(isPermAnnotation(node)) {
+				// TODO refactor location restrictions for annotations in some principled way
+				ASTNode annotated = getAnnotatedElement(node);
+				ITypeBinding type;
+				if(annotated == null) {
+					type = null;
+				}
+				else if(annotated instanceof MethodDeclaration) {
+					MethodDeclaration m = (MethodDeclaration) annotated;
+					if(isResultAnnotation(node)) {
+						type = m.resolveBinding().getReturnType();
+						if(isVoid(type)) {
+							reportUserProblem("@ResultXxx annotations must be on non-void methods", node);
+							type = null;
+						}
+					}
+					else { // receiver annotation
+						if(Modifier.isStatic(m.getModifiers())) {
+							PluralAnnotationAnalysis.this.reportUserProblem(
+									"Receiver annotation must be on non-static method", node);
+							type = null;
+						}
+						else 
+							type = m.resolveBinding().getDeclaringClass();
+					}
+				}
+				else if(annotated instanceof SingleVariableDeclaration) {
+					// should be a parameter...
+					SingleVariableDeclaration d = (SingleVariableDeclaration) annotated;
+					type = d.resolveBinding().getType();
+				}
+				else if(annotated instanceof VariableDeclarationFragment && 
+						annotated.getParent() instanceof FieldDeclaration) {
+					// should be a field...
+					VariableDeclarationFragment frag = (VariableDeclarationFragment) annotated;
+					FieldDeclaration d = (FieldDeclaration) annotated.getParent();
+					if(!Modifier.isStatic(d.getModifiers())) {
+						PluralAnnotationAnalysis.this.reportUserProblem(
+								"Permission annotations must be on non-static method, static field, or method parameter", node);
+						type = null;
+					}
+					// TODO check requires to only contain marker states / ensures to be empty
+					type = frag.resolveBinding().getType();
+				}
+				else {
+					PluralAnnotationAnalysis.this.reportUserProblem(
+							"Permission annotations must be on non-static method, static field, or method parameter", node);
+					type = null;
+				}
+				
+				// check that required / ensured states are inside declared root
+				if(type != null) {
+					Option<Object> guarantee = getDeclaredAttribute(node, "guarantee");
+					Option<Object> value = getDeclaredAttribute(node, "value");
+					if(guarantee.isSome() && value.isSome()) {
+						PluralAnnotationAnalysis.this.reportUserProblem(
+								"Only use one of the equivalent attributes: guarantee and value", 
+								node);
+					}
+					else {
+						if(guarantee.isNone()) guarantee = value;
+						if(guarantee.isSome()) {
+							Object root = guarantee.unwrap();
+							if(root instanceof String) {
+								Object[] req = getArrayAttribute(node, "requires");
+								for(Object o : req) {
+									if(o instanceof String) {
+										Option<String> msg = checkPermissionStates(type, (String) root, (String) o);
+										if(msg.isSome())
+											PluralAnnotationAnalysis.this.reportUserProblem(msg.unwrap(), node);
+									}
+								}
+								Object[] ens = getArrayAttribute(node, "ensures");
+								for(Object o : ens) {
+									if(o instanceof String) {
+										Option<String> msg = checkPermissionStates(type, (String) root, (String) o);
+										if(msg.isSome())
+											PluralAnnotationAnalysis.this.reportUserProblem(msg.unwrap(), node);
+									}
+								}
+							}
+							else {
+								// this shouldn't happen
+								PluralAnnotationAnalysis.this.reportUserProblem(
+										"Root attribute must be a string", 
+										node);
+							}
+						} // else nothing to check...
+					}
 				}
 			}
 			super.endVisit(node);
 		}
 
 		@Override
+		public boolean visit(SingleMemberAnnotation node) {
+			checkCasesAndPermOnSameMethod(node);
+			
+			// check that @Cases is not empty, i.e., prevent @Cases({ })
+			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) {
+				if(! checkValueArrayNonEmpty(node.resolveAnnotationBinding()))
+					reporter.reportUserProblem("Must have cases in @Cases", node, PluralAnnotationAnalysis.this.getName());
+			}
+			// check that @ResultXxx is not on constructor or void method
+			else if(isPermAnnotation(node)) {
+				ASTNode annotated = getAnnotatedElement(node);
+				if(annotated != null && annotated instanceof MethodDeclaration) {
+					if(isResultAnnotation(node)) { 
+						if(isVoid(((MethodDeclaration) annotated).resolveBinding().getReturnType())) 
+							reportUserProblem("@ResultXxx annotations must be on non-void method", node);
+					}
+					else {
+						if(Modifier.isStatic(((MethodDeclaration) annotated).getModifiers())) {
+							PluralAnnotationAnalysis.this.reportUserProblem(
+									"Receiver annotation must be on non-static method", node);
+						}
+					}
+				}
+				else if(isResultAnnotation(node)) {
+					reportUserProblem("@ResultXxx annotations must be on non-void method", node);
+				}
+			}
+
+			return super.visit(node);
+		}
+
+		@Override
 		public void endVisit(SingleMemberAnnotation node) {
+			checkCasesAndPermOnSameMethod(node);
+
 			// check that @Cases is not empty, i.e., prevent @Cases({ })
 			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) {
 				if(! checkValueArrayNonEmpty(node.resolveAnnotationBinding()))
@@ -228,10 +410,18 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		}
 
 		@Override
+		public boolean visit(MethodDeclaration node) {
+			// reset cases and perm flags
+			sawCases = sawPerm = false;
+			return super.visit(node);
+		}
+		
+		@Override
 		public void endVisit(MethodDeclaration node) {
 			String ambiguity = checkAmbiguousSpecification(node.resolveBinding());
 			if(ambiguity != null)
 				reporter.reportUserProblem(ambiguity, node, PluralAnnotationAnalysis.this.getName());
+			
 			super.endVisit(node);
 		}
 
@@ -261,6 +451,88 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			super.endVisit(node);
 		}
 
+		/**
+		 * Call this method for every annotation!!!
+		 * Check whether we saw both @Cases and @Perm when processing the given node
+		 * @param node
+		 */
+		private void checkCasesAndPermOnSameMethod(Annotation node) {
+			if("edu.cmu.cs.plural.annot.Cases".equals(node.resolveTypeBinding().getQualifiedName())) 
+				sawCases = true;
+			
+			if("edu.cmu.cs.plural.annot.Perm".equals(node.resolveTypeBinding().getQualifiedName()))
+				sawPerm = true;
+			
+			// check if there is both a @Cases and a @Perm on this method
+			if(sawCases && sawPerm) {
+				reporter.reportUserProblem("@Perm next to @Cases is ignored!",
+						node, PluralAnnotationAnalysis.this.getName());
+			}
+		}
+
+		/**
+		 * Finds the nearest method declaration around the given node, if any.
+		 * @param node
+		 * @return the nearest method declaration around the given node or <code>null</code>.
+		 */
+		private MethodDeclaration getSurroundingMethod(ASTNode node) {
+			return Utilities.getMethodDeclaration(node);
+		}
+		
+		private ASTNode getAnnotatedElement(Annotation node) {
+			ASTNode result = node;
+			while(result != null && result instanceof Annotation)
+				result = result.getParent();
+			return result;
+		}
+
+	}
+	
+	private static boolean isVoid(ITypeBinding t) {
+		if(!t.isPrimitive())
+			return false;
+		return "void".equals(t.getName());
+	}
+
+	/**
+	 * @param node
+	 * @return
+	 */
+	private boolean isPermAnnotation(Annotation node) {
+		if(permAnnos == null) {
+			permAnnos = new HashSet<String>();
+			permAnnos.add("edu.cmu.cs.plural.annot.Unique");
+			permAnnos.add("edu.cmu.cs.plural.annot.Full");
+			permAnnos.add("edu.cmu.cs.plural.annot.Share");
+			permAnnos.add("edu.cmu.cs.plural.annot.Imm");
+			permAnnos.add("edu.cmu.cs.plural.annot.Pure");
+		}
+		return permAnnos.contains(node.resolveTypeBinding().getQualifiedName()) ||
+				isResultAnnotation(node);
+	}
+
+	/**
+	 * @param node
+	 * @return
+	 */
+	private boolean isResultAnnotation(Annotation node) {
+		if(resultAnnos == null) {
+			resultAnnos = new HashSet<String>();
+			resultAnnos.add("edu.cmu.cs.plural.annot.ResultUnique");
+			resultAnnos.add("edu.cmu.cs.plural.annot.ResultFull");
+			resultAnnos.add("edu.cmu.cs.plural.annot.ResultShare");
+			resultAnnos.add("edu.cmu.cs.plural.annot.ResultImm");
+			resultAnnos.add("edu.cmu.cs.plural.annot.ResultPure");
+		}
+		return resultAnnos.contains(node.resolveTypeBinding().getQualifiedName());
+	}
+
+	/**
+	 * @param string
+	 * @param node
+	 */
+	public void reportUserProblem(String problemDescription, ASTNode node) {
+		reporter.reportUserProblem(problemDescription, node, getName());
 	}
 
 	/**
@@ -291,15 +563,8 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 
 			@Override
 			public Option<String> visitParam(ParamReference paramReference) {
-				return Option.some(paramReference.toString());
+				return Option.some(paramReference.getParamString());
 			}});
-	}
-	
-	private static Option<String> checkField(RefExpr ref, Set<String> field_names) {
-		if( ref instanceof PrimaryExpr )
-			return checkField((PrimaryExpr)ref, field_names);
-		else
-			return Utilities.nyi();
 	}
 	
 	/**
@@ -310,19 +575,22 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	 * Returned list is a list of error-full AST nodes and the error messages that should
 	 * be printed with them.
 	 */
-	private static List<Pair<ASTNode, String>> 
+	private List<Pair<ASTNode, String>> 
 	checkClassStatesAnnot(AnnotationDatabase annotationDatabase,
 			TypeDeclaration node) {
 		
 		/*
 		 * No matter what, we need a set of the types in the class.
 		 */
-		final Set<String> field_names = new HashSet<String>();
+		final Map<String, ITypeBinding> field_names = new HashMap<String, ITypeBinding>();
 		for( IVariableBinding field : node.resolveBinding().getDeclaredFields() ) {
-			field_names.add(field.getName());
+			field_names.put(field.getName(), field.getType());
 		}
-		field_names.add("this");
-		field_names.add("this!fr");
+		field_names.put("this", node.resolveBinding());
+		field_names.put("this!fr", node.resolveBinding());
+		if(node.resolveBinding().getSuperclass() != null)
+			// accept superclass references
+			field_names.put("super", node.resolveBinding().getSuperclass());
 		
 		/*
 		 * First check to see that problems even exist, which they may not.
@@ -365,6 +633,8 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 					((SingleMemberAnnotation)obj).getTypeName().getFullyQualifiedName().endsWith("ClassStates");
 					
 				if( this_one ) {
+					// FIXME error message could talk about a state now....
+					// TODO find the right @State annotation and make it work for NormalAnnotation
 					return Collections.singletonList(new Pair<ASTNode, String>((SingleMemberAnnotation)obj,
 					"This annotation refers to field " + problem_field + " of class " +
 					node.getName() + " which cannot be found. Possible misspelling or use of " +
@@ -387,6 +657,35 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			}
 		}		
 		return Option.none();
+	}
+	
+	/**
+	 * Returns the value of the annotation parameter with the given name, or
+	 * NONE if it is not <b>declared</b>in the given annotation.
+	 */
+	private static Option<Object> getDeclaredAttribute(Annotation anno, String p_name) {
+		for(IMemberValuePairBinding p : anno.resolveAnnotationBinding().getDeclaredMemberValuePairs()) {
+			if(p_name.equals(p.getName())) {
+				return Option.some(p.getValue());
+			}
+		}
+		return Option.none();
+	}
+	
+	/**
+	 * Returns the given annotation attribute as an array, which will
+	 * be empty if the attribute is not <b>defined</b>.
+	 */
+	private static Object[] getArrayAttribute(Annotation anno, String p_name) {
+		for(IMemberValuePairBinding p : anno.resolveAnnotationBinding().getAllMemberValuePairs()) {
+			if(p_name.equals(p.getName())) {
+				Object result = p.getValue();
+				if(result instanceof Object[])
+					return (Object[]) result;
+				return new Object[] { result };
+			}
+		}
+		return new Object[0];
 	}
 	
 	/**
@@ -446,26 +745,10 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		return null;
 	}
 	
-	/**
-	 * A visitor to check that the fields actually exist.
-	 */
-	static class InvariantFieldVisitor implements AccessPredVisitor<Option<String>> {
-		private final Set<String> field_names; 
-
-		InvariantFieldVisitor(Set<String> field_names) {
-			this.field_names = field_names;
-		}
-
-		@Override
-		public Option<String> visit(TempPermission perm) {
-			if( perm.getRef() instanceof Identifier )
-				return checkField(perm.getRef(), field_names);
-			else if( perm.getRef() instanceof ParamReference ) 
-				return checkField(perm.getRef(), field_names);
-			else
-				return Utilities.nyi();
-		}
-
+	abstract class ReferenceVisitor implements AccessPredVisitor<Option<String>> {
+		
+		protected abstract Option<String> checkPrimary(PrimaryExpr expr);
+		
 		@Override
 		public Option<String> visit(Disjunction disj) {
 			Option<String> c_1 = disj.getP1().accept(this);
@@ -506,47 +789,6 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		}
 
 		@Override
-		public Option<String> visit(BinaryExprAP binaryExpr) {
-			Option<String> c_1 = checkField(binaryExpr.getBinExpr().getE1(), field_names);
-			Option<String> c_2 = checkField(binaryExpr.getBinExpr().getE2(), field_names);
-			if( c_1.isSome() )
-				return c_1;
-			if( c_2.isSome() )
-				return c_2;
-
-			return Option.none();
-		}
-
-		@Override
-		public Option<String> visit(EqualsExpr equalsExpr) {
-			Option<String> c_1 = checkField(equalsExpr.getE1(), field_names);
-			Option<String> c_2 = checkField(equalsExpr.getE2(), field_names);
-			if( c_1.isSome() )
-				return c_1;
-			if( c_2.isSome() )
-				return c_2;
-
-			return Option.none();
-		}
-
-		@Override
-		public Option<String> visit(NotEqualsExpr notEqualsExpr) {
-			Option<String> c_1 = checkField(notEqualsExpr.getE1(), field_names);
-			Option<String> c_2 = checkField(notEqualsExpr.getE2(), field_names);
-			if( c_1.isSome() )
-				return c_1;
-			if( c_2.isSome() )
-				return c_2;
-
-			return Option.none();
-		}
-
-		@Override
-		public Option<String> visit(StateOnly stateOnly) {
-			return checkField(stateOnly.getVar(), field_names);
-		}
-
-		@Override
 		public Option<String> visit(PermissionImplication permissionImplication) {
 			Option<String> c_1 = permissionImplication.ant().accept(this);
 			Option<String> c_2 = permissionImplication.cons().accept(this);
@@ -558,5 +800,252 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 
 			return Option.none();
 		}
+
+		@Override
+		public Option<String> visit(BinaryExprAP binaryExpr) {
+			Option<String> c_1 = checkPrimary(binaryExpr.getBinExpr().getE1());
+			Option<String> c_2 = checkPrimary(binaryExpr.getBinExpr().getE2());
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+
+		@Override
+		public Option<String> visit(EqualsExpr equalsExpr) {
+			Option<String> c_1 = checkPrimary(equalsExpr.getE1());
+			Option<String> c_2 = checkPrimary(equalsExpr.getE2());
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+
+		@Override
+		public Option<String> visit(NotEqualsExpr notEqualsExpr) {
+			Option<String> c_1 = checkPrimary(notEqualsExpr.getE1());
+			Option<String> c_2 = checkPrimary(notEqualsExpr.getE2());
+			if( c_1.isSome() )
+				return c_1;
+			if( c_2.isSome() )
+				return c_2;
+
+			return Option.none();
+		}
+
+	}
+	
+	/**
+	 * A visitor to check that the fields actually exist.
+	 */
+	class InvariantFieldVisitor extends ReferenceVisitor {
+		private final Map<String, ITypeBinding> field_names; 
+
+		InvariantFieldVisitor(Map<String, ITypeBinding> field_names) {
+			this.field_names = field_names;
+		}
+
+		@Override
+		protected Option<String> checkPrimary(PrimaryExpr expr) {
+			return checkField(expr, field_names.keySet());
+		}
+
+		@Override
+		public Option<String> visit(TempPermission perm) {
+			if( perm.getRef() instanceof Identifier ) {
+//				return checkField(perm.getRef(), field_names);
+				String f = ((Identifier) perm.getRef()).getName();
+				if(!field_names.containsKey(f))
+					return Option.some(f);
+				ITypeBinding t = field_names.get(f);
+				return PluralAnnotationAnalysis.this.checkPermissionStates(t, perm.getRoot(), perm.getStateInfo());
+			}
+			else if( perm.getRef() instanceof ParamReference )
+				return Option.some(((ParamReference) perm.getRef()).getParamString());
+//				return checkField(perm.getRef(), field_names);
+			else
+				return Utilities.nyi();
+		}
+
+		@Override
+		public Option<String> visit(StateOnly stateOnly) {
+			if(stateOnly.getVar() instanceof Identifier)
+				// TODO check state somehow?
+				return checkField((Identifier) stateOnly.getVar(), field_names.keySet());
+			else if(stateOnly.getVar() instanceof ParamReference)
+				return Option.some(((ParamReference) stateOnly.getVar()).getParamString());
+			else
+				return Utilities.nyi();
+		}
+
+	}
+
+	/**
+	 * A visitor to check that the fields actually exist.
+	 */
+	class PreconditionParamVisitor extends ReferenceVisitor {
+		
+		protected final IMethodBinding meth;
+
+		PreconditionParamVisitor(IMethodBinding meth) {
+			this.meth = meth;
+		}
+
+		@Override
+		protected Option<String> checkPrimary(PrimaryExpr expr) {
+			return expr.dispatch(new PrimaryExprVisitor<Option<String>>() {
+
+				@Override
+				public Option<String> visitBool(BoolLiteral bool) {
+					return Option.none();
+				}
+
+				@Override
+				public Option<String> visitId(Identifier id) {
+					if(PreconditionParamVisitor.this.identifierType(id) == null)
+						return Option.some("Not a valid identifier: " + id.getName());
+					else
+						return Option.none();
+				}
+
+				@Override
+				public Option<String> visitNull(Null nul) {
+					return Option.none();
+				}
+
+				@Override
+				public Option<String> visitParam(ParamReference paramReference) {
+					if(PreconditionParamVisitor.this.paramType(paramReference) == null)
+						return Option.some("Not a valid parameter: " + paramReference.getParamString() + " (parameters are referenced with # + their 0-based index)");
+					else
+						return Option.none();
+				}
+				
+			});
+		}
+
+		/**
+		 * @param paramReference
+		 * @return
+		 */
+		protected ITypeBinding paramType(ParamReference paramReference) {
+			Integer p = paramReference.getParamPosition();
+			if(p == null)
+				// not a number
+				return null;
+			else if(p < 0 || p >= meth.getParameterTypes().length)
+				// not a parameter number for this method
+				return null;
+			else
+				// look up parameter type
+				return meth.getParameterTypes()[p];
+		}
+
+		/**
+		 * Returns the type of the given identifier, 
+		 * ignores <i>result</i> in the pre-condition.
+		 * @param id
+		 * @return
+		 */
+		protected ITypeBinding identifierType(Identifier id) {
+			String name = id.getName();
+			if(Modifier.isStatic(meth.getModifiers()))
+				// static methods cannot refer to any names in their pre-condition
+				return null;
+			else if("this".equals(name) || "this!fr".equals(name))
+				// receiver
+				return meth.getDeclaringClass();
+			else 
+				// other names not allowed
+				return null;
+		}
+		
+
+		@Override
+		public Option<String> visit(TempPermission perm) {
+			ITypeBinding t;
+			if( perm.getRef() instanceof Identifier ) {
+				t = identifierType((Identifier) perm.getRef());
+				if(t == null)
+					return Option.some("Not a valid identifier: " + ((Identifier) perm.getRef()).getName());
+			}
+			else if( perm.getRef() instanceof ParamReference ) {
+				t = paramType((ParamReference) perm.getRef());
+				if(t == null)
+					return Option.some("Not a valid parameter identifier: " + ((ParamReference) perm.getRef()).getParamString() + " (parameters are identified with # + their 0-based index)");
+			}
+			else
+				return Utilities.nyi();
+			assert t != null;
+			return PluralAnnotationAnalysis.this.checkPermissionStates(t, perm.getRoot(), perm.getStateInfo());
+		}
+
+		@Override
+		public Option<String> visit(StateOnly stateOnly) {
+			if(stateOnly.getVar() instanceof Identifier)
+				return checkPrimary((Identifier) stateOnly.getVar());
+			else if(stateOnly.getVar() instanceof ParamReference)
+				return checkPrimary((ParamReference) stateOnly.getVar());
+			else
+				return Utilities.nyi();
+		}
+
+	}
+	
+	class PostconditionParamVisitor extends PreconditionParamVisitor {
+
+		/**
+		 * @param meth
+		 */
+		PostconditionParamVisitor(IMethodBinding meth) {
+			super(meth);
+		}
+
+		/**
+		 * Returns the type of the given identifier,
+		 * overriding inherited method to <i>not</i> ignore <i>result</i>
+		 * @param id
+		 * @return
+		 */
+		@Override
+		protected ITypeBinding identifierType(Identifier id) {
+			ITypeBinding result = super.identifierType(id);
+			if(result != null)
+				return result;
+			else if("result".equals(id.getName()) && 
+					!PluralAnnotationAnalysis.isVoid(meth.getReturnType()))
+				return meth.getReturnType();
+			else 
+				// other names not allowed
+				return null;
+		}
+		
+	}
+
+	/**
+	 * @param t
+	 * @param root
+	 * @param stateInfo
+	 */
+	public Option<String> checkPermissionStates(ITypeBinding t, String root,
+			String... stateInfo) {
+		StateSpace space = getRepository().getStateSpace(t);
+		List<String> wrong = new LinkedList<String>();
+		for(String s : stateInfo) {
+			// TODO check whether state is "known"?  Not really helpful since we take every state as known
+			if(!space.firstBiggerThanSecond(root, s))
+				wrong.add(s);
+		}
+		
+		if(wrong.isEmpty())
+			// this handles a empty stateInfo: wrong cannot possibly be non-empty
+			return Option.none();
+		if(wrong.size() == 1)
+			return Option.some("Inconsistent state space references: " + wrong.get(0) + " not inside of " + root);
+		return Option.some("Inconsistent state space references: " + wrong.toString() + " not inside of " + root);
 	}
 }
