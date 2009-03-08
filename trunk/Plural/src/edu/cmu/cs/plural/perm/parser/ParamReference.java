@@ -68,7 +68,7 @@ public class ParamReference implements RefExpr, PrimaryExpr {
 	 * the provided parameter string could not be parsed as an integer.
 	 * @return the 0-based parameter position or <code>null</code>.
 	 */
-	Integer getParamPosition() {
+	public Integer getParamPosition() {
 		return paramPosition;
 	}
 	
@@ -78,7 +78,7 @@ public class ParamReference implements RefExpr, PrimaryExpr {
 	 * could not be parsed as an integer.
 	 * @return the original string used to specify a parameter.
 	 */
-	String getParamString() {
+	public String getParamString() {
 		return "#" + paramString;
 	}
 
