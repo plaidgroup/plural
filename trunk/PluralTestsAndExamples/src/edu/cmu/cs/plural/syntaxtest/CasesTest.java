@@ -39,62 +39,46 @@ package edu.cmu.cs.plural.syntaxtest;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.plural.annot.Cases;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
-import edu.cmu.cs.plural.annot.Pure;
-import edu.cmu.cs.plural.annot.ResultUnique;
-import edu.cmu.cs.plural.annot.States;
 
 /**
  * @author Kevin
- * @since Mar 7, 2009
+ * @since Mar 8, 2009
  *
  */
-@FailingTest(6)
+@FailingTest(2)
 @UseAnalyses(PluralAnalysis.SYNTAX)
-@States(dim = "A", value = {"x", "y"})
-public interface FailingPermChecks {
+public interface CasesTest {
 
-	/* @Perm tests */
+	// error: empty cases array
+	@Cases({})
+	public void noCases();
 	
-	// error: parameter #0 doesn't exist
-	@Perm(requires = "#0 == null")
-	public void noParam();
-	
-	// ok
-	@Perm(requires = "#0 == null")
-	public void oneParam(Object o);
-	
-	// error: cannot mention result in pre-condition
-	@Perm(requires = "result in open")
-	public Object resultInPre();
-	
-	// two state errors: z not in A, A not in x
-	@Perm(requires = "immutable(this!fr, A) in z", ensures = "unique(result, x) in A")
-	FailingPermChecks copyWithWrongStates();
+	// error: cases and perm
+	@Perm
+	@Cases({
+		@Perm
+	})
+	public void permAndCases();
 	
 	// ok
-	@Perm(requires = "immutable(this!fr, A) in x", ensures = "unique(result) in z")
-	FailingPermChecks copy();
+	@Cases({
+		@Perm
+	})
+	public void oneCase();
 	
 	// ok
-	@Perm(requires = "immutable(this) in z", ensures = "immutable(result, z)")
-	FailingPermChecks identity();
-	
-	
-	/* @Full etc. tests */
-	
-	// error: no result
-	@ResultUnique
-	void noResult();
-	
-	// error: z not in A
-	@Full(guarantee = "A", requires = "x", ensures = "z")
-	void xToUnknown();
+	@Perm
+	public void permOnly();
 	
 	// ok
-	@Pure(value = "A", requires = "x", ensures = "y")
-	void xToY();
-	
+	@Full
+	@Cases({
+		@Perm,
+		@Perm
+	})
+	public void twoCasesWithFull();
 }
