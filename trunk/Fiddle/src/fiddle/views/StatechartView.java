@@ -66,7 +66,6 @@ import org.eclipse.ui.part.ViewPart;
 import com.evelopers.unimod.core.stateworks.State;
 import com.evelopers.unimod.core.stateworks.StateMachine;
 import com.evelopers.unimod.core.stateworks.StateType;
-import com.evelopers.unimod.core.stateworks.Transition;
 import com.evelopers.unimod.plugin.eclipse.model.GInitialState;
 import com.evelopers.unimod.plugin.eclipse.model.GModel;
 import com.evelopers.unimod.plugin.eclipse.model.GNormalState;
@@ -75,7 +74,7 @@ import com.evelopers.unimod.plugin.eclipse.ui.base.MyEditDomain;
 import com.evelopers.unimod.plugin.eclipse.ui.base.MyScrollingGraphicalViewer;
 
 import edu.cmu.cs.crystal.Crystal;
-import edu.cmu.cs.crystal.annotationprocesssing.AnnotationDatabase;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
 import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.plural.states.IInvocationSignature;
