@@ -205,11 +205,24 @@ public class StateSpaceImpl implements StateSpace {
 	 */
 	@Override
 	public String getFieldRootNode(IVariableBinding field) {
+		// TODO take declaring class into account in case of shadowed superclass fields
 		String fieldName = field.getName();
 		String result = fieldMap.get(fieldName);
-		if (result != null)
-			return result;
-		return getRootState();
+		return result; // returns null if field is not mapped, as desired
+//		if (result != null)
+//			return result;
+//		return getRootState();
+	}
+
+	/**
+	 * Indicates whether the given field is mapped to a node
+	 * (usually per some invariant declaration)
+	 * @param field
+	 * @return
+	 */
+	public boolean isMapped(IVariableBinding field) {
+		// TODO take declaring class into account in case of shadowed superclass fields
+		return fieldMap.containsKey(field.getName());
 	}
 
 	/**

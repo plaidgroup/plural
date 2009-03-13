@@ -1200,6 +1200,10 @@ class LinearOperations extends TACAnalysisHelper {
 			// Find that field's mapped node
 			String mapped_node = this_perms.getStateSpace().getFieldRootNode(field);
 			
+			if(mapped_node == null)
+				// field is not mapped, so we know nothing about it -> no protection
+				continue next_field;
+			
 			// For each permission of this...
 			for( FractionalPermission this_perm : this_perms.getFramePermissions() ) {
 				// test if this_perm "protects" the field's mapped node so we don't
@@ -1384,7 +1388,7 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @param instr
 	 * @return Possibly a disjunction of new lattice information.
 	 */
-	public DisjunctiveLE fancyUnpackForFieldAccess(
+	public DisjunctiveLE handleFieldAccess(
 			TensorPluralTupleLE value,
 			final Variable assignmentSource,
 			final TACFieldAccess instr) {
@@ -1425,45 +1429,40 @@ class LinearOperations extends TACAnalysisHelper {
 				 * override the permission for the source operand
 				 * TODO Maybe we can avoid affecting the source operand during unpacking?
 				 */
-				DisjunctiveLE result;
-				if( value.isRcvrPacked() )
-//					value = unpackReceiver(true, instr, value);
-					result = internalUnpackForFieldAccess(value, isAssignment, instr);
-				else 
-					result = ContextFactory.tensor(value);
+				DisjunctiveLE result = internalHandleFieldAccess(value, isAssignment, instr);
 				
-				if(isAssignment) {
-					result.dispatch(new DescendingVisitor() {
-
-						@Override
-						public Boolean tuple(
-								TensorPluralTupleLE tuple) {
-							if(tuple.isRcvrPacked())
-								// may not have actually unpacked
-								return true;
-							
-							/*
-							 * 3. Force unpacked permission to be modifiable, to allow assignment.
-							 */
-							FractionalPermissions rcvrPerms = tuple.get(loc);
-							rcvrPerms = rcvrPerms.makeUnpackedPermissionModifiable();
-							tuple.put(loc, rcvrPerms);
-							
-							/*
-							 * 4. Override potential permission for assigned field from unpacking
-							 * with saved permission being assigned.  This will fix the permission
-							 * associated with the source operand as well, because of aliasing. 
-							 */
-							tuple.put(instr.getNode(), 
-									new FieldVariable(instr.resolveFieldBinding()), 
-									new_field_perms);
-							
-							return true;
-						}
-						
-					});
-					
-				}
+//				if(isAssignment) {
+//					result.dispatch(new DescendingVisitor() {
+//
+//						@Override
+//						public Boolean tuple(
+//								TensorPluralTupleLE tuple) {
+//							if(tuple.isRcvrPacked())
+//								// may not have actually unpacked
+//								return true;
+//							
+//							/*
+//							 * 3. Force unpacked permission to be modifiable, to allow assignment.
+//							 */
+//							FractionalPermissions rcvrPerms = tuple.get(loc);
+//							rcvrPerms = rcvrPerms.makeUnpackedPermissionModifiable();
+//							tuple.put(loc, rcvrPerms);
+//							
+//							/*
+//							 * 4. Override potential permission for assigned field from unpacking
+//							 * with saved permission being assigned.  This will fix the permission
+//							 * associated with the source operand as well, because of aliasing. 
+//							 */
+//							tuple.put(instr.getNode(), 
+//									new FieldVariable(instr.resolveFieldBinding()), 
+//									new_field_perms);
+//							
+//							return true;
+//						}
+//						
+//					});
+//					
+//				}
 				
 				return result;
 			}
@@ -1476,12 +1475,12 @@ class LinearOperations extends TACAnalysisHelper {
 		else {
 			// static method--cannot be a receiver field access
 			if(log.isLoggable(Level.WARNING))
-				log.warning("Unsupported field access: " + instr.getNode());
+				log.warning("Unsupported static field access: " + instr.getNode());
 		}
 		return ContextFactory.tensor(value);
 	}
 	
-	private DisjunctiveLE internalUnpackForFieldAccess(
+	private DisjunctiveLE internalHandleFieldAccess(
 			final TensorPluralTupleLE value,
 			final boolean isAssignment, 
 			final TACFieldAccess instr) {
@@ -1492,6 +1491,8 @@ class LinearOperations extends TACAnalysisHelper {
 		StateSpace this_space = getStateSpace(thisVar.resolveType());
 		String unpacking_root = 
 			this_space.getFieldRootNode(instr.resolveFieldBinding());
+		
+		if(unpacking_root != null) {
 
 			// don't need to wiggle root since we'll try all nodes anyway
 //			for(FractionalPermission p : value.get(instr.getNode(), thisVar).getPermissions()) {
@@ -1516,16 +1517,35 @@ class LinearOperations extends TACAnalysisHelper {
 //				}
 //			}
 			
-//			unpacking_root = StateSpace.STATE_ALIVE;
-		return value.fancyUnpackReceiver(thisVar, instr.getNode(), 
-				getRepository(),
-				new SimpleMap<Variable,Aliasing>() {
-					@Override
-					public Aliasing get(Variable key) {
-						return value.getLocations(key);
-					}},
-				unpacking_root, 
-				isAssignment ? instr.getFieldName() : null);
+			if(value.isRcvrPacked()) {
+				return value.fancyUnpackReceiver(thisVar, instr.getNode(), 
+					getRepository(),
+					new SimpleMap<Variable,Aliasing>() {
+						@Override
+						public Aliasing get(Variable key) {
+							return value.getLocations(key);
+						}},
+					unpacking_root, 
+					isAssignment ? instr.getFieldName() : null);
+			}
+			else { // already unpacked...
+				if(isAssignment) {
+					/*
+					 * Force unpacked permission to be modifiable, to allow assignment.
+					 */
+					final Aliasing loc = 
+						value.getLocationsBefore(instr.getNode(), thisVar);
+					FractionalPermissions rcvrPerms = value.get(loc);
+					rcvrPerms = rcvrPerms.makeUnpackedPermissionModifiable();
+					value.put(loc, rcvrPerms);
+				}
+				return ContextFactory.tensor(value);
+			}
+		}
+		else {
+			// field is not mapped -> no unpack, no modifiable permission for assignment needed
+			return ContextFactory.tensor(value);
+		}
 	}
 	
 	//

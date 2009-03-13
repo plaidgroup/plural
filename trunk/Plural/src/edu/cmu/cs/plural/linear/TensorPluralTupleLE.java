@@ -185,11 +185,14 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		Aliasing rcvrLoc = locs.get(rcvrVar);
 		FractionalPermissions this_perms = this.get(rcvrLoc);
 		if(this_perms.isBottom() || this_perms.getFramePermissions().isEmpty())
-			// no frame permissions 
-			// --> trivially succeed without actually unpacking to avoid abundance of errors
-			// anything that depends on invariants will fail because we don't evaluate invariants
+			// trivially succeed but no field permissions injected
+			// (no point for bottom; will create problems when fields are used)
+			// TODO enforce permission present to access fields: could fail if no frame perms 
 			return true;
 		this_perms = this_perms.unpack(rcvrRoot);
+		if(assignedField != null)
+			// assignment -> make sure we're unpacking a modifiable permission
+			this_perms = this_perms.makeUnpackedPermissionModifiable();
 
 		// 2.) Add resulting receiver permission.
 		this.put(rcvrLoc, this_perms);
@@ -210,7 +213,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			
 			// Create a call-back for this state that will purify as necessary
 			final boolean purify = this_perms.getUnpackedPermission().isReadOnly();
-			final MergeIntoTuple callback = 
+			final DefaultInvariantMerger callback = 
 				new DefaultInvariantMerger(nodeWhereUnpacked, this, assignedField, purify); 
 			
 			final SimpleMap<String,Aliasing> locs_ =
@@ -218,6 +221,10 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			
 			// Call merge-in...
 			parsed.fst().mergeInPredicate(locs_, callback);
+			if(callback.isVoid()) {
+				// got void from invariant
+				// TODO inject bottom to make (m)any things work subsequently
+			}
 		}
 		
 		return true;
@@ -410,13 +417,17 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	/**
 	 * This is the disjunctive version of 
 	 * {@link PluralTupleLatticeElement#unpackReceiver(Variable, ASTNode, StateSpaceRepository, SimpleMap, String, String)}.
+	 * If this is an assignment, then receiver is forced to have a modifiable permission.
+	 * @tag usage.restriction: no unpacking is necessary for unmapped nodes, so this shouldn't be called in that case. 
 	 * @param rcvrVar
-	 * @param nodeWhereUnpacked TODO
+	 * @param nodeWhereUnpacked Node where this unpack happens
 	 * @param stateRepo
 	 * @param locs
 	 * @param rcvrRoot
-	 * @param assignedField
-	 * @return
+	 * @param assignedField Name of the field being assigned, 
+	 * or <code>null</code> if the unpack happens for a field read
+	 * @return The resulting lattice value, possibly a disjunction of different
+	 * states we tried to unpack from.
 	 */
 	public DisjunctiveLE fancyUnpackReceiver(Variable rcvrVar,
 			ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
@@ -430,14 +441,22 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		assert rcvr_loc != null;
 
 		FractionalPermissions rcvrPerms = get(rcvr_loc);
-		if(rcvrPerms.getFramePermissions().isEmpty()) {
-			// no actual receiver permission --> call unpack anyway
-			// won't actually unpack but will populate fields
-			if(this.unpackReceiverInternal(rcvrVar, nodeWhereUnpacked, stateRepo, locs, rcvrRoot, assignedField))
+		if(rcvrPerms.isBottom()) {
+			// receiver is bottom
+			// trivially succeed, but no injected field permissions
+			return ContextFactory.tensor(this);
+		}
+		else if(rcvrPerms.getFramePermissions().isEmpty()) {
+			// TODO enforce permission present to access fields at all: could fail if no frame perms 
+			if(assignedField == null)
+				// keep going: no field permissions will be available, either
 				return ContextFactory.tensor(this);
 			else
+				// fail: must have permission for assignment
 				return ContextFactory.trueContext();
+			
 		}
+		// the above should just be an optimization for below
 		else {
 			// try all states implied by receiver's state info inside the requested root
 			Set<String> tried_nodes = new HashSet<String>();
