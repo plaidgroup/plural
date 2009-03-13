@@ -94,8 +94,8 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 			ITACAnalysisContext tacContext,
 			FractionAnalysisContext fractContext) {
 		assert tacContext.getAnalyzedMethod().isConstructor() == false;
-		final ThisVariable receiverVar = tacContext.getThisVariable(); 
-		assert receiverVar == null || receiverVar.isUnqualifiedThis();
+//		final ThisVariable receiverVar = tacContext.getThisVariable(); 
+//		assert receiverVar == null || receiverVar.isUnqualifiedThis();
 		final TensorPluralTupleLE tuple =
 			new TensorPluralTupleLE(
 					FractionalPermissions.createEmpty(), // use top (no permissions) as default
@@ -109,6 +109,14 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		if(c.isVoid)
 			// void can prove anything: start with false
 			return Pair.create(ContextFactory.falseContext(), vars);
+		
+		if(!Modifier.isStatic(tacContext.getAnalyzedMethod().getModifiers())) {
+			// issue #61: make the receiver non-null
+			Aliasing t = vars.get("this");
+			assert t != null;
+			tuple.addNonNullVariable(t);
+		}
+		
 		return Pair.create(ContextFactory.tensor(tuple), vars);
 	}
 	
@@ -142,8 +150,9 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 				decl);
 		tuple.storeInitialAliasingInfo(tacContext.getAnalyzedMethod());
 		
+		Aliasing this_loc = tuple.getLocations(receiverVar);
 		InitialLECreator c = new InitialConstructorLECreator(tuple, 
-				tuple.getLocations(receiverVar),
+				this_loc,
 				fractContext.getRepository().getStateSpace(receiverVar.resolveType()));
 		
 		final SimpleMap<String, Aliasing> vars = createStartMap(tacContext, tuple);
@@ -151,6 +160,9 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		if(c.isVoid)
 			// void can prove anything: start with false
 			return Pair.create(ContextFactory.falseContext(), vars);
+		
+		// issue #61: make the receiver non-null
+		tuple.addNonNullVariable(this_loc);
 		return Pair.create(ContextFactory.tensor(tuple), vars);
 	}
 	
