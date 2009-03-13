@@ -149,11 +149,12 @@ public interface StateSpace {
 	public Set<String> getAllStates();
 	
 	/**
-	 * Return the lowest node in the state hierarchy that completely covers
-	 * all references to the given field.
+	 * <b>If defined</b>, returns the lowest node in the state hierarchy 
+	 * that completely covers all references to the given field.
 	 * @param field a field defined in this state space's class.
 	 * @return the lowest node in the state hierarchy that completely covers
-	 * all references to the given field.
+	 * all references to the given field, or <code>null</code> if the field
+	 * is not mentioned in any invariants.
 	 */
 	public String getFieldRootNode(IVariableBinding field);
 

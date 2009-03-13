@@ -44,6 +44,12 @@ package edu.cmu.cs.plural.linear;
  */
 abstract class DescendingVisitor extends DisjunctiveVisitor<Boolean> {
 
+	/**
+	 * Visit a tuple, indicating whether to continue visiting or not.
+	 * @param tuple
+	 * @return <code>true</code> to continue visiting, 
+	 * <code>false</code> to stop. 
+	 */
 	public abstract Boolean tuple(TensorPluralTupleLE tuple);
 
 	/* (non-Javadoc)

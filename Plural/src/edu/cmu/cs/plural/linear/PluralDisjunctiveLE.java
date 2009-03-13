@@ -699,12 +699,8 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
 			public DisjunctiveLE context(LinearContextLE le) {
-				if(le.getTuple().isRcvrPacked()) {
-					return op.fancyUnpackForFieldAccess(le.getTuple(), 
-							null /* not an assignment */, instr);
-				}
-				// else ?
-				return le;
+				return op.handleFieldAccess(le.getTuple(), 
+						null /* not an assignment */, instr);
 			}
 		});
 	}
@@ -713,13 +709,9 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
 			public DisjunctiveLE context(LinearContextLE le) {
-				if(le.getTuple().isRcvrPacked()) {
-					return op.fancyUnpackForFieldAccess(le.getTuple(),
-							instr.getSourceOperand(),
-							instr);
-				}
-				// else ?
-				return le;
+				return op.handleFieldAccess(le.getTuple(),
+						instr.getSourceOperand(),
+						instr);
 			}
 		});
 	}
