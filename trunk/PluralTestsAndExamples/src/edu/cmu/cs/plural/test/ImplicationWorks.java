@@ -79,7 +79,7 @@ public class ImplicationWorks {
 		}
 	}
 		
-	@Share
+	@Share(fieldAccess = true)
 	void testPermImplicationShouldFail(@Full LastObject lo) {
 		boolean local = hasFull;
 		
