@@ -47,13 +47,13 @@ import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
 
 /**
- * This test case makes sure that assignments to fields
+ * This test case makes sure that accesses to fields
  * with invariants require a frame permission.
  * @author Kevin Bierhoff
  * @since Mar 13, 2009
  *
  */
-@FailingTest(4)
+@FailingTest(5)
 @UseAnalyses(PluralAnalysis.PLURAL)
 @ClassStates(@State(name = "A", inv = "o1 != null"))
 public class FieldAccessTest {
@@ -116,9 +116,7 @@ public class FieldAccessTest {
 	
 	@Pure(guarantee = "A")
 	public Object getRef() {
-		return o1; // ok (for now): just return reference
-		// in the future we probably want this to be an error
-		// and require frame access for field reads
+		return o1; // error: need field access
 	}
 	
 }
