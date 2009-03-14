@@ -447,14 +447,8 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			return ContextFactory.tensor(this);
 		}
 		else if(rcvrPerms.getFramePermissions().isEmpty()) {
-			// TODO enforce permission present to access fields at all: could fail if no frame perms 
-			if(assignedField == null)
-				// keep going: no field permissions will be available, either
-				return ContextFactory.tensor(this);
-			else
-				// fail: must have permission for assignment
-				return ContextFactory.trueContext();
-			
+			// fail: must have permission for assignment
+			return ContextFactory.trueContext();
 		}
 		// the above should just be an optimization for below
 		else {
@@ -466,6 +460,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			infoToTry.add(rcvrRoot); // try root node (and bigger) first
 			infoToTry.addAll(rcvrPerms.getStateInfo(true));
 			for(String n : infoToTry) {
+				// TODO field assignments, skip nodes below field's root
 				if(rcvr_space.firstBiggerThanSecond(rcvrRoot, n) == false)
 					continue;
 				state_iter:

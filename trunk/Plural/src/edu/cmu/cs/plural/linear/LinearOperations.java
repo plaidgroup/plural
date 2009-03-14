@@ -1537,6 +1537,7 @@ class LinearOperations extends TACAnalysisHelper {
 						value.getLocationsBefore(instr.getNode(), thisVar);
 					FractionalPermissions rcvrPerms = value.get(loc);
 					rcvrPerms = rcvrPerms.makeUnpackedPermissionModifiable();
+					// TODO force permission to be above assigned field's root
 					value.put(loc, rcvrPerms);
 				}
 				return ContextFactory.tensor(value);
