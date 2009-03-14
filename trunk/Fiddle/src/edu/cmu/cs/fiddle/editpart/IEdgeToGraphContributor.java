@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
-
-<!-- 
+/**
  * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
@@ -37,41 +34,35 @@
  * Public License gives permission to release a modified version
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
--->
+ */
+package edu.cmu.cs.fiddle.editpart;
 
-<plugin>
+import java.util.Map;
 
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="Fiddle"
-            id="Fiddle">
-      </category>
-      <view
-            name="Statechart View"
-            icon="icons/plural.gif"
-            category="Fiddle"
-            class="edu.cmu.cs.fiddle.view.StatechartView"
-            id="edu.cmu.cs.fiddle.view.StatechartView">
-      </view>
-   </extension>
-   <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="right"
-               id="edu.cmu.cs.fiddle.view.StatechartView">
-         </view>
-      </perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.help.contexts">
-      <contexts
-            file="contexts.xml">
-      </contexts>
-   </extension>
+import org.eclipse.draw2d.graph.CompoundDirectedGraph;
+import org.eclipse.gef.EditPart;
 
-</plugin>
+/**
+ * Clients that implement this interface are edit parts that have the
+ * ability to contribute themselves as edges to a graph for the purposes
+ * of graph layout. We expect Connection edit parts to implement this
+ * interface.
+ * 
+ * @author Nels E. Beckman
+ */
+public interface IEdgeToGraphContributor {
+
+	/**
+	 * Contribute edges represented by this connection to the
+	 * given graph.
+	 */
+	public void contributeToGraph(CompoundDirectedGraph graph, 
+			Map<EditPart, Object> editPartToEdge);
+	/**
+	 * Apply the results of the graph layout algorithm back to
+	 * the edit part itself.
+	 */
+	public void applyGraphResults(CompoundDirectedGraph graph,
+			Map<EditPart, Object> partsToNodes);
+	
+}

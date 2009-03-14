@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
-
-<!-- 
+/**
  * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
@@ -37,41 +34,39 @@
  * Public License gives permission to release a modified version
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
--->
+ */
+package edu.cmu.cs.fiddle.editpart;
 
-<plugin>
+import java.util.Map;
 
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="Fiddle"
-            id="Fiddle">
-      </category>
-      <view
-            name="Statechart View"
-            icon="icons/plural.gif"
-            category="Fiddle"
-            class="edu.cmu.cs.fiddle.view.StatechartView"
-            id="edu.cmu.cs.fiddle.view.StatechartView">
-      </view>
-   </extension>
-   <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="right"
-               id="edu.cmu.cs.fiddle.view.StatechartView">
-         </view>
-      </perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.help.contexts">
-      <contexts
-            file="contexts.xml">
-      </contexts>
-   </extension>
+import org.eclipse.draw2d.geometry.Insets;
+import org.eclipse.draw2d.graph.CompoundDirectedGraph;
+import org.eclipse.draw2d.graph.Subgraph;
+import org.eclipse.gef.EditPart;
 
-</plugin>
+/**
+ * EditParts that implement this interface have the ability to
+ * add themselves as nodes to a graph for the purposes of
+ * graph layout.
+ * 
+ * @author Nels E. Beckman
+ */
+public interface INodeToGraphContributor {
+	// Used by the layout aglo, these come directly from
+	// the flow example.
+	public static final Insets INNER_PADDING = new Insets(0);
+	public static final Insets PADDING = new Insets(8, 6, 8, 6);
+	
+	public void contributeNodesToGraph(CompoundDirectedGraph graph,
+			Subgraph s, Map<EditPart, Object> partsToNodesOrEdges);
+	
+	public void contributeEdgesToGraph(CompoundDirectedGraph graph, 
+			Map<EditPart, Object> partsToNodesOrEdges);
+	
+	/**
+	 * Forces the changes in the graph onto the nodes themselves.
+	 */
+	public void applyGraphResults(CompoundDirectedGraph graph,
+			Map<EditPart, Object> partsToNodes);
+	
+}

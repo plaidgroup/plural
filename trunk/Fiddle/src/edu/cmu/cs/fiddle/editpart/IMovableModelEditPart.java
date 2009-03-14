@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
-
-<!-- 
+/**
  * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
@@ -37,41 +34,22 @@
  * Public License gives permission to release a modified version
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
--->
+ */
+package edu.cmu.cs.fiddle.editpart;
 
-<plugin>
+import org.eclipse.draw2d.geometry.Rectangle;
 
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="Fiddle"
-            id="Fiddle">
-      </category>
-      <view
-            name="Statechart View"
-            icon="icons/plural.gif"
-            category="Fiddle"
-            class="edu.cmu.cs.fiddle.view.StatechartView"
-            id="edu.cmu.cs.fiddle.view.StatechartView">
-      </view>
-   </extension>
-   <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="right"
-               id="edu.cmu.cs.fiddle.view.StatechartView">
-         </view>
-      </perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.help.contexts">
-      <contexts
-            file="contexts.xml">
-      </contexts>
-   </extension>
+/**
+ * An interface to be implemented by EditParts that controlled place-able
+ * and resize-able models. 
+ * 
+ * @author Nels E. Beckman
+ */
+public interface IMovableModelEditPart {
 
-</plugin>
+	/**
+	 * Move the model that is attached to this edit part to the
+	 * location/size given by the rectangle
+	 */
+	public void moveModel(Rectangle new_location);
+}

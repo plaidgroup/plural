@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
-
-<!-- 
+/**
  * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
@@ -37,41 +34,26 @@
  * Public License gives permission to release a modified version
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
--->
+ */
+package edu.cmu.cs.fiddle.model;
 
-<plugin>
+/**
+ * A connection between two {@code IConnectable}s. This is a
+ * directed, uni-directional connection, and hence has a source
+ * and a target.
+ * 
+ * @author Nels E. Beckman
+ * @See {@Link IConnectable}
+ */
+public interface IConnection {
 
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="Fiddle"
-            id="Fiddle">
-      </category>
-      <view
-            name="Statechart View"
-            icon="icons/plural.gif"
-            category="Fiddle"
-            class="edu.cmu.cs.fiddle.view.StatechartView"
-            id="edu.cmu.cs.fiddle.view.StatechartView">
-      </view>
-   </extension>
-   <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="right"
-               id="edu.cmu.cs.fiddle.view.StatechartView">
-         </view>
-      </perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.help.contexts">
-      <contexts
-            file="contexts.xml">
-      </contexts>
-   </extension>
-
-</plugin>
+	/**
+	 * Where does this connection come from?
+	 */
+	public IConnectable getTarget();
+	
+	/**
+	 * Where is this connection going?
+	 */
+	public IConnectable getSource();
+}
