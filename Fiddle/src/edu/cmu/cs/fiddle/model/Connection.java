@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
-
-<!-- 
+/**
  * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
@@ -37,41 +34,66 @@
  * Public License gives permission to release a modified version
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
--->
+ */
+package edu.cmu.cs.fiddle.model;
 
-<plugin>
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="Fiddle"
-            id="Fiddle">
-      </category>
-      <view
-            name="Statechart View"
-            icon="icons/plural.gif"
-            category="Fiddle"
-            class="edu.cmu.cs.fiddle.view.StatechartView"
-            id="edu.cmu.cs.fiddle.view.StatechartView">
-      </view>
-   </extension>
-   <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="right"
-               id="edu.cmu.cs.fiddle.view.StatechartView">
-         </view>
-      </perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.help.contexts">
-      <contexts
-            file="contexts.xml">
-      </contexts>
-   </extension>
+import edu.cmu.cs.fiddle.model.IHasProperties.PropertyType;
 
-</plugin>
+/**
+ * A connection for connecting States/Dimensions.
+ * 
+ * @author Nels E. Beckman
+ *
+ */
+public class Connection implements IConnection, IHasProperties {
+
+	private IConnectable source;
+	private IConnectable target;
+
+	private PropertyChangeSupport listeners;
+	
+	/**
+	 * Creates a new IConnection and connects it to the source and target, 
+	 * additionally calling the add methods on both source and target.
+	 */
+	public static IConnection connectTwoIConnectables(IConnectable source, IConnectable target) {
+		IConnection result = new Connection(source, target);
+		source.addOutgoingConnection(result);
+		target.addIncomingConnection(result);
+		return result;
+	}
+	
+	public Connection(IConnectable source, IConnectable target) {
+		super();
+		this.source = source;
+		this.target = target;
+		this.listeners = new PropertyChangeSupport(this);
+	}
+
+	@Override
+	public IConnectable getSource() {
+		return source;
+	}
+
+	@Override
+	public IConnectable getTarget() {
+		return target;
+	}
+
+	private void firePropertyChange(PropertyType prop, Object oldValue, Object newValue) {
+		this.listeners.firePropertyChange(prop.toString(), oldValue, newValue);
+	}
+	
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		listeners.addPropertyChangeListener(listener);
+	}
+
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		listeners.removePropertyChangeListener(listener);
+	}
+}

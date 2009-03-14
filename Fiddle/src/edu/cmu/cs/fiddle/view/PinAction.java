@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
-
-<!-- 
+/**
  * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
@@ -37,41 +34,44 @@
  * Public License gives permission to release a modified version
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
--->
+ */
 
-<plugin>
+package edu.cmu.cs.fiddle.view;
 
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="Fiddle"
-            id="Fiddle">
-      </category>
-      <view
-            name="Statechart View"
-            icon="icons/plural.gif"
-            category="Fiddle"
-            class="edu.cmu.cs.fiddle.view.StatechartView"
-            id="edu.cmu.cs.fiddle.view.StatechartView">
-      </view>
-   </extension>
-   <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="right"
-               id="edu.cmu.cs.fiddle.view.StatechartView">
-         </view>
-      </perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.help.contexts">
-      <contexts
-            file="contexts.xml">
-      </contexts>
-   </extension>
+import org.eclipse.jface.action.Action;
 
-</plugin>
+/**
+ * An action that pins the current contents of the StatechartView, 
+ * preventing them from changing when a SelectionChange occurs
+ * 
+ * @author Paul Richardson
+ * @date Dec 7, 2008
+ *
+ */
+public class PinAction extends Action { // NEB: As far as I know there
+	                                                // is no reason we need to
+	                                                // extend SelectionAction as
+	                                                // opposed to the more basic
+	                                                // actions.
+
+	private StatechartView view;
+	
+	public PinAction(StatechartView view) {
+		super();
+		this.view = view;
+		//this.setImageDescriptor(Helper.UNIMOD_RESOURCE_ICON);
+		this.setToolTipText("Pin the Diagram");
+		this.setText("Pin Digram");
+		this.setChecked(false);
+	}
+
+	protected boolean calculateEnabled() {
+		return true;
+	}
+
+	@Override
+	public void run() {
+		view.setPin(this.isChecked());
+    }
+
+}

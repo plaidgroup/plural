@@ -1,7 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<?eclipse version="3.2"?>
-
-<!-- 
+/**
  * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
@@ -37,41 +34,53 @@
  * Public License gives permission to release a modified version
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
--->
+ */
+package edu.cmu.cs.fiddle.model;
 
-<plugin>
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="Fiddle"
-            id="Fiddle">
-      </category>
-      <view
-            name="Statechart View"
-            icon="icons/plural.gif"
-            category="Fiddle"
-            class="edu.cmu.cs.fiddle.view.StatechartView"
-            id="edu.cmu.cs.fiddle.view.StatechartView">
-      </view>
-   </extension>
-   <extension
-         point="org.eclipse.ui.perspectiveExtensions">
-      <perspectiveExtension
-            targetID="org.eclipse.jdt.ui.JavaPerspective">
-         <view
-               ratio="0.5"
-               relative="org.eclipse.ui.views.TaskList"
-               relationship="right"
-               id="edu.cmu.cs.fiddle.view.StatechartView">
-         </view>
-      </perspectiveExtension>
-   </extension>
-   <extension
-         point="org.eclipse.help.contexts">
-      <contexts
-            file="contexts.xml">
-      </contexts>
-   </extension>
+/**
+ * There is only one state machine in the model. It is the top
+ * level element.
+ * 
+ * @author Nels E. Beckman
+ */
+public class StateMachine implements IHasProperties {
 
-</plugin>
+	// Mutable
+	private final Set<IState> topLevelStates;
+	
+	private PropertyChangeSupport listeners;
+	
+	public StateMachine() {
+		this.topLevelStates = new HashSet<IState>(); 
+		this.listeners = new PropertyChangeSupport(this);
+	}
+	
+	public Set<IState> getStates() {
+		return Collections.unmodifiableSet(topLevelStates);
+	}
+	
+	public void addState(IState state) {
+		this.topLevelStates.add(state);
+		firePropertyChange(PropertyType.CHILDREN, null, state);
+	}
+
+	private void firePropertyChange(PropertyType prop, Object oldValue, Object newValue) {
+		this.listeners.firePropertyChange(prop.toString(), oldValue, newValue);
+	}
+	
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		this.listeners.addPropertyChangeListener(listener);
+	}
+
+	@Override
+	public void removePropertyChangeListener(PropertyChangeListener listener) {
+		this.listeners.removePropertyChangeListener(listener);
+	}
+}
