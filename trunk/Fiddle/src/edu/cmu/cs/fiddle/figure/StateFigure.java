@@ -37,19 +37,14 @@
  */
 package edu.cmu.cs.fiddle.figure;
 
-import java.awt.Font;
-
 import org.eclipse.draw2d.BorderLayout;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.Shape;
-import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Display;
 
 /**
  * This figure represents a state. It's pretty simple, although it
@@ -112,14 +107,4 @@ public class StateFigure extends Shape {
 		Point footer_line_right = new Point(r.x + r.width, r.y + r.height -  FOOTER_SIZE);
 		graphics.drawLine(footer_line_left, footer_line_right);
 	}
-
-	@Override
-	public Dimension getPreferredSize(int hint, int hint2) {
-		// XXX
-		// Just for testing
-		// I am pretty sure this no longer has any effect...
-		return new Dimension(80, 80);
-	}
-	
-	
 }

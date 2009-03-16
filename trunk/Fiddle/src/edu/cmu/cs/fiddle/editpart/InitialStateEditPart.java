@@ -56,12 +56,10 @@ import org.eclipse.draw2d.graph.Node;
 import org.eclipse.draw2d.graph.Subgraph;
 import org.eclipse.gef.ConnectionEditPart;
 import org.eclipse.gef.EditPart;
-import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 
-import edu.cmu.cs.fiddle.model.IState;
 import edu.cmu.cs.fiddle.model.InitialState;
 import edu.cmu.cs.fiddle.model.IHasProperties.PropertyType;
 
@@ -71,8 +69,7 @@ import edu.cmu.cs.fiddle.model.IHasProperties.PropertyType;
  * @author Nels E. Beckman
  */
 public class InitialStateEditPart extends AbstractGraphicalEditPart 
-	implements IMovableModelEditPart, NodeEditPart, 
-	PropertyChangeListener, INodeToGraphContributor {
+	implements NodeEditPart, PropertyChangeListener, INodeToGraphContributor {
 
 	private static final Dimension INITIAL_STATE_SIZE = new Dimension(20, 20);
 	
@@ -103,19 +100,7 @@ public class InitialStateEditPart extends AbstractGraphicalEditPart
 		return new ArrayList<Object>(getModelAsInitialState().getIncomingConnections());
 	}
 	
-	@Override
-	protected void createEditPolicies() {
-	}
-
-	@Override
-	protected void refreshVisuals() {
-		IState model = getModelAsInitialState();
-		// Here's how we tell the XYLayout where this figure should actually go.
-		// Again, this comes from the tutorial
-		Rectangle rect = new Rectangle(model.getXPos(), model.getYPos(), -1, -1);
-		
-		((GraphicalEditPart) getParent()).setLayoutConstraint(this, getFigure(), rect);
-	}
+	@Override protected void createEditPolicies() {}
 	
 	@Override
 	public void activate() {
@@ -131,12 +116,6 @@ public class InitialStateEditPart extends AbstractGraphicalEditPart
 
 	private InitialState getModelAsInitialState() {
 		return (InitialState)getModel();
-	}
-
-	@Override
-	public void moveModel(Rectangle new_location) {
-		getModelAsInitialState().setXPos(new_location.x);
-		getModelAsInitialState().setYPos(new_location.y);
 	}
 
 	@Override

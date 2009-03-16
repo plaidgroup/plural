@@ -53,8 +53,6 @@ import java.util.Set;
  */
 public class InitialState implements IState, IHasProperties {
 	
-	private int x;
-	private int y;
 	private final Set<IConnection> outgoingConnections;
 	private final Set<IConnection> incomingConnections;
 
@@ -62,8 +60,6 @@ public class InitialState implements IState, IHasProperties {
 	
 	public InitialState() {
 		super();
-		this.x = 0;
-		this.y = 0;
 		this.outgoingConnections = new HashSet<IConnection>();
 		this.incomingConnections = new HashSet<IConnection>();
 		this.listeners = new PropertyChangeSupport(this);
@@ -72,30 +68,6 @@ public class InitialState implements IState, IHasProperties {
 	@Override
 	public List<IDimension> getDimensions() {
 		return Collections.emptyList();
-	}
-
-	@Override
-	public int getXPos() {
-		return x;
-	}
-
-	@Override
-	public int getYPos() {
-		return y;
-	}
-	
-	@Override
-	public void setXPos(int x) {
-		int old = this.x;
-		this.x = x;
-		firePropertyChange(PropertyType.LOCATION, old, x);
-	}
-
-	@Override
-	public void setYPos(int y) {
-		int old = this.y;
-		this.y = y;
-		firePropertyChange(PropertyType.LOCATION, old, y);
 	}
 	
 	@Override

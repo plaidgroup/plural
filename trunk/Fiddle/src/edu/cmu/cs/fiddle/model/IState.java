@@ -53,24 +53,4 @@ public interface IState extends IConnectable {
 	 * @return
 	 */
 	public List<IDimension> getDimensions();
-	
-	/**
-	 * What is the on-screen location of this State? (X)
-	 */
-	public int getXPos();
-	
-	/**
-	 * What is the on-screen location of this State? (Y)
-	 */
-	public int getYPos();
-
-	/**
-	 * Set a new X position for this state.
-	 */
-	public void setXPos(int x);
-
-	/**
-	 * Set a new Y position for this state.
-	 */
-	public void setYPos(int y);
 }

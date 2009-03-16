@@ -52,16 +52,12 @@ import java.util.Set;
  */
 public class FinalState implements IState, IHasProperties {
 
-	private int x;
-	private int y;
 	private final Set<IConnection> outgoingConnections;
 	private final Set<IConnection> incomingConnections;
 	
 	private final PropertyChangeSupport listeners;
 	
 	public FinalState() {
-		this.x = 0;
-		this.y = 0;
 		this.outgoingConnections = new HashSet<IConnection>();
 		this.incomingConnections = new HashSet<IConnection>();
 		this.listeners = new PropertyChangeSupport(this);
@@ -70,31 +66,6 @@ public class FinalState implements IState, IHasProperties {
 	@Override
 	public List<IDimension> getDimensions() {
 		return Collections.emptyList();
-	}
-
-	/*
-	 * TODO
-	 * These positions don't matter, and I should remove them soon.
-	 */
-	
-	@Override
-	public int getXPos() {
-		return x;
-	}
-
-	@Override
-	public int getYPos() {
-		return y;
-	}
-
-	@Override
-	public void setXPos(int x) {
-		this.x = x;
-	}
-
-	@Override
-	public void setYPos(int y) {
-		this.y = y;
 	}
 	
 	@Override

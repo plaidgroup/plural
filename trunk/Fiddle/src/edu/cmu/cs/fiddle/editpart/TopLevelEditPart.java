@@ -45,7 +45,6 @@ import java.util.Map;
 
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.IFigure;
-import org.eclipse.draw2d.XYLayout;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.draw2d.graph.CompoundDirectedGraph;
 import org.eclipse.draw2d.graph.Node;

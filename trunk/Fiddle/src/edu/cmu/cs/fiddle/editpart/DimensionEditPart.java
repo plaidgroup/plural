@@ -46,6 +46,7 @@ import java.util.Map;
 import org.eclipse.draw2d.ChopboxAnchor;
 import org.eclipse.draw2d.ConnectionAnchor;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.geometry.Insets;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.draw2d.graph.CompoundDirectedGraph;
 import org.eclipse.draw2d.graph.Node;
@@ -71,6 +72,9 @@ import edu.cmu.cs.fiddle.model.IHasProperties.PropertyType;
 public class DimensionEditPart extends AbstractGraphicalEditPart implements
 		NodeEditPart, PropertyChangeListener, INodeToGraphContributor {
 
+	public static final Insets INNER_PADDING = new Insets(0);
+	public static final Insets PADDING = new Insets(0, 0, 0, 0);
+	
 	@Override
 	protected IFigure createFigure() {
 		// This is the last dimension if this is the last

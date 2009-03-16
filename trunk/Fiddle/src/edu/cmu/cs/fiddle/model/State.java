@@ -59,10 +59,6 @@ public class State implements IState, IHasProperties {
 
 	private String name;
 	
-	// Location of this state
-	private int x;
-	private int y;
-	
 	// Connections
 	private final Set<IConnection> outgoingConnections;
 	private final Set<IConnection> incomingConnections;
@@ -72,8 +68,6 @@ public class State implements IState, IHasProperties {
 	public State(String name, Collection<? extends IDimension> dimensions) {
 		this.name = name;
 		this.dimensions = new ArrayList<IDimension>(dimensions);
-		this.x = 0;
-		this.y = 0;
 		this.outgoingConnections = new HashSet<IConnection>();
 		this.incomingConnections = new HashSet<IConnection>();
 		this.listeners = new PropertyChangeSupport(this);
@@ -86,30 +80,6 @@ public class State implements IState, IHasProperties {
 	
 	public String getName() {
 		return name;
-	}
-
-	@Override
-	public int getXPos() {
-		return x;
-	}
-
-	@Override
-	public int getYPos() {
-		return y;
-	}
-	
-	@Override
-	public void setXPos(int x) {
-		int old = this.x;
-		this.x = x;
-		firePropertyChange(PropertyType.LOCATION, old, x);
-	}
-
-	@Override
-	public void setYPos(int y) {
-		int old = this.y;
-		this.y = y;
-		firePropertyChange(PropertyType.LOCATION, old, y);
 	}
 	
 	@Override
