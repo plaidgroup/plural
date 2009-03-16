@@ -40,8 +40,6 @@ package edu.cmu.cs.fiddle.model;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
-import edu.cmu.cs.fiddle.model.IHasProperties.PropertyType;
-
 /**
  * A connection for connecting States/Dimensions.
  * 
@@ -83,6 +81,7 @@ public class Connection implements IConnection, IHasProperties {
 		return target;
 	}
 
+	@SuppressWarnings("unused")
 	private void firePropertyChange(PropertyType prop, Object oldValue, Object newValue) {
 		this.listeners.firePropertyChange(prop.toString(), oldValue, newValue);
 	}

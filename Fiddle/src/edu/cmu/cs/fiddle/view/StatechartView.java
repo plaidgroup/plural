@@ -68,7 +68,6 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 
-
 import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
@@ -351,8 +350,6 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 		StateMachine machine = new StateMachine();
 		IState initialState = new InitialState();
 		machine.addState(initialState);
-		initialState.setXPos(300);
-		initialState.setYPos(50);
 		
 		// two dimensions
 		// two states per dim
@@ -368,8 +365,6 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 		
 		IState aliveState = new State("Alive", list(speed_dim, protocol_dim));
 		machine.addState(aliveState);
-		aliveState.setXPos(40);
-		aliveState.setYPos(40);
 		Connection.connectTwoIConnectables(initialState, aliveState);
 		
 		IState finalState = new FinalState();
@@ -449,30 +444,6 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 		addTransitions(binding, machine, ssr, stringToNode);
 		
 		return machine;
-	}
-	
-//	private StateSpace getSpaceFromIType(IType type) {
-//		Crystal crystal = AbstractCrystalPlugin.getCrystalInstance();
-//		final AnnotationDatabase annoDB = new AnnotationDatabase();
-//		crystal.registerAnnotationsWithDatabase(annoDB);
-//		StateSpaceRepository ssr = StateSpaceRepository.getInstance(annoDB);
-//		StateSpace space = ssr.getStateSpace(type);
-//
-//		return space;
-//	}
-
-
-	private void addChildNodes(State state, StateMachine machine, String str, StateSpace space) {
-//		boolean is_dimension = space.isDimension(str);
-//		
-//		State newState = is_dimension ?
-//				new GDimension((GStateMachine)machine) :
-//				new GNormalState((GStateMachine) machine);
-//		newState.setName(str);
-//		state.addState(newState);
-//		for(String s: space.getChildNodes(str)) {
-//			addChildNodes(newState, machine, s, space);
-//		}
 	}
 
 	@Override

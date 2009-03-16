@@ -40,11 +40,9 @@ package edu.cmu.cs.fiddle.figure;
 import org.eclipse.draw2d.BorderLayout;
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.Figure;
-import org.eclipse.draw2d.FreeformLayout;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
-import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.Shape;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
@@ -75,8 +73,8 @@ public class DimensionFigure extends Shape {
 		this.setOpaque(true);
 	
 		this.isLastDim = isLastDim;
-		this.name = new Label(name);
-		this.name.setLabelAlignment(PositionConstants.LEFT);
+		this.name = new Label(" " + name);
+		this.name.setLabelAlignment(Label.LEFT);
 		this.add(this.name, BorderLayout.TOP);
 		
 		this.contents = new Figure();

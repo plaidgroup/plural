@@ -52,7 +52,6 @@ import org.eclipse.draw2d.graph.Node;
 import org.eclipse.draw2d.graph.Subgraph;
 import org.eclipse.gef.ConnectionEditPart;
 import org.eclipse.gef.EditPart;
-import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
@@ -102,16 +101,6 @@ public class StateEditPart extends AbstractGraphicalEditPart
 	@Override
 	public IFigure getContentPane() {
 		return ((StateFigure)getFigure()).getContents();
-	}
-
-	@Override
-	protected void refreshVisuals() {
-		State model = getModelAsState();
-		// Here's how we tell the XYLayout where this figure should actually go.
-		// Again, this comes from the tutorial
-		Rectangle rect = new Rectangle(model.getXPos(), model.getYPos(), -1, -1);
-		
-		((GraphicalEditPart) getParent()).setLayoutConstraint(this, getFigure(), rect);
 	}
 	
 	private State getModelAsState() {
