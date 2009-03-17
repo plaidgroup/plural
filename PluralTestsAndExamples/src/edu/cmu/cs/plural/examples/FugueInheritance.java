@@ -3,11 +3,15 @@ package edu.cmu.cs.plural.examples;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
-import edu.cmu.cs.plural.annot.Full;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.Unique;
 
+@PassingTest
+@UseAnalyses({PluralAnalysis.SYNTAX, PluralAnalysis.EFFECT, PluralAnalysis.PLURAL})
 public class FugueInheritance {
 	
 	@ClassStates({
@@ -18,7 +22,6 @@ public class FugueInheritance {
 		
 		private Object sock = null;
 		
-		@Full
 		@Unique(requires = "closed", ensures = "open", fieldAccess = true)
 		public void open() {
 			this.sock = new Object();
@@ -36,6 +39,8 @@ public class FugueInheritance {
 		
 		@Override
 		public void open() {
+			// TODO avoid forced unpacking with field access
+			Map<String, String> c = this.cache;
 			super.open();
 			cache = new HashMap<String, String>();
 		}
