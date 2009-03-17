@@ -480,8 +480,9 @@ class LinearOperations extends TACAnalysisHelper {
 		protected final boolean splitOffInternal(Aliasing var,
 				String var_name, TensorPluralTupleLE value, PermissionSetFromAnnotations perms) {
 			if(borrowed != null && borrowed.contains(var)) {
-				// no frame permissions should get here
-				assert perms.getFramePermissions().isEmpty();
+				// no permissions for the *current* frame should get here
+				// (super-frame permissions are ok...)
+				assert !var.equals(this_loc) || perms.getFramePermissions().isEmpty();
 				
 				if(!checkStateInfoInternal(var, perms.getStateInfo(false), false))
 					// check state info right away so we can fail early if desired

@@ -530,11 +530,17 @@ public abstract class AbstractParamVisitor
 		boolean isFrame = false;
 		if(ref instanceof Identifier) {
 			param = ((Identifier) ref).getName();
-			// this flag decides whether a frame or virtual permission is created, so frameToVirtual matters
-			isFrame = !isFrameToVirtual() && ((Identifier) ref).isFrame();
-			if(isFrame /*((Identifier) ref).isFrame()*/)
-				// TODO keep permissions declared for receiver frame and virtual separate, even if coerced
-				param = param + "!fr";
+			if("super".equals(param)) {
+				// super always refers to a frame
+				isFrame = true;
+			}
+			else {
+				// this flag decides whether a frame or virtual permission is created, so frameToVirtual matters
+				isFrame = !isFrameToVirtual() && ((Identifier) ref).isFrame();
+				if(isFrame /*((Identifier) ref).isFrame()*/)
+					// TODO keep permissions declared for receiver frame and virtual separate, even if coerced
+					param = param + "!fr";
+			}
 		}
 		else if(ref instanceof ParamReference) {
 			param = ((ParamReference) ref).getParamString();

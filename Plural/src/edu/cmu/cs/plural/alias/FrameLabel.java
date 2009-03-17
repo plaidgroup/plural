@@ -58,6 +58,11 @@ public class FrameLabel implements ObjectLabel {
 	public boolean isSummary() {
 		return false;
 	}
+	
+	@Override
+	public String toString() {
+		return "frame:"+frame.getBinaryName();
+	}
 
 	@Override
 	public int hashCode() {

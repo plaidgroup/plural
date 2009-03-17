@@ -1090,7 +1090,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 * @return
 	 */
 	private static AliasLE getFrameAliasing(final ITypeBinding frameType) {
-		return AliasLE.create(new FrameLabel(frameType.getSuperclass()));
+		return AliasLE.create(new FrameLabel(frameType));
 	}
 	
 	/**
