@@ -59,6 +59,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
 
+import edu.cmu.cs.fiddle.figure.CornerAnchor;
 import edu.cmu.cs.fiddle.figure.StateFigure;
 import edu.cmu.cs.fiddle.model.State;
 import edu.cmu.cs.fiddle.model.IHasProperties.PropertyType;
@@ -110,23 +111,35 @@ public class StateEditPart extends AbstractGraphicalEditPart
 	@Override
 	public ConnectionAnchor getSourceConnectionAnchor(
 			ConnectionEditPart connection) {
-		return new ChopboxAnchor(getFigure());
+		edu.cmu.cs.fiddle.editpart.ConnectionEditPart connection_ = 
+			(edu.cmu.cs.fiddle.editpart.ConnectionEditPart)connection;
+		
+		if( connection_.isSelfConnection() || connection_.isChildToParent() )
+			return new CornerAnchor(getFigure(), true);
+		else
+			return new ChopboxAnchor(getFigure());
 	}
 
 	@Override
 	public ConnectionAnchor getSourceConnectionAnchor(Request request) {
-		return new ChopboxAnchor(getFigure());
+		throw new RuntimeException("NYI");
 	}
 
 	@Override
 	public ConnectionAnchor getTargetConnectionAnchor(
 			ConnectionEditPart connection) {
-		return new ChopboxAnchor(getFigure());
+		edu.cmu.cs.fiddle.editpart.ConnectionEditPart connection_ = 
+			(edu.cmu.cs.fiddle.editpart.ConnectionEditPart)connection;
+		
+		if( connection_.isSelfConnection() || connection_.isChildToParent() )
+			return new CornerAnchor(getFigure(), false);
+		else
+			return new ChopboxAnchor(getFigure());
 	}
 
 	@Override
 	public ConnectionAnchor getTargetConnectionAnchor(Request request) {
-		return new ChopboxAnchor(getFigure());
+		throw new RuntimeException("NYI");
 	}
 
 	@Override

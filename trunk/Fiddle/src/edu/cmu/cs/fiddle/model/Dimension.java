@@ -119,4 +119,20 @@ public class Dimension implements IDimension, IHasProperties {
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		this.listeners.removePropertyChangeListener(listener);
 	}
+
+	@Override
+	public boolean isParentOf(IConnectable child) {
+		// Breadth-first
+		for( IConnectable dim : this.getStates() ) {
+			if( dim.equals(child) ) {
+				return true;
+			}
+		}
+		for( IConnectable dim : this.getStates() ) {
+			if( dim.isParentOf(child) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

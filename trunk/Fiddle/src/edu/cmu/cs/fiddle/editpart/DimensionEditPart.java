@@ -57,6 +57,7 @@ import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 
+import edu.cmu.cs.fiddle.figure.CornerAnchor;
 import edu.cmu.cs.fiddle.figure.DimensionFigure;
 import edu.cmu.cs.fiddle.model.Dimension;
 import edu.cmu.cs.fiddle.model.IConnection;
@@ -91,23 +92,35 @@ public class DimensionEditPart extends AbstractGraphicalEditPart implements
 	@Override
 	public ConnectionAnchor getSourceConnectionAnchor(
 			ConnectionEditPart connection) {
-		return new ChopboxAnchor(getFigure());
+		edu.cmu.cs.fiddle.editpart.ConnectionEditPart connection_ = 
+			(edu.cmu.cs.fiddle.editpart.ConnectionEditPart)connection;
+		
+		if( connection_.isSelfConnection() || connection_.isChildToParent() )
+			return new CornerAnchor(getFigure(), true);
+		else
+			return new ChopboxAnchor(getFigure());
 	}
 
 	@Override
 	public ConnectionAnchor getSourceConnectionAnchor(Request request) {
-		return new ChopboxAnchor(getFigure());
+		throw new RuntimeException("NYI");
 	}
 
 	@Override
 	public ConnectionAnchor getTargetConnectionAnchor(
 			ConnectionEditPart connection) {
-		return new ChopboxAnchor(getFigure());
+		edu.cmu.cs.fiddle.editpart.ConnectionEditPart connection_ = 
+			(edu.cmu.cs.fiddle.editpart.ConnectionEditPart)connection;
+		
+		if( connection_.isSelfConnection() || connection_.isChildToParent() )
+			return new CornerAnchor(getFigure(), false);
+		else
+			return new ChopboxAnchor(getFigure());
 	}
 
 	@Override
 	public ConnectionAnchor getTargetConnectionAnchor(Request request) {
-		return new ChopboxAnchor(getFigure());
+		throw new RuntimeException("NYI");
 	}
 
 	private Dimension modelAsDimension() {
