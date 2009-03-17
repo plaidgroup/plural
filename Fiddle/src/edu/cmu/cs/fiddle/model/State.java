@@ -119,4 +119,20 @@ public class State implements IState, IHasProperties {
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		this.listeners.removePropertyChangeListener(listener);
 	}
+
+	@Override
+	public boolean isParentOf(IConnectable child) {
+		// Breadth-first
+		for( IDimension dim : this.getDimensions() ) {
+			if( dim.equals(child) ) {
+				return true;
+			}
+		}
+		for( IDimension dim : this.getDimensions() ) {
+			if( dim.isParentOf(child) ) {
+				return true;
+			}
+		}
+		return false;
+	}
 }

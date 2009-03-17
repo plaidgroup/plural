@@ -107,4 +107,9 @@ public class InitialState implements IState, IHasProperties {
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		this.listeners.removePropertyChangeListener(listener);
 	}
+
+	@Override
+	public boolean isParentOf(IConnectable child) {
+		return false;
+	}
 }

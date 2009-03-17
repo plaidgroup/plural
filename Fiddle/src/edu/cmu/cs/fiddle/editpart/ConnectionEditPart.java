@@ -46,6 +46,7 @@ import java.util.Map;
 
 import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.Bendpoint;
+import org.eclipse.draw2d.FanRouter;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolygonDecoration;
 import org.eclipse.draw2d.PolylineConnection;
@@ -56,6 +57,8 @@ import org.eclipse.draw2d.graph.NodeList;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 
+import edu.cmu.cs.fiddle.figure.BendpointSelfConnectionRouter;
+import edu.cmu.cs.fiddle.model.Connection;
 import edu.cmu.cs.fiddle.model.IHasProperties;
 import edu.cmu.cs.fiddle.model.IHasProperties.PropertyType;
 
@@ -71,12 +74,48 @@ public class ConnectionEditPart extends AbstractConnectionEditPart
 	protected void createEditPolicies() {
 
 	}
+
+	/**
+	 * Does this method connect this state/dimension to its child
+	 * or parent?
+	 */
+	public boolean isChildToParent() {
+		Connection model = modelAsConnection();
+		return model.getSource().isParentOf(model.getTarget()) ||
+		       model.getTarget().isParentOf(model.getSource());
+	}
+	
+	/**
+	 * Does this method connect this state/dimension to itself?
+	 */
+	public boolean isSelfConnection() {
+		return modelAsConnection().getSource().equals(modelAsConnection().getTarget());
+	}
 	
 	@Override
 	protected IFigure createFigure() {
+		/*
+		 * If this connection represents a self connection (and
+		 * later a parent to child connection) we use a different
+		 * anchor and router to better display that connection. 
+		 */
 		PolylineConnection connection = (PolylineConnection) super.createFigure();
 		connection.setTargetDecoration(new PolygonDecoration());
+		if( isSelfConnection() || isChildToParent() ) {
+			// Self
+			connection.setConnectionRouter(new BendpointSelfConnectionRouter(connection));
+		}
+		else {
+			// other
+			connection.setConnectionRouter(new FanRouter());
+		}
 		return connection;
+	}
+
+	
+
+	private Connection modelAsConnection() {
+		return (Connection)this.getModel();
 	}
 
 	@Override

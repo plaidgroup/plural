@@ -70,4 +70,12 @@ public interface IConnectable {
 	 * Adds a new outgoing connection.
 	 */
 	public void addOutgoingConnection(IConnection conn);
+
+	/**
+	 * Is this IConnectable a parent of the given IConnectable?
+	 * The fact that this method is 'isParentOf' means it is
+	 * much easier to implement, but much less effecient than
+	 * 'isChildOf.'
+	 */
+	public boolean isParentOf(IConnectable child);
 }
