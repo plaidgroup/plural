@@ -54,14 +54,15 @@ import edu.cmu.cs.crystal.BooleanLabel;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
+import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.flow.LabeledSingleResult;
-import edu.cmu.cs.crystal.flow.Lattice;
+import edu.cmu.cs.crystal.simple.LatticeElementOps;
 import edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.AssignmentInstruction;
-import edu.cmu.cs.crystal.tac.BranchSensitiveTACAnalysis;
 import edu.cmu.cs.crystal.tac.CastInstruction;
 import edu.cmu.cs.crystal.tac.ConstructorCallInstruction;
 import edu.cmu.cs.crystal.tac.CopyInstruction;
@@ -76,6 +77,7 @@ import edu.cmu.cs.crystal.tac.NewObjectInstruction;
 import edu.cmu.cs.crystal.tac.SourceVariable;
 import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
+import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.TypeVariable;
@@ -90,7 +92,7 @@ import edu.cmu.cs.plural.track.Permission.PermissionKind;
  */
 public class PermissionAnalysis extends AbstractCrystalMethodAnalysis {
 
-	private BranchSensitiveTACAnalysis<DisjointSetTuple<Variable, Permissions>> fa;
+	private ITACFlowAnalysis<DisjointSetTuple<Variable, Permissions>> fa;
 
 	private HashMap<TACInstruction, String> problems;
 
@@ -108,7 +110,7 @@ public class PermissionAnalysis extends AbstractCrystalMethodAnalysis {
 	public void analyzeMethod(MethodDeclaration d) {
 		// create a transfer function object and pass it to a new FlowAnalysis
 		PermTransferFunction tf = new PermTransferFunction(d);
-		fa = new BranchSensitiveTACAnalysis<DisjointSetTuple<Variable, Permissions>>(tf, 
+		fa = new TACFlowAnalysis<DisjointSetTuple<Variable, Permissions>>(tf, 
 				this.analysisInput.getComUnitTACs().unwrap());
 		
 		// must call getResultsAfter at least once on this method,
@@ -138,8 +140,6 @@ public class PermissionAnalysis extends AbstractCrystalMethodAnalysis {
 		super.beforeAllMethods(compUnit, rootNode);
 		problems = new HashMap<TACInstruction, String>();
 		// TODO use annotation database
-		//crystal.getAnnotationDatabase().register(StateTest.class.getName(), StateTestAnnotation.class);
-		//crystal.getAnnotationDatabase().register(Indicates.class.getName(), IndicatesAnnotation.class);
 	}
 
 	/**
@@ -170,11 +170,13 @@ public class PermissionAnalysis extends AbstractCrystalMethodAnalysis {
 			this.analyzedMethod = analyzedMethod;
 		}
 
-		public Lattice<DisjointSetTuple<Variable, Permissions>> getLattice(MethodDeclaration d) {
-			// TODO initialize receiver and parameters
-			return new Lattice<DisjointSetTuple<Variable, Permissions>>(
-					new DisjointSetTuple<Variable, Permissions>(Permissions.BOTTOM),
+		public ILatticeOperations<DisjointSetTuple<Variable, Permissions>> createLatticeOperations(MethodDeclaration d) {
+			return LatticeElementOps.create(
 					new DisjointSetTuple<Variable, Permissions>(Permissions.BOTTOM));
+		}
+		
+		public DisjointSetTuple<Variable, Permissions> createEntryValue(MethodDeclaration d) {
+			return new DisjointSetTuple<Variable, Permissions>(Permissions.BOTTOM);
 		}
 		
 		public Permissions get(Variable x, DisjointSetTuple<Variable, Permissions> value) {
@@ -407,7 +409,7 @@ public class PermissionAnalysis extends AbstractCrystalMethodAnalysis {
 			
 			// process boolean state tests
 			LabeledResult<DisjointSetTuple<Variable, Permissions>> result = 
-				LabeledResult.createResult(value);
+				LabeledResult.createResult(labels, value);
 			for(ILabel label : labels) {
 				if(label instanceof BooleanLabel) {
 					boolean outcome = ((BooleanLabel) label).getBranchValue();

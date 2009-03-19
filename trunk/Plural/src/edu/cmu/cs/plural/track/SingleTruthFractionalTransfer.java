@@ -61,10 +61,11 @@ import edu.cmu.cs.crystal.BooleanLabel;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.flow.LabeledSingleResult;
-import edu.cmu.cs.crystal.flow.Lattice;
+import edu.cmu.cs.crystal.simple.LatticeElementOps;
 import edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.BinaryOperation;
@@ -99,7 +100,6 @@ import edu.cmu.cs.plural.concrete.ImplicationResult;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionAssignment;
-import edu.cmu.cs.plural.fractions.FractionConstraints;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
@@ -123,6 +123,8 @@ public class SingleTruthFractionalTransfer extends
 	
 	private PermissionFactory pf = PermissionFactory.INSTANCE;
 	
+	private PluralTupleLatticeElement start;
+
 	/*
 	 * Post-condition stuff.
 	 */
@@ -160,7 +162,7 @@ public class SingleTruthFractionalTransfer extends
 	 * For state invariants, I will insert information into the lattice about this object's
 	 * fields based on what the precondition state implies.
 	 */
-	public Lattice<PluralTupleLatticeElement> getLattice(MethodDeclaration d) {
+	public ILatticeOperations<PluralTupleLatticeElement> createLatticeOperations(MethodDeclaration d) {
 		final IMethodBinding methodBinding = d.resolveBinding();
 		
 		if(paramPost != null || dynamicStateTest != null)
@@ -168,8 +170,6 @@ public class SingleTruthFractionalTransfer extends
 		paramPost = new HashMap<Aliasing, PermissionSetFromAnnotations>();
 		dynamicStateTest = new HashMap<Boolean, String>(2);
 		
-		PluralTupleLatticeElement start;
-
 		// receiver permission--skip for static methods
 		if((d.getModifiers() & Modifier.STATIC) == 0) {
 			thisVar = getAnalysisContext().getThisVariable();
@@ -244,8 +244,11 @@ public class SingleTruthFractionalTransfer extends
 		// populate expected result
 		resultPost = resultPermissions(methodBinding, false);
 		
-		return new Lattice<PluralTupleLatticeElement>(
-				start, start.bottom());
+		return LatticeElementOps.create(start.bottom());
+	}
+	
+	public PluralTupleLatticeElement createEntryValue(MethodDeclaration d) {
+		return start;
 	}
 
 	private void populateDynamicStateTest(MethodDeclaration d) {

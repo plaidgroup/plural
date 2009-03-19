@@ -73,7 +73,7 @@ public interface AliasedLatticeElement<K, I, AE extends AliasedLatticeElement<K,
 	 * lattice infos to common representatives. 
 	 * @return <code>true</code> if this lattice element is more precise than
 	 * the <code>other</code>, <code>false</code> otherwise.
-	 * @see edu.cmu.cs.crystal.flow.LatticeElement#atLeastAsPrecise(edu.cmu.cs.crystal.flow.LatticeElement, ASTNode)
+	 * @see edu.cmu.cs.crystal.simple.LatticeElement#atLeastAsPrecise(edu.cmu.cs.crystal.simple.LatticeElement, ASTNode)
 	 */
 	public boolean atLeastAsPrecise(DisjointSets<K, I, AE> other, 
 			Map<K, K> representatives);
@@ -82,7 +82,7 @@ public interface AliasedLatticeElement<K, I, AE extends AliasedLatticeElement<K,
 	 * Copies this lattice element, if it is not immutable.
 	 * @return Deep copy of this lattice element, or <code>this</code> if 
 	 * it is immutable.
-	 * @see edu.cmu.cs.crystal.flow.LatticeElement#copy()
+	 * @see edu.cmu.cs.crystal.simple.LatticeElement#copy()
 	 */
 	public AE copy();
 	
@@ -94,7 +94,7 @@ public interface AliasedLatticeElement<K, I, AE extends AliasedLatticeElement<K,
 	 * lattice infos to common representatives. 
 	 * @param node AST node on which the join occurs. 
 	 * @return Joined lattice information, using the given representatives.
-	 * @see edu.cmu.cs.crystal.flow.LatticeElement#join(edu.cmu.cs.crystal.flow.LatticeElement)
+	 * @see edu.cmu.cs.crystal.simple.LatticeElement#join(edu.cmu.cs.crystal.simple.LatticeElement)
 	 */
 	public AE join(DisjointSets<K, I, AE> other, 
 			Map<K, K> representatives, ASTNode node);

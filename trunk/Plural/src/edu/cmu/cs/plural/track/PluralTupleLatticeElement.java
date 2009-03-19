@@ -60,7 +60,7 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.flow.LatticeElement;
+import edu.cmu.cs.crystal.simple.LatticeElement;
 import edu.cmu.cs.crystal.tac.SourceVariable;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.TempVariable;

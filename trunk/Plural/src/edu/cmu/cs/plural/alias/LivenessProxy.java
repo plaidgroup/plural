@@ -45,7 +45,7 @@ import edu.cmu.cs.crystal.analysis.live.LiveVariableLE;
 import edu.cmu.cs.crystal.analysis.live.LiveVariableTransferFunction;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
-import edu.cmu.cs.crystal.flow.TupleLatticeElement;
+import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.Variable;
