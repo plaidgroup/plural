@@ -58,9 +58,10 @@ import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.analysis.metrics.LoopCountingAnalysis;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledSingleResult;
-import edu.cmu.cs.crystal.flow.Lattice;
+import edu.cmu.cs.crystal.simple.LatticeElementOps;
 import edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.AssignmentInstruction;
@@ -120,7 +121,11 @@ public class LocalAliasTransfer extends
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.crystal.flow.IFlowAnalysisDefinition#getLattice(org.eclipse.jdt.core.dom.MethodDeclaration)
 	 */
-	public Lattice<AliasingLE> getLattice(MethodDeclaration methodDeclaration) {
+	public ILatticeOperations<AliasingLE> createLatticeOperations(MethodDeclaration method) {
+		return LatticeElementOps.create(AliasingLE.createBottom());
+	}
+	
+	public AliasingLE createEntryValue(MethodDeclaration method) {
 		labelContext = new HashMap<Variable, ObjectLabel>();
 //		liveness.switchToMethod(methodDeclaration);
 		AliasingLE entry = AliasingLE.createEmpty();
@@ -145,7 +150,7 @@ public class LocalAliasTransfer extends
 		/*
 		 * Create brand new locations for each field of this.
 		 */
-		ITypeBinding this_type = methodDeclaration.resolveBinding().getDeclaringClass();
+		ITypeBinding this_type = method.resolveBinding().getDeclaringClass();
 		while(this_type != null) {
 			for( final IVariableBinding field : this_type.getDeclaredFields() ) {
 				if((field.getModifiers() & Modifier.STATIC) != 0)
@@ -173,7 +178,7 @@ public class LocalAliasTransfer extends
 			this_type = this_type.getSuperclass();
 		}
 		
-		return new Lattice<AliasingLE>(entry, AliasingLE.createBottom());
+		return entry;
 	}
 
 	private ObjectLabel createThisLabel(final Variable thisVar) {

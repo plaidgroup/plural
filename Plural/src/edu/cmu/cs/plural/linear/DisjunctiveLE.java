@@ -39,7 +39,7 @@ package edu.cmu.cs.plural.linear;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import edu.cmu.cs.crystal.flow.LatticeElement;
+import edu.cmu.cs.crystal.simple.LatticeElement;
 import edu.cmu.cs.crystal.util.Freezable;
 
 /**

@@ -41,8 +41,8 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import edu.cmu.cs.crystal.flow.LatticeElement;
-import edu.cmu.cs.crystal.flow.TupleLatticeElement;
+import edu.cmu.cs.crystal.simple.LatticeElement;
+import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 
 /**
  * @author Kevin Bierhoff

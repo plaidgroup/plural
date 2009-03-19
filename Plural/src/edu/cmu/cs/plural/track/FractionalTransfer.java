@@ -57,9 +57,10 @@ import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.NormalLabel;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
-import edu.cmu.cs.crystal.flow.Lattice;
+import edu.cmu.cs.crystal.simple.LatticeElementOps;
 import edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.AssignmentInstruction;
@@ -174,16 +175,14 @@ public class FractionalTransfer extends
 	 * For state invariants, I will insert information into the lattice about this object's
 	 * fields based on what the precondition state implies.
 	 */
-	public Lattice<PluralDisjunctiveLE> getLattice(MethodDeclaration d) {
+	public ILatticeOperations<PluralDisjunctiveLE> createLatticeOperations(MethodDeclaration d) {
+		return LatticeElementOps.create(PluralDisjunctiveLE.bottom());
+	}
+	
+	public PluralDisjunctiveLE createEntryValue(MethodDeclaration d) {
 		if(initialLocations != null || dynamicStateTest != null)
 			throw new IllegalStateException("getLattice() called twice--must create a new instance of this class for every method being analyzed");
 		
-//		final IMethodBinding methodBinding = d.resolveBinding();
-		
-//		if(paramPost != null || dynamicStateTest != null)
-//			throw new IllegalStateException("getLattice() called twice--must create a new instance of this class for every method being analyzed");
-//		paramPost = new HashMap<Aliasing, PermissionSetFromAnnotations>();
-
 		liveness.switchToMethod(d);
 		
 		Pair<DisjunctiveLE, SimpleMap<String, Aliasing>> li = createLatticeInfo(d);
@@ -194,89 +193,6 @@ public class FractionalTransfer extends
 		dynamicStateTest = new HashMap<Boolean, String>(2);
 		populateDynamicStateTest();
 		
-		//		TensorPluralTupleLE start;
-//		boolean isConstructor = d.isConstructor();
-//
-//		// receiver permission--skip for static methods
-//		if((d.getModifiers() & Modifier.STATIC) == 0) {
-//			// instance method or constructor
-//			thisVar = getAnalysisContext().getThisVariable();
-//			// Get initial lattice, either constructor or regular method.
-//			start = 
-//				isConstructor ? 
-//				TensorPluralTupleLE.createUnpackedLattice(
-//					FractionalPermissions.createEmpty(), // use top (no permissions) as default
-//					getAnnoDB(),
-//					context.getRepository(),
-//					thisVar)
-//					:	
-//				new TensorPluralTupleLE(
-//					FractionalPermissions.createEmpty(), // use top (no permissions) as default
-//					getAnnoDB(),
-//					context.getRepository());
-//			
-//			start.storeInitialAliasingInfo(d);
-//			Aliasing thisLocation =
-//				start.getStartLocations(thisVar, d);
-//			
-//			// get the declared pre-condition
-//			PermissionSetFromAnnotations this_pre = context.getAnalyzedCase().getRequiredReceiverPermissions();
-//			// pre-condition
-//			if(isConstructor) { // constructor
-//				// add an unpacked unique frame permission for alive
-//				StateSpace thisSpace = getStateSpace(methodBinding.getDeclaringClass());
-//				PermissionFromAnnotation thisFrame = 
-//					pf.createUniqueOrphan(thisSpace, thisSpace.getRootState(), 
-//							true /* frame permission */, thisSpace.getRootState());
-//				// there shouldn't already be frame permissions
-//				assert this_pre.getFramePermissions().isEmpty() :
-//					"Specification error: a constructor cannot require frame permissions; instead, it starts out with an unpacked unique frame permission"; 
-//				this_pre = this_pre.combine(thisFrame); 
-//
-//				FractionalPermissions this_initial = this_pre.toLatticeElement();
-//				this_initial = this_initial.unpack(thisSpace.getRootState());
-//				start.put(thisLocation, this_initial);
-//			}
-//			else { 
-//				// regular instance method: just use declared pre-condition
-//				start.put(thisLocation, this_pre.toLatticeElement());
-//			}
-//			
-//			// post-condition
-//			PermissionSetFromAnnotations thisPost = context.getAnalyzedCase().getEnsuredReceiverPermissions();
-//			paramPost.put(thisLocation, thisPost);
-//		}
-//		else {
-//			// static method
-//			thisVar = null;
-//			start =	new TensorPluralTupleLE(FractionalPermissions.createEmpty(), // use top (no permissions) as default
-//					getAnnoDB(), context.getRepository());
-//			start.storeInitialAliasingInfo(d);
-//		}
-//		
-//		/*
-//		 * Fill this.dynamicStateTest
-//		 */
-//		populateDynamicStateTest();
-//		
-//		// parameter permissions
-//		int paramCount = d.parameters().size();
-//		for(int param = 0; param < paramCount; param++) {
-//			SingleVariableDeclaration paramDecl = (SingleVariableDeclaration) d.parameters().get(param);
-//			SourceVariable paramVar = getAnalysisContext().getSourceVariable(paramDecl.resolveBinding());
-//			Aliasing paramLocation = start.getLocationsAfter(paramDecl, paramVar);
-//			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> prePost = 
-//				context.getAnalyzedCase().getParameterPermissions()[param];
-////				parameterPermissions(methodBinding, param, true);
-//			start.put(paramLocation, prePost.fst().toLatticeElement());
-//			paramPost.put(paramLocation, prePost.snd());
-//		}
-//		
-//		// populate expected result
-//		if(isConstructor == false)
-//			resultPost = context.getAnalyzedCase().getMethodCaseInstance().getEnsuredResultPermissions();
-//		resultPost = resultPermissions(methodBinding, false);
-		
 		PluralDisjunctiveLE startLE = PluralDisjunctiveLE.createLE(start,
 				getAnalysisContext(), context);
 		
@@ -286,8 +202,7 @@ public class FractionalTransfer extends
 				log.fine("Ignoring implicit super-constructor call");
 		}
 		
-		return new Lattice<PluralDisjunctiveLE>(
-				startLE, PluralDisjunctiveLE.bottom());
+		return startLE;
 	}
 
 	private Pair<DisjunctiveLE, SimpleMap<String, Aliasing>> createLatticeInfo(MethodDeclaration decl) {

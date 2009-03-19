@@ -48,12 +48,12 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
-import edu.cmu.cs.crystal.flow.Lattice;
-import edu.cmu.cs.crystal.flow.TupleLatticeElement;
+import edu.cmu.cs.crystal.flow.ILatticeOperations;
+import edu.cmu.cs.crystal.simple.LatticeElementOps;
+import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 import edu.cmu.cs.crystal.tac.AbstractingTransferFunction;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.AssignmentInstruction;
-import edu.cmu.cs.crystal.tac.BranchInsensitiveTACAnalysis;
 import edu.cmu.cs.crystal.tac.CastInstruction;
 import edu.cmu.cs.crystal.tac.ConstructorCallInstruction;
 import edu.cmu.cs.crystal.tac.CopyInstruction;
@@ -142,6 +142,9 @@ public class BranchInsensitivePermissionAnalysis extends AbstractCrystalMethodAn
 	private class PermTransferFunction extends AbstractingTransferFunction<TupleLatticeElement<Variable, Permissions>> {
 		
 		private MethodDeclaration analyzedMethod;
+		
+		private TupleLatticeElement<Variable, Permissions> entry =
+			new TupleLatticeElement<Variable, Permissions>(Permissions.BOTTOM, Permissions.BOTTOM);
 
 		public PermTransferFunction(MethodDeclaration analyzedMethod) {
 			this.analyzedMethod = analyzedMethod;
@@ -150,11 +153,13 @@ public class BranchInsensitivePermissionAnalysis extends AbstractCrystalMethodAn
 		/* (non-Javadoc)
 		 * @see edu.cmu.cs.crystal.tac.ITransferFunction#getLattice(com.surelogic.ast.java.operator.IMethodDeclarationNode)
 		 */
-		public Lattice<TupleLatticeElement<Variable, Permissions>> getLattice(MethodDeclaration d) {
+		public ILatticeOperations<TupleLatticeElement<Variable, Permissions>> createLatticeOperations(MethodDeclaration d) {
+			return LatticeElementOps.create(entry.bottom());
+		}
+		
+		public TupleLatticeElement<Variable, Permissions> createEntryValue(MethodDeclaration d) {
 			// TODO initialize receiver and parameters
-			return new Lattice<TupleLatticeElement<Variable, Permissions>>(
-					new TupleLatticeElement<Variable, Permissions>(Permissions.BOTTOM, Permissions.BOTTOM),
-					new TupleLatticeElement<Variable, Permissions>(Permissions.BOTTOM, Permissions.BOTTOM));
+			return entry.copy();
 		}
 		
 		public Permissions get(Variable x, TupleLatticeElement<Variable, Permissions> value) {

@@ -42,7 +42,7 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.flow.LatticeElement;
+import edu.cmu.cs.crystal.simple.LatticeElement;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.Variable;
 

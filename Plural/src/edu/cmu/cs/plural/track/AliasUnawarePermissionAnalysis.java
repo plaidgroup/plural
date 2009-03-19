@@ -53,11 +53,12 @@ import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
 import edu.cmu.cs.crystal.BooleanLabel;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.flow.LabeledSingleResult;
-import edu.cmu.cs.crystal.flow.Lattice;
-import edu.cmu.cs.crystal.flow.TupleLatticeElement;
+import edu.cmu.cs.crystal.simple.LatticeElementOps;
+import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 import edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.AssignmentInstruction;
@@ -137,8 +138,6 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 		super.beforeAllMethods(compUnit, rootNode);
 		problems = new HashMap<TACInstruction, String>();
 		// TODO use annotation database
-		//crystal.getAnnotationDatabase().register(StateTest.class.getName(), StateTestAnnotation.class);
-		//crystal.getAnnotationDatabase().register(Indicates.class.getName(), IndicatesAnnotation.class);
 	}
 
 	/**
@@ -164,15 +163,20 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 		
 		private MethodDeclaration analyzedMethod;
 
+		private TupleLatticeElement<Variable, Permissions> entry =
+			new TupleLatticeElement<Variable, Permissions>(Permissions.BOTTOM, Permissions.BOTTOM);
+
 		public PermTransferFunction(MethodDeclaration analyzedMethod) {
 			this.analyzedMethod = analyzedMethod;
 		}
 
-		public Lattice<TupleLatticeElement<Variable, Permissions>> getLattice(MethodDeclaration d) {
+		public ILatticeOperations<TupleLatticeElement<Variable, Permissions>> createLatticeOperations(MethodDeclaration d) {
+			return LatticeElementOps.create(entry.bottom());
+		}
+		
+		public TupleLatticeElement<Variable, Permissions> createEntryValue(MethodDeclaration d) {
 			// TODO initialize receiver and parameters
-			return new Lattice<TupleLatticeElement<Variable, Permissions>>(
-					new TupleLatticeElement<Variable, Permissions>(Permissions.BOTTOM, Permissions.BOTTOM),
-					new TupleLatticeElement<Variable, Permissions>(Permissions.BOTTOM, Permissions.BOTTOM));
+			return entry.copy();
 		}
 		
 		public Permissions get(Variable x, TupleLatticeElement<Variable, Permissions> value) {
@@ -392,7 +396,7 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 			
 			// process boolean state tests
 			LabeledResult<TupleLatticeElement<Variable, Permissions>> result = 
-				LabeledResult.createResult(value);
+				LabeledResult.createResult(labels, value);
 			for(ILabel label : labels) {
 				if(label instanceof BooleanLabel) {
 					boolean outcome = ((BooleanLabel) label).getBranchValue();

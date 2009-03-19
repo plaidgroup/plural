@@ -53,7 +53,7 @@ import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
-import edu.cmu.cs.crystal.flow.LatticeElement;
+import edu.cmu.cs.crystal.simple.LatticeElement;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.Variable;
@@ -89,7 +89,7 @@ import edu.cmu.cs.plural.util.ReplacementGenerator;
  * 
  * @author Kevin Bierhoff
  * @since Crystal 3.3.0
- * @see edu.cmu.cs.crystal.flow.TupleLatticeElement
+ * @see edu.cmu.cs.crystal.simple.TupleLatticeElement
  */
 public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	Freezable<AliasAwareTupleLE<LE>>,	
