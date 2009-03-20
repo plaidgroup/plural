@@ -52,6 +52,7 @@ public class Connection implements IConnection, IHasProperties {
 	private IConnectable target;
 	
 	private String name;
+	private String hover;
 
 	private PropertyChangeSupport listeners;
 	
@@ -93,6 +94,15 @@ public class Connection implements IConnection, IHasProperties {
 		this.name = name;
 	}
 
+	@Override
+	public String getHover() {
+		return hover;
+	}
+
+	@Override
+	public void setHover(String hover) {
+		this.hover = hover;
+	}
 	@SuppressWarnings("unused")
 	private void firePropertyChange(PropertyType prop, Object oldValue, Object newValue) {
 		this.listeners.firePropertyChange(prop.toString(), oldValue, newValue);
@@ -107,4 +117,5 @@ public class Connection implements IConnection, IHasProperties {
 	public void removePropertyChangeListener(PropertyChangeListener listener) {
 		listeners.removePropertyChangeListener(listener);
 	}
+
 }
