@@ -243,32 +243,28 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 	
 	private void addTransitions(ITypeBinding binding, StateMachine machine, StateSpaceRepository ssr, Map<String, IConnectable> stringToNode){
 		List<IMethodBinding> methods = getClassMethods(binding, ssr);
+		StateSpace space = ssr.getStateSpace(binding);
 		
 		for( IMethodBinding method : methods ) {
 			IInvocationSignature sig = ssr.getSignature(method);
-			String start = "";
-			String finish = "";
-			
 			// Results...
 			for(Set<String> set : sig.getRequiredReceiverStateOptions()){
-				for(String s : set){
-					start = s;
-				}
-			}
-			
-			if(method.isConstructor()) start = "Initial";
-			
-			for(Set<String> set : sig.getEnsuredReceiverStateOptions()){
-				for(String s : set){
-					finish = s;
+				for(String start : set){
+					for(Set<String> fset : sig.getEnsuredReceiverStateOptions()){
+						for(String finish : fset){
+							IConnectable s1 = stringToNode.get(start);
+							IConnectable s2 = stringToNode.get(finish);
+							
+							if(null != s1 && null != s2) {
+								if(!space.areOrthogonal(start, finish))
+									createTransition(s1, s2, machine, method);
+							}
+						}						
+					}
+
 				}
 			}
 
-			IConnectable s1 = stringToNode.get(start);
-			IConnectable s2 = stringToNode.get(finish);
-			if(null != s1 && null != s2) {
-				createTransition(s1, s2, machine, method);
-			}
 		}
 		
 		for( ITypeBinding face_bind : binding.getInterfaces() ) {
@@ -280,7 +276,7 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 	}
 	
 	private void createTransition(IConnectable s1, IConnectable s2, StateMachine machine, IMethodBinding method) {
-		String sig = extractSignature(method);
+		//String sig = extractSignature(method);
 		Connection.connectTwoIConnectables(s1, s2);
 		//machine.createTransition(s1, s2, machine.createGuard(sig), ((GStateMachine) machine).createEvent(method.getName()));
 	}
