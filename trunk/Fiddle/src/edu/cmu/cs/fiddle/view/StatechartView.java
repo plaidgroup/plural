@@ -48,6 +48,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.draw2d.ColorConstants;
+import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.MidpointLocator;
 import org.eclipse.gef.EditDomain;
 import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -77,6 +79,7 @@ import edu.cmu.cs.fiddle.model.Connection;
 import edu.cmu.cs.fiddle.model.Dimension;
 import edu.cmu.cs.fiddle.model.FinalState;
 import edu.cmu.cs.fiddle.model.IConnectable;
+import edu.cmu.cs.fiddle.model.IConnection;
 import edu.cmu.cs.fiddle.model.IDimension;
 import edu.cmu.cs.fiddle.model.IState;
 import edu.cmu.cs.fiddle.model.InitialState;
@@ -107,8 +110,6 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 
 	private boolean pin = false;
 
-	//private LayoutAction lact;
-
 	public StateMachine getStateMachine() {
 		return stateMachine;
 	}
@@ -121,37 +122,13 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 		this.pin = b;
 	}
 
-	// Just create some simple model, like we always do.
-//	private GStateMachine createModelForTestPurposes() {
-//		GModel m = new GModel();
-//
-//		GStateMachine new_state_machine = new GStateMachine(m);
-//		new_state_machine.setName("Nels state machine #" +  
-//				System.currentTimeMillis());
-//		m.addStateMachine(new_state_machine);
-//
-//		GNormalState my_first_state = new GNormalState(new_state_machine);
-//		new_state_machine.getTop().addSubstate(my_first_state);
-//
-//		GNormalState my_second_state = new GNormalState(new_state_machine);
-//		new_state_machine.getTop().addSubstate(my_second_state);
-//
-//		/*GTransition my_transition = (GTransition) */new_state_machine.createTransition(
-//				my_first_state, my_second_state, new_state_machine.createGuard("o1.x1"), new_state_machine.createEvent("e1"));
-//
-//		return new_state_machine;
-//	}
-
 	/*
 	 * @see org.eclipse.ui.part.WorkbenchPart#createPartControl(org.eclipse.swt.widgets.Composite)
 	 */
 	@Override
 	public void createPartControl(Composite parent) {
-		//setEditDomain(new MyEditDomain(null)); // NEB: Normally takes an editor
 		setGraphicalViewer(new ScrollingGraphicalViewer());
 		getGraphicalViewer().createControl(parent);
-//		getGraphicalViewer().setRootEditPart(
-//				new FreeformGraphicalRootEditPart());
 		getGraphicalViewer().setEditPartFactory(new StateEditPartFactory());
 
 		setStateMachine(new StateMachine());
@@ -161,21 +138,10 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 				ColorConstants.listBackground);
 
 		// Add the menu that performs graph layout
-		// addGraphLayoutAction();
 		addGraphPinAction();
 
 		getViewSite().getPage().addPostSelectionListener(this);
 	}
-
-//	private void addGraphLayoutAction() {
-//		Action action = new LayoutAction(this);
-//		IActionBars actionBars = getViewSite().getActionBars();
-//		IMenuManager dropDownMenu = actionBars.getMenuManager();
-//		IToolBarManager toolBar = actionBars.getToolBarManager();
-//		dropDownMenu.add(action);
-//		toolBar.add(action);
-//		lact = (LayoutAction)action;
-//	}
 
 	private void addGraphPinAction() {
 		Action action = new PinAction(this);
@@ -211,21 +177,10 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 	 *            the graphical viewer
 	 */
 	private void setGraphicalViewer(ScrollingGraphicalViewer scrollingGraphicalViewer) {
-		//getEditDomain().addViewer(viewer);
 		this.graphicalViewer = scrollingGraphicalViewer;
 	}
-	
-	/**
-	 * Sets the EditDomain for this ViewPart.
-	 * 
-	 * @param anEditDomain
-	 *            the EditDomain for this ViewPart.
-	 */
-//	protected void setEditDomain(MyEditDomain anEditDomain) {
-//		this.editDomain = anEditDomain;
-//	}
 
-	/*
+	/**
 	 * @see org.eclipse.ui.part.WorkbenchPart#setFocus()
 	 */
 	@Override
@@ -277,7 +232,7 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 	
 	private void createTransition(IConnectable s1, IConnectable s2, StateMachine machine, IMethodBinding method) {
 		//String sig = extractSignature(method);
-		Connection.connectTwoIConnectables(s1, s2);
+		(Connection.connectTwoIConnectables(s1, s2)).setName(method.getName());
 		//machine.createTransition(s1, s2, machine.createGuard(sig), ((GStateMachine) machine).createEvent(method.getName()));
 	}
 	

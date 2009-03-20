@@ -48,8 +48,11 @@ import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.Bendpoint;
 import org.eclipse.draw2d.FanRouter;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.MidpointLocator;
 import org.eclipse.draw2d.PolygonDecoration;
 import org.eclipse.draw2d.PolylineConnection;
+import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.graph.CompoundDirectedGraph;
 import org.eclipse.draw2d.graph.Edge;
 import org.eclipse.draw2d.graph.Node;
@@ -59,6 +62,7 @@ import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 
 import edu.cmu.cs.fiddle.figure.BendpointSelfConnectionRouter;
 import edu.cmu.cs.fiddle.model.Connection;
+import edu.cmu.cs.fiddle.model.IConnection;
 import edu.cmu.cs.fiddle.model.IHasProperties;
 import edu.cmu.cs.fiddle.model.IHasProperties.PropertyType;
 
@@ -109,6 +113,11 @@ public class ConnectionEditPart extends AbstractConnectionEditPart
 			// other
 			connection.setConnectionRouter(new FanRouter());
 		}
+		MidpointLocator mpl = new MidpointLocator(connection, 0);
+		mpl.setRelativePosition(PositionConstants.EAST);
+		mpl.setGap(15);
+		Label lbl = new Label(((IConnection) this.getModel()).getName());
+		connection.add(lbl, mpl);
 		return connection;
 	}
 

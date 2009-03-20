@@ -56,4 +56,14 @@ public interface IConnection {
 	 * Where is this connection going?
 	 */
 	public IConnectable getSource();
+	
+	/**
+	 * @return the name
+	 */
+	public String getName();
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setName(String name);
 }
