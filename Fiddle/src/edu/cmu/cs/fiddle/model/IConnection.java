@@ -66,4 +66,14 @@ public interface IConnection {
 	 * @param name the name to set
 	 */
 	public void setName(String name);
+	
+	/**
+	 * @return the name
+	 */
+	public String getHover();
+
+	/**
+	 * @param name the name to set
+	 */
+	public void setHover(String hover);
 }
