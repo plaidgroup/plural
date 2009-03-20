@@ -50,6 +50,8 @@ public class Connection implements IConnection, IHasProperties {
 
 	private IConnectable source;
 	private IConnectable target;
+	
+	private String name;
 
 	private PropertyChangeSupport listeners;
 	
@@ -79,6 +81,16 @@ public class Connection implements IConnection, IHasProperties {
 	@Override
 	public IConnectable getTarget() {
 		return target;
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public void setName(String name) {
+		this.name = name;
 	}
 
 	@SuppressWarnings("unused")
