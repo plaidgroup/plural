@@ -49,14 +49,12 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
 
 /**
  * This is a test class for implications in state invariants.
- * KB: Made this class final to only report error in
- * constructor once. 
  * @author Nels Beckman
  */
 @FailingTest(3)
 @UseAnalyses("FractionalAnalysis")
 @ClassStates(@State(name="alive", inv="hasFull == true => full(data)"))
-public final class ImplicationWorks {
+public class ImplicationWorks {
 
 	boolean hasFull;
 	
