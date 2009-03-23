@@ -43,6 +43,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -396,6 +397,20 @@ class PermissionSet {
 		ArrayList<FractionalPermission> newPs = new ArrayList<FractionalPermission>(permissions.size());
 		for(FractionalPermission p : permissions) {
 			newPs.add(p.forgetStateInfo());
+		}
+		return newPs;
+	}
+	
+	static List<FractionalPermission> replaceStateInfo(
+			List<FractionalPermission> permissions,
+			Set<String> stateInfo) {
+		List<FractionalPermission> newPs;
+		if(permissions.isEmpty())
+			newPs = permissions;
+		else {
+			newPs = new ArrayList<FractionalPermission>(permissions.size());
+			for(FractionalPermission p : permissions)
+				newPs.add(p.replaceStateInfo(stateInfo));
 		}
 		return newPs;
 	}

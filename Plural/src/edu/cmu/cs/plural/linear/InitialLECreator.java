@@ -56,6 +56,7 @@ import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.fractions.VirtualFramePermissionSet;
 import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 import edu.cmu.cs.plural.states.StateSpace;
@@ -149,8 +150,16 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 				receiverVar,
 				decl);
 		tuple.storeInitialAliasingInfo(tacContext.getAnalyzedMethod());
-		
 		Aliasing this_loc = tuple.getLocations(receiverVar);
+		
+		if(fractContext.assumeVirtualFrame()) {
+			// virtual and frame permissions are the same for analyzing virtual receiver frame
+			tuple.put(this_loc, VirtualFramePermissionSet.createEmpty());
+		}
+		else {
+			// default takes care of this
+		}
+		
 		InitialLECreator c = new InitialConstructorLECreator(tuple, 
 				this_loc,
 				fractContext.getRepository().getStateSpace(receiverVar.resolveType()));

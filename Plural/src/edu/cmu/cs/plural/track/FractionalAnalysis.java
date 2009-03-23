@@ -95,6 +95,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	private FractionalTransfer tf;
 
 	private IInvocationCaseInstance analyzedCase;
+	
+	private boolean assumeVirtualFrame;
 
 	public FractionalAnalysis() {
 		super();
@@ -136,25 +138,43 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			// only analyze methods with code in them; skip abstract methods
 			IInvocationSignature sig = getRepository().getSignature(d.resolveBinding());
 			for(IInvocationCase c : sig.cases()) {
-				analyzedCase = c.createPermissions(true, false);
-				tf = createNewFractionalTransfer();
-				
-				// need local to be able to set monitor
-				TACFlowAnalysis<PluralDisjunctiveLE> temp; 
-				fa = temp = new TACFlowAnalysis<PluralDisjunctiveLE>(getTf(),
-						this.analysisInput.getComUnitTACs().unwrap());
-				temp.setMonitor(analysisInput.getProgressMonitor());
-				
-				FractionalChecker checker = createASTWalker();
-				if(sig.cases().size() > 1)
-					// make sure checker prints the case in which errors occurred 
-					// (if more than one case)
-					checker.setErrorContext(c.toString());
-				if(logger.isLoggable(Level.FINE))
-					logger.fine("Results for " + d.getName() + " case " + c);
-				d.accept(checker);
+				if(sig.isConstructorSignature()) {
+					analyzeCase(d, sig, c, false);
+//					analyzeCase(d, sig, c, true);
+				}
+				else {
+					analyzeCase(d, sig, c, false);
+				}
 			}
 		}
+	}
+
+	/**
+	 * @param d
+	 * @param sig
+	 * @param c
+	 * @param assumeVirtualFrame 
+	 */
+	private void analyzeCase(MethodDeclaration d, IInvocationSignature sig,
+			IInvocationCase c, boolean assumeVirtualFrame) {
+		analyzedCase = c.createPermissions(true, assumeVirtualFrame);
+		this.assumeVirtualFrame = assumeVirtualFrame;
+		tf = createNewFractionalTransfer();
+		
+		// need local to be able to set monitor
+		TACFlowAnalysis<PluralDisjunctiveLE> temp; 
+		fa = temp = new TACFlowAnalysis<PluralDisjunctiveLE>(getTf(),
+				this.analysisInput.getComUnitTACs().unwrap());
+		temp.setMonitor(analysisInput.getProgressMonitor());
+		
+		FractionalChecker checker = createASTWalker();
+		if(sig.cases().size() > 1)
+			// make sure checker prints the case in which errors occurred 
+			// (if more than one case)
+			checker.setErrorContext(c.toString());
+		if(logger.isLoggable(Level.FINE))
+			logger.fine("Results for " + d.getName() + " case " + c);
+		d.accept(checker);
 	}	
 	
 	@Override
@@ -180,6 +200,11 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	@Override
 	public IInvocationCaseInstance getAnalyzedCase() {
 		return analyzedCase;
+	}
+	
+	@Override
+	public boolean assumeVirtualFrame() {
+		return assumeVirtualFrame;
 	}
 
 	protected class FractionalChecker extends ASTVisitor {
