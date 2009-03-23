@@ -545,26 +545,6 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 				PermissionSet.learnStateInfo(permissions, new_state);
 			return createPermissions(new_permissions, framePermissions, constraints);
 		}
-		
-//		/*
-//		 * Build a new fractional permissions where we copy each permission
-//		 * with the new state. Use the ___ method to determine which states
-//		 * we can actually overwrite. 
-//		 */
-//		List<FractionalPermission> new_permissions = 
-//			new ArrayList<FractionalPermission>(permissions.size());
-//		
-//		for(FractionalPermission p : permissions) {
-//			if( p.coversNode(new_state) ) {
-//				/*
-//				 * The new state is a sub-state of this permission's state.
-//				 * Include the new_state into p's state information
-//				 */
-//				new_permissions.add(p.addStateInfo(new_state));
-//			}
-//			else
-//				new_permissions.add(p);
-//		}
 	}
 	
 	public boolean isImpossible() {

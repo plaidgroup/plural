@@ -75,5 +75,19 @@ public interface IInvocationCase {
 	IInvocationCaseInstance createPermissions(boolean forAnalyzingBody, boolean isSuperCall);
 	
 	boolean isReentrant();
+	
+	/**
+	 * If this method returns <code>true</code> then implementations must
+	 * be checked separately for the case where the declaring class is the
+	 * runtime type of the receiver object (unless the method implementation
+	 * occurs in an abstract class, making the special case impossible).
+	 * If the declaring class is the receiver runtime type then current
+	 * and virtual frame coincide, which in certain cases can allow / require
+	 * special checking.
+	 * @return <code>true</code> if implementations of the specified method must
+	 * be checked separately for the case where the declaring class is the
+	 * runtime type of the receiver object, <code>false</code> otherwise.
+	 */
+	boolean isVirtualFrameSpecial();
 
 }

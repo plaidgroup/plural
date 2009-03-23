@@ -131,6 +131,12 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 			super(annoDB, specBinding, staticallyInvokedBinding, perm);
 		}
 		
+		@Override
+		public boolean isVirtualFrameSpecial() {
+			return MultiCaseConstructorSignature.this.requiresVirtualFrameCheck(
+					preAndPostString == null ? null : preAndPostString.fst());
+		}
+		
 		/**
 		 *
 		 * @tag todo.general -id="1233909" : take out superseded code (also in method signatures)
@@ -142,14 +148,6 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 			final Pair<MethodPrecondition, MethodPostcondition> preAndPost = preAndPost(
 					forAnalyzingBody, preAndPostString, coerce, forAnalyzingBody ? isConstructorCall : coerce);
 			
-//			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> receiverPrePost =
-//				receiverPermissions(forAnalyzingBody, preAndPostString, coerce, coerce);
-//			final int argCount = binding.getParameterTypes().length;
-//			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost = 
-//				new Pair[argCount];
-//			for(int arg = 0; arg < argCount; arg++) {
-//				argPrePost[arg] = parameterPermissions(arg, forAnalyzingBody, preAndPostString);
-//			}
 			return new IConstructorCaseInstance() {
 
 				@Override

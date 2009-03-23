@@ -50,6 +50,7 @@ import edu.cmu.cs.crystal.util.ConsList;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.fractions.VirtualFramePermissionSet;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 
 /**
@@ -82,15 +83,24 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	// constructed
 	private ConsList<PermissionSetFromAnnotations> splitFromThis = empty();
 	private final Set<String> neededReceiverStates = new HashSet<String>();
+	private final boolean delayVirtualReceiverPermissions;
 	
 	public AbstractPredicateChecker(TensorPluralTupleLE value, Aliasing thisLoc) {
 		this.value = value;
 		this.this_loc = thisLoc;
+		if(this_loc != null /* && ! this_loc.getLabels().isEmpty()*/)
+			// this is a hack to determine whether we're treating virtual as frame permissions
+			// we're just looking whether receiver permissions are tracked with special permission set implementation
+			// TODO clean way of determining whether virtual receiver permissions need to be delayed
+			this.delayVirtualReceiverPermissions = 
+				(value.get(thisLoc) instanceof VirtualFramePermissionSet);
+		else
+			this.delayVirtualReceiverPermissions = false;
 	}
 	
 	@Override
 	public boolean checkStateInfo(Aliasing var, String var_name, Set<String> stateInfo, boolean inFrame) {
-		if(inFrame && var.equals(this_loc)) {
+		if((delayVirtualReceiverPermissions || inFrame) && var.equals(this_loc)) {
 			neededReceiverStates.addAll(stateInfo);
 			return true;
 		}
@@ -141,11 +151,24 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 			PermissionSetFromAnnotations perms) {
 		if(this_loc != null && this_loc.equals(var)) {
 			// defer...
-			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> virtualAndFrame =
-				PermissionSetFromAnnotations.splitPermissionSets(perms);
-			splitFromThis = cons(virtualAndFrame.snd(), splitFromThis);
-			neededReceiverStates.addAll(virtualAndFrame.snd().getStateInfo(true));
-			perms = virtualAndFrame.fst(); // split the virtual part below--frame later
+			if(delayVirtualReceiverPermissions) {
+				// remember the given permissions for later splitting
+				splitFromThis = cons(perms, splitFromThis);
+				neededReceiverStates.addAll(perms.getStateInfo(false));
+				neededReceiverStates.addAll(perms.getStateInfo(true));
+				// return since no splitting happens now
+				return true;
+			}
+			else {
+				// remember only frame permissions for later and split virtual permissions now
+				Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> virtualAndFrame =
+					PermissionSetFromAnnotations.splitPermissionSets(perms);
+				// remember frame permissions for later splitting
+				splitFromThis = cons(virtualAndFrame.snd(), splitFromThis);
+				neededReceiverStates.addAll(virtualAndFrame.snd().getStateInfo(true));
+				// split the virtual part below
+				perms = virtualAndFrame.fst(); 
+			}
 		}
 		// split virtual permissions
 		return splitOffInternal(var, var_name, value, perms);
