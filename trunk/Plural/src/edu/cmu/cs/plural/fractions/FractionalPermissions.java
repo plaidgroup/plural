@@ -60,7 +60,7 @@ import edu.cmu.cs.plural.states.StateSpace;
  */
 public class FractionalPermissions 
 extends AbstractFractionalPermissionSet<FractionalPermission> 
-implements LatticeElement<FractionalPermissions> {
+implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 	
 	private static final FractionalPermissions BOTTOM = new FractionalPermissions(null, false);
 	private static final Logger log = Logger.getLogger(FractionalPermissions.class.getName());
@@ -154,10 +154,13 @@ implements LatticeElement<FractionalPermissions> {
 	 * and returns a new set of permissions with the given permissions removed.
 	 * Splitting can require merging "smaller" permissions into one permission
 	 * with the given permission's root.
+	 * 
+	 * This method must not manipulate permission sets itself but forward 
+	 * to {@link #splitOff(PermissionSetFromAnnotations, FractionConstraints)}.
 	 * @param permissionsToSplitOff
 	 * @return
 	 */
-	public FractionalPermissions splitOff(PermissionSetFromAnnotations permissionsToSplitOff) {
+	public final FractionalPermissions splitOff(PermissionSetFromAnnotations permissionsToSplitOff) {
 		if(this.isBottom() || permissionsToSplitOff.isEmpty())
 			// trivially succeed
 			return this;
@@ -169,10 +172,13 @@ implements LatticeElement<FractionalPermissions> {
 	 * and returns a new set of permissions with the given permission removed.
 	 * Splitting can require merging "smaller" permissions into one permission
 	 * with the given permission's root.
+	 * 
+	 * This method must not manipulate permission sets itself but forward 
+	 * to {@link #splitOff(PermissionSetFromAnnotations, FractionConstraints)}.
 	 * @param permission
 	 * @return
 	 */
-	public FractionalPermissions splitOff(PermissionFromAnnotation permissionToSplitOff) {
+	public final FractionalPermissions splitOff(PermissionFromAnnotation permissionToSplitOff) {
 		if(isBottom())
 			// trivially succeed
 			return this;
@@ -188,17 +194,11 @@ implements LatticeElement<FractionalPermissions> {
 	 * @param constraints
 	 * @return
 	 */
-	private FractionalPermissions splitOff(
+	protected FractionalPermissions splitOff(
 			PermissionSetFromAnnotations permissionsToSplitOff,
 			FractionConstraints constraints) {
 		// add in constraints about incoming permissions
 		constraints.addAll(permissionsToSplitOff.getConstraints());
-		// bottom test
-//		if(permissions == null) {
-//			if(!permissionsToSplitOff.isEmpty())
-//				constraints.addConstraint(FractionConstraint.impossible());
-//			return createPermissions(Collections.<FractionalPermission>emptyList(), Collections.<FractionalPermission>emptyList(), constraints);
-//		}
 
 		List<FractionalPermission> newPs = 
 			splitOffPermissions(permissions, permissionsToSplitOff.getPermissions(), constraints);
@@ -220,7 +220,7 @@ implements LatticeElement<FractionalPermissions> {
 	 * <code>permissionsToSplitOff</code> split off.
 	 * @see FractionalPermission#splitOff(PermissionFromAnnotation, FractionConstraints)
 	 */
-	private static List<FractionalPermission> splitOffPermissions(
+	protected static List<FractionalPermission> splitOffPermissions(
 			List<FractionalPermission> permissions, 
 			List<PermissionFromAnnotation> permissionsToSplitOff,
 			FractionConstraints constraints) {
@@ -259,6 +259,7 @@ implements LatticeElement<FractionalPermissions> {
 			List<? extends FractionalPermission> newPermissions,
 			List<? extends FractionalPermission> newFramePermissions,
 			FractionConstraints newConstraints) {
+		assert this.getClass().equals(FractionalPermissions.class);
 		return new FractionalPermissions(newPermissions, newFramePermissions, newConstraints, 
 				/*parameters, parameterPermissions,*/ unpackedPermission);
 	}
@@ -266,6 +267,7 @@ implements LatticeElement<FractionalPermissions> {
 	private FractionalPermissions createPermissions(
 			List<? extends FractionalPermission> newPermissions,
 			List<? extends FractionalPermission> newFramePermissions, FractionConstraints new_cs, FractionalPermission unpacked_perm) {
+		assert this.getClass().equals(FractionalPermissions.class);
 		return new FractionalPermissions(newPermissions, newFramePermissions, new_cs,
 				/*parameters, parameterPermissions,*/ unpacked_perm);
 	}
@@ -317,8 +319,12 @@ implements LatticeElement<FractionalPermissions> {
 		return this;
 	}
 
+	/*
+	 * This method must not manipulate permission sets itself and instead
+	 * forward to protected method
+	 */
 	@Override
-	public FractionalPermissions join(
+	public final FractionalPermissions join(
 			FractionalPermissions other, ASTNode node) {
 		if(other == this)
 			return this;
@@ -387,7 +393,7 @@ implements LatticeElement<FractionalPermissions> {
 	 * @param symmetric
 	 * @return Joined permission set.
 	 */
-	private FractionalPermissions join(
+	protected FractionalPermissions join(
 			FractionalPermissions other, ASTNode node,
 			FractionConstraints constraints,
 			boolean symmetric) {
@@ -405,6 +411,7 @@ implements LatticeElement<FractionalPermissions> {
 		
 		/*
 		 * Do not tolerate differences in unpacked permission: must be resolved before join
+		 * TODO make this an assert?
 		 */
 		if(! ((this.unpackedPermission == null && other.unpackedPermission == null) ||
 				(this.unpackedPermission != null && other.unpackedPermission != null &&
@@ -420,10 +427,12 @@ implements LatticeElement<FractionalPermissions> {
 	 * Merge the given permission into the set of known permissions.
 	 * If a permission with the same root as the given permission is already
 	 * in the set then these two permissions will be coalesced immediately.
+	 * This method must not manipulate permission sets itself but forward 
+	 * to {@link #mergeIn(PermissionSetFromAnnotations, FractionConstraints)}.
 	 * @param permission New permission to be added to the set.
 	 * @return New permission set with <code>permission</code> added.
 	 */
-	public FractionalPermissions mergeIn(PermissionSetFromAnnotations permissionsToMergeIn) {
+	public final FractionalPermissions mergeIn(PermissionSetFromAnnotations permissionsToMergeIn) {
 		if(isBottom())
 			// trivially succeed
 			return this;
@@ -436,16 +445,11 @@ implements LatticeElement<FractionalPermissions> {
 	 * @param constraints
 	 * @return
 	 */
-	private FractionalPermissions mergeIn(
+	protected FractionalPermissions mergeIn(
 			PermissionSetFromAnnotations permissionsToMergeIn,
 			FractionConstraints constraints) {
 		// add in constraints about incoming permissions
 		constraints.addAll(permissionsToMergeIn.getConstraints());
-		// bottom case
-//		if(permissions == null) {
-//			return createPermissions(permissionsToMergeIn.getPermissions(), 
-//					permissionsToMergeIn.getFramePermissions(), constraints);
-//		}
 		// new permission list
 		List<? extends FractionalPermission> newPs = 
 			mergeInPermissions(permissions, permissionsToMergeIn.getPermissions(), constraints); 
@@ -465,7 +469,7 @@ implements LatticeElement<FractionalPermissions> {
 	 * @return a list of permissions with the given <code>permissionsToMergeIn</code> merged
 	 * into <code>permissions</code>.
 	 */
-	private static List<? extends FractionalPermission> mergeInPermissions(List<FractionalPermission> permissions,
+	protected static List<? extends FractionalPermission> mergeInPermissions(List<? extends FractionalPermission> permissions,
 			List<PermissionFromAnnotation> permissionsToMergeIn, FractionConstraints constraints) {
 		if(permissionsToMergeIn.isEmpty())
 			// nothing to merge
@@ -690,10 +694,12 @@ implements LatticeElement<FractionalPermissions> {
 	/**
 	 * Makes sure there is a modifiable permission with the given root.
 	 * You may not call this method on bottom.
+	 * This method must not manipulate permission sets itself but forward 
+	 * to {@link #makeModifiable(String, boolean, FractionConstraints)}
 	 * @param rootState
 	 * @return
 	 */
-	public FractionalPermissions makeModifiable(String rootState, boolean inFrame) {
+	public final FractionalPermissions makeModifiable(String rootState, boolean inFrame) {
 		if(isBottom())
 			return this;
 		return makeModifiable(rootState, inFrame, constraints.mutableCopy());
@@ -706,11 +712,7 @@ implements LatticeElement<FractionalPermissions> {
 	 * @param constraints
 	 * @return
 	 */
-	private FractionalPermissions makeModifiable(String neededRoot, boolean inFrame, FractionConstraints constraints) {
-//		if(isBottom()) {
-//			constraints.addConstraint(FractionConstraint.impossible());
-//			return createPermissions(Collections.<FractionalPermission>emptyList(), Collections.<FractionalPermission>emptyList(), constraints);
-//		}
+	protected FractionalPermissions makeModifiable(String neededRoot, boolean inFrame, FractionConstraints constraints) {
 		ArrayList<FractionalPermission> newPs = new ArrayList<FractionalPermission>(inFrame ? framePermissions : permissions);
 		FractionalPermission p = PermissionSet.removePermission(newPs, neededRoot, false, constraints);
 		if(p == null)
@@ -720,28 +722,6 @@ implements LatticeElement<FractionalPermissions> {
 			newPs.add(p);
 		}
 		
-//		HashSet<FractionalPermission> combine = new HashSet<FractionalPermission>();
-//		for(FractionalPermission p : permissions) {
-//			if(p.getRootNode().equals(neededRoot)) {
-//				newPs.add(p.makeModifiable(constraints));
-//			}
-//			else if(p.getStateSpace().firstBiggerThanSecond(p.getRootNode(), neededRoot)) {
-//				// permissions with moved-down roots are automatically modifiable
-//				Pair<FractionalPermission, List<FractionalPermission>> ps = p.moveDown(neededRoot, constraints);
-//				newPs.addAll(ps.snd());
-//				newPs.add(ps.fst());
-//			}
-//			else if(p.getStateSpace().firstBiggerThanSecond(neededRoot, p.getRootNode())) {
-//				combine.add(p);
-//			}
-//			else {
-//				newPs.add(p);
-//			}
-//		}
-//		if(combine.isEmpty() == false) {
-//			// permission with moved-up root is automatically modifiable 
-//			newPs.add(FractionalPermission.combine(combine, getStateSpace(), neededRoot, constraints));
-//		}
 		if(inFrame)
 			return createPermissions(permissions, newPs, constraints);
 		else
@@ -765,6 +745,7 @@ implements LatticeElement<FractionalPermissions> {
 	 * applicable. Remembers what permission was unpacked, and the state information
 	 * to go along with it.  Unpacking bottom results in 
 	 * {@link FractionConstraints#isImpossible() impossible} constraints.
+	 * TODO revisit this and see if we can't just unpack bottom to bottom
 	 * @param neededRoot
 	 * @return New permissions with permission for needed root unpacked.
 	 */
@@ -781,63 +762,11 @@ implements LatticeElement<FractionalPermissions> {
 			notunpacked_perms = Collections.emptyList();
 		}
 		else {
-//		List<FractionalPermission> notunpacked_perms = 
-//			new ArrayList<FractionalPermission>(checkPermissions().size());
-//		Set<FractionalPermission> combine =
-//			new HashSet<FractionalPermission>();
-		
 			notunpacked_perms = new ArrayList<FractionalPermission>(framePermissions);
 			unpacked_perm = 
 				PermissionSet.removePermission(notunpacked_perms, neededRoot, false, new_cs); 
 		}
 
-//		FractionalPermission unpacked_perm = null;
-//		for( FractionalPermission fperm : permissions ) {
-//			/*
-//			 * Three cases:
-//			 * 1.) Exact match
-//			 */
-//			if( fperm.getRootNode().equals(neededRoot) ) {
-//				unpacked_perm = fperm;
-//			}
-//			/*
-//			 * 2.) fperm root is bigger than needed. We need to move fperm root down.
-//			 */
-//			else if( fperm.coversNode(neededRoot) && 
-//					 fperm.impliesState(neededRoot)) {
-//				
-//				Pair<FractionalPermission, List<FractionalPermission>> new_perms =
-//					fperm.moveDown(neededRoot, new_cs);
-//				/*
-//				 * Store the unpacked and add all the rest.
-//				 */
-//				unpacked_perm = new_perms.fst();
-//				notunpacked_perms.addAll(new_perms.snd());
-//			}
-//			/*
-//			 * 3.) fperms root is too small
-//			 */
-//			else if( fperm.getStateSpace().firstBiggerThanSecond(neededRoot,
-//					                                             fperm.getRootNode()) ) {
-//				combine.add(fperm);
-//			}
-//			/*
-//			 * 4.) irrelevant permission
-//			 */
-//			else {
-//				notunpacked_perms.add(fperm);
-//			}
-//		}
-//		
-//		/*
-//		 * Combine
-//		 */
-//		if( !combine.isEmpty() ) {
-//			unpacked_perm =
-//			FractionalPermission.combine(combine,
-//					this.getStateSpace(), neededRoot, new_cs);
-//		}
-		
 		/*
 		 * By this point, we HOPE we have a permission and constraints.
 		 */
@@ -874,6 +803,7 @@ implements LatticeElement<FractionalPermissions> {
 
 	/**
 	 * You may not call this method on bottom.
+	 * TODO see if we can't just return bottom when packing bottom
 	 * @param desiredState
 	 * @return
 	 */
@@ -885,32 +815,7 @@ implements LatticeElement<FractionalPermissions> {
 		FractionConstraints constraints = this.constraints.mutableCopy();
 		PermissionSet.mergeInPermission(newPs, new_rcvr_perm, false, constraints);
 		
-//		String neededRoot = new_rcvr_perm.getRootNode();
-//		for(FractionalPermission p : newPs) {
-//			if(p.getRootNode().equals(neededRoot)) {
-//				// eager merging of permissions for same root
-//				FractionalPermission newP = p.mergeIn(new_rcvr_perm, constraints);
-//				// manipulate permissions list
-//				newPs.remove(p);
-//				newPs.add(newP);
-//				return createPermissions(newPs, framePermissions, constraints, null);
-//			}
-//			else if(! new_rcvr_perm.getStateSpace().areOrthogonal(p.getRootNode(), new_rcvr_perm.getRootNode())) {
-//				// this is an error: presented a permission for a mutually exclusive node, or
-//				// a node above or below p's root--permission and p cannot co-exist
-//				constraints.addConstraint(FractionConstraint.impossible());
-//				if(log.isLoggable(Level.FINE))
-//					log.fine("Tried to pack a permission for a subnode of an existing permission: " + new_rcvr_perm);
-//				// preserve invariant that only permissions with orthogonal roots can co-exist: drop packed permission
-//				return createPermissions(newPs, framePermissions, constraints, null);
-//			}
-//		}
-//		// nothing to combine with --> just add to the list
-//		newPs.add(new_rcvr_perm);
 		return createPermissions(permissions, newPs, constraints, null);
-
-//		return
-//			this.mergeIn(new_rcvr_perm, true);
 	}
 
 	/**
@@ -934,24 +839,10 @@ implements LatticeElement<FractionalPermissions> {
 			return this;
 		assert unpackedPermission == null;
 
-		List<FractionalPermission> newPs;
-		if(permissions.isEmpty())
-			newPs = permissions;
-		else {
-			newPs = new ArrayList<FractionalPermission>(permissions.size());
-			for(FractionalPermission p : permissions)
-				newPs.add(p.replaceStateInfo(stateInfo.fst()));
-		}
-		
-		List<FractionalPermission> newFramePs;
-		if(framePermissions.isEmpty())
-			newFramePs = framePermissions;
-		else {
-			newFramePs = new ArrayList<FractionalPermission>(framePermissions.size());
-			for(FractionalPermission p : framePermissions)
-				newFramePs.add(p.replaceStateInfo(stateInfo.snd()));
-		}
-		
+		List<FractionalPermission> newPs = 
+			PermissionSet.replaceStateInfo(permissions, stateInfo.fst());
+		List<FractionalPermission> newFramePs =
+			PermissionSet.replaceStateInfo(framePermissions, stateInfo.snd());
 		return createPermissions(newPs, newFramePs, constraints);
 	}
 	
@@ -969,20 +860,18 @@ implements LatticeElement<FractionalPermissions> {
 		
 		if(inFrame) {
 			if(framePermissions.isEmpty())
+				// shortcut
 				return this;
-			
-			List<FractionalPermission> newFramePs = new ArrayList<FractionalPermission>(framePermissions.size());
-			for(FractionalPermission p : framePermissions)
-				newFramePs.add(p.replaceStateInfo(stateInfo));
+			List<FractionalPermission> newFramePs = 
+				PermissionSet.replaceStateInfo(framePermissions, stateInfo);
 			return createPermissions(permissions, newFramePs, constraints);
 		}
 		else {
 			if(permissions.isEmpty())
+				// shortcut
 				return this;
-			
-			List<FractionalPermission> newPs = new ArrayList<FractionalPermission>(permissions.size());
-			for(FractionalPermission p : permissions)
-				newPs.add(p.replaceStateInfo(stateInfo));
+			List<FractionalPermission> newPs = 
+				PermissionSet.replaceStateInfo(permissions, stateInfo);
 			return createPermissions(newPs, framePermissions, constraints);
 		}
 	}

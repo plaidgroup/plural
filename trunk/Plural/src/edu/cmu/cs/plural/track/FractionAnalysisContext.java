@@ -51,4 +51,9 @@ public interface FractionAnalysisContext extends IAnalysisInput {
 	
 	public IInvocationCaseInstance getAnalyzedCase();
 
+	/**
+	 * @return
+	 */
+	public boolean assumeVirtualFrame();
+
 }

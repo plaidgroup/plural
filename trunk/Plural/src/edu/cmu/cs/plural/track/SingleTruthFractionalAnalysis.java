@@ -174,6 +174,11 @@ public class SingleTruthFractionalAnalysis extends AbstractCrystalMethodAnalysis
 	public IInvocationCaseInstance getAnalyzedCase() {
 		throw new UnsupportedOperationException("Not needed for now.");
 	}
+	
+	@Override
+	public boolean assumeVirtualFrame() {
+		return false;
+	}
 
 	protected class FractionalChecker extends ASTVisitor {
 
