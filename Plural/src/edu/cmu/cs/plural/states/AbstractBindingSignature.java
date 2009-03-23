@@ -57,7 +57,6 @@ import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
-import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermParser;
 import edu.cmu.cs.plural.perm.parser.AbstractParamVisitor.FractionCreation;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
@@ -101,6 +100,32 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		throw new IllegalStateException("This is not a method signature: " + this);
 	}
 	
+	/**
+	 * Implementation helper for {@link IInvocationCase#isVirtualFrameSpecial()}.
+	 * @param pre Pre-condition declared as @Perm(requires = <code>pre</code>).
+	 * @return Same as {@link IInvocationCase#isVirtualFrameSpecial()}
+	 */
+	protected boolean requiresVirtualFrameCheck(String pre) {
+		boolean isConstructor = getSpecifiedMethodBinding().isConstructor();
+		if(isConstructor) {
+			// need to check if virtual receiver permission is by constructor
+			// since frame receiver permissions cannot be required by a constructor
+			// we'll just check for the presence of any receiver permission in
+			// the pre-condition
+			List<ParameterPermissionAnnotation> annos = getReceiverAnnotations();
+			return ! annos.isEmpty() || // @Full etc. annotation for receiver present 
+			// silly test whether the @Perm pre-condition talks about the receiver 
+					(pre != null && pre.contains("this"));
+		}
+		else if(isStaticMethod())
+			// no receiver, so no virtual frame check
+			return false;
+		else {
+			// TODO virtual checks for instance methods?
+			return false;
+		}
+	}
+	
 	protected Pair<MethodPrecondition, MethodPostcondition> preAndPost(
 			boolean forAnalyzingBody, Pair<String, String> preAndPostString,
 			boolean frameAsVirtual, boolean noReceiverPre) {
@@ -116,7 +141,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		/*
 		 * 1. receiver
 		 */
-		if(!isStaticMethod(binding)) {
+		if(!isStaticMethod()) {
 			StateSpace rcvr_space = getStateSpace(binding.getDeclaringClass());
 			spaces.put("this", rcvr_space);
 			if(!frameAsVirtual)
@@ -124,7 +149,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> rcvr_borrowed = 
 				prePostFromAnnotations(rcvr_space, 
-						CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding), 
+						getReceiverAnnotations(), 
 						namedFractions, 
 						frameAsVirtual,
 						noReceiverPre);
@@ -191,7 +216,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		}
 		
 		return PermParser.parseSignature(
-				preAndPostString, forAnalyzingBody, frameAsVirtual, 
+				preAndPostString, forAnalyzingBody, frameAsVirtual, noReceiverPre,
 				new SimpleMap<String, StateSpace>() {
 					@Override
 					public StateSpace get(String key) {
@@ -202,6 +227,13 @@ abstract class AbstractBindingSignature extends AbstractBinding
 				},
 				getCapturedParams(), capturing, getReleasedParams(), pre, post, 
 				getNotReturned());
+	}
+
+	/**
+	 * @return the receiver annotations in the form of @Full etc.
+	 */
+	private List<ParameterPermissionAnnotation> getReceiverAnnotations() {
+		return CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding);
 	}
 
 	private Set<String> getNotReturned() {
@@ -279,7 +311,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		notReturned = Collections.unmodifiableSet(notReturned);
 	}
 
-	private boolean isStaticMethod(IMethodBinding binding) {
+	private boolean isStaticMethod() {
 		return Modifier.isStatic(binding.getModifiers());
 	}
 

@@ -38,7 +38,6 @@
 package edu.cmu.cs.plural.perm.parser;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -312,6 +311,7 @@ public class PermParser {
 			Pair<String, String> preAndPostString,
 			boolean forAnalyzingBody,
 			boolean frameToVirtual, 
+			boolean noReceiverPre,
 			SimpleMap<String, StateSpace> spaces,
 			Map<String, String> capturedParams,
 			String capturing, Map<String, String> released, 
@@ -320,6 +320,9 @@ public class PermParser {
 			Set<String> notBorrowed) {
 		assert !forAnalyzingBody || !frameToVirtual;
 		
+		/*
+		 * 1. create pre-condition parser
+		 */
 		MethodPreconditionParser pre;
 		if(forAnalyzingBody) {
 			pre = MethodPreconditionParser.createPreconditionForAnalyzingBody(
@@ -329,7 +332,10 @@ public class PermParser {
 			pre = MethodPreconditionParser.createPreconditionForCallSite(
 					prePerms, spaces, frameToVirtual, notBorrowed);
 		}
-				
+		
+		/*
+		 * 2. parse pre-condition, if any
+		 */
 		Option<TopLevelPred> pre_pred = parse(preAndPostString == null ? "" : preAndPostString.fst());
 		if(pre_pred.isSome()) {
 			if(pre_pred.unwrap() instanceof Impossible) {
@@ -339,7 +345,18 @@ public class PermParser {
 				((AccessPred) pre_pred.unwrap()).accept(pre);
 			}
 		} // else true
+
+		/*
+		 * 3. drop receiver pre-conditions if desired
+		 */
+		if(noReceiverPre) {
+			pre.getParams().remove("this");
+			pre.getParams().remove("this!fr");
+		}
 		
+		/*
+		 * 4. determine captured permissions
+		 */
 		Map<String, ReleaseHolder> captured;
 		if(capturedParams.isEmpty()) {
 			captured = null;
@@ -357,6 +374,9 @@ public class PermParser {
 			}
 		}
 		
+		/*
+		 * 5. create post-condition parser
+		 */
 		MethodPostconditionParser post;
 		if(forAnalyzingBody)
 			post = MethodPostconditionParser.createPostconditionForAnalyzingBody(
@@ -365,6 +385,9 @@ public class PermParser {
 			post = MethodPostconditionParser.createPostconditionForCallSite(
 					postPerms, captured, capturing, released, spaces, frameToVirtual);
 		
+		/*
+		 * 6. parse post-condition
+		 */
 		Option<TopLevelPred> post_pred = parse(preAndPostString == null ? "" : preAndPostString.snd());
 		if(post_pred.isSome()) {
 			if(post_pred.unwrap() instanceof Impossible) {

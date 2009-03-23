@@ -64,17 +64,6 @@ public class FractionalPermission extends AbstractFractionalPermission {
 	private static final Logger log = Logger.getLogger(FractionalPermission.class.getName());
 
 	/**
-	 * @deprecated Use method without neededStateInfo parameter instead.
-	 */
-	@Deprecated
-	public static FractionalPermission combine(
-			Set<FractionalPermission> permissions, 
-			StateSpace stateSpace, String neededRoot,
-			String neededStateInfo, FractionConstraints constraints) {
-		return combine(permissions, stateSpace, neededRoot, constraints);
-	}
-	
-	/**
 	 * Combines the given set of permissions to one permission with the given root.
 	 * @param permissions Set of permissions with roots that are smaller than <code>neededRoot</code>.
 	 * @param stateSpace State space for the new permission.

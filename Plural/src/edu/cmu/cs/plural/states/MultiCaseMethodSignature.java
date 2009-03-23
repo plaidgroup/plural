@@ -161,6 +161,12 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 		}
 		
 		@Override
+		public boolean isVirtualFrameSpecial() {
+			return MultiCaseMethodSignature.this.requiresVirtualFrameCheck(
+					preAndPostString == null ? null : preAndPostString.fst());
+		}
+		
+		@Override
 		public IMethodCaseInstance createPermissions(final boolean forAnalyzingBody, boolean isSuperCall) {
 			boolean coerce;
 			if(hasReceiver()) {
@@ -173,21 +179,6 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 			final Pair<MethodPrecondition,MethodPostcondition> preAndPost = 
 				preAndPost(forAnalyzingBody, preAndPostString, coerce, false);
 
-//			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> receiverPrePost;
-// 			if(hasReceiver()) {
-//				receiverPrePost = receiverPermissions(forAnalyzingBody, preAndPostString, coerce, false);
-// 			}
-//			else {
-//				receiverPrePost = null;
-//			}
-//			final int argCount = binding.getParameterTypes().length;
-//			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost = 
-//				new Pair[argCount];
-//			for(int arg = 0; arg < argCount; arg++) {
-//				argPrePost[arg] = parameterPermissions(arg, forAnalyzingBody, preAndPostString);
-//			}
-//			final PermissionSetFromAnnotations resultPost = 
-//				resultPermissions(forAnalyzingBody, preAndPostString.snd());
 			return new IMethodCaseInstance() {
 
 				@Override

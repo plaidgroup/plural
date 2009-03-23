@@ -56,6 +56,7 @@ import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.SuperMethodInvocation;
@@ -137,28 +138,36 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		else {
 			// only analyze methods with code in them; skip abstract methods
 			IInvocationSignature sig = getRepository().getSignature(d.resolveBinding());
+			int classFlags = sig.getSpecifiedMethodBinding().getDeclaringClass().getModifiers();
 			for(IInvocationCase c : sig.cases()) {
-				if(sig.isConstructorSignature()) {
-					analyzeCase(d, sig, c, false);
-//					analyzeCase(d, sig, c, true);
-				}
+				boolean requiresVirtualFrameCheck = c.isVirtualFrameSpecial();
+				if(!requiresVirtualFrameCheck)
+					// no separate checks for virtual frame needed
+					analyzeCase(d, sig, c, null);
 				else {
-					analyzeCase(d, sig, c, false);
+					if(!Modifier.isFinal(classFlags))
+						// non-final class: test assuming current != virtual frame
+						analyzeCase(d, sig, c, false);
+					if(!Modifier.isAbstract(classFlags))
+						// non-abstract class: test assuming current == virtual frame
+						analyzeCase(d, sig, c, true);
 				}
 			}
 		}
 	}
-
+	
 	/**
 	 * @param d
 	 * @param sig
 	 * @param c
-	 * @param assumeVirtualFrame 
+	 * @param assumeVirtualFrame <code>null</code> if virtual frame doesn't need
+	 * to be distinguished, <code>false</code> if analyzed != runtime type of the
+	 * receiver, <code>true</code> if analyzed == runtime type of the receiver.
 	 */
 	private void analyzeCase(MethodDeclaration d, IInvocationSignature sig,
-			IInvocationCase c, boolean assumeVirtualFrame) {
-		analyzedCase = c.createPermissions(true, assumeVirtualFrame);
-		this.assumeVirtualFrame = assumeVirtualFrame;
+			IInvocationCase c, Boolean assumeVirtualFrame) {
+		this.assumeVirtualFrame = assumeVirtualFrame != null && assumeVirtualFrame;
+		analyzedCase = c.createPermissions(true, this.assumeVirtualFrame);
 		tf = createNewFractionalTransfer();
 		
 		// need local to be able to set monitor
@@ -168,12 +177,31 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		temp.setMonitor(analysisInput.getProgressMonitor());
 		
 		FractionalChecker checker = createASTWalker();
-		if(sig.cases().size() > 1)
+		if(sig.cases().size() > 1) {
 			// make sure checker prints the case in which errors occurred 
 			// (if more than one case)
-			checker.setErrorContext(c.toString());
-		if(logger.isLoggable(Level.FINE))
-			logger.fine("Results for " + d.getName() + " case " + c);
+			if(assumeVirtualFrame != null) {
+				if(assumeVirtualFrame)
+					checker.setErrorContext(c.toString() + " assuming receiver has analyzed type");
+				else
+					checker.setErrorContext(c.toString() + " assuming receiver is a subclass");
+			}
+			else
+				checker.setErrorContext(c.toString());
+		}
+		else if(assumeVirtualFrame != null) {
+			// distinguish frame assumptions
+			if(assumeVirtualFrame)
+				checker.setErrorContext("assuming receiver has analyzed type");
+			else
+				checker.setErrorContext("assuming receiver is a subclass");
+		}
+		if(logger.isLoggable(Level.FINE)) {
+			if(assumeVirtualFrame != null)
+				logger.fine("Results for " + d.getName() + (assumeVirtualFrame ? " (virtual frame) case " : " (non-virtual frame) case ") + c);
+			else
+				logger.fine("Results for " + d.getName() + " case " + c);
+		}
 		d.accept(checker);
 	}	
 	

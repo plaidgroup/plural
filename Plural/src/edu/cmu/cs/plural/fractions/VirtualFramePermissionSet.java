@@ -254,6 +254,22 @@ public class VirtualFramePermissionSet extends FractionalPermissions implements 
 	 * that only manipulates framePermissions.
 	 */
 	@Override
+	public FractionalPermissions learnTemporaryStateInfo(String new_state,
+			boolean forFrame) {
+		if(isBottom())
+			return this;
+
+		// ignore forFrame...
+		List<FractionalPermission> new_permissions = 
+			PermissionSet.learnStateInfo(framePermissions, new_state);
+		return createPermissions(new_permissions, constraints);
+	}
+
+	/*
+	 * This is a simplified version of the superclass method 
+	 * that only manipulates framePermissions.
+	 */
+	@Override
 	protected FractionalPermissions makeModifiable(String neededRoot, boolean inFrame,
 			FractionConstraints constraints) {
 		// ignore inFrame...
@@ -475,6 +491,13 @@ public class VirtualFramePermissionSet extends FractionalPermissions implements 
 			return inSets;
 		else
 			return "unpacked[" + us + "] + " + inSets; 
+	}
+
+	@Override
+	public String toString() {
+		if(getUnpackedPermission() == null)
+			return "virtual frame " + framePermissions + " with " + constraints;
+		return "unpacked[" + getUnpackedPermission() + "] + " + " virtual frame " + framePermissions + " with " + constraints;
 	}
 
 }

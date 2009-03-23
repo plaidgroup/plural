@@ -157,6 +157,11 @@ public abstract class AbstractParamVisitor
 		private InfoHolderPredicate ant;
 		private List<InfoHolderPredicate> cons;
 
+		/**
+		 * Creates an implication with the given antecedent and consequence.
+		 * @param ant
+		 * @param cons
+		 */
 		public ParamImplication(InfoHolderPredicate ant,
 				List<InfoHolderPredicate> cons) {
 			super();
@@ -523,7 +528,7 @@ public abstract class AbstractParamVisitor
 
 	/**
 	 * @param ref
-	 * @return Pair (parameter name, frame permission) for the given ref.
+	 * @return {@link Pair} (parameter name, frame permission) for the given ref.
 	 */
 	protected Pair<String, Boolean> getRefPair(RefExpr ref) {
 		String param;
@@ -551,7 +556,8 @@ public abstract class AbstractParamVisitor
 	}
 
 	/**
-	 * @param ref
+	 * Adds the given permission to the info holder for the given parameter.
+	 * @param param
 	 * @param pa
 	 */
 	protected void addPerm(String param, PermissionFromAnnotation pa) {
@@ -560,8 +566,10 @@ public abstract class AbstractParamVisitor
 	}
 
 	/**
+	 * Returns the info holder for the given parameter.  If
+	 * the parameter was previously unknown then an empty info holder is returned.
 	 * @param param
-	 * @return
+	 * @return the info holder for the given parameter, never <code>null</code>.
 	 */
 	private ParamInfoHolder getInfoHolder(String param) {
 		ParamInfoHolder ps = params.get(param);
@@ -682,14 +690,12 @@ public abstract class AbstractParamVisitor
 	public Boolean visit(EqualsExpr equalsExpr) {
 		handleBinary(equalsExpr);
 		return null;
-//		throw new IllegalStateException("Should be handled as BinaryExprAP");
 	}
 
 	@Override
 	public Boolean visit(NotEqualsExpr notEqualsExpr) {
 		handleBinary(notEqualsExpr);
 		return null;
-//		throw new IllegalStateException("Should be handled as BinaryExprAP");
 	}
 
 	@Override
@@ -701,8 +707,9 @@ public abstract class AbstractParamVisitor
 	}
 	
 	/**
+	 * Returns the state space for the given reference.
 	 * @param ref
-	 * @return
+	 * @return the state space for the given reference.
 	 */
 	protected StateSpace getStateSpace(RefExpr ref) {
 		String n;
@@ -722,6 +729,7 @@ public abstract class AbstractParamVisitor
 	}
 
 	/**
+	 * Returns the permission factory in use.
 	 * @return the pf
 	 */
 	protected PermissionFactory getPf() {
@@ -729,6 +737,7 @@ public abstract class AbstractParamVisitor
 	}
 
 	/**
+	 * Sets the permission factory.
 	 * @param pf the pf to set
 	 */
 	public void setPf(PermissionFactory pf) {
@@ -743,7 +752,7 @@ public abstract class AbstractParamVisitor
 	}
 
 	/**
-	 * @return the perms
+	 * @return the params
 	 */
 	Map<String, ParamInfoHolder> getParams() {
 		return params;
@@ -759,13 +768,7 @@ public abstract class AbstractParamVisitor
 	@Override
 	public Boolean visit(PermissionImplication permissionImplication) {
 		AbstractParamVisitor anteVisitor = createSubParser(named.opposite()); 
-			
-//			new MethodPostconditionParser(
-//				getSpaces(), isFrameToVirtual(), 
-//				! isNamedFractions() /* negate for antecedent */);
 		AbstractParamVisitor consVisitor = createSubParser(named); 
-//			new MethodPostconditionParser(
-//				getSpaces(), isFrameToVirtual(), isNamedFractions());
 		permissionImplication.ant().accept(anteVisitor);
 		permissionImplication.cons().accept(consVisitor);
 		impls.add(Pair.create(anteVisitor, consVisitor));

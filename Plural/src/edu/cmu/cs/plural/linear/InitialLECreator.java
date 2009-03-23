@@ -248,15 +248,15 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 					true /* universals are named */);
 			
 			FractionalPermissions ps = value.get(receiverVar);
-			if(ps.isEmpty()) {
-				ps = thisFrame.toLatticeElement();
-			}
-			else {
+//			if(ps.isEmpty()) {
+//				ps = thisFrame.toLatticeElement();
+//			}
+//			else {
 				// there shouldn't already be frame permissions
 				assert ps.getFramePermissions().isEmpty() :
 					"Specification error: a constructor cannot require frame permissions; instead, it starts out with an unpacked unique frame permission"; 
 				ps = ps.mergeIn(thisFrame);
-			}
+//			}
 			ps = ps.unpack(receiverSpace.getRootState());
 			value.put(receiverVar, ps);
 		}
