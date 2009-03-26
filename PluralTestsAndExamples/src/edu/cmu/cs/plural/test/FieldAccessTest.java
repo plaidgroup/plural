@@ -45,6 +45,7 @@ import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * This test case makes sure that accesses to fields
@@ -67,7 +68,7 @@ public class FieldAccessTest {
 		this.o1 = o; // error: need field access
 	}
 	
-	@Full(guarantee = "A", fieldAccess = true)
+	@Full(guarantee = "A", use = Use.FIELDS)
 	@Perm(requires = "#0 != null")
 	public void setO1(Object o) {
 		this.o1 = o; // ok: have field access
@@ -78,26 +79,26 @@ public class FieldAccessTest {
 		this.o2 = o; // ok: o2 is not part of invariant
 	}
 
-	@Full(guarantee = "B", fieldAccess = true)
+	@Full(guarantee = "B", use = Use.FIELDS)
 	public void setO2(Object o) {
 		this.o1 = o; // error: field access to wrong state
 	}
 	
-	@Pure(guarantee = "A", fieldAccess = true)
+	@Pure(guarantee = "A", use = Use.FIELDS)
 	public Object getA() {
 		Object result = o1;
 		o1 = new Object(); // error: need modifying permission
 		return result;
 	}
 	
-	@Pure(guarantee = "B", fieldAccess = true)
+	@Pure(guarantee = "B", use = Use.FIELDS)
 	public Object getB() {
 		Object result = o2;
 		o2 = new Object(); // ok: o2 is not part of invariant
 		return result;
 	}
 	
-	@Pure(guarantee = "A", fieldAccess = true)
+	@Pure(guarantee = "A", use = Use.FIELDS)
 	@Perm(ensures = "result != null")
 	public Object getO1() {
 		return o1; // ok: have field access

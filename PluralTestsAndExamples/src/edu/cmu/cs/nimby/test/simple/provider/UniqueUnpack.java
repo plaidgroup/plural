@@ -40,7 +40,11 @@ package edu.cmu.cs.nimby.test.simple.provider;
 
 import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
-import edu.cmu.cs.plural.annot.*;
+import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.States;
+import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("NIMBYChecker")
@@ -51,7 +55,7 @@ public class UniqueUnpack {
 
 	private boolean fact = true;
 
-	@Unique(fieldAccess = true, requires="OPEN", ensures="CLOSED")
+	@Unique(use = Use.FIELDS, requires="OPEN", ensures="CLOSED")
 	void doUnpacking() {
 		fact = false;
 	}	

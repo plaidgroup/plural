@@ -57,6 +57,7 @@ import edu.cmu.cs.plural.annot.ResultUnique;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * An immutable cons list. Because this list cannot be modified, many
@@ -261,7 +262,7 @@ public abstract class ConsList<T> implements List<T> {
 	 */
 	@Pure public abstract int size();	
 	
-	@Pure(fieldAccess=true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("EMPTY")
 	@FalseIndicates("NONEMPTY")
 	public abstract boolean isEmpty();
@@ -318,7 +319,7 @@ public abstract class ConsList<T> implements List<T> {
 			}
 			
 			@Override
-			@Pure(fieldAccess=true)
+			@Pure(use = Use.FIELDS)
 			@TrueIndicates("HASNEXT")
 			@FalseIndicates("END")
 			public boolean hasNext() {
@@ -329,7 +330,7 @@ public abstract class ConsList<T> implements List<T> {
 			}
 
 			@Override
-			@Full(fieldAccess=true, requires="HASNEXT")
+			@Full(use = Use.FIELDS, requires="HASNEXT")
 			@ResultImm
 			public S next() {
 				S hd = curList.hd();
@@ -550,7 +551,7 @@ public abstract class ConsList<T> implements List<T> {
 			}
 			
 			@Override
-			@Pure(fieldAccess=true)
+			@Pure(use = Use.FIELDS)
 			@TrueIndicates("HASNEXT")
 			@FalseIndicates("END")
 			public boolean hasNext() {
@@ -563,13 +564,13 @@ public abstract class ConsList<T> implements List<T> {
 			@Override
 			@TrueIndicates("HASPREV")
 			@FalseIndicates("FRONT")
-			@Pure(fieldAccess=true)
+			@Pure(use = Use.FIELDS)
 			public boolean hasPrevious() {
 				return curElement != startingPoint;
 			}
 
 			@Override
-			@Full(fieldAccess=true, requires="HASNEXT")
+			@Full(use = Use.FIELDS, requires="HASNEXT")
 			@ResultImm
 			public S next() {
 				S hd = curElement.hd();
@@ -585,7 +586,7 @@ public abstract class ConsList<T> implements List<T> {
 			}
 
 			@Override
-			@Full(fieldAccess=true, requires="HASPREV")
+			@Full(use = Use.FIELDS, requires="HASPREV")
 			@ResultImm
 			public S previous() {
 				if( this.curIndex == 0 )
@@ -709,7 +710,7 @@ final class Nonempty<T> extends ConsList<T> {
 	}
 
 	@Override
-	@Pure(fieldAccess=true, requires="NONEMPTY", ensures="NONEMPTY")
+	@Pure(use = Use.FIELDS, requires="NONEMPTY", ensures="NONEMPTY")
 	@ResultImm
 	public T hd() {
 		return hd;
@@ -747,7 +748,7 @@ final class Nonempty<T> extends ConsList<T> {
 	}
 
 	@Override
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@ResultImm
 	public ConsList<T> tl() {
 		return tl;

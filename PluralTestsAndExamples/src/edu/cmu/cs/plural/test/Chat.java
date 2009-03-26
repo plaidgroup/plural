@@ -57,6 +57,7 @@ import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("FractionalAnalysis")
@@ -66,7 +67,7 @@ import edu.cmu.cs.plural.annot.Unique;
 class Connection {
 	private BufferedWriter socket = null;
 
-	@Share(requires="CONNECTED", ensures="IDLE", fieldAccess = true)
+	@Share(requires="CONNECTED", ensures="IDLE", use = Use.FIELDS)
 	void disconnect() throws IOException {
 		atomic: {
 			BufferedWriter s = this.socket;
@@ -81,7 +82,7 @@ class Connection {
 		this.socket = null;
 	}
 
-	@Share(fieldAccess = true)
+	@Share(use = Use.FIELDS)
 	@TrueIndicates("IDLE")
 	public boolean isIdle() {
 		atomic: {
@@ -94,7 +95,7 @@ class Connection {
 		}
 	}
 
-	@Share(fieldAccess = true)
+	@Share(use = Use.FIELDS)
 	@TrueIndicates("CONNECTED")
 	public boolean isConnected() {
 		atomic: 
@@ -108,7 +109,7 @@ class Connection {
 		}
 	}
 
-	@Share(requires="CONNECTED", ensures="CONNECTED", fieldAccess = true)
+	@Share(requires="CONNECTED", ensures="CONNECTED", use = Use.FIELDS)
 	void send(String txt) throws IOException {
 		atomic: {
 			this.socket.write(txt + "\n");
@@ -116,7 +117,7 @@ class Connection {
 		}
 	}
 
-	@Share(requires="IDLE", ensures="CONNECTED", fieldAccess = true)
+	@Share(requires="IDLE", ensures="CONNECTED", use = Use.FIELDS)
 	void connect(String ip) throws IOException {
 		atomic: {
 			this.socket = new BufferedWriter(new FileWriter("foo.out", true));
@@ -134,7 +135,7 @@ class NetworkListener implements Runnable {
 
 	final private Connection myNetwork;
 
-	@Unique(fieldAccess = true) 
+	@Unique(use = Use.FIELDS) 
 	public void run() {
 		for( int i = 0; i < 3; i++ ) {
 			try {
@@ -196,7 +197,7 @@ class GUI implements Runnable {
 	/*
 	 * Simulate random button presses from the user on enabled buttons.
 	 */
-	@Unique(fieldAccess = true)	
+	@Unique(use = Use.FIELDS)	
 	public void run() {
 		Random r = new Random();
 		try {

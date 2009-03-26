@@ -42,11 +42,12 @@ import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("NIMBYChecker")
 public class SimplePureAtomic {
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("OPEN")
 	boolean isOpen() { return true; }
 	

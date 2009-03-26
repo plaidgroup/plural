@@ -54,6 +54,7 @@ import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("FractionalAnalysis")
@@ -68,7 +69,7 @@ class Handler implements Runnable {
 		return;
 	}
 	
-	@Unique(fieldAccess = true)
+	@Unique(use = Use.FIELDS)
 	public void run() {
 		for(;;) {
 			atomic: {
@@ -93,7 +94,7 @@ public class RequestGenerator {
 
 	private RequestPipe requestPipe = new RequestPipe();
 	
-	@Unique(requires="IDLE", ensures="RUNNING", fieldAccess = true)
+	@Unique(requires="IDLE", ensures="RUNNING", use = Use.FIELDS)
 	void start() {
 		this.requestPipe.open();
 		
@@ -103,13 +104,13 @@ public class RequestGenerator {
 		return;
 	}
 
-	@Unique(requires="RUNNING", ensures="RUNNING", fieldAccess = true)
+	@Unique(requires="RUNNING", ensures="RUNNING", use = Use.FIELDS)
 	void send(String str) {
 		this.requestPipe.send(str);
 		return;
 	}
 	
-	@Unique(requires="RUNNING", ensures="IDLE", fieldAccess = true)
+	@Unique(requires="RUNNING", ensures="IDLE", use = Use.FIELDS)
 	void stop() {
 		this.requestPipe.close();
 		return;
@@ -122,7 +123,7 @@ class Thread extends java.lang.Thread {
 		super(r);
 	}
 	
-	@Unique(returned=false, fieldAccess = true)
+	@Unique(returned=false, use = Use.FIELDS)
 	public void start() {
 		super.start();
 		return;
@@ -133,13 +134,13 @@ class RequestPipe {
 	
 	private ConcurrentLinkedQueue<String> queue;
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("open")
 	boolean isOpen() {
 		return true;
 	}
 	
-	@Full(requires="closed", ensures="open", fieldAccess = true)
+	@Full(requires="closed", ensures="open", use = Use.FIELDS)
 	void open() {
 		atomic: {
 			this.queue = new ConcurrentLinkedQueue<String>();
@@ -147,7 +148,7 @@ class RequestPipe {
 		return;
 	}
 	
-	@Full(requires="open", ensures="closed", fieldAccess = true)
+	@Full(requires="open", ensures="closed", use = Use.FIELDS)
 	void close() {
 		atomic: {
 			this.queue = null;
@@ -155,7 +156,7 @@ class RequestPipe {
 		return;
 	}
 	
-	@Full(requires="open", ensures="open", fieldAccess = true)
+	@Full(requires="open", ensures="open", use = Use.FIELDS)
 	void send(String str) {
 		atomic: {
 			this.queue.add(str);
@@ -163,7 +164,7 @@ class RequestPipe {
 		}
 	}
 	
-	@Pure(requires="open", ensures="open", fieldAccess = true)
+	@Pure(requires="open", ensures="open", use = Use.FIELDS)
 	String get() {
 		atomic: {
 			return this.queue.poll();

@@ -44,6 +44,7 @@ import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * We want to make sure that we are forgetting even
@@ -55,7 +56,7 @@ public class PureSubtractNoAtomic {
 
 	@Full(returned = false) public void takeMyFull() {}
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("OPEN")
 	public boolean isOpen() {
 		return true;

@@ -42,6 +42,7 @@ import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * A simple test. Share should be okay if we are inside
@@ -50,7 +51,7 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
 @PassingTest
 @UseAnalyses("NIMBYChecker")
 public class SimpleShareAtomic {
-	@Share(fieldAccess = true)
+	@Share(use = Use.FIELDS)
 	@TrueIndicates("OPEN")
 	boolean isOpen() { return true; }
 	

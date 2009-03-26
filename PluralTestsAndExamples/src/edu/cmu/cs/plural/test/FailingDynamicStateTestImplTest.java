@@ -44,6 +44,7 @@ import edu.cmu.cs.plural.annot.FalseIndicates;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * This class tests Plural's dynamic state test implementation checking
@@ -58,13 +59,13 @@ public class FailingDynamicStateTestImplTest {
 	
 	private boolean a;
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("A")
 	public boolean isA() {
 		return !a; // error here because of negation
 	}
 
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("A")
 	public boolean isA2() {
 		if(a)

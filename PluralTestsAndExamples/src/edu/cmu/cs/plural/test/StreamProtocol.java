@@ -46,6 +46,7 @@ import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 @FailingTest(5) 
 //  7 when not using borrowing optimization
@@ -69,11 +70,11 @@ public class StreamProtocol {
 		return 0;
 	}
 	
-	@Full(requires = "open", ensures = "closed", fieldAccess = true)
+	@Full(requires = "open", ensures = "closed", use = Use.FIELDS)
 	public void close() {
 	}
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("closed")
 	@FalseIndicates("open")
 	public boolean isClosed() {

@@ -44,6 +44,7 @@ import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("NIMBYChecker")
@@ -53,7 +54,7 @@ import edu.cmu.cs.plural.annot.States;
 public class FullUnpackAtomic {
 	private boolean fact;
 	
-	@Full(fieldAccess = true, requires="OPEN", ensures="CLOSED")
+	@Full(use = Use.FIELDS, requires="OPEN", ensures="CLOSED")
 	void doUnpacking() {
 		atomic: {
 			fact = false;

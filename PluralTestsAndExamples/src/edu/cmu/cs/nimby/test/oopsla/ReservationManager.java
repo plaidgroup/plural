@@ -64,6 +64,7 @@ import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("NIMBYChecker")
@@ -76,7 +77,7 @@ class RsvnManager {
 	 * itinerary to a air-based one if demand for bus tickets is
 	 * high.
 	 */
-	@Share(fieldAccess = true)
+	@Share(use = Use.FIELDS)
 	@ResultUnique
 	Itinerary upgradeIfAvailable(
 			@Unique(returned = false, requires="byLand") Itinerary old_itin,
@@ -121,7 +122,7 @@ class Itinerary {
 		return r;
 	}
 	
-	@Pure(fieldAccess=true)
+	@Pure(use = Use.FIELDS)
 	void emailReminder() {
 		if( myFlightRsvn.isConfirmed() ) {
 			System.out.println("Reminder, Flight: " + myFlightRsvn.toString() );
@@ -147,7 +148,7 @@ class Itinerary {
 	FlightRsvn myFlightRsvn;
 	BusRsvn myBusRsvn;
 		
-	@Unique(fieldAccess = true, ensures="byAir")
+	@Unique(use = Use.FIELDS, ensures="byAir")
 	void makeByAir(@Unique(requires="confirmed", returned=false) FlightRsvn new_flight) {
 		this.myBusRsvn = null;
 		this.myFlightRsvn = new_flight;
@@ -162,7 +163,7 @@ class Flight {
 		
 	}
 	
-	@Pure(fieldAccess=true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("seatAvail")
 	@FalseIndicates("filled")
 	boolean seatAvail() {
@@ -177,14 +178,14 @@ class FlightRsvn {
 		
 	}
 	
-	@Pure(fieldAccess=true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("confirmed")
 	@FalseIndicates("void")
 	boolean isConfirmed() {
 		return true;
 	}
 	
-	@Full(fieldAccess=true, ensures="confirmed")
+	@Full(use = Use.FIELDS, ensures="confirmed")
 	void confirm() {}
 }
 
@@ -195,14 +196,14 @@ class BusRsvn {
 		
 	}
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("confirmed")
 	@FalseIndicates("void")
 	boolean isConfirmed() {
 		return true;
 	}
 	
-	@Full(fieldAccess = true, requires="confirmed", ensures="void")
+	@Full(use = Use.FIELDS, requires="confirmed", ensures="void")
 	public void makeVoid() {
 		return;
 	}
@@ -211,7 +212,7 @@ class BusRsvn {
 
 class ReservationDatabase {
 
-	@Imm(fieldAccess=true)
+	@Imm(use = Use.FIELDS)
 	@TrueIndicates("highBusDemand")
 	boolean isHighDemand() {
 		return true;

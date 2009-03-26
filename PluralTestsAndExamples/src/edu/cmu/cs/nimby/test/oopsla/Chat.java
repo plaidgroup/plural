@@ -53,6 +53,7 @@ import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * Here is a pedagogical example. It is meant to be a program similar in architecture to
@@ -89,7 +90,7 @@ class NetworkListener implements Runnable {
 	
 	final private Connection myNetwork;
 	
-	@Unique(fieldAccess = true) 
+	@Unique(use = Use.FIELDS) 
 	public void run() {
 		for( int i = 0; i < 3; i++ ) {
 			try {
@@ -131,7 +132,7 @@ class Connection {
 		socket = null;
 	}
 	
-	@Share(fieldAccess = true, requires="CONNECTED", ensures="IDLE")
+	@Share(use = Use.FIELDS, requires="CONNECTED", ensures="IDLE")
 	void disconnect() throws IOException {
 		atomic: synchronized(Chat.class) {
 			socket.flush();
@@ -141,7 +142,7 @@ class Connection {
 		}
 	}
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("IDLE")
 	public boolean isIdle() {
 		atomic: synchronized(Chat.class) {
@@ -154,7 +155,7 @@ class Connection {
 		}
 	}
 
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("CONNECTED")
 	public boolean isConnected() {
 		atomic: synchronized(Chat.class)
@@ -168,7 +169,7 @@ class Connection {
 		}
 	}
 	
-	@Share(fieldAccess = true, requires="CONNECTED", ensures="CONNECTED")
+	@Share(use = Use.FIELDS, requires="CONNECTED", ensures="CONNECTED")
 	void send(String txt) throws IOException {
 		atomic: synchronized(Chat.class) {
 			this.socket.write(txt + "\n");
@@ -176,7 +177,7 @@ class Connection {
 		}
 	}
 	
-	@Share(fieldAccess = true, requires="IDLE", ensures="CONNECTED")
+	@Share(use = Use.FIELDS, requires="IDLE", ensures="CONNECTED")
 	void connect(String ip) throws IOException {
 		atomic: synchronized(Chat.class) {
 			this.socket = new BufferedWriter(new FileWriter("foo.out", true));
@@ -202,7 +203,7 @@ class GUI implements Runnable {
 	/*
 	 * Simulate random button presses from the user on enabled buttons.
 	 */
-	@Unique(fieldAccess = true)	
+	@Unique(use = Use.FIELDS)	
 	public void run() {
 		Random r = new Random();
 		try {

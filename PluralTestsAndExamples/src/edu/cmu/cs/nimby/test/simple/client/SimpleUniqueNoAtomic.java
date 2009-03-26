@@ -42,11 +42,12 @@ import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("NIMBYChecker")
 public class SimpleUniqueNoAtomic {
-	@Unique(fieldAccess = true)
+	@Unique(use = Use.FIELDS)
 	@TrueIndicates("OPEN")
 	boolean isOpen() { return true; } // This line should not indicate an error...
 	

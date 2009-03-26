@@ -53,6 +53,7 @@ import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("NIMBYChecker")
@@ -100,19 +101,19 @@ class PingPong {
 		
 	}
 	
-	@Pure(fieldAccess=true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("PING")
 	@FalseIndicates("PONG")
 	boolean isPing() {
 		atomic: {return isPing;}
 	}
 	
-	@Share(fieldAccess=true, requires="PONG", ensures="PING")
+	@Share(use = Use.FIELDS, requires="PONG", ensures="PING")
 	void ping() {
 		atomic: {this.isPing = true;}
 	}
 	
-	@Share(fieldAccess=true, requires="PING",ensures="PONG")
+	@Share(use = Use.FIELDS, requires="PING",ensures="PONG")
 	void pong() {
 		atomic:{this.isPing = false;}
 	}
@@ -136,7 +137,7 @@ class OtherThread extends java.lang.Thread {
 	}
 
 	@Override
-	@Full(fieldAccess=true,value="INSIDE")
+	@Full(use = Use.FIELDS,value="INSIDE")
 	public void run() {
 		for( int i=0; i<5; i++ ) {
 			atomic: {

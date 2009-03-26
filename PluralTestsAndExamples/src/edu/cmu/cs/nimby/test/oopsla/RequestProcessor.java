@@ -52,6 +52,7 @@ import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 
 /**
@@ -75,7 +76,7 @@ public class RequestProcessor {
 
 	private RequestPipe requestPipe = new RequestPipe();
 	
-	@Unique(fieldAccess = true, requires="IDLE", ensures="RUNNING")
+	@Unique(use = Use.FIELDS, requires="IDLE", ensures="RUNNING")
 	void start() {
 		this.requestPipe.open();
 		
@@ -85,13 +86,13 @@ public class RequestProcessor {
 		return;
 	}
 
-	@Unique(fieldAccess = true, requires="RUNNING", ensures="RUNNING")
+	@Unique(use = Use.FIELDS, requires="RUNNING", ensures="RUNNING")
 	void send(@Imm String str) {
 		this.requestPipe.send(str);
 		return;
 	}
 	
-	@Unique(fieldAccess = true, requires="RUNNING", ensures="IDLE")
+	@Unique(use = Use.FIELDS, requires="RUNNING", ensures="IDLE")
 	void stop() {
 		this.requestPipe.close();
 		return;
@@ -131,7 +132,7 @@ class Handler implements Runnable {
 		return;
 	}
 	
-	@Full(fieldAccess = true)
+	@Full(use = Use.FIELDS)
 	public void run() {
 		for(;;) {
 			atomic: {
@@ -157,7 +158,7 @@ class RequestPipe {
 	
 	private ConcurrentLinkedQueue<String> queue;
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("open")
 	boolean isOpen() {
 		atomic: {
@@ -165,7 +166,7 @@ class RequestPipe {
 		}
 	}
 	
-	@Full(fieldAccess = true, requires="closed", ensures="open")
+	@Full(use = Use.FIELDS, requires="closed", ensures="open")
 	void open() {
 		atomic: {
 			this.queue = new ConcurrentLinkedQueue<String>();
@@ -173,7 +174,7 @@ class RequestPipe {
 		}
 	}
 	
-	@Full(fieldAccess = true, requires="open", ensures="closed")
+	@Full(use = Use.FIELDS, requires="open", ensures="closed")
 	void close() {
 		atomic: {
 			this.queue = null;
@@ -189,7 +190,7 @@ class RequestPipe {
 		}
 	}
 	
-	@Pure(requires="open", ensures="open", fieldAccess = true)
+	@Pure(requires="open", ensures="open", use = Use.FIELDS)
 	String get() {
 		atomic: {
 			return this.queue.poll();

@@ -39,6 +39,7 @@ package edu.cmu.cs.plural.test;
 
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * @author Kevin Bierhoff
@@ -82,7 +83,7 @@ public class Issue23Test {
 		
 	}
 	
-	@Full(requires = "A", ensures = "B", fieldAccess = true)
+	@Full(requires = "A", ensures = "B", use = Use.FIELDS)
 	public void toB() {
 		
 	}

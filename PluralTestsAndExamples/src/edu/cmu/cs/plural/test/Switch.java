@@ -11,6 +11,7 @@ import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * This is a mock interface for tests with concrete predicates
@@ -30,13 +31,13 @@ public class Switch {
 		@Perm(requires = "#0 == true", ensures = "this!fr in on"),
 		@Perm(requires = "#0 == false", ensures = "this!fr in off")
 	})
-	@Full(fieldAccess = true)
+	@Full(use = Use.FIELDS)
 	public void setState(boolean on) {
 		this.f_on = on;
 	}
 	
 	@Perm(ensures = "result == true => this!fr in on")
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	public boolean isOn() {
 		return f_on;
 	}

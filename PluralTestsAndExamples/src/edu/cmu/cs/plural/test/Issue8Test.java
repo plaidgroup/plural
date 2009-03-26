@@ -43,6 +43,7 @@ import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @UseAnalyses("FractionalAnalysis")
 @States({"OPEN", "CLOSED"})
@@ -52,7 +53,7 @@ public class Issue8Test {
 	
 	private boolean fact = true;
 
-	@Unique(fieldAccess = true, requires="OPEN", ensures="CLOSED")
+	@Unique(use = Use.FIELDS, requires="OPEN", ensures="CLOSED")
 	void doUnpacking() {
 		fact = false;
 	}	

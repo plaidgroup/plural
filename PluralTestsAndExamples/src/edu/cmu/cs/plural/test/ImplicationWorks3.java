@@ -46,6 +46,7 @@ import edu.cmu.cs.plural.annot.Refine;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * This is specifically a test for issue 46, to see if I can use 'this'
@@ -65,7 +66,7 @@ public class ImplicationWorks3 {
 
 	private boolean giveMeFull = true;
 	
-	@Share(fieldAccess=true, value="STRUCTURE")
+	@Share(use = Use.FIELDS, value="STRUCTURE")
 	void foo() {
 		if( this.giveMeFull ) {
 			this.giveMeFull = false;

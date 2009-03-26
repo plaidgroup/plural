@@ -51,7 +51,7 @@ import edu.cmu.cs.plural.annot.Refine;
 import edu.cmu.cs.plural.annot.ResultUnique;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
-import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @FailingTest(2)
 @UseAnalyses("FractionalAnalysis")
@@ -69,19 +69,19 @@ public class ModifyingIterator<T> {
 		this.list = list;
 	}
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("available")
 	@FalseIndicates("end")
 	public boolean hasNext() {
 		return next < list.size();
 	}
 	
-	@Full(requires = "available", ensures = "retrieved", fieldAccess = true)
+	@Full(requires = "available", ensures = "retrieved", use = Use.FIELDS)
 	public T next() {
 		return list.get(next++);
 	}
 	
-	@Full(value = "current", requires = "retrieved", ensures = "removed", fieldAccess = true)
+	@Full(value = "current", requires = "retrieved", ensures = "removed", use = Use.FIELDS)
 	public void remove() {
 		list.remove(--next);
 	}

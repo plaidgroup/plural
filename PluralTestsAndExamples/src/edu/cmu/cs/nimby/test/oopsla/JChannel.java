@@ -47,8 +47,6 @@ package edu.cmu.cs.nimby.test.oopsla;
 
 
 import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.URL;
 import java.util.HashMap;
@@ -59,20 +57,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Exchanger;
 
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
-//import org.jgroups.conf.ConfiguratorFactory;
-//import org.jgroups.conf.ProtocolStackConfigurator;
-//import org.jgroups.stack.IpAddress;
-//import org.jgroups.stack.ProtocolStack;
-//import org.jgroups.stack.StateTransferInfo;
-//import org.jgroups.util.Promise;
-//import org.jgroups.util.Queue;
-//import org.jgroups.util.QueueClosedException;
-//import org.jgroups.util.Util;
 import org.w3c.dom.Element;
 
-import edu.cmu.cs.plural.annot.*;
+import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.FalseIndicates;
+import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.Pure;
+import edu.cmu.cs.plural.annot.Share;
+import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.TrueIndicates;
 
 /**
  * This class is part of JGroups (www.jgroups.org) and is (c) its creators<br>

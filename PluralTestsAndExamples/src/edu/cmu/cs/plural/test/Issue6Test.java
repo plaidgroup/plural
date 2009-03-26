@@ -42,6 +42,7 @@ import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * This test is meant to confirm Kevin's solution to
@@ -51,7 +52,7 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
 @UseAnalyses("FractionalAnalysis")
 public class Issue6Test {
 	
-	@Share(fieldAccess = true)
+	@Share(use = Use.FIELDS)
 	@TrueIndicates("OPEN")
 	boolean isOpen() { return true; }
 	

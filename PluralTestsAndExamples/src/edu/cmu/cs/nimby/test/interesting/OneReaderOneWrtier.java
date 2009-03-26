@@ -46,6 +46,7 @@ import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 
 @PassingTest
@@ -78,7 +79,7 @@ public class OneReaderOneWrtier {
 		}
 
 		@Override
-		@Unique(fieldAccess=true)
+		@Unique(use = Use.FIELDS)
 		public void run() {
 			
 			boolean was_closed = false;

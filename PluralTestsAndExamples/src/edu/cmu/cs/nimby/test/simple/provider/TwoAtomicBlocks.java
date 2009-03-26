@@ -44,6 +44,7 @@ import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
+import edu.cmu.cs.plural.annot.Use;
 
 @FailingTest(1)
 @UseAnalyses("NIMBYChecker")
@@ -56,7 +57,7 @@ public class TwoAtomicBlocks {
 	private boolean f_2 = false;
 	
 	// Classic problem. This should fail!
-	@Full(fieldAccess = true, requires="OPEN", ensures="CLOSED")
+	@Full(use = Use.FIELDS, requires="OPEN", ensures="CLOSED")
 	void close() {
 		atomic: { 
 			f_1 = false;
