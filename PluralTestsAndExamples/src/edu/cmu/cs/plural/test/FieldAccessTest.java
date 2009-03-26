@@ -54,7 +54,7 @@ import edu.cmu.cs.plural.annot.Use;
  * @since Mar 13, 2009
  *
  */
-@FailingTest(5)
+@FailingTest(6)
 @UseAnalyses(PluralAnalysis.PLURAL)
 @ClassStates(@State(name = "A", inv = "o1 != null"))
 public class FieldAccessTest {
@@ -118,6 +118,22 @@ public class FieldAccessTest {
 	@Pure(guarantee = "A")
 	public Object getRef() {
 		return o1; // error: need field access
+	}
+	
+	@Full(guarantee = "A", use = Use.DISP_FIELDS)
+	@Perm(requires = "#0 != null")
+	public Object replace(Object o) {
+		Object result = o1; // ok: have field access
+		setO1(o); // ok: can dispatch, too!
+		return result;
+	}
+	
+	@Full(guarantee = "A", use = Use.FIELDS)
+	@Perm(requires = "#0 != null")
+	public Object failReplace(Object o) {
+		Object result = o1; // ok: have field access
+		setO1(o); // error: cannot do dynamic dispatch
+		return result;
 	}
 	
 }
