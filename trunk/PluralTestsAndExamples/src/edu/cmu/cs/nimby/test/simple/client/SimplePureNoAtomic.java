@@ -42,11 +42,12 @@ import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 @FailingTest(1)
 @UseAnalyses("NIMBYChecker")
 public class SimplePureNoAtomic {
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("OPEN")
 	boolean isOpen() { return true; } // This line should not indicate an error...
 	

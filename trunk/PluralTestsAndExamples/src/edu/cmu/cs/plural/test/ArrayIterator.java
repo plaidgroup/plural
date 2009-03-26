@@ -39,9 +39,9 @@ package edu.cmu.cs.plural.test;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.plural.annot.Capture;
 import edu.cmu.cs.plural.annot.FalseIndicates;
 import edu.cmu.cs.plural.annot.Full;
-import edu.cmu.cs.plural.annot.Capture;
 import edu.cmu.cs.plural.annot.Param;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
@@ -51,6 +51,7 @@ import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @FailingTest(5)  
 // 6 when not using borrowing optimization 
@@ -68,12 +69,12 @@ public class ArrayIterator<T> {
 		this.array = array;
 	}
 	
-	@Full(requires="available", fieldAccess = true)
+	@Full(requires="available", use = Use.FIELDS)
 	public T next() {
 		return array[pos++];
 	}
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("available")
 	@FalseIndicates("end")
 	public boolean hasNext() {

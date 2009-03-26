@@ -46,6 +46,7 @@ import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * This is a test class for implications in state invariants.
@@ -71,7 +72,7 @@ public class ImplicationWorks {
 		this.data = new LastObject();
 	}
 	
-	@Full(fieldAccess=true)
+	@Full(use = Use.FIELDS)
 	void testPermImplicationShouldWork() {
 		if( hasFull == true ) {
 			hasFull = false;
@@ -83,7 +84,7 @@ public class ImplicationWorks {
 		}
 	}
 		
-	@Share(fieldAccess = true)
+	@Share(use = Use.FIELDS)
 	void testPermImplicationShouldFail(@Full LastObject lo) {
 		boolean local = hasFull;
 		
@@ -127,7 +128,7 @@ public class ImplicationWorks {
 
 class OtherObject {
 	
-	@Share(fieldAccess = true)
+	@Share(use = Use.FIELDS)
 	@TrueIndicates("closed")
 	boolean isClosed() {
 		return true;

@@ -44,6 +44,7 @@ import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * We want to make sure that we are forgetting even
@@ -54,7 +55,7 @@ import edu.cmu.cs.plural.annot.Unique;
 public class ShareSubtractNoAtomic {
 	@Share(returned = false) public void takeYourShare() {}
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@TrueIndicates("OPEN")
 	public boolean isOpen() {
 		return true;

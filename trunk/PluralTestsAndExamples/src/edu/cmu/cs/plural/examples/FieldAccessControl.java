@@ -48,6 +48,7 @@ import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.Refine;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * This class demonstrates how to control field accesses with Plural
@@ -80,25 +81,25 @@ public class FieldAccessControl {
 	private int b;
 	
 	@Perm(requires = "#0 != null")
-	@Full(value = "A", fieldAccess = true)
+	@Full(value = "A", use = Use.FIELDS)
 	public void setA(Object a) {
 		this.a = a;
 	}
 	
 	@NoEffects // pure method--not necessary for checking
 	@Perm(ensures = "result != null")
-	@Pure(value = "A", fieldAccess = true)
+	@Pure(value = "A", use = Use.FIELDS)
 	public Object getA() {
 		return a;
 	}
 	
-	@Full(value = "B", fieldAccess = true)
+	@Full(value = "B", use = Use.FIELDS)
 	public void setB(int b) {
 		this.b = b;
 	}
 	
 	@NoEffects // pure method--not necessary for checking
-	@Pure(value = "B", fieldAccess = true)
+	@Pure(value = "B", use = Use.FIELDS)
 	public int getB() {
 		return b;
 	}

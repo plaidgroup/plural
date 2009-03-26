@@ -42,6 +42,7 @@ import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * Simple failing test. Share permissions should
@@ -50,7 +51,7 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
 @FailingTest(1)
 @UseAnalyses("NIMBYChecker")
 public class SimpleShareNoAtomic {
-	@Share(fieldAccess = true)
+	@Share(use = Use.FIELDS)
 	@TrueIndicates("OPEN")
 	boolean isOpen() { return true; } // This line should not indicate an error...
 	

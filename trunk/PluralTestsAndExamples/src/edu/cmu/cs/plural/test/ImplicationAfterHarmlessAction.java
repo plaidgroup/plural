@@ -44,6 +44,7 @@ import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * @author Kevin Bierhoff
@@ -62,7 +63,7 @@ public class ImplicationAfterHarmlessAction {
 	ImplicationAfterHarmlessAction() {
 	}
 	
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	@NoEffects
 	@TrueIndicates("ready")
 	public boolean isReady() {

@@ -45,6 +45,7 @@ import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 /*
  * In this test, we see if we can use a state implication in a
@@ -59,7 +60,7 @@ public class ImplicationWorks2 {
 	boolean hasAState;
 	
 	// Should work fine
-	@Unique(fieldAccess=true,requires="SPECIAL")
+	@Unique(use = Use.FIELDS,requires="SPECIAL")
 	void foo() {
 		if( this.hasAState ) {
 			data.mustBeInAState();

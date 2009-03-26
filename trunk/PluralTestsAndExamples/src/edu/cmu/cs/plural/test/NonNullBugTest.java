@@ -44,6 +44,7 @@ import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
  * This test is meant to expose a bug in the DefaultPredicateMerger.
@@ -65,14 +66,14 @@ public class NonNullBugTest {
 	Object nullField = new Object();
 	boolean otherField = true;
 	
-	@Unique(fieldAccess=true)
+	@Unique(use = Use.FIELDS)
 	void foo() { // with bug, method fails to pack due to insufficient fields
 		
 		otherField = true; // Force an unpack
 		
 	}	
 	
-	@Unique(fieldAccess=true)
+	@Unique(use = Use.FIELDS)
 	void bar() { // with bug, method fails to pack due to insufficient fields
 		
 		nullField = new Object(); // Force an unpack

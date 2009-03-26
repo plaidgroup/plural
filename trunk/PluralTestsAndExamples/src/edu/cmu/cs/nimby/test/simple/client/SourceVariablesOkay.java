@@ -46,6 +46,7 @@ import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.Use;
 
 
 /**
@@ -62,7 +63,7 @@ public class SourceVariablesOkay {
 	
 	private BufferedWriter socket;
 	
-	@Share(fieldAccess = true, requires="CONNECTED", ensures="CONNECTED")
+	@Share(use = Use.FIELDS, requires="CONNECTED", ensures="CONNECTED")
 	void send(String txt) throws IOException {
 		atomic: {
 			this.socket.write(txt + "\n");

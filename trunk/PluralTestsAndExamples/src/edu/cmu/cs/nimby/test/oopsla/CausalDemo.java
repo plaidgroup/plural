@@ -52,12 +52,11 @@ import java.util.Vector;
 import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
-import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
-import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 
 
@@ -109,8 +108,8 @@ public class CausalDemo implements Runnable
 		System.out.println(alphabet);
 	}
 			
-	//@Unique(fieldAccess = true, returned=false)
-	//@Full(fieldAccess = true)
+	//@Unique(use = Use.FIELDS, returned=false)
+	//@Full(use = Use.FIELDS)
 	@Perm(requires="pure(this) * full(this!fr)")
 	public void run()
 	{
@@ -284,7 +283,7 @@ class ShutDownThread implements Runnable {
 		this.causalDemo = causalDemo;
 	}
 	
-	@Unique(fieldAccess = true)
+	@Unique(use = Use.FIELDS)
 	public void run()
 	{
 		this.causalDemo.listAlphabet();

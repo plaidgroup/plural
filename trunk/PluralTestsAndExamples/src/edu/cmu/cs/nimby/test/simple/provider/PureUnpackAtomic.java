@@ -46,6 +46,7 @@ import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("NIMBYChecker")
@@ -57,7 +58,7 @@ public class PureUnpackAtomic {
 	
 	@TrueIndicates("OPEN")
 	@FalseIndicates("CLOSED")
-	@Pure(fieldAccess = true)
+	@Pure(use = Use.FIELDS)
 	public boolean doUnpacking() {
 		atomic: {
 			return fact;

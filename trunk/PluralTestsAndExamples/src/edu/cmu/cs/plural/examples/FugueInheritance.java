@@ -9,6 +9,7 @@ import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses({PluralAnalysis.SYNTAX, PluralAnalysis.EFFECT, PluralAnalysis.PLURAL})
@@ -20,9 +21,10 @@ public class FugueInheritance {
 	})
 	class WebPageFetcher {
 		
+		@SuppressWarnings("unused")
 		private Object sock = null;
 		
-		@Unique(requires = "closed", ensures = "open", fieldAccess = true)
+		@Unique(requires = "closed", ensures = "open", use = Use.FIELDS)
 		public void open() {
 			this.sock = new Object();
 		}

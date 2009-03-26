@@ -4,7 +4,6 @@ package com.holub.asynch;
 //import java.util.LinkedList; NEB: I use my own, annotated LinkedList.
 import java.util.NoSuchElementException;
 
-import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.FalseIndicates;
@@ -18,6 +17,7 @@ import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
+import edu.cmu.cs.plural.annot.Use;
 
 /***********************************************************************
  *  NEB: Note! This class is used with permission of Allen I. Holub.
@@ -227,7 +227,7 @@ public class Blocking_queue
 	 	
      
      // NEB: I added the is_closed() method... because there wasn't one. :-(
-     @Pure(fieldAccess=true,value="PROTOCOL")
+     @Pure(use = Use.FIELDS,value="PROTOCOL")
      @TrueIndicates("CLOSED")
      @FalseIndicates("OPEN")
      public final synchronized boolean is_closed() {
@@ -249,7 +249,7 @@ public class Blocking_queue
 	 * to a given object are those stored on the queue, the object will
 	 * become garbage collectable.
 	 */
-     @Full(fieldAccess=true,value="PROTOCOL",requires="OPEN",ensures="CLOSED")
+     @Full(use = Use.FIELDS,value="PROTOCOL",requires="OPEN",ensures="CLOSED")
 	 public synchronized void close()
 	 {	
     	 atomic : { // NEB: Added atomic block

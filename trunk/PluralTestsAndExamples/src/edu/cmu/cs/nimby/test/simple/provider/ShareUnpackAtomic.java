@@ -44,6 +44,7 @@ import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
+import edu.cmu.cs.plural.annot.Use;
 
 @PassingTest
 @UseAnalyses("NIMBYChecker")
@@ -53,7 +54,7 @@ import edu.cmu.cs.plural.annot.States;
 public class ShareUnpackAtomic {
 	private boolean fact;
 	
-	@Share(fieldAccess = true, requires="OPEN", ensures="CLOSED")
+	@Share(use = Use.FIELDS, requires="OPEN", ensures="CLOSED")
 	void doUnpacking() {
 		atomic: {
 			fact = false;
