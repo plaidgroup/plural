@@ -116,9 +116,6 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.states.IInvocationSignature#isConstructorSignature()
-	 */
 	@Override
 	public boolean isConstructorSignature() {
 		return false;
@@ -136,6 +133,7 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 
 	@Override
 	public boolean hasReceiver() {
+		// TODO Use Modifier.isStatic 
 		return (binding.getModifiers() & Modifier.STATIC) == 0;
 	}
 
@@ -168,17 +166,29 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 		
 		@Override
 		public IMethodCaseInstance createPermissions(final boolean forAnalyzingBody, boolean isSuperCall) {
-			boolean coerce;
-			if(hasReceiver()) {
-				// coerce == true iff dynamically dispatched call site
-				// TODO could consider not coercing for final methods / final classes?
-				coerce = !forAnalyzingBody && !isSuperCall && (binding.getModifiers() & Modifier.PRIVATE) == 0;
+			final Pair<MethodPrecondition,MethodPostcondition> preAndPost;
+			if(forAnalyzingBody) {
+				preAndPost = preAndPost(forAnalyzingBody, preAndPostString, 
+						false,
+						false,
+						isSuperCall);
 			}
-			else
-				coerce = false;
-			final Pair<MethodPrecondition,MethodPostcondition> preAndPost = 
-				preAndPost(forAnalyzingBody, preAndPostString, coerce, false);
-
+			else {
+				boolean coerce;
+				if(hasReceiver()) {
+					// coerce == true iff dynamically dispatched call site
+					// TODO Use Modifier.isPrivate 
+					coerce = !isSuperCall && (binding.getModifiers() & Modifier.PRIVATE) == 0;
+				}
+				else
+					coerce = false;
+				preAndPost = preAndPost(forAnalyzingBody, preAndPostString, 
+						coerce, 
+						false,
+						false);
+			}
+			
+			
 			return new IMethodCaseInstance() {
 
 				@Override

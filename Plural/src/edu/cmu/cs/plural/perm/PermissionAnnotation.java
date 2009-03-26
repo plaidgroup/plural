@@ -52,6 +52,4 @@ public interface PermissionAnnotation extends ICrystalAnnotation {
 
 	public String[] getEnsures();
 	
-	public boolean isFramePermission();
-
 }

@@ -53,4 +53,8 @@ public interface ParameterPermissionAnnotation extends PermissionAnnotation {
 
 	public String[] getEnsures();
 
+	public boolean isFramePermission();
+	
+	public boolean isVirtualPermission();
+
 }

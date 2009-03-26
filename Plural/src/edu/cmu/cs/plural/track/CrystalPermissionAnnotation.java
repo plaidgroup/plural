@@ -51,6 +51,7 @@ import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.PermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
+import edu.cmu.cs.plural.perm.parser.PermissionUse;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
 /**
@@ -96,7 +97,7 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 		List<A> result = new LinkedList<A>();
 		for(ICrystalAnnotation anno : s.getReturn()) {
 			if(clazz.isAssignableFrom(anno.getClass())) {
-				A pa = (A) anno;
+				A pa = clazz.cast(anno);
 				result.add(pa);
 			}
 		}
@@ -207,6 +208,42 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 
 	@Override
 	public boolean isFramePermission() {
+		IVariableBinding result = (IVariableBinding) getObject("use");
+		if(result == null)
+			// backwards-compatibility: use fieldAccess flag
+			return isFieldAccess();
+	
+		PermissionUse use = PermissionUse.valueOf(result.getName());
+		if(use == PermissionUse.DISPATCH)
+			// use legacy fieldAccess flag if "use" has default value
+			return isFieldAccess();
+		// new "use" attribute takes precedence over legacy fieldAccess flag
+		return use.isFrame();
+	}
+	
+	@Override
+	public boolean isVirtualPermission() {
+		IVariableBinding result = (IVariableBinding) getObject("use");
+		if(result == null)
+			// backwards-compatibility: use fieldAccess flag
+			return ! isFieldAccess();
+		
+		PermissionUse use = PermissionUse.valueOf(result.getName());
+		if(use == PermissionUse.DISPATCH)
+			// use legacy fieldAccess flag if "use" has default value
+			return ! isFieldAccess();
+		// new "use" attribute takes precedence over legacy fieldAccess flag
+		return use.isVirtual();
+	}
+	
+	/**
+	 * Kickin' it old school: this method queries the legacy fieldAcces
+	 * flag and returns its value.
+	 * TODO retire fieldAccess flag
+	 * @return the value of the fieldAccess flag or <code>false</code>
+	 * if that flag is unknown (would have to be a *very* old annotatio Jar).
+	 */
+	private boolean isFieldAccess() {
 		Boolean result = (Boolean) getObject("fieldAccess");
 		if(result == null)
 			// backwards-compatibility: not a frame permission if attribute unknown

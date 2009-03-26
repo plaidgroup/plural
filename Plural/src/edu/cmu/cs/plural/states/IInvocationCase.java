@@ -68,7 +68,7 @@ public interface IInvocationCase {
 	
 	/**
 	 * @param forAnalyzingBody
-	 * @param isSuperCall Ignore if <code>forAnalyzingBody</code> is <code>true</code>.
+	 * @param isSuperCall 
 	 * @return
 	 * @see IInvocationSignature#createPermissionsForCases(boolean, boolean)
 	 */

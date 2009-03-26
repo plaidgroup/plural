@@ -107,9 +107,4 @@ public class ResultAnnotationImpl extends CrystalAnnotation implements ResultPer
 		return k;
 	}
 
-	@Override
-	public boolean isFramePermission() {
-		return false;
-	}
-
 }

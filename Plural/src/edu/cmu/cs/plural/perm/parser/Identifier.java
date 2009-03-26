@@ -38,40 +38,69 @@
 package edu.cmu.cs.plural.perm.parser;
 
 public class Identifier implements PrimaryExpr, RefExpr {
+	
+	/**
+	 * Reference to outer object from inner class.
+	 * @param qualifier
+	 * @param thisOrSuper
+	 * @return
+	 */
+	public static Identifier qualified(String qualifier, String thisOrSuper) {
+		return new Identifier(qualifier + "." + thisOrSuper);
+	}
+
+	/**
+	 * Reference to outer object from inner class.
+	 * @param qualifier
+	 * @param thisOrSuper
+	 * @param use
+	 * @return
+	 */
+	public static Identifier qualifiedThis(String qualifier, PermissionUse use) {
+		return new Identifier(qualifier + ".this", use);
+	}
+	
 	private final String name;
-	private final boolean isFrame;
+	private final PermissionUse use;
 	
 	public Identifier(String name) {
 		this.name = name;
-		this.isFrame = false;
+		// default to dispatch-only 
+		this.use = PermissionUse.DISPATCH;
 	}
 
 	/**
 	 * @param text
 	 * @param b
 	 */
-	public Identifier(String name, boolean isFrame) {
+	public Identifier(String name, PermissionUse use) {
 		this.name = name;
-		this.isFrame = isFrame;
+		this.use = use;
 	}
 
 	public String getName() {
 		return name;
 	}
 	
-	public boolean isFrame() {
-		return isFrame;
+	public PermissionUse getUse() {
+		return use;
 	}
 
 	@Override
 	public String toString() {
-		if(isFrame())
-			return this.getName() + " [frame]";
-		return this.getName();
+		switch(use) {
+		case FIELDS:
+			return this.getName() + "!fr";
+		case DISP_FIELDS:
+			return this.getName() + "!df";
+		default:
+			return this.getName();
+		}
 	}
 
 	@Override
 	public <T> T dispatch(PrimaryExprVisitor<T> visitor) {
 		return visitor.visitId(this);
 	}
+
 }

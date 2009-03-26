@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g 2008-09-22 17:56:53
+// $ANTLR 3.0.1 C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g 2009-03-26 15:56:27
 
 package edu.cmu.cs.plural.perm.parser;
 
@@ -15,12 +15,14 @@ public class AccessPredLexer extends Lexer {
     public static final int NUMBER=11;
     public static final int DEQ=9;
     public static final int WHITESPACE=20;
+    public static final int T29=29;
     public static final int ONE=16;
+    public static final int T28=28;
     public static final int T27=27;
     public static final int T26=26;
     public static final int T25=25;
     public static final int ID=6;
-    public static final int Tokens=28;
+    public static final int Tokens=34;
     public static final int T24=24;
     public static final int EOF=-1;
     public static final int T23=23;
@@ -33,8 +35,12 @@ public class AccessPredLexer extends Lexer {
     public static final int ALT=13;
     public static final int TENS=15;
     public static final int DIGIT=19;
+    public static final int T33=33;
     public static final int FALSE=5;
+    public static final int T30=30;
+    public static final int T32=32;
     public static final int WITH=14;
+    public static final int T31=31;
     public AccessPredLexer() {;} 
     public AccessPredLexer(CharStream input) {
         super(input);
@@ -117,11 +123,10 @@ public class AccessPredLexer extends Lexer {
     public final void mT25() throws RecognitionException {
         try {
             int _type = T25;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:10:5: ( '!fr' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:10:7: '!fr'
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:10:5: ( '!' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:10:7: '!'
             {
-            match("!fr"); 
-
+            match('!'); 
 
             }
 
@@ -136,10 +141,11 @@ public class AccessPredLexer extends Lexer {
     public final void mT26() throws RecognitionException {
         try {
             int _type = T26;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:11:5: ( '=' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:11:7: '='
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:11:5: ( '.super' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:11:7: '.super'
             {
-            match('='); 
+            match(".super"); 
+
 
             }
 
@@ -154,10 +160,11 @@ public class AccessPredLexer extends Lexer {
     public final void mT27() throws RecognitionException {
         try {
             int _type = T27;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:12:5: ( '/' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:12:7: '/'
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:12:5: ( '.this' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:12:7: '.this'
             {
-            match('/'); 
+            match(".this"); 
+
 
             }
 
@@ -168,11 +175,123 @@ public class AccessPredLexer extends Lexer {
     }
     // $ANTLR end T27
 
+    // $ANTLR start T28
+    public final void mT28() throws RecognitionException {
+        try {
+            int _type = T28;
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:13:5: ( 'fr' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:13:7: 'fr'
+            {
+            match("fr"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end T28
+
+    // $ANTLR start T29
+    public final void mT29() throws RecognitionException {
+        try {
+            int _type = T29;
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:14:5: ( 'fl' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:14:7: 'fl'
+            {
+            match("fl"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end T29
+
+    // $ANTLR start T30
+    public final void mT30() throws RecognitionException {
+        try {
+            int _type = T30;
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:15:5: ( 'dp' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:15:7: 'dp'
+            {
+            match("dp"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end T30
+
+    // $ANTLR start T31
+    public final void mT31() throws RecognitionException {
+        try {
+            int _type = T31;
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:16:5: ( 'df' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:16:7: 'df'
+            {
+            match("df"); 
+
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end T31
+
+    // $ANTLR start T32
+    public final void mT32() throws RecognitionException {
+        try {
+            int _type = T32;
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:17:5: ( '=' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:17:7: '='
+            {
+            match('='); 
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end T32
+
+    // $ANTLR start T33
+    public final void mT33() throws RecognitionException {
+        try {
+            int _type = T33;
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:18:5: ( '/' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:18:7: '/'
+            {
+            match('/'); 
+
+            }
+
+            this.type = _type;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end T33
+
     // $ANTLR start ALT
     public final void mALT() throws RecognitionException {
         try {
             int _type = ALT;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:234:5: ( 'alt' | '+' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:5: ( 'alt' | '+' )
             int alt1=2;
             int LA1_0 = input.LA(1);
 
@@ -184,13 +303,13 @@ public class AccessPredLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("234:1: ALT : ( 'alt' | '+' );", 1, 0, input);
+                    new NoViableAltException("251:1: ALT : ( 'alt' | '+' );", 1, 0, input);
 
                 throw nvae;
             }
             switch (alt1) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:234:7: 'alt'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:7: 'alt'
                     {
                     match("alt"); 
 
@@ -198,7 +317,7 @@ public class AccessPredLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:234:15: '+'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:15: '+'
                     {
                     match('+'); 
 
@@ -217,7 +336,7 @@ public class AccessPredLexer extends Lexer {
     public final void mTENS() throws RecognitionException {
         try {
             int _type = TENS;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:235:6: ( 'tens' | '*' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:252:6: ( 'tens' | '*' )
             int alt2=2;
             int LA2_0 = input.LA(1);
 
@@ -229,13 +348,13 @@ public class AccessPredLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("235:1: TENS : ( 'tens' | '*' );", 2, 0, input);
+                    new NoViableAltException("252:1: TENS : ( 'tens' | '*' );", 2, 0, input);
 
                 throw nvae;
             }
             switch (alt2) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:235:8: 'tens'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:252:8: 'tens'
                     {
                     match("tens"); 
 
@@ -243,7 +362,7 @@ public class AccessPredLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:235:17: '*'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:252:17: '*'
                     {
                     match('*'); 
 
@@ -262,7 +381,7 @@ public class AccessPredLexer extends Lexer {
     public final void mWITH() throws RecognitionException {
         try {
             int _type = WITH;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:236:6: ( 'with' | '&' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:253:6: ( 'with' | '&' )
             int alt3=2;
             int LA3_0 = input.LA(1);
 
@@ -274,13 +393,13 @@ public class AccessPredLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("236:1: WITH : ( 'with' | '&' );", 3, 0, input);
+                    new NoViableAltException("253:1: WITH : ( 'with' | '&' );", 3, 0, input);
 
                 throw nvae;
             }
             switch (alt3) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:236:8: 'with'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:253:8: 'with'
                     {
                     match("with"); 
 
@@ -288,7 +407,7 @@ public class AccessPredLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:236:17: '&'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:253:17: '&'
                     {
                     match('&'); 
 
@@ -307,8 +426,8 @@ public class AccessPredLexer extends Lexer {
     public final void mDEQ() throws RecognitionException {
         try {
             int _type = DEQ;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:237:5: ( '==' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:237:7: '=='
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:254:5: ( '==' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:254:7: '=='
             {
             match("=="); 
 
@@ -326,8 +445,8 @@ public class AccessPredLexer extends Lexer {
     public final void mNEQ() throws RecognitionException {
         try {
             int _type = NEQ;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:238:5: ( '!=' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:238:7: '!='
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:255:5: ( '!=' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:255:7: '!='
             {
             match("!="); 
 
@@ -345,8 +464,8 @@ public class AccessPredLexer extends Lexer {
     public final void mIN() throws RecognitionException {
         try {
             int _type = IN;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:239:5: ( 'in' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:239:7: 'in'
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:256:5: ( 'in' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:256:7: 'in'
             {
             match("in"); 
 
@@ -364,8 +483,8 @@ public class AccessPredLexer extends Lexer {
     public final void mNULL() throws RecognitionException {
         try {
             int _type = NULL;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:240:6: ( 'null' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:240:8: 'null'
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:257:6: ( 'null' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:257:8: 'null'
             {
             match("null"); 
 
@@ -383,7 +502,7 @@ public class AccessPredLexer extends Lexer {
     public final void mIMPLIES() throws RecognitionException {
         try {
             int _type = IMPLIES;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:241:9: ( '=>' | 'implies' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:258:9: ( '=>' | 'implies' )
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -395,13 +514,13 @@ public class AccessPredLexer extends Lexer {
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("241:1: IMPLIES : ( '=>' | 'implies' );", 4, 0, input);
+                    new NoViableAltException("258:1: IMPLIES : ( '=>' | 'implies' );", 4, 0, input);
 
                 throw nvae;
             }
             switch (alt4) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:241:11: '=>'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:258:11: '=>'
                     {
                     match("=>"); 
 
@@ -409,7 +528,7 @@ public class AccessPredLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:241:18: 'implies'
+                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:258:18: 'implies'
                     {
                     match("implies"); 
 
@@ -429,8 +548,8 @@ public class AccessPredLexer extends Lexer {
     public final void mTRUE() throws RecognitionException {
         try {
             int _type = TRUE;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:242:6: ( 'true' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:242:8: 'true'
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:259:6: ( 'true' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:259:8: 'true'
             {
             match("true"); 
 
@@ -448,8 +567,8 @@ public class AccessPredLexer extends Lexer {
     public final void mFALSE() throws RecognitionException {
         try {
             int _type = FALSE;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:243:7: ( 'false' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:243:9: 'false'
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:260:7: ( 'false' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:260:9: 'false'
             {
             match("false"); 
 
@@ -467,8 +586,8 @@ public class AccessPredLexer extends Lexer {
     public final void mONE() throws RecognitionException {
         try {
             int _type = ONE;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:244:6: ( 'one' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:244:8: 'one'
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:261:6: ( 'one' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:261:8: 'one'
             {
             match("one"); 
 
@@ -486,8 +605,8 @@ public class AccessPredLexer extends Lexer {
     public final void mZERO() throws RecognitionException {
         try {
             int _type = ZERO;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:245:6: ( 'zero' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:245:8: 'zero'
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:262:6: ( 'zero' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:262:8: 'zero'
             {
             match("zero"); 
 
@@ -505,8 +624,8 @@ public class AccessPredLexer extends Lexer {
     public final void mID() throws RecognitionException {
         try {
             int _type = ID;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:247:5: ( ( LETTER | '_' ) ( LETTER | DIGIT | '_' )* )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:247:7: ( LETTER | '_' ) ( LETTER | DIGIT | '_' )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:264:5: ( ( LETTER | '_' ) ( LETTER | DIGIT | '_' )* )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:264:7: ( LETTER | '_' ) ( LETTER | DIGIT | '_' )*
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -518,7 +637,7 @@ public class AccessPredLexer extends Lexer {
                 recover(mse);    throw mse;
             }
 
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:247:19: ( LETTER | DIGIT | '_' )*
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:264:19: ( LETTER | DIGIT | '_' )*
             loop5:
             do {
                 int alt5=2;
@@ -565,8 +684,8 @@ public class AccessPredLexer extends Lexer {
     // $ANTLR start LETTER
     public final void mLETTER() throws RecognitionException {
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:249:16: ( ( 'a' .. 'z' | 'A' .. 'Z' ) )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:249:18: ( 'a' .. 'z' | 'A' .. 'Z' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:266:16: ( ( 'a' .. 'z' | 'A' .. 'Z' ) )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:266:18: ( 'a' .. 'z' | 'A' .. 'Z' )
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -591,10 +710,10 @@ public class AccessPredLexer extends Lexer {
     public final void mNUMBER() throws RecognitionException {
         try {
             int _type = NUMBER;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:8: ( ( DIGIT )+ )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:10: ( DIGIT )+
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:268:8: ( ( DIGIT )+ )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:268:10: ( DIGIT )+
             {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:10: ( DIGIT )+
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:268:10: ( DIGIT )+
             int cnt6=0;
             loop6:
             do {
@@ -608,7 +727,7 @@ public class AccessPredLexer extends Lexer {
 
                 switch (alt6) {
             	case 1 :
-            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:11: DIGIT
+            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:268:11: DIGIT
             	    {
             	    mDIGIT(); 
 
@@ -638,10 +757,10 @@ public class AccessPredLexer extends Lexer {
     public final void mWHITESPACE() throws RecognitionException {
         try {
             int _type = WHITESPACE;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:253:12: ( ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+ )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:253:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:270:12: ( ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+ )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:270:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
             {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:253:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:270:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
             int cnt7=0;
             loop7:
             do {
@@ -694,8 +813,8 @@ public class AccessPredLexer extends Lexer {
     // $ANTLR start DIGIT
     public final void mDIGIT() throws RecognitionException {
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:255:16: ( '0' .. '9' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:255:18: '0' .. '9'
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:272:16: ( '0' .. '9' )
+            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:272:18: '0' .. '9'
             {
             matchRange('0','9'); 
 
@@ -708,8 +827,8 @@ public class AccessPredLexer extends Lexer {
     // $ANTLR end DIGIT
 
     public void mTokens() throws RecognitionException {
-        // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:8: ( T21 | T22 | T23 | T24 | T25 | T26 | T27 | ALT | TENS | WITH | DEQ | NEQ | IN | NULL | IMPLIES | TRUE | FALSE | ONE | ZERO | ID | NUMBER | WHITESPACE )
-        int alt8=22;
+        // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:8: ( T21 | T22 | T23 | T24 | T25 | T26 | T27 | T28 | T29 | T30 | T31 | T32 | T33 | ALT | TENS | WITH | DEQ | NEQ | IN | NULL | IMPLIES | TRUE | FALSE | ONE | ZERO | ID | NUMBER | WHITESPACE )
+        int alt8=28;
         switch ( input.LA(1) ) {
         case '(':
             {
@@ -735,18 +854,118 @@ public class AccessPredLexer extends Lexer {
             {
             int LA8_5 = input.LA(2);
 
-            if ( (LA8_5=='f') ) {
-                alt8=5;
+            if ( (LA8_5=='=') ) {
+                alt8=18;
             }
-            else if ( (LA8_5=='=') ) {
-                alt8=12;
+            else {
+                alt8=5;}
+            }
+            break;
+        case '.':
+            {
+            int LA8_6 = input.LA(2);
+
+            if ( (LA8_6=='s') ) {
+                alt8=6;
+            }
+            else if ( (LA8_6=='t') ) {
+                alt8=7;
             }
             else {
                 NoViableAltException nvae =
-                    new NoViableAltException("1:1: Tokens : ( T21 | T22 | T23 | T24 | T25 | T26 | T27 | ALT | TENS | WITH | DEQ | NEQ | IN | NULL | IMPLIES | TRUE | FALSE | ONE | ZERO | ID | NUMBER | WHITESPACE );", 8, 5, input);
+                    new NoViableAltException("1:1: Tokens : ( T21 | T22 | T23 | T24 | T25 | T26 | T27 | T28 | T29 | T30 | T31 | T32 | T33 | ALT | TENS | WITH | DEQ | NEQ | IN | NULL | IMPLIES | TRUE | FALSE | ONE | ZERO | ID | NUMBER | WHITESPACE );", 8, 6, input);
 
                 throw nvae;
             }
+            }
+            break;
+        case 'f':
+            {
+            switch ( input.LA(2) ) {
+            case 'l':
+                {
+                int LA8_28 = input.LA(3);
+
+                if ( ((LA8_28>='0' && LA8_28<='9')||(LA8_28>='A' && LA8_28<='Z')||LA8_28=='_'||(LA8_28>='a' && LA8_28<='z')) ) {
+                    alt8=26;
+                }
+                else {
+                    alt8=9;}
+                }
+                break;
+            case 'r':
+                {
+                int LA8_29 = input.LA(3);
+
+                if ( ((LA8_29>='0' && LA8_29<='9')||(LA8_29>='A' && LA8_29<='Z')||LA8_29=='_'||(LA8_29>='a' && LA8_29<='z')) ) {
+                    alt8=26;
+                }
+                else {
+                    alt8=8;}
+                }
+                break;
+            case 'a':
+                {
+                int LA8_30 = input.LA(3);
+
+                if ( (LA8_30=='l') ) {
+                    int LA8_47 = input.LA(4);
+
+                    if ( (LA8_47=='s') ) {
+                        int LA8_59 = input.LA(5);
+
+                        if ( (LA8_59=='e') ) {
+                            int LA8_67 = input.LA(6);
+
+                            if ( ((LA8_67>='0' && LA8_67<='9')||(LA8_67>='A' && LA8_67<='Z')||LA8_67=='_'||(LA8_67>='a' && LA8_67<='z')) ) {
+                                alt8=26;
+                            }
+                            else {
+                                alt8=23;}
+                        }
+                        else {
+                            alt8=26;}
+                    }
+                    else {
+                        alt8=26;}
+                }
+                else {
+                    alt8=26;}
+                }
+                break;
+            default:
+                alt8=26;}
+
+            }
+            break;
+        case 'd':
+            {
+            switch ( input.LA(2) ) {
+            case 'p':
+                {
+                int LA8_31 = input.LA(3);
+
+                if ( ((LA8_31>='0' && LA8_31<='9')||(LA8_31>='A' && LA8_31<='Z')||LA8_31=='_'||(LA8_31>='a' && LA8_31<='z')) ) {
+                    alt8=26;
+                }
+                else {
+                    alt8=10;}
+                }
+                break;
+            case 'f':
+                {
+                int LA8_32 = input.LA(3);
+
+                if ( ((LA8_32>='0' && LA8_32<='9')||(LA8_32>='A' && LA8_32<='Z')||LA8_32=='_'||(LA8_32>='a' && LA8_32<='z')) ) {
+                    alt8=26;
+                }
+                else {
+                    alt8=11;}
+                }
+                break;
+            default:
+                alt8=26;}
+
             }
             break;
         case '=':
@@ -754,50 +973,50 @@ public class AccessPredLexer extends Lexer {
             switch ( input.LA(2) ) {
             case '=':
                 {
-                alt8=11;
+                alt8=17;
                 }
                 break;
             case '>':
                 {
-                alt8=15;
+                alt8=21;
                 }
                 break;
             default:
-                alt8=6;}
+                alt8=12;}
 
             }
             break;
         case '/':
             {
-            alt8=7;
+            alt8=13;
             }
             break;
         case 'a':
             {
-            int LA8_8 = input.LA(2);
+            int LA8_11 = input.LA(2);
 
-            if ( (LA8_8=='l') ) {
-                int LA8_27 = input.LA(3);
+            if ( (LA8_11=='l') ) {
+                int LA8_36 = input.LA(3);
 
-                if ( (LA8_27=='t') ) {
-                    int LA8_37 = input.LA(4);
+                if ( (LA8_36=='t') ) {
+                    int LA8_50 = input.LA(4);
 
-                    if ( ((LA8_37>='0' && LA8_37<='9')||(LA8_37>='A' && LA8_37<='Z')||LA8_37=='_'||(LA8_37>='a' && LA8_37<='z')) ) {
-                        alt8=20;
+                    if ( ((LA8_50>='0' && LA8_50<='9')||(LA8_50>='A' && LA8_50<='Z')||LA8_50=='_'||(LA8_50>='a' && LA8_50<='z')) ) {
+                        alt8=26;
                     }
                     else {
-                        alt8=8;}
+                        alt8=14;}
                 }
                 else {
-                    alt8=20;}
+                    alt8=26;}
             }
             else {
-                alt8=20;}
+                alt8=26;}
             }
             break;
         case '+':
             {
-            alt8=8;
+            alt8=14;
             }
             break;
         case 't':
@@ -805,92 +1024,92 @@ public class AccessPredLexer extends Lexer {
             switch ( input.LA(2) ) {
             case 'e':
                 {
-                int LA8_28 = input.LA(3);
+                int LA8_37 = input.LA(3);
 
-                if ( (LA8_28=='n') ) {
-                    int LA8_38 = input.LA(4);
+                if ( (LA8_37=='n') ) {
+                    int LA8_51 = input.LA(4);
 
-                    if ( (LA8_38=='s') ) {
-                        int LA8_47 = input.LA(5);
+                    if ( (LA8_51=='s') ) {
+                        int LA8_60 = input.LA(5);
 
-                        if ( ((LA8_47>='0' && LA8_47<='9')||(LA8_47>='A' && LA8_47<='Z')||LA8_47=='_'||(LA8_47>='a' && LA8_47<='z')) ) {
-                            alt8=20;
+                        if ( ((LA8_60>='0' && LA8_60<='9')||(LA8_60>='A' && LA8_60<='Z')||LA8_60=='_'||(LA8_60>='a' && LA8_60<='z')) ) {
+                            alt8=26;
                         }
                         else {
-                            alt8=9;}
+                            alt8=15;}
                     }
                     else {
-                        alt8=20;}
+                        alt8=26;}
                 }
                 else {
-                    alt8=20;}
+                    alt8=26;}
                 }
                 break;
             case 'r':
                 {
-                int LA8_29 = input.LA(3);
+                int LA8_38 = input.LA(3);
 
-                if ( (LA8_29=='u') ) {
-                    int LA8_39 = input.LA(4);
+                if ( (LA8_38=='u') ) {
+                    int LA8_52 = input.LA(4);
 
-                    if ( (LA8_39=='e') ) {
-                        int LA8_48 = input.LA(5);
+                    if ( (LA8_52=='e') ) {
+                        int LA8_61 = input.LA(5);
 
-                        if ( ((LA8_48>='0' && LA8_48<='9')||(LA8_48>='A' && LA8_48<='Z')||LA8_48=='_'||(LA8_48>='a' && LA8_48<='z')) ) {
-                            alt8=20;
+                        if ( ((LA8_61>='0' && LA8_61<='9')||(LA8_61>='A' && LA8_61<='Z')||LA8_61=='_'||(LA8_61>='a' && LA8_61<='z')) ) {
+                            alt8=26;
                         }
                         else {
-                            alt8=16;}
+                            alt8=22;}
                     }
                     else {
-                        alt8=20;}
+                        alt8=26;}
                 }
                 else {
-                    alt8=20;}
+                    alt8=26;}
                 }
                 break;
             default:
-                alt8=20;}
+                alt8=26;}
 
             }
             break;
         case '*':
             {
-            alt8=9;
+            alt8=15;
             }
             break;
         case 'w':
             {
-            int LA8_12 = input.LA(2);
+            int LA8_15 = input.LA(2);
 
-            if ( (LA8_12=='i') ) {
-                int LA8_30 = input.LA(3);
+            if ( (LA8_15=='i') ) {
+                int LA8_39 = input.LA(3);
 
-                if ( (LA8_30=='t') ) {
-                    int LA8_40 = input.LA(4);
+                if ( (LA8_39=='t') ) {
+                    int LA8_53 = input.LA(4);
 
-                    if ( (LA8_40=='h') ) {
-                        int LA8_49 = input.LA(5);
+                    if ( (LA8_53=='h') ) {
+                        int LA8_62 = input.LA(5);
 
-                        if ( ((LA8_49>='0' && LA8_49<='9')||(LA8_49>='A' && LA8_49<='Z')||LA8_49=='_'||(LA8_49>='a' && LA8_49<='z')) ) {
-                            alt8=20;
+                        if ( ((LA8_62>='0' && LA8_62<='9')||(LA8_62>='A' && LA8_62<='Z')||LA8_62=='_'||(LA8_62>='a' && LA8_62<='z')) ) {
+                            alt8=26;
                         }
                         else {
-                            alt8=10;}
+                            alt8=16;}
                     }
                     else {
-                        alt8=20;}
+                        alt8=26;}
                 }
                 else {
-                    alt8=20;}
+                    alt8=26;}
             }
             else {
-                alt8=20;}
+                alt8=26;}
             }
             break;
         case '&':
             {
-            alt8=10;
+            alt8=16;
             }
             break;
         case 'i':
@@ -898,175 +1117,140 @@ public class AccessPredLexer extends Lexer {
             switch ( input.LA(2) ) {
             case 'n':
                 {
-                int LA8_31 = input.LA(3);
+                int LA8_40 = input.LA(3);
 
-                if ( ((LA8_31>='0' && LA8_31<='9')||(LA8_31>='A' && LA8_31<='Z')||LA8_31=='_'||(LA8_31>='a' && LA8_31<='z')) ) {
-                    alt8=20;
+                if ( ((LA8_40>='0' && LA8_40<='9')||(LA8_40>='A' && LA8_40<='Z')||LA8_40=='_'||(LA8_40>='a' && LA8_40<='z')) ) {
+                    alt8=26;
                 }
                 else {
-                    alt8=13;}
+                    alt8=19;}
                 }
                 break;
             case 'm':
                 {
-                int LA8_32 = input.LA(3);
+                int LA8_41 = input.LA(3);
 
-                if ( (LA8_32=='p') ) {
-                    int LA8_42 = input.LA(4);
+                if ( (LA8_41=='p') ) {
+                    int LA8_55 = input.LA(4);
 
-                    if ( (LA8_42=='l') ) {
-                        int LA8_50 = input.LA(5);
+                    if ( (LA8_55=='l') ) {
+                        int LA8_63 = input.LA(5);
 
-                        if ( (LA8_50=='i') ) {
-                            int LA8_56 = input.LA(6);
+                        if ( (LA8_63=='i') ) {
+                            int LA8_69 = input.LA(6);
 
-                            if ( (LA8_56=='e') ) {
-                                int LA8_60 = input.LA(7);
+                            if ( (LA8_69=='e') ) {
+                                int LA8_73 = input.LA(7);
 
-                                if ( (LA8_60=='s') ) {
-                                    int LA8_62 = input.LA(8);
+                                if ( (LA8_73=='s') ) {
+                                    int LA8_74 = input.LA(8);
 
-                                    if ( ((LA8_62>='0' && LA8_62<='9')||(LA8_62>='A' && LA8_62<='Z')||LA8_62=='_'||(LA8_62>='a' && LA8_62<='z')) ) {
-                                        alt8=20;
+                                    if ( ((LA8_74>='0' && LA8_74<='9')||(LA8_74>='A' && LA8_74<='Z')||LA8_74=='_'||(LA8_74>='a' && LA8_74<='z')) ) {
+                                        alt8=26;
                                     }
                                     else {
-                                        alt8=15;}
+                                        alt8=21;}
                                 }
                                 else {
-                                    alt8=20;}
+                                    alt8=26;}
                             }
                             else {
-                                alt8=20;}
+                                alt8=26;}
                         }
                         else {
-                            alt8=20;}
+                            alt8=26;}
                     }
                     else {
-                        alt8=20;}
+                        alt8=26;}
                 }
                 else {
-                    alt8=20;}
+                    alt8=26;}
                 }
                 break;
             default:
-                alt8=20;}
+                alt8=26;}
 
             }
             break;
         case 'n':
             {
-            int LA8_15 = input.LA(2);
+            int LA8_18 = input.LA(2);
 
-            if ( (LA8_15=='u') ) {
-                int LA8_33 = input.LA(3);
+            if ( (LA8_18=='u') ) {
+                int LA8_42 = input.LA(3);
 
-                if ( (LA8_33=='l') ) {
-                    int LA8_43 = input.LA(4);
+                if ( (LA8_42=='l') ) {
+                    int LA8_56 = input.LA(4);
 
-                    if ( (LA8_43=='l') ) {
-                        int LA8_51 = input.LA(5);
+                    if ( (LA8_56=='l') ) {
+                        int LA8_64 = input.LA(5);
 
-                        if ( ((LA8_51>='0' && LA8_51<='9')||(LA8_51>='A' && LA8_51<='Z')||LA8_51=='_'||(LA8_51>='a' && LA8_51<='z')) ) {
-                            alt8=20;
-                        }
-                        else {
-                            alt8=14;}
-                    }
-                    else {
-                        alt8=20;}
-                }
-                else {
-                    alt8=20;}
-            }
-            else {
-                alt8=20;}
-            }
-            break;
-        case 'f':
-            {
-            int LA8_16 = input.LA(2);
-
-            if ( (LA8_16=='a') ) {
-                int LA8_34 = input.LA(3);
-
-                if ( (LA8_34=='l') ) {
-                    int LA8_44 = input.LA(4);
-
-                    if ( (LA8_44=='s') ) {
-                        int LA8_52 = input.LA(5);
-
-                        if ( (LA8_52=='e') ) {
-                            int LA8_58 = input.LA(6);
-
-                            if ( ((LA8_58>='0' && LA8_58<='9')||(LA8_58>='A' && LA8_58<='Z')||LA8_58=='_'||(LA8_58>='a' && LA8_58<='z')) ) {
-                                alt8=20;
-                            }
-                            else {
-                                alt8=17;}
+                        if ( ((LA8_64>='0' && LA8_64<='9')||(LA8_64>='A' && LA8_64<='Z')||LA8_64=='_'||(LA8_64>='a' && LA8_64<='z')) ) {
+                            alt8=26;
                         }
                         else {
                             alt8=20;}
                     }
                     else {
-                        alt8=20;}
+                        alt8=26;}
                 }
                 else {
-                    alt8=20;}
+                    alt8=26;}
             }
             else {
-                alt8=20;}
+                alt8=26;}
             }
             break;
         case 'o':
             {
-            int LA8_17 = input.LA(2);
+            int LA8_19 = input.LA(2);
 
-            if ( (LA8_17=='n') ) {
-                int LA8_35 = input.LA(3);
+            if ( (LA8_19=='n') ) {
+                int LA8_43 = input.LA(3);
 
-                if ( (LA8_35=='e') ) {
-                    int LA8_45 = input.LA(4);
+                if ( (LA8_43=='e') ) {
+                    int LA8_57 = input.LA(4);
 
-                    if ( ((LA8_45>='0' && LA8_45<='9')||(LA8_45>='A' && LA8_45<='Z')||LA8_45=='_'||(LA8_45>='a' && LA8_45<='z')) ) {
-                        alt8=20;
+                    if ( ((LA8_57>='0' && LA8_57<='9')||(LA8_57>='A' && LA8_57<='Z')||LA8_57=='_'||(LA8_57>='a' && LA8_57<='z')) ) {
+                        alt8=26;
                     }
                     else {
-                        alt8=18;}
+                        alt8=24;}
                 }
                 else {
-                    alt8=20;}
+                    alt8=26;}
             }
             else {
-                alt8=20;}
+                alt8=26;}
             }
             break;
         case 'z':
             {
-            int LA8_18 = input.LA(2);
+            int LA8_20 = input.LA(2);
 
-            if ( (LA8_18=='e') ) {
-                int LA8_36 = input.LA(3);
+            if ( (LA8_20=='e') ) {
+                int LA8_44 = input.LA(3);
 
-                if ( (LA8_36=='r') ) {
-                    int LA8_46 = input.LA(4);
+                if ( (LA8_44=='r') ) {
+                    int LA8_58 = input.LA(4);
 
-                    if ( (LA8_46=='o') ) {
-                        int LA8_54 = input.LA(5);
+                    if ( (LA8_58=='o') ) {
+                        int LA8_66 = input.LA(5);
 
-                        if ( ((LA8_54>='0' && LA8_54<='9')||(LA8_54>='A' && LA8_54<='Z')||LA8_54=='_'||(LA8_54>='a' && LA8_54<='z')) ) {
-                            alt8=20;
+                        if ( ((LA8_66>='0' && LA8_66<='9')||(LA8_66>='A' && LA8_66<='Z')||LA8_66=='_'||(LA8_66>='a' && LA8_66<='z')) ) {
+                            alt8=26;
                         }
                         else {
-                            alt8=19;}
+                            alt8=25;}
                     }
                     else {
-                        alt8=20;}
+                        alt8=26;}
                 }
                 else {
-                    alt8=20;}
+                    alt8=26;}
             }
             else {
-                alt8=20;}
+                alt8=26;}
             }
             break;
         case 'A':
@@ -1098,7 +1282,6 @@ public class AccessPredLexer extends Lexer {
         case '_':
         case 'b':
         case 'c':
-        case 'd':
         case 'e':
         case 'g':
         case 'h':
@@ -1115,7 +1298,7 @@ public class AccessPredLexer extends Lexer {
         case 'x':
         case 'y':
             {
-            alt8=20;
+            alt8=26;
             }
             break;
         case '0':
@@ -1129,7 +1312,7 @@ public class AccessPredLexer extends Lexer {
         case '8':
         case '9':
             {
-            alt8=21;
+            alt8=27;
             }
             break;
         case '\t':
@@ -1138,12 +1321,12 @@ public class AccessPredLexer extends Lexer {
         case '\r':
         case ' ':
             {
-            alt8=22;
+            alt8=28;
             }
             break;
         default:
             NoViableAltException nvae =
-                new NoViableAltException("1:1: Tokens : ( T21 | T22 | T23 | T24 | T25 | T26 | T27 | ALT | TENS | WITH | DEQ | NEQ | IN | NULL | IMPLIES | TRUE | FALSE | ONE | ZERO | ID | NUMBER | WHITESPACE );", 8, 0, input);
+                new NoViableAltException("1:1: Tokens : ( T21 | T22 | T23 | T24 | T25 | T26 | T27 | T28 | T29 | T30 | T31 | T32 | T33 | ALT | TENS | WITH | DEQ | NEQ | IN | NULL | IMPLIES | TRUE | FALSE | ONE | ZERO | ID | NUMBER | WHITESPACE );", 8, 0, input);
 
             throw nvae;
         }
@@ -1199,105 +1382,147 @@ public class AccessPredLexer extends Lexer {
                 }
                 break;
             case 8 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:38: ALT
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:38: T28
+                {
+                mT28(); 
+
+                }
+                break;
+            case 9 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:42: T29
+                {
+                mT29(); 
+
+                }
+                break;
+            case 10 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:46: T30
+                {
+                mT30(); 
+
+                }
+                break;
+            case 11 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:50: T31
+                {
+                mT31(); 
+
+                }
+                break;
+            case 12 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:54: T32
+                {
+                mT32(); 
+
+                }
+                break;
+            case 13 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:58: T33
+                {
+                mT33(); 
+
+                }
+                break;
+            case 14 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:62: ALT
                 {
                 mALT(); 
 
                 }
                 break;
-            case 9 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:42: TENS
+            case 15 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:66: TENS
                 {
                 mTENS(); 
 
                 }
                 break;
-            case 10 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:47: WITH
+            case 16 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:71: WITH
                 {
                 mWITH(); 
 
                 }
                 break;
-            case 11 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:52: DEQ
+            case 17 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:76: DEQ
                 {
                 mDEQ(); 
 
                 }
                 break;
-            case 12 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:56: NEQ
+            case 18 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:80: NEQ
                 {
                 mNEQ(); 
 
                 }
                 break;
-            case 13 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:60: IN
+            case 19 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:84: IN
                 {
                 mIN(); 
 
                 }
                 break;
-            case 14 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:63: NULL
+            case 20 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:87: NULL
                 {
                 mNULL(); 
 
                 }
                 break;
-            case 15 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:68: IMPLIES
+            case 21 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:92: IMPLIES
                 {
                 mIMPLIES(); 
 
                 }
                 break;
-            case 16 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:76: TRUE
+            case 22 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:100: TRUE
                 {
                 mTRUE(); 
 
                 }
                 break;
-            case 17 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:81: FALSE
+            case 23 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:105: FALSE
                 {
                 mFALSE(); 
 
                 }
                 break;
-            case 18 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:87: ONE
+            case 24 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:111: ONE
                 {
                 mONE(); 
 
                 }
                 break;
-            case 19 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:91: ZERO
+            case 25 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:115: ZERO
                 {
                 mZERO(); 
 
                 }
                 break;
-            case 20 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:96: ID
+            case 26 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:120: ID
                 {
                 mID(); 
 
                 }
                 break;
-            case 21 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:99: NUMBER
+            case 27 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:123: NUMBER
                 {
                 mNUMBER(); 
 
                 }
                 break;
-            case 22 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:106: WHITESPACE
+            case 28 :
+                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:130: WHITESPACE
                 {
                 mWHITESPACE(); 
 

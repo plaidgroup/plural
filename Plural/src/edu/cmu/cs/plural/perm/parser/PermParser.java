@@ -240,6 +240,7 @@ public class PermParser {
 	 * 
 	 * @return A pair corresponding to pre and post conditions for 'this'.
 	 */
+	@Deprecated
 	public static Pair<List<PermissionFromAnnotation>,
 	List<PermissionFromAnnotation>> parseReceiverPermissions(String pre, String post,
 			StateSpace rcvrSpace, boolean preIsNamed) {
@@ -256,6 +257,7 @@ public class PermParser {
 	 * 
 	 * @return A pair corresponding to pre and post conditions for the <code>paramIndex</code>th parameter.
 	 */
+	@Deprecated
 	public static Pair<List<PermissionFromAnnotation>, List<PermissionFromAnnotation>> 
 	parseParameterPermissions(String pre, String post, StateSpace space, 
 			int paramIndex, boolean preIsNamed) {
@@ -268,6 +270,7 @@ public class PermParser {
 	 * Get post PermissioNfromAnnotation objects for the result. Results are cached, so calling parse parameter methods multiple times in a row on the same
 	 * pre and post string should not be too slow.
 	 */
+	@Deprecated
 	public static List<PermissionFromAnnotation> parseResultPermissions(
 			String perm_string, StateSpace space, boolean namedFractions) {
 		Pair<ParsedParameterSummary, ParsedParameterSummary> summaries =
@@ -311,7 +314,7 @@ public class PermParser {
 			Pair<String, String> preAndPostString,
 			boolean forAnalyzingBody,
 			boolean frameToVirtual, 
-			boolean noReceiverPre,
+			boolean noReceiverPre, boolean noReceiverVirtual,
 			SimpleMap<String, StateSpace> spaces,
 			Map<String, String> capturedParams,
 			String capturing, Map<String, String> released, 
@@ -330,7 +333,7 @@ public class PermParser {
 		}
 		else {
 			pre = MethodPreconditionParser.createPreconditionForCallSite(
-					prePerms, spaces, frameToVirtual, notBorrowed);
+					prePerms, spaces, frameToVirtual, noReceiverVirtual, notBorrowed);
 		}
 		
 		/*
@@ -383,7 +386,8 @@ public class PermParser {
 					postPerms, captured, capturing, released, spaces);
 		else
 			post = MethodPostconditionParser.createPostconditionForCallSite(
-					postPerms, captured, capturing, released, spaces, frameToVirtual);
+					postPerms, captured, capturing, released, spaces, 
+					frameToVirtual, noReceiverVirtual);
 		
 		/*
 		 * 6. parse post-condition

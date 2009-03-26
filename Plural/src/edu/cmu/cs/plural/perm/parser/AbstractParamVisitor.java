@@ -301,6 +301,8 @@ public abstract class AbstractParamVisitor
 
 	private final boolean frameToVirtual;
 	
+	private final boolean ignoreReceiverVirtual;
+	
 	private final Map<String, ParamInfoHolder> params;
 	
 	private PermissionFactory pf = PermissionFactory.INSTANCE;
@@ -312,7 +314,9 @@ public abstract class AbstractParamVisitor
 
 	protected AbstractParamVisitor(Map<String, PermissionSetFromAnnotations> perms, 
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual, FractionCreation namedFractions) {
+			boolean frameToVirtual,
+			boolean ignoreReceiverVirtual,
+			FractionCreation namedFractions) {
 		this.params = new LinkedHashMap<String, ParamInfoHolder>(perms.size());
 		for(Map.Entry<String, PermissionSetFromAnnotations> p : perms.entrySet()) {
 			ParamInfoHolder h = new ParamInfoHolder();
@@ -321,6 +325,7 @@ public abstract class AbstractParamVisitor
 		}
 		this.spaces = spaces;
 		this.frameToVirtual = frameToVirtual;
+		this.ignoreReceiverVirtual = ignoreReceiverVirtual;
 		this.named = namedFractions;
 	}
 	
@@ -517,34 +522,51 @@ public abstract class AbstractParamVisitor
 		PermissionKind p_type = PermissionKind.valueOf(perm.getType().toUpperCase());
 		StateSpace space = getStateSpace(ref);
 		if(space != null) {
-			Pair<String, Boolean> refPair = getRefPair(ref);
-			boolean isFrame = refPair.snd();
-			PermissionFromAnnotation pa = 
-				pf.createOrphan(space, perm.getRoot(), p_type, isFrame, perm.getStateInfo(), named.createNamed());
-			addPerm(refPair.fst(), pa);
+			Pair<String, PermissionUse> refPair = getRefPair(ref);
+			// may need both a virtual and a frame permission
+			if(refPair.snd().isVirtual()) {
+				assert !"super".equals(refPair.fst());
+				PermissionFromAnnotation pa = 
+					pf.createOrphan(space, perm.getRoot(), p_type, false, perm.getStateInfo(), named.createNamed());
+				addPerm(refPair.fst(), pa);
+			}
+			if(refPair.snd().isFrame()) {
+				PermissionFromAnnotation pa = 
+					pf.createOrphan(space, perm.getRoot(), p_type, true, perm.getStateInfo(), named.createNamed());
+				// construct canonical name for frame reference
+				String r = refPair.fst();
+				// super by definition refers to a frame, but turn this into this!fr
+				if(!"super".equals(r))
+					r += "!fr";
+				addPerm(refPair.fst(), pa);
+			}
 		}
 		return null;
 	}
 
 	/**
 	 * @param ref
-	 * @return {@link Pair} (parameter name, frame permission) for the given ref.
+	 * @return {@link Pair} (parameter name, {@link PermissionUse}) for the given ref.
 	 */
-	protected Pair<String, Boolean> getRefPair(RefExpr ref) {
+	protected Pair<String, PermissionUse> getRefPair(RefExpr ref) {
 		String param;
-		boolean isFrame = false;
+		PermissionUse use = PermissionUse.DISPATCH;
 		if(ref instanceof Identifier) {
 			param = ((Identifier) ref).getName();
 			if("super".equals(param)) {
 				// super always refers to a frame
-				isFrame = true;
+				use = PermissionUse.FIELDS;
 			}
 			else {
-				// this flag decides whether a frame or virtual permission is created, so frameToVirtual matters
-				isFrame = !isFrameToVirtual() && ((Identifier) ref).isFrame();
-				if(isFrame /*((Identifier) ref).isFrame()*/)
-					// TODO keep permissions declared for receiver frame and virtual separate, even if coerced
-					param = param + "!fr";
+				if("this".equals(((Identifier) ref).getName()) && ignoreReceiverVirtual()) {
+					if(((Identifier) ref).getUse().equals(PermissionUse.DISPATCH))
+						return null;
+					if(!isFrameToVirtual())
+						return Pair.create(param, PermissionUse.FIELDS);
+				}
+				if(!isFrameToVirtual())
+					use = ((Identifier) ref).getUse();
+				// else always use DISPATCH
 			}
 		}
 		else if(ref instanceof ParamReference) {
@@ -552,7 +574,14 @@ public abstract class AbstractParamVisitor
 		}
 		else
 			throw new IllegalArgumentException("Unknown ref: " + ref);
-		return Pair.create(param, isFrame);
+		return Pair.create(param, use);
+	}
+
+	/**
+	 * @return
+	 */
+	protected final boolean ignoreReceiverVirtual() {
+		return ignoreReceiverVirtual;
 	}
 
 	/**
@@ -668,8 +697,8 @@ public abstract class AbstractParamVisitor
 
 			@Override
 			public Object visitId(Identifier id) {
-				if(id.isFrame())
-					log.warning("Frame referenece in primary not supported: " + id);
+				if(PermissionUse.DISPATCH != id.getUse())
+					log.warning("Frame reference in primary doesn't make sense: " + id);
 				return id.getName();
 			}
 
@@ -700,9 +729,16 @@ public abstract class AbstractParamVisitor
 
 	@Override
 	public Boolean visit(StateOnly stateOnly) {
-		Pair<String, Boolean> r = getRefPair(stateOnly.getVar());
+		Pair<String,PermissionUse> r = getRefPair(stateOnly.getVar());
 		String param = r.fst();
-		getInfoHolder(param).getStateInfos().add(stateOnly.getStateInfo());
+		if(r.snd().isVirtual()) {
+			getInfoHolder(param).getStateInfos().add(stateOnly.getStateInfo());
+		}
+		if(r.snd().isFrame()) {
+			if(!"super".equals(param))
+				param += "!fr";
+			getInfoHolder(param).getStateInfos().add(stateOnly.getStateInfo());
+		}
 		return null;
 	}
 	
