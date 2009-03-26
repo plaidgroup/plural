@@ -66,11 +66,12 @@ class MethodPostconditionParser extends AbstractParamVisitor
 			String capturing, 
 			Map<String, String> released,
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual) {
+			boolean frameToVirtual, boolean ignoreReceiverVirtual) {
 		return new MethodPostconditionParser(perms,  
 				captured, capturing, released,
 				spaces,
 				frameToVirtual /* chosen by caller */, 
+				ignoreReceiverVirtual /* chosen by caller */,
 				FractionCreation.NAMED_EXISTENTIAL /* named fractions */);
 	}
 
@@ -84,6 +85,7 @@ class MethodPostconditionParser extends AbstractParamVisitor
 				captured, capturing, released,
 				spaces,
 				false /* no frame-to-virtual coercion */, 
+				false /* never ignore virtual receiver permissions */,
 				FractionCreation.VARIABLE_EXISTENTIAL /* variable fractions */);
 	}
 
@@ -101,6 +103,7 @@ class MethodPostconditionParser extends AbstractParamVisitor
 	 * @param released
 	 * @param spaces
 	 * @param frameToVirtual
+	 * @param ignoreReceiverVirtual
 	 * @param namedFractions
 	 */
 	private MethodPostconditionParser(
@@ -109,8 +112,9 @@ class MethodPostconditionParser extends AbstractParamVisitor
 			String capturing, 
 			Map<String, String> released,
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual, FractionCreation namedFractions) {
-		super(perms, spaces, frameToVirtual, namedFractions);
+			boolean frameToVirtual, boolean ignoreReceiverVirtual,
+			FractionCreation namedFractions) {
+		super(perms, spaces, frameToVirtual, ignoreReceiverVirtual, namedFractions);
 		this.captured = captured;
 		this.capturing = capturing;
 		this.released = released;
@@ -120,13 +124,15 @@ class MethodPostconditionParser extends AbstractParamVisitor
 	 * This constructor is used for recursing into implications.
 	 * @param spaces
 	 * @param frameToVirtual
+	 * @param ignoreReceiverVirtual 
 	 * @param namedFractions
 	 */
 	private MethodPostconditionParser(
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual, FractionCreation namedFractions) {
+			boolean frameToVirtual, boolean ignoreReceiverVirtual, 
+			FractionCreation namedFractions) {
 		super(new LinkedHashMap<String, PermissionSetFromAnnotations>(), 
-				spaces, frameToVirtual, namedFractions);
+				spaces, frameToVirtual, ignoreReceiverVirtual, namedFractions);
 		this.captured = null;
 		this.released = null;
 	}
@@ -171,7 +177,7 @@ class MethodPostconditionParser extends AbstractParamVisitor
 
 	@Override
 	protected AbstractParamVisitor createSubParser(FractionCreation namedFraction) {
-		return new MethodPostconditionParser(getSpaces(),isFrameToVirtual(),namedFraction);
+		return new MethodPostconditionParser(getSpaces(),isFrameToVirtual(),ignoreReceiverVirtual(),namedFraction);
 	}
 
 }

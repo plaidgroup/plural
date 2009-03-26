@@ -58,6 +58,7 @@ import edu.cmu.cs.plural.states.StateSpace;
 class MethodPreconditionParser extends AbstractParamVisitor 
 			implements AccessPredVisitor<Boolean>, MethodPrecondition {
 	
+	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(MethodPreconditionParser.class.getName());
 	
 	private Set<String> notBorrowed;
@@ -65,10 +66,11 @@ class MethodPreconditionParser extends AbstractParamVisitor
 	public static MethodPreconditionParser createPreconditionForCallSite(
 			Map<String, PermissionSetFromAnnotations> perms,
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual,  
+			boolean frameToVirtual, boolean ignoreReceiverVirtual, 
 			Set<String> notBorrowed) {
 		return new MethodPreconditionParser(perms, spaces, 
 				frameToVirtual /* chosen by caller */, 
+				ignoreReceiverVirtual /* chosen by caller */,
 				FractionCreation.VARIABLE_UNIVERSAL /* variable fractions */,
 				new LinkedHashSet<String>(notBorrowed));
 	}	
@@ -79,6 +81,7 @@ class MethodPreconditionParser extends AbstractParamVisitor
 			Set<String> notBorrowed) {
 		return new MethodPreconditionParser(perms, spaces, 
 				false /* no frame-to-virtual coercion */, 
+				false /* never ignore virtual receiver permissions in body analysis */, 
 				FractionCreation.NAMED_UNIVERSAL /* named fractions */,
 				new LinkedHashSet<String>(notBorrowed));
 	}	
@@ -86,9 +89,10 @@ class MethodPreconditionParser extends AbstractParamVisitor
 	private MethodPreconditionParser(
 			Map<String, PermissionSetFromAnnotations> perms,
 			SimpleMap<String, StateSpace> spaces,
-			boolean frameToVirtual, FractionCreation namedFractions, 
+			boolean frameToVirtual, boolean ignoreReceiverVirtual, 
+			FractionCreation namedFractions, 
 			Set<String> notBorrowed) {
-		super(perms, spaces, frameToVirtual, namedFractions);
+		super(perms, spaces, frameToVirtual, ignoreReceiverVirtual, namedFractions);
 		this.notBorrowed = notBorrowed;
 	}
 	
@@ -133,6 +137,7 @@ class MethodPreconditionParser extends AbstractParamVisitor
 		return new MethodPreconditionParser(Collections.<String, PermissionSetFromAnnotations>emptyMap(),
 				getSpaces(),
 				isFrameToVirtual(),
+				ignoreReceiverVirtual(),
 				namedFraction,
 				notBorrowed);
 	}

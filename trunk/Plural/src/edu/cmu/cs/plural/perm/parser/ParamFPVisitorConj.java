@@ -47,7 +47,7 @@ import edu.cmu.cs.plural.track.Permission.PermissionKind;
  * 
  * @author Nels Beckman
  * @date Apr 3, 2008
- *
+ * @deprecated Use {@link AbstractParamVisitor} instead
  */
 public class ParamFPVisitorConj implements AccessPredVisitor<ParsedParameterSummary> {
 
@@ -60,10 +60,10 @@ public class ParamFPVisitorConj implements AccessPredVisitor<ParsedParameterSumm
 		if( ref instanceof Identifier ) {
 			Identifier id = (Identifier)ref;
 			if( "this".equals(id.getName()) ) {
-				result.addRcvr(perm.getRoot(), perm.getStateInfo(), p_type, id.isFrame());
+				result.addRcvr(perm.getRoot(), perm.getStateInfo(), p_type, id.getUse().isFrame());
 			}
 			else if( "result".equals(id.getName()) ) {
-				result.addResult(perm.getRoot(), perm.getStateInfo(), p_type, id.isFrame());
+				result.addResult(perm.getRoot(), perm.getStateInfo(), p_type, false);
 			}
 			else {
 				throw new RuntimeException("You are probably using a parameter " +

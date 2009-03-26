@@ -163,9 +163,26 @@ primary_expr returns [PrimaryExpr result]
 	;
 
 ref_expr returns [RefExpr result]
-	: i=ID {$result = new Identifier(i.getText());}
-	| i=ID '!fr' {$result = new Identifier(i.getText(), true);}
+	: 	i=ID 
+		(	{$result = new Identifier(i.getText());}
+		| 	'!' use=use_qualifier
+			{$result = new Identifier(i.getText(), use);}
+		|	'.super' 
+			{$result = Identifier.qualified(i.getText(), "super");}
+		|	'.this' 
+			(	{$result = Identifier.qualified(i.getText(), "this");}
+			|	'!' use2=use_qualifier
+				{$result = Identifier.qualifiedThis(i.getText(), use2);}
+			)
+		)
 	| '#' num=NUMBER {$result = new ParamReference(num.getText());}
+	;
+	
+use_qualifier returns [PermissionUse result]
+	: 'fr' {$result = PermissionUse.FIELDS;}
+	| 'fl' {$result = PermissionUse.FIELDS;}
+	| 'dp' {$result = PermissionUse.DISPATCH;}
+	| 'df' {$result = PermissionUse.DISP_FIELDS;}
 	;
 
 /* From low to high precedence */

@@ -99,7 +99,7 @@ import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
  * constructed correctly.
  * 
  * @author Kevin Bierhoff
- *
+ * @author Nels Beckman
  */
 public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	
@@ -218,9 +218,10 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			}
 			// Do the user's annotations actually parse correctly?
 			else if( "edu.cmu.cs.plural.annot.State".equals(node.resolveTypeBinding().getQualifiedName()) ) {
-				Option<Object> perm_ = getAnnotationParam(node.resolveAnnotationBinding(), "inv");
+				Option<String> perm_ = getAnnotationParam(
+						node.resolveAnnotationBinding(), "inv", String.class);
 				if( perm_.isSome() ) {
-					String perm = (String)perm_.unwrap();
+					String perm = perm_.unwrap();
 					Option<String> parse_error = PermParser.getParseError(perm);
 					if( parse_error.isSome() ) {
 						reporter.reportUserProblem("Parse error in annotation string: " + parse_error.unwrap(), 
@@ -237,11 +238,13 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 							node, PluralAnnotationAnalysis.this.getName());
 				}
 
-				Option<Object> req_ = getAnnotationParam(node.resolveAnnotationBinding(), "requires");
-				Option<Object> ens_ = getAnnotationParam(node.resolveAnnotationBinding(), "ensures");
+				Option<String> req_ = getAnnotationParam(
+						node.resolveAnnotationBinding(), "requires", String.class);
+				Option<String> ens_ = getAnnotationParam(
+						node.resolveAnnotationBinding(), "ensures", String.class);
 				
 				if( req_.isSome() ) {
-					String perm = (String)req_.unwrap();
+					String perm = req_.unwrap();
 					Option<String> parse_error = PermParser.getParseError(perm);
 					if( parse_error.isSome() ) {
 						reporter.reportUserProblem("Parse error in annotation string: " + parse_error.unwrap(), 
@@ -256,7 +259,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 					}
 				}
 				if( ens_.isSome() ) {
-					String perm = (String)ens_.unwrap();
+					String perm = ens_.unwrap();
 					Option<String> parse_error = PermParser.getParseError(perm);
 					if( parse_error.isSome() ) {
 						reporter.reportUserProblem("Parse error in annotation string: " + parse_error.unwrap(), 
@@ -283,6 +286,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 					if(isResultAnnotation(node)) {
 						type = m.resolveBinding().getReturnType();
 						if(isVoid(type)) {
+							// this will apply to constructors as well
 							reportUserProblem("@ResultXxx annotations must be on non-void methods", node);
 							type = null;
 						}
@@ -293,13 +297,26 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 									"Receiver annotation must be on non-static method", node);
 							type = null;
 						}
-						else 
+						else {
+							if(m.isConstructor()) {
+								// forbid requiring anything but virtual permissions "for receiver" in constructors
+								if(!isDispatchOnlyAnnotation(node)) {
+									PluralAnnotationAnalysis.this.reportUserProblem(
+											"Cannot require field access: constructors automatically have field access, but you can additionally declare permissions needed for performing dynamic dispatch in the constructor", node);
+								}
+							}
 							type = m.resolveBinding().getDeclaringClass();
+						}
 					}
 				}
 				else if(annotated instanceof SingleVariableDeclaration) {
 					// should be a parameter...
 					SingleVariableDeclaration d = (SingleVariableDeclaration) annotated;
+					// forbid requiring anything but virtual permissions for parameters
+					if(!isDispatchOnlyAnnotation(node)) {
+						PluralAnnotationAnalysis.this.reportUserProblem(
+								"Field access not supported for parameters: parameters can only be used for performing dispatch", node);
+					}
 					type = d.resolveBinding().getType();
 				}
 				else if(annotated instanceof VariableDeclarationFragment && 
@@ -468,6 +485,18 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 				reporter.reportUserProblem("@Perm next to @Cases is ignored!",
 						node, PluralAnnotationAnalysis.this.getName());
 			}
+		}
+		
+		/**
+		 * Figure out whether the given annotation explicitly or implicitly 
+		 * carries the attribute "use = Use.DISPATCH".
+		 * @param node
+		 * @return
+		 */
+		private boolean isDispatchOnlyAnnotation(Annotation node) {
+			Option<IVariableBinding> use = PluralAnnotationAnalysis.this.getAnnotationParam(
+					node.resolveAnnotationBinding(), "use", IVariableBinding.class);
+			return use.isNone() || "DISPATCH".equals((use.unwrap()).getName());
 		}
 
 		/**
@@ -659,10 +688,10 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	 * Returns the value of the annotation parameter with the given name, or
 	 * NONE if it is not in the given annotation.
 	 */
-	private Option<Object> getAnnotationParam(IAnnotationBinding anno, String p_name) {
+	private <T> Option<T> getAnnotationParam(IAnnotationBinding anno, String p_name, Class<T> type) {
 		for(IMemberValuePairBinding p : anno.getAllMemberValuePairs()) {
 			if(p_name.equals(p.getName())) {
-				return Option.some(p.getValue());
+				return Option.some(type.cast(p.getValue()));
 			}
 		}		
 		return Option.none();
@@ -701,8 +730,8 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	 * Returns the value of the parameter named "value" for the given
 	 * annotation binding, or NONE if there is no key called "value."
 	 */
-	private Option<Object> getAnnotationValue(IAnnotationBinding anno) {
-		return getAnnotationParam(anno, "value");
+	private <T> Option<T> getAnnotationValue(IAnnotationBinding anno, Class<T> type) {
+		return getAnnotationParam(anno, "value", type);
 	}
 	
 	/**
@@ -714,7 +743,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 	private boolean checkValueArrayNonEmpty(
 			IAnnotationBinding casesAnnotation) {
 		
-		Option<Object> value_ = getAnnotationValue(casesAnnotation);
+		Option<Object> value_ = getAnnotationValue(casesAnnotation, Object.class);
 		
 		if( value_.isNone() ) return false;
 		
@@ -724,6 +753,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			return ((Object[]) value).length > 0;
 		}
 		else {
+			// one-element array
 			return true;
 		}
 	}

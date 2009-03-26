@@ -144,9 +144,19 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 		 */
 		@Override
 		public IConstructorCaseInstance createPermissions(final boolean forAnalyzingBody, boolean isConstructorCall) {
-			final boolean coerce = !forAnalyzingBody && !isConstructorCall;
-			final Pair<MethodPrecondition, MethodPostcondition> preAndPost = preAndPost(
-					forAnalyzingBody, preAndPostString, coerce, forAnalyzingBody ? isConstructorCall : coerce);
+			final Pair<MethodPrecondition, MethodPostcondition> preAndPost;
+			if(forAnalyzingBody) {
+				preAndPost = preAndPost(
+						forAnalyzingBody, preAndPostString, 
+						false, 
+						false, 
+						isConstructorCall);
+			}
+			else {
+				preAndPost = preAndPost(
+						forAnalyzingBody, preAndPostString, !isConstructorCall, 
+						!isConstructorCall, !isConstructorCall);
+			}
 			
 			return new IConstructorCaseInstance() {
 

@@ -95,13 +95,23 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 			ITACAnalysisContext tacContext,
 			FractionAnalysisContext fractContext) {
 		assert tacContext.getAnalyzedMethod().isConstructor() == false;
-//		final ThisVariable receiverVar = tacContext.getThisVariable(); 
-//		assert receiverVar == null || receiverVar.isUnqualifiedThis();
 		final TensorPluralTupleLE tuple =
 			new TensorPluralTupleLE(
 					FractionalPermissions.createEmpty(), // use top (no permissions) as default
 					fractContext);
 		tuple.storeInitialAliasingInfo(tacContext.getAnalyzedMethod());
+		
+		if(fractContext.assumeVirtualFrame()) {
+			final ThisVariable receiverVar = tacContext.getThisVariable();
+			// shouldn't be null, since we're asked to assume a virtual frame for "this"
+			assert receiverVar.isUnqualifiedThis();
+			Aliasing this_loc = tuple.getLocations(receiverVar);
+			// virtual and frame permissions are the same for analyzing virtual receiver frame
+			tuple.put(this_loc, VirtualFramePermissionSet.createEmpty());
+		}
+		else {
+			// default takes care of this
+		}
 		
 		InitialLECreator c = new InitialMethodLECreator(tuple);
 		
@@ -312,9 +322,11 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	public void mergeInPermission(Aliasing var, String var_name,
 			PermissionSetFromAnnotations perms) {
 		FractionalPermissions ps = value.get(var);
-		if(ps.isEmpty())
+		if(ps.isEmpty() && FractionalPermissions.class.equals(ps.getClass()))
+			// TODO allow converting into VirtualFrameLatticeElement if necessary
 			ps = perms.toLatticeElement();
 		else
+			// FIXME Why does FailingBorrowingTest.alsodoesnotborrow() verify when taking above three LOC out???
 			ps = ps.mergeIn(perms);
 		value.put(var, ps);
 	}

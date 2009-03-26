@@ -25,7 +25,7 @@ public class InvariantParser extends AbstractParamVisitor implements
 	private InvariantParser(SimpleMap<String, StateSpace> spaces,
 			FractionCreation namedFractions) {
 		super(Collections.<String,PermissionSetFromAnnotations>emptyMap(), 
-				spaces, false, namedFractions);
+				spaces, false, false, namedFractions);
 	}
 
 	@Override

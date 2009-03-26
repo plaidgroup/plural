@@ -112,23 +112,32 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			// since frame receiver permissions cannot be required by a constructor
 			// we'll just check for the presence of any receiver permission in
 			// the pre-condition
-			List<ParameterPermissionAnnotation> annos = getReceiverAnnotations();
-			return ! annos.isEmpty() || // @Full etc. annotation for receiver present 
+			return 
+			// @Full etc. annotation for receiver present
+					! getReceiverAnnotations().isEmpty() || 
 			// silly test whether the @Perm pre-condition talks about the receiver 
 					(pre != null && pre.contains("this"));
 		}
 		else if(isStaticMethod())
 			// no receiver, so no virtual frame check
 			return false;
-		else {
-			// TODO virtual checks for instance methods?
-			return false;
+		else { // instance method
+			// need to check if any permissions required by the method
+			// can access fields *and* allow dynamic dispatch 
+			for(ParameterPermissionAnnotation a : getReceiverAnnotations()) {
+				if(a.isFramePermission() && a.isVirtualPermission())
+					// this means we have a use = Use.DISP_FIELDS annotation
+					// which requires a separate virtual frame check
+					return true;
+			}
+			// test whether @Perm pre-condition mentions "dispatch and frame"
+			return pre != null && pre.contains("this!df");
 		}
 	}
 	
 	protected Pair<MethodPrecondition, MethodPostcondition> preAndPost(
 			boolean forAnalyzingBody, Pair<String, String> preAndPostString,
-			boolean frameAsVirtual, boolean noReceiverPre) {
+			boolean frameAsVirtual, boolean noReceiverPre, boolean noReceiverVirtual) {
 		final Map<String, StateSpace> spaces = new HashMap<String, StateSpace>();
 		Map<String, PermissionSetFromAnnotations> pre = 
 			new HashMap<String, PermissionSetFromAnnotations>();
@@ -152,7 +161,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 						getReceiverAnnotations(), 
 						namedFractions, 
 						frameAsVirtual,
-						noReceiverPre);
+						noReceiverVirtual);
 			
 			assert !frameAsVirtual || rcvr_borrowed.fst().getFramePermissions().isEmpty();
 			
@@ -185,7 +194,8 @@ abstract class AbstractBindingSignature extends AbstractBinding
 				prePostFromAnnotations(space, 
 					CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), 
 					namedFractions,
-					false, false);
+					false /* TODO replace frame with virtual permissions to "overlook" spec errors? */, 
+					false /* do not ever ignore virtual permissions for parameters */);
 			pre.put(paramName, param_borrowed.fst());
 			post.put(paramName, param_borrowed.snd());
 		}
@@ -209,14 +219,18 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			
 			PermissionSetFromAnnotations result = PermissionSetFromAnnotations.createEmpty(space);
 			for(ResultPermissionAnnotation a : CrystalPermissionAnnotation.resultAnnotations(getAnnoDB(), binding)) {
-				PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(space, a.getRootNode(), a.getKind(), a.isFramePermission(), a.getEnsures(), ! forAnalyzingBody);
+				PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(
+						space, a.getRootNode(), a.getKind(), 
+						false, // virtual permission 
+						a.getEnsures(), ! forAnalyzingBody);
 				result = result.combine(p, forAnalyzingBody /* named means universal */);
 			}
 			post.put("result", result);
 		}
 		
 		return PermParser.parseSignature(
-				preAndPostString, forAnalyzingBody, frameAsVirtual, noReceiverPre,
+				preAndPostString, forAnalyzingBody, frameAsVirtual, 
+				noReceiverPre, noReceiverVirtual,
 				new SimpleMap<String, StateSpace>() {
 					@Override
 					public StateSpace get(String key) {
@@ -319,8 +333,9 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	 * @param space
 	 * @param annos
 	 * @param namedFractions
-	 * @param frameAsVirtual This should only be used for receiver permissions 
-	 * at virtual method call sites.
+	 * @param frameAsVirtual This should be <code>true</code> for 
+	 * receiver permissions at virtual method call sites as well as
+	 * new object construction sites.
 	 * @param ignoreVirtual Ignores virtual permissions, useful for constructor signatures.
 	 * @return
 	 */
@@ -331,15 +346,37 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		PermissionSetFromAnnotations pre = PermissionSetFromAnnotations.createEmpty(space);
 		PermissionSetFromAnnotations post = PermissionSetFromAnnotations.createEmpty(space);
 		for(ParameterPermissionAnnotation a : annos) {
-			if(!a.isFramePermission() && ignoreVirtual)
-				continue;
-			PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(
-					space, a.getRootNode(), a.getKind(), 
-					a.isFramePermission() && !frameAsVirtual, 
-					a.getRequires(), namedFractions.createNamed());
-			pre = pre.combine(p, namedFractions.isNamedUniversal());
-			if(a.isReturned())
-				post = post.combine(p.copyNewState(a.getEnsures()), namedFractions.isNamedUniversal());
+			// permission annotation can call for both frame access and
+			// the ability to call virtual methods
+			// depending on ignoreVirtual, we may have to create both permissions
+			// in this case
+			// frameAsVirtual, on the other hand, calls for replacing
+			// frame with virtual permissions, and in this case we don't
+			// want to end up with double the virtual permissions if
+			// ignoreVirtual is false
+			boolean needVirtual = (a.isVirtualPermission() && !ignoreVirtual)
+					|| (a.isFramePermission() && frameAsVirtual);
+			boolean needFrame = (a.isFramePermission() && !frameAsVirtual);
+			
+			if(needVirtual) {
+				PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(
+						space, a.getRootNode(), a.getKind(), 
+						false /* virtual permission */, 
+						a.getRequires(), namedFractions.createNamed());
+				pre = pre.combine(p, namedFractions.isNamedUniversal());
+				if(a.isReturned())
+					post = post.combine(p.copyNewState(a.getEnsures()), namedFractions.isNamedUniversal());
+			}
+
+			if(needFrame) {
+				PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(
+						space, a.getRootNode(), a.getKind(), 
+						true /* frame permission */, 
+						a.getRequires(), namedFractions.createNamed());
+				pre = pre.combine(p, namedFractions.isNamedUniversal());
+				if(a.isReturned())
+					post = post.combine(p.copyNewState(a.getEnsures()), namedFractions.isNamedUniversal());
+			}
 		}
 		return Pair.create(pre, post);
 	}
