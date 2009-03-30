@@ -81,6 +81,11 @@ public class State implements IState, IHasProperties {
 	public String getName() {
 		return name;
 	}
+
+	@Override
+	public void addDimension(IDimension dim) {
+		dimensions.add(dim);
+	}
 	
 	@Override
 	public void addIncomingConnection(IConnection conn) {
@@ -134,10 +139,5 @@ public class State implements IState, IHasProperties {
 			}
 		}
 		return false;
-	}
-
-	@Override
-	public void addDimension(IDimension dim) {
-		dimensions.add(dim);
 	}
 }

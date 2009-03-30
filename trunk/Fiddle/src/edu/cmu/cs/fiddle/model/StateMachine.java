@@ -227,6 +227,7 @@ public class StateMachine implements IHasProperties {
 				for(String start : set){
 					for(Set<String> fset : sig.getEnsuredReceiverStateOptions()){
 						for(String finish : fset){
+							boolean changed = false;
 							IConnectable s1 = stringToNode.get(start);
 							if(null == s1) {
 								IState newState = new State(start, 
@@ -234,6 +235,7 @@ public class StateMachine implements IHasProperties {
 								machine.getDefaultDimension().addState(newState);
 								s1 = newState;
 								stringToNode.put(start, s1);
+								changed = true;
 							}
 							
 							IConnectable s2 = stringToNode.get(finish);
@@ -243,9 +245,10 @@ public class StateMachine implements IHasProperties {
 								machine.getDefaultDimension().addState(newState);
 								s2 = newState;
 								stringToNode.put(finish, s2);
+								changed = true;
 							}
 
-							if(!space.areOrthogonal(start, finish))
+							if(changed || !space.areOrthogonal(start, finish))
 								createTransition(s1, s2, machine, method);
 						}						
 					}
