@@ -74,11 +74,47 @@ public class StateMachine implements IHasProperties {
 	
 	private PropertyChangeSupport listeners;
 	
+	private IDimension defaultDimension = null;
+	private IState rootState = null;
+	
 	public StateMachine() {
 		this.topLevelStates = new HashSet<IState>(); 
 		this.listeners = new PropertyChangeSupport(this);
 	}
 	
+	/**
+	 * @return the rootState
+	 */
+	public IState getRootState() {
+		return rootState;
+	}
+
+	/**
+	 * @param rootState the rootState to set
+	 */
+	public void setRootState(IState rootState) {
+		this.rootState = rootState;
+		this.addState(rootState);
+	}
+
+	/**
+	 * @return the defaultDimension
+	 */
+	public IDimension getDefaultDimension() {
+		if(null == defaultDimension) {
+			setDefaultDimension(new Dimension("<Anonymous>", new ArrayList<IState>()));
+			rootState.addDimension(defaultDimension);
+		}
+		return defaultDimension;
+	}
+
+	/**
+	 * @param defaultDimension the defaultDimension to set
+	 */
+	public void setDefaultDimension(IDimension defaultDimension) {
+		this.defaultDimension = defaultDimension;
+	}
+
 	public Set<IState> getStates() {
 		return Collections.unmodifiableSet(topLevelStates);
 	}
@@ -120,11 +156,10 @@ public class StateMachine implements IHasProperties {
 		// After adding the initial state, add the root
 		// state to the machine.
 		Collection<IDimension> root_dims = makeDimensionsInState(space.getRootState(), space, stringToNode);
-		IState rootState = new State(space.getRootState(), root_dims);
-		machine.addState(rootState);
-		stringToNode.put(space.getRootState(), rootState);
+		machine.setRootState(new State(space.getRootState(), root_dims));
+		stringToNode.put(space.getRootState(), machine.getRootState());
 		
-		Connection.connectTwoIConnectables(initialState, rootState);
+		Connection.connectTwoIConnectables(initialState, machine.getRootState());
 		
 		addTransitions(binding, machine, ssr, stringToNode);
 		
@@ -193,12 +228,25 @@ public class StateMachine implements IHasProperties {
 					for(Set<String> fset : sig.getEnsuredReceiverStateOptions()){
 						for(String finish : fset){
 							IConnectable s1 = stringToNode.get(start);
-							IConnectable s2 = stringToNode.get(finish);
-							
-							if(null != s1 && null != s2) {
-								if(!space.areOrthogonal(start, finish))
-									createTransition(s1, s2, machine, method);
+							if(null == s1) {
+								IState newState = new State(start, 
+										makeDimensionsInState(start, space, stringToNode));
+								machine.getDefaultDimension().addState(newState);
+								s1 = newState;
+								stringToNode.put(start, s1);
 							}
+							
+							IConnectable s2 = stringToNode.get(finish);
+							if(null == s2) {
+								IState newState = new State(finish, 
+										makeDimensionsInState(finish, space, stringToNode));
+								machine.getDefaultDimension().addState(newState);
+								s2 = newState;
+								stringToNode.put(finish, s2);
+							}
+
+							if(!space.areOrthogonal(start, finish))
+								createTransition(s1, s2, machine, method);
 						}						
 					}
 

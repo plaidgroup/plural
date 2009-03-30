@@ -135,4 +135,9 @@ public class State implements IState, IHasProperties {
 		}
 		return false;
 	}
+
+	@Override
+	public void addDimension(IDimension dim) {
+		dimensions.add(dim);
+	}
 }

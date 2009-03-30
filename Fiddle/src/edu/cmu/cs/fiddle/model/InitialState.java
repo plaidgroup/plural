@@ -112,4 +112,8 @@ public class InitialState implements IState, IHasProperties {
 	public boolean isParentOf(IConnectable child) {
 		return false;
 	}
+
+	@Override
+	public void addDimension(IDimension dim) {
+	}
 }
