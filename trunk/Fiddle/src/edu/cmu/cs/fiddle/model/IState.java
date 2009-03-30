@@ -53,4 +53,6 @@ public interface IState extends IConnectable {
 	 * @return
 	 */
 	public List<IDimension> getDimensions();
+	
+	public void addDimension(IDimension dim);
 }
