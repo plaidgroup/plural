@@ -436,7 +436,8 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 		if(isBottom())
 			// trivially succeed
 			return this;
-		return this.mergeIn(permissionsToMergeIn, constraints.mutableCopy());
+		return this.mergeIn(permissionsToMergeIn, 
+				constraints.mutableCopy(permissionsToMergeIn.getConstraints().getUniversalParameters()));
 	}
 
 	/**
@@ -487,6 +488,19 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 		return newPs;
 	}
 	
+	/**
+	 * Factory method for a brand-new permission set from annotations
+	 * @param initialPermissions
+	 * @return a brand-new permission set from annotations
+	 */
+	public FractionalPermissions createReplacement(
+			PermissionSetFromAnnotations initialPermissions) {
+		assert isEmpty();
+		return createPermissions(initialPermissions.getPermissions(), 
+				initialPermissions.getFramePermissions(), 
+				initialPermissions.getConstraints());
+	}
+
 	/**
 	 * Forgets state information for permissions known to be "share" or "pure".
 	 * @return

@@ -215,6 +215,22 @@ public class VirtualFramePermissionSet extends FractionalPermissions implements 
 		
 		return this.createPermissions(newFramePermissions, constraints);
 	}
+	
+	/*
+	 * This is a simplified version of the superclass method 
+	 * that only manipulates framePermissions.
+	 */
+	@Override
+	public FractionalPermissions createReplacement(PermissionSetFromAnnotations initial) {
+		assert isEmpty();
+		FractionConstraints newCs = initial.getConstraints().mutableCopy();
+		List<? extends FractionalPermission> newFramePs = 
+			mergeInPermissions(initial.getPermissions(), 
+					initial.getFramePermissions(), 
+					newCs); 
+		
+		return createPermissions(newFramePs, newCs);
+	}
 
 	/*
 	 * This is a simplified version of the superclass method 

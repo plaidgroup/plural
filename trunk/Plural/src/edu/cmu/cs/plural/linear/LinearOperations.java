@@ -1324,13 +1324,6 @@ class LinearOperations extends TACAnalysisHelper {
 			Variable x, PermissionSetFromAnnotations toMerge) {
 		if(x == null) throw new NullPointerException("Null variable provided");
 		return mergeIn(value.getLocationsAfter(instr.getNode(), x), value, toMerge);
-//		if(toMerge == null || toMerge.isEmpty())
-//			return value;
-//		
-//		FractionalPermissions permissions = value.get(instr, x);
-//		permissions = permissions.mergeIn(toMerge);
-//		value.put(instr, x, permissions);
-//		return value;
 	}
 	
 	static TensorPluralTupleLE mergeIn(

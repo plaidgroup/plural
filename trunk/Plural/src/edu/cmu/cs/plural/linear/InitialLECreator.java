@@ -322,9 +322,8 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	public void mergeInPermission(Aliasing var, String var_name,
 			PermissionSetFromAnnotations perms) {
 		FractionalPermissions ps = value.get(var);
-		if(ps.isEmpty() && FractionalPermissions.class.equals(ps.getClass()))
-			// TODO allow converting into VirtualFrameLatticeElement if necessary
-			ps = perms.toLatticeElement();
+		if(ps.isEmpty())
+			ps = ps.createReplacement(perms);
 		else
 			// FIXME Why does FailingBorrowingTest.alsodoesnotborrow() verify when taking above three LOC out???
 			ps = ps.mergeIn(perms);
