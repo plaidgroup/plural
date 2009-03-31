@@ -523,6 +523,9 @@ public abstract class AbstractParamVisitor
 		StateSpace space = getStateSpace(ref);
 		if(space != null) {
 			Pair<String, PermissionUse> refPair = getRefPair(ref);
+			if(refPair.snd() == null)
+				// ignore
+				return null;
 			// may need both a virtual and a frame permission
 			if(refPair.snd().isVirtual()) {
 				assert !"super".equals(refPair.fst());
@@ -546,7 +549,9 @@ public abstract class AbstractParamVisitor
 
 	/**
 	 * @param ref
-	 * @return {@link Pair} (parameter name, {@link PermissionUse}) for the given ref.
+	 * @return {@link Pair} (parameter name, {@link PermissionUse}) for the given ref;
+	 * second component is <code>null</code> if this reference should be ignored 
+	 * because of {@link #ignoreReceiverVirtual()}.
 	 */
 	protected Pair<String, PermissionUse> getRefPair(RefExpr ref) {
 		String param;
@@ -560,7 +565,7 @@ public abstract class AbstractParamVisitor
 			else {
 				if("this".equals(((Identifier) ref).getName()) && ignoreReceiverVirtual()) {
 					if(((Identifier) ref).getUse().equals(PermissionUse.DISPATCH))
-						return null;
+						return Pair.create(param, null);
 					if(!isFrameToVirtual())
 						return Pair.create(param, PermissionUse.FIELDS);
 				}
@@ -730,6 +735,9 @@ public abstract class AbstractParamVisitor
 	@Override
 	public Boolean visit(StateOnly stateOnly) {
 		Pair<String,PermissionUse> r = getRefPair(stateOnly.getVar());
+		if(r.snd() == null)
+			// ignore
+			return null;
 		String param = r.fst();
 		if(r.snd().isVirtual()) {
 			getInfoHolder(param).getStateInfos().add(stateOnly.getStateInfo());

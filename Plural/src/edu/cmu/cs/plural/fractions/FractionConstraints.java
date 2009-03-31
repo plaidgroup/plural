@@ -300,12 +300,6 @@ public final class FractionConstraints implements Freezable<FractionConstraints>
 
 	public FractionConstraints mutableCopy() {
 		return mutableCopy(Collections.<NamedFraction>emptySet());
-//		FractionConstraints result = new FractionConstraints(this.universalParameters);
-//		result.constraints = this.constraints;
-//		result.variables.addAll(this.variables);
-//		result.constants.addAll(this.constants);
-//		result.consistent = consistent;
-//		return result;
 	}
 
 	/**
