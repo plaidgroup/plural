@@ -325,7 +325,6 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		if(ps.isEmpty())
 			ps = ps.createReplacement(perms);
 		else
-			// FIXME Why does FailingBorrowingTest.alsodoesnotborrow() verify when taking above three LOC out???
 			ps = ps.mergeIn(perms);
 		value.put(var, ps);
 	}
