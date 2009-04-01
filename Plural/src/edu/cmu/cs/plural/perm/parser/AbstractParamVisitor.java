@@ -541,7 +541,7 @@ public abstract class AbstractParamVisitor
 				// super by definition refers to a frame, but turn this into this!fr
 				if(!"super".equals(r))
 					r += "!fr";
-				addPerm(refPair.fst(), pa);
+				addPerm(r, pa);
 			}
 		}
 		return null;
