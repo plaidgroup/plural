@@ -11,6 +11,17 @@ import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.Unique;
 import edu.cmu.cs.plural.annot.Use;
 
+/**
+ * This example is modeled after the running example in the
+ * ECOOP'04 paper by on Fugue, 
+ * <a href="http://www.springerlink.com/content/xkyypj4843qywwlv/">"Typestates for Objects"</a>.
+ * It includes a base class, {@link WebPageFetcher}, and a
+ * subclass, {@link CachingFetcher}, that overrides inherited
+ * methods to add caching.
+ * @author Kevin Bierhoff
+ * @since Apr 1, 2009
+ *
+ */
 @PassingTest
 @UseAnalyses({PluralAnalysis.SYNTAX, PluralAnalysis.EFFECT, PluralAnalysis.PLURAL})
 public class FugueInheritance {
@@ -37,6 +48,7 @@ public class FugueInheritance {
 	})
 	class CachingFetcher extends WebPageFetcher {
 		
+		@SuppressWarnings("unused")
 		private Map<String, String> cache = null;
 		
 		@Override
