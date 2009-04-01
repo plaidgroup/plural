@@ -54,6 +54,7 @@ import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
@@ -130,14 +131,42 @@ class LinearOperations extends TACAnalysisHelper {
 	 * {@link ContextFactory#trueContext() false}.
 	 */
 	public DisjunctiveLE handleMethodCall(
-			MethodCallInstruction instr,
-			TensorPluralTupleLE value,
-			IMethodCaseInstance sigCase,
+			final MethodCallInstruction instr,
+			final TensorPluralTupleLE value,
+			final IMethodCaseInstance sigCase,
 			boolean failFast) {
 		// create parameter map suitable for method call
 		final SimpleMap<String, Aliasing> paramMap = createParameterMap(
 				instr, value, instr.getReceiverOperand(), instr.getTarget());
-		return handleInvocation(instr, value, sigCase, failFast, paramMap);
+		if(instr.isSuperCall() && value.isRcvrPacked()) {
+			// may have to unpack to get super-frame permissions
+			DisjunctiveLE unpacked = value.fancyUnpackReceiver(
+					getThisVar(), instr.getNode(), getRepository(),
+					new SimpleMap<Variable,Aliasing>() {
+						@Override
+						public Aliasing get(Variable key) {
+							return value.getLocations(key);
+						}},
+					StateSpace.STATE_ALIVE /* super always mapped to root node */, 
+					null /* not an assignment */,
+					true /* also keep the packed version */);
+			
+			final boolean failFaster = failFast || ! ContextFactory.isSingleContext(unpacked);
+			return unpacked.dispatch(new RewritingVisitor() {
+				@Override
+				public DisjunctiveLE context(LinearContextLE le) {
+					return handleInvocation(instr, le.getTuple(), 
+							sigCase, failFaster, paramMap);
+				}
+			});
+		}
+		else
+			// not a super call: business as usual
+			// super call but already unpacked: 
+			//   will just fail if super-frame permission missing
+			//   super is mapped to alive, so any unpacked node will do
+			//   no need to check like in handleFieldAccess
+			return handleInvocation(instr, value, sigCase, failFast, paramMap);
 	}
 	
 	/**
@@ -1410,12 +1439,12 @@ class LinearOperations extends TACAnalysisHelper {
 				/*
 				 * 1. Save permission that's assigned to field. 
 				 */
-				final FractionalPermissions new_field_perms;
-				if(isAssignment)
-					new_field_perms = value.get(
-						value.getLocationsBefore(instr.getNode(), assignmentSource));
-				else
-					new_field_perms = null;
+//				final FractionalPermissions new_field_perms;
+//				if(isAssignment)
+//					new_field_perms = value.get(
+//						value.getLocationsBefore(instr.getNode(), assignmentSource));
+//				else
+//					new_field_perms = null;
 
 				/*
 				 * 2. Unpack receiver if needed.
@@ -1520,19 +1549,39 @@ class LinearOperations extends TACAnalysisHelper {
 							return value.getLocations(key);
 						}},
 					unpacking_root, 
-					isAssignment ? instr.getFieldName() : null);
+					isAssignment ? instr.getFieldName() : null,
+					false /* do not keep packed tuple */);
 			}
 			else { // already unpacked...
+				final Aliasing loc = 
+					value.getLocationsBefore(instr.getNode(), thisVar);
+				FractionalPermissions rcvrPerms = value.get(loc);
 				if(isAssignment) {
+					/*
+					 * need unpacked root to be at least as big as 
+					 * the node the field is mapped to 
+					 */
+					if(!this_space.firstBiggerThanSecond(
+							rcvrPerms.getUnpackedPermission().getRootNode(), 
+							unpacking_root)) {
+						return ContextFactory.trueContext();
+					}
 					/*
 					 * Force unpacked permission to be modifiable, to allow assignment.
 					 */
-					final Aliasing loc = 
-						value.getLocationsBefore(instr.getNode(), thisVar);
-					FractionalPermissions rcvrPerms = value.get(loc);
 					rcvrPerms = rcvrPerms.makeUnpackedPermissionModifiable();
-					// TODO force permission to be above assigned field's root
 					value.put(loc, rcvrPerms);
+				}
+				else /* field read */ {
+					/* 
+					 * unpacked permission must overlap with 
+					 * the node the field is mapped to 
+					 */
+					if(this_space.areOrthogonal(
+							rcvrPerms.getUnpackedPermission().getRootNode(), 
+							unpacking_root)) {
+						return ContextFactory.trueContext();
+					}
 				}
 				return ContextFactory.tensor(value);
 			}
@@ -1678,14 +1727,60 @@ class LinearOperations extends TACAnalysisHelper {
 	 * @return a string describing failing conditions or <code>null</code> if the
 	 * check was successful.
 	 */
-	public String checkCallPrecondition(ASTNode node,
-			TensorPluralTupleLE value,
+	public String checkCallPrecondition(final ASTNode node,
+			final TensorPluralTupleLE value,
 			Variable receiver,
-			List<Variable> arguments, PredicateChecker pre) {
-		Aliasing this_loc = value.getLocationsBefore(node, getThisVar());
-		PredicateErrorReporter checker = new PredicateErrorReporter(false, // pre-checker
+			List<Variable> arguments, final PredicateChecker pre) {
+		final SimpleMap<String, Aliasing> argLocs = createNodeArgumentMap(node, value, receiver, arguments);
+		final Aliasing this_loc = value.getLocationsBefore(node, getThisVar());
+		
+		if(node != null && (node instanceof SuperMethodInvocation) && value.isRcvrPacked()) {
+			// super-method call....
+			// may have to unpack to get super-frame permissions
+			DisjunctiveLE unpacked = value.fancyUnpackReceiver(
+					getThisVar(), node, getRepository(),
+					new SimpleMap<Variable,Aliasing>() {
+						@Override
+						public Aliasing get(Variable key) {
+							return value.getLocations(key);
+						}},
+					StateSpace.STATE_ALIVE /* super always mapped to root node */, 
+					null /* not an assignment */,
+					true /* also keep the packed version */);
+			// keeping the original means there is at least one tuple in unpacked
+			// that's good because we'll visit at least one tuple below and 
+			// get error messages from it
+			
+			return unpacked.dispatch(new ErrorReportingVisitor() {
+				@Override
+				public String checkTuple(TensorPluralTupleLE tuple) {
+					return checkCallPreconditionInternal(node, tuple, pre, 
+							argLocs, this_loc);
+				}
+			});
+		}
+		else 
+			// standard case
+			// just do the pre-condition check outright
+			return checkCallPreconditionInternal(node, value, pre, argLocs,
+					this_loc);
+	}
+
+	/**
+	 * @param node
+	 * @param value
+	 * @param pre
+	 * @param argLocs
+	 * @param this_loc
+	 * @return
+	 */
+	private String checkCallPreconditionInternal(ASTNode node,
+			final TensorPluralTupleLE value, PredicateChecker pre,
+			SimpleMap<String, Aliasing> argLocs, Aliasing this_loc) {
+		PredicateErrorReporter checker = new PredicateErrorReporter(
+				false /* pre-checker */,
 				node, value, this_loc);
-		pre.splitOffPredicate(createNodeArgumentMap(node, value, receiver, arguments), checker);
+		pre.splitOffPredicate(argLocs, checker);
 		if(checker.hasErrors())
 			return ErrorReportingVisitor.errorString(checker.getErrors(), " and ");
 		else
@@ -2372,7 +2467,9 @@ class LinearOperations extends TACAnalysisHelper {
 			DisjunctiveLE unpacked = 
 			value.fancyUnpackReceiver(this_var, node, 
 					getRepository(),
-					loc_map, unpack_state, null /* no assigned field */);
+					loc_map, unpack_state, 
+					null /* no assigned field */, 
+					false /* do not keep packed version */);
 
 			// find the states we need to re-pack to
 			final Set<String> packToStates = AbstractFractionalPermission.cleanStateInfo(
