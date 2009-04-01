@@ -517,7 +517,9 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			@Override
 			public DisjunctiveLE context(LinearContextLE le) {
 				if(le.getTuple().isRcvrPacked()) {
-					return le.getTuple().fancyUnpackReceiver(rcvrVar, nodeWhereUnpacked, stateRepo, locs, desiredRoot, assignedField);
+					return le.getTuple().fancyUnpackReceiver(
+							rcvrVar, nodeWhereUnpacked, stateRepo, locs, 
+							desiredRoot, assignedField, false);
 				}
 				// else ?
 				return le;

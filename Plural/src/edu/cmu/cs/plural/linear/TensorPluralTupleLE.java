@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
+ * Copyright (C) 2007-2009 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
  *
@@ -69,7 +69,6 @@ import edu.cmu.cs.plural.pred.DefaultInvariantMerger;
 import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
-import edu.cmu.cs.plural.pred.PredicateMerger.MergeIntoTuple;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
@@ -111,6 +110,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		return tuple;
 	}
 
+	/** Cached unsatisfiable flag; <code>null</code> if unknown. */
 	private Boolean unsatisfiable;
 	
 	public TensorPluralTupleLE(FractionalPermissions b,
@@ -171,7 +171,31 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField) {
 		return super.unpackReceiver(rcvrVar, nodeWhereUnpacked, stateRepo, locs, rcvrRoot, assignedField);
 	}
-
+	
+	/**
+	 * Implements the lattice manipulations for unpacking a variable at a particular
+	 * node, i.e. it injects field permissions and marks the receiver as unpacked;
+	 * {@link #fancyUnpackReceiver(Variable, ASTNode, StateSpaceRepository, SimpleMap, String, String)}
+	 * does not call this method if there are no permissions available for unpacking.
+	 * Trivially succeeds if the unpacked variable is associated with "bottom"
+	 * or there are no frame permissions available for unpacking.  
+	 * Returns <code>false</code> when the unpacked invariant contains void.
+	 * Notice that this method does not fail if there are no (suitable) permissions 
+	 * for unpacking available; failures would occur when fields are used,
+	 * but in practice we don't even call this method in this case.
+	 * If a field is assigned then the unpacked permission is forced to be modifiable
+	 * and permissions for the old location assicated with the assigned field are not 
+	 * overridden.
+	 * @param rcvrVar
+	 * @param nodeWhereUnpacked
+	 * @param stateRepo
+	 * @param locs
+	 * @param rcvrRoot
+	 * @param assignedField Assigned field or <code>null</code> if this unpack
+	 * happens for reading a field.
+	 * @return <code>false</code> if <b>void</b> was unpacked; 
+	 * <code>true</code> otherwise.
+	 */
 	private boolean unpackReceiverInternal(Variable rcvrVar, ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
 			final SimpleMap<Variable, Aliasing> locs, String rcvrRoot, final String assignedField) {
 
@@ -203,6 +227,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		final FractionalPermission unpacked_perm = this_perms.getUnpackedPermission();
 		final SimpleMap<String,StateSpace> field_spaces = getFieldAndObjStateSpaces(class_decl, stateRepo);
 		
+		boolean result = true; // no void seen yet
 		for( Pair<String,String> state_and_inv : getStatesAndInvs(class_decl, unpacked_perm, getAnnotationDB()) ) {
 			// foreach invariant string:
 			final String inv = state_and_inv.snd();
@@ -223,11 +248,11 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			parsed.fst().mergeInPredicate(locs_, callback);
 			if(callback.isVoid()) {
 				// got void from invariant
-				// TODO inject bottom to make (m)any things work subsequently
+				result = false;
 			}
 		}
 		
-		return true;
+		return result;
 	}
 	
 	@Override
@@ -346,24 +371,6 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		return result;
 	}
 	
-//	/**
-//	 * This is the disjunctive version of 
-//	 * {@link PluralTupleLatticeElement#packReceiver(Variable, StateSpaceRepository, SimpleMap, Set)}.
-//	 * @param rcvrVar
-//	 * @param stateRepo
-//	 * @param locs
-//	 * @param desiredState
-//	 * @return
-//	 */
-//	public DisjunctiveLE fancyPackReceiver(Variable rcvrVar,
-//			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
-//			Set<String> desiredState) {
-//		if(super.packReceiver(rcvrVar, stateRepo, locs, desiredState))
-//			return ContextFactory.tensor(this);
-//		else
-//			return ContextFactory.falseContext();
-//	}
-//
 	/**
 	 * This is the disjunctive version of 
 	 * {@link PluralTupleLatticeElement#packReceiverToBestGuess(ThisVariable, StateSpaceRepository, SimpleMap, String...)}.
@@ -426,15 +433,20 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 * @param rcvrRoot
 	 * @param assignedField Name of the field being assigned, 
 	 * or <code>null</code> if the unpack happens for a field read
+	 * @param includeOriginal set to <code>true</code> to include
+	 * the receiver tuple as-is in the result.
 	 * @return The resulting lattice value, possibly a disjunction of different
 	 * states we tried to unpack from.
 	 */
 	public DisjunctiveLE fancyUnpackReceiver(Variable rcvrVar,
 			ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
-			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField) {
+			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, 
+			String assignedField, boolean includeOriginal) {
 		// this need not be unfrozen because we create mutable copies...
 
 		LinkedHashSet<DisjunctiveLE> resultElems = new LinkedHashSet<DisjunctiveLE>();
+		if(includeOriginal)
+			resultElems.add(ContextFactory.tensor(this));
 		
 		StateSpace rcvr_space = stateRepo.getStateSpace(rcvrVar.resolveType());
 		Aliasing rcvr_loc = locs.get(rcvrVar);
@@ -447,8 +459,10 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			return ContextFactory.tensor(this);
 		}
 		else if(rcvrPerms.getFramePermissions().isEmpty()) {
-			// fail: must have permission for assignment
-			return ContextFactory.trueContext();
+			// fail: must have permission for unpacking
+			return includeOriginal ?
+					ContextFactory.tensor(this) :
+					ContextFactory.trueContext();
 		}
 		// the above should just be an optimization for below
 		else {
@@ -458,9 +472,11 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			
 			List<String> infoToTry = new LinkedList<String>();
 			infoToTry.add(rcvrRoot); // try root node (and bigger) first
-			infoToTry.addAll(rcvrPerms.getStateInfo(true));
+			if(assignedField == null)
+				// try smaller unpacking roots *if this is not an assignment*
+				// (otherwise only try rcvrRoot and bigger)
+				infoToTry.addAll(rcvrPerms.getStateInfo(true));
 			for(String n : infoToTry) {
-				// TODO field assignments, skip nodes below field's root
 				if(rcvr_space.firstBiggerThanSecond(rcvrRoot, n) == false)
 					continue;
 				state_iter:
@@ -504,9 +520,9 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 					TensorPluralTupleLE elem = this.mutableCopy();
 					elem.storeIdenticalAliasInfo(this);
 					if(!elem.unpackReceiverInternal(rcvrVar, nodeWhereUnpacked, stateRepo, locs, try_node, assignedField))
-						// tried to unpack to a state with FALSE invariant
-						// this should not be possible, so we fail conservatively 
-						return ContextChoiceLE.trueContext();
+						// tried to unpack to a state with VOID invariant
+						// anything is possible after that... 
+						return ContextFactory.falseContext();
 					if(elem.get(rcvr_loc).getConstraints().seemsConsistent())
 						// could check for satisfiability here
 						resultElems.add(LinearContextLE.tensor(elem));
@@ -515,7 +531,24 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 			return ContextChoiceLE.choice(resultElems);
 		}
 	}
+	
+	private static boolean canUnpackNode(FractionalPermissions ps, String root) {
+		if(ps.getFramePermissions().isEmpty())
+			return false;
+		StateSpace space = ps.getStateSpace();
+		for(String n : ps.getStateInfo(true)) {
+			if(space.firstBiggerThanSecond(root, n))
+				return true;
+		}
+		return false;
+	}
 
+	/**
+	 * Tests whether there is an element in the tuple that is unsatisfiable.
+	 * @return <code>true</code> if there is an unsatisfiable element in the
+	 * tuple; <code>false</code> otherwise.
+	 * @see FractionalPermissions#isUnsatisfiable()
+	 */
 	public boolean isUnsatisfiable() {
 		if(unsatisfiable != null)
 			return unsatisfiable;
@@ -534,35 +567,5 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		}
 		return false;
 	}
-
-//	/**
-//	 * @param livenessInformation
-//	 */
-//	public void killDeadVariables(TACInstruction instr, LivenessInformation livenessInformation) {
-//		Set<Variable> deadVars = new HashSet<Variable>();
-//		AliasingLE aliasing = getTupleLatticeElement().getLocationsBefore(instr.getNode());
-//		
-//		outer:
-//		for(Variable x : aliasing.getKeySet()) {
-//			Aliasing a = aliasing.get(x);
-//			FractionalPermissions ps = get(a);
-//			if(ps.hasParameterPermissions()) {
-//				for(ObjectLabel l : a.getLabels()) {
-//					for(Variable y : aliasing.getVariables(l)) {
-//						if(livenessInformation.isLive(y))
-//							continue outer;
-//					}
-//				}
-//				// a is dead
-//				
-//				
-//				
-//			}
-//			
-//			if(! livenessInformation.isLive(x))
-//				deadVars.add(x);
-//		}
-//		
-//	}
 
 }
