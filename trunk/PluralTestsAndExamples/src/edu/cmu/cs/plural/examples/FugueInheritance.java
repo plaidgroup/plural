@@ -41,8 +41,6 @@ public class FugueInheritance {
 		
 		@Override
 		public void open() {
-			// TODO avoid forced unpacking with field access
-			Map<String, String> c = this.cache;
 			super.open();
 			cache = new HashMap<String, String>();
 		}
