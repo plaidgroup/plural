@@ -2,14 +2,14 @@
 <feature
       id="edu.cmu.cs.plural.feature"
       label="Plural"
-      version="1.0.7">
+      version="1.1.0">
 
    <description url="http://code.google.com/p/pluralism/">
       Modular object protocol checking for Java.
    </description>
 
    <copyright url="http://code.google.com/p/pluralism/">
-      Copyright (C) 2007, 2008 Carnegie Mellon University and others.
+      Copyright (C) 2007-2009 Carnegie Mellon University and others.
    </copyright>
 
    <license url="http://www.gnu.org/licenses/gpl-2.0.html">
@@ -34,7 +34,7 @@ To obtain this software under a commercial license, please contact
 the Carnegie Mellon University Center for Technology Transfer
 at innovation@cmu.edu.
 
-Copyright 2008 by Carnegie Mellon University.
+Copyright 2007-2009 by Carnegie Mellon University.
    </license>
 
    <url>
