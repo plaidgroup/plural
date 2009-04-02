@@ -57,12 +57,10 @@ import edu.cmu.cs.plural.states.StateSpace;
  */
 class MethodPreconditionParser extends AbstractParamVisitor 
 			implements AccessPredVisitor<Boolean>, MethodPrecondition {
-	
+
 	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(MethodPreconditionParser.class.getName());
 	
-	private Set<String> notBorrowed;
-
 	public static MethodPreconditionParser createPreconditionForCallSite(
 			Map<String, PermissionSetFromAnnotations> perms,
 			SimpleMap<String, StateSpace> spaces,
@@ -85,7 +83,13 @@ class MethodPreconditionParser extends AbstractParamVisitor
 				FractionCreation.NAMED_UNIVERSAL /* named fractions */,
 				new LinkedHashSet<String>(notBorrowed));
 	}	
-	
+
+	/**
+	 * Parameters that are non-borrowed b/c of additional permissions in the pre-condition.
+	 * This set is shared with {@link #createSubParser(FractionCreation) sub-parsers}.
+	 */
+	private final Set<String> notBorrowed;
+
 	private MethodPreconditionParser(
 			Map<String, PermissionSetFromAnnotations> perms,
 			SimpleMap<String, StateSpace> spaces,
@@ -94,6 +98,16 @@ class MethodPreconditionParser extends AbstractParamVisitor
 			Set<String> notBorrowed) {
 		super(perms, spaces, frameToVirtual, ignoreReceiverVirtual, namedFractions);
 		this.notBorrowed = notBorrowed;
+	}
+	
+	/**
+	 * Add names that represent parameters that are not borrowed.
+	 * This method is useful for excluding parameters from borrowing because of
+	 * what's declared in the post-condition.
+	 * @param additional Parameter names to be excluded from borrowing
+	 */
+	void addNotBorrowed(Set<String> additional) {
+		notBorrowed.addAll(additional);
 	}
 	
 	@Override
@@ -111,15 +125,21 @@ class MethodPreconditionParser extends AbstractParamVisitor
 			SplitOffTuple callback) {
 		
 		/*
-		 * announce borrowed objects 
+		 * Announce borrowed objects
+		 * need to first add all locations and then remove the ones that are not borrowed
+		 * this accounts for the case where parameters with different names alias
+		 * which in particular can be the case for this and this!fr 
 		 */
-		
 		Set<Aliasing> borrowed_vars = new HashSet<Aliasing>();
 		for(String p : getParams().keySet()) {
 			borrowed_vars.add(vars.get(p));
 		}
 		for(String p : notBorrowed) {
-			borrowed_vars.remove(vars.get(p));
+			if(getParams().keySet().contains(p))
+				// remove locations for non-borrowed parameters
+				// restrict to parameters for which we actually have pre-information
+				// to avoid problems with unknown locations
+				borrowed_vars.remove(vars.get(p));
 		}
 		callback.announceBorrowed(borrowed_vars);
 

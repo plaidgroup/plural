@@ -37,13 +37,16 @@
  */
 package edu.cmu.cs.plural.perm.parser;
 
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
+import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.linear.PermissionPredicate;
 import edu.cmu.cs.plural.linear.ReleasePermissionImplication;
@@ -93,7 +96,13 @@ class MethodPostconditionParser extends AbstractParamVisitor
 	
 	private final Map<String, String> released;
 
-	private String capturing;
+	private final String capturing;
+	
+	/**
+	 * Parameters that are non-borrowed b/c of additional permissions in the post-condition.
+	 * This set is shared with {@link #createSubParser(FractionCreation) sub-parsers}.
+	 */
+	private final Set<String> notBorrowed;
 	
 	/**
 	 * Use this constructor to create a new visitor for a given permission expression
@@ -118,6 +127,7 @@ class MethodPostconditionParser extends AbstractParamVisitor
 		this.captured = captured;
 		this.capturing = capturing;
 		this.released = released;
+		this.notBorrowed = new HashSet<String>();
 	}
 
 	/**
@@ -126,15 +136,23 @@ class MethodPostconditionParser extends AbstractParamVisitor
 	 * @param frameToVirtual
 	 * @param ignoreReceiverVirtual 
 	 * @param namedFractions
+	 * @param notBorrowed Parent's shared mutable {@link #notBorrowed} set.
 	 */
 	private MethodPostconditionParser(
 			SimpleMap<String, StateSpace> spaces,
 			boolean frameToVirtual, boolean ignoreReceiverVirtual, 
-			FractionCreation namedFractions) {
+			FractionCreation namedFractions,
+			Set<String> notBorrowed) {
 		super(new LinkedHashMap<String, PermissionSetFromAnnotations>(), 
 				spaces, frameToVirtual, ignoreReceiverVirtual, namedFractions);
 		this.captured = null;
+		this.capturing = null;
 		this.released = null;
+		this.notBorrowed = notBorrowed;
+	}
+	
+	Set<String> getNotBorrowed() {
+		return notBorrowed;
 	}
 	
 	@Override
@@ -176,8 +194,15 @@ class MethodPostconditionParser extends AbstractParamVisitor
 	}
 
 	@Override
+	protected void addPerm(String param, PermissionFromAnnotation pa) {
+		notBorrowed.add(param); 
+		super.addPerm(param, pa);
+	}
+
+	@Override
 	protected AbstractParamVisitor createSubParser(FractionCreation namedFraction) {
-		return new MethodPostconditionParser(getSpaces(),isFrameToVirtual(),ignoreReceiverVirtual(),namedFraction);
+		return new MethodPostconditionParser(getSpaces(),isFrameToVirtual(),ignoreReceiverVirtual(),
+				namedFraction,notBorrowed);
 	}
 
 }

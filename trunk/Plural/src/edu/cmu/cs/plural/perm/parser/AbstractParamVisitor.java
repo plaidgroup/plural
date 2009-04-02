@@ -144,6 +144,12 @@ public abstract class AbstractParamVisitor
 		 */
 		public abstract boolean isNamedUniversal();
 		
+		/**
+		 * This is used to create fractions in implication antecedents.
+		 * Returns the inverse <code>FractionCreation</code> policy,
+		 * swapping "universal" with "existential" and "named" with "variable".
+		 * @return the inverse <code>FractionCreation</code> policy
+		 */
 		public abstract FractionCreation opposite();
 	}
 

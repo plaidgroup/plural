@@ -517,6 +517,10 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 		return createPermissions(newPs, newFramePs, constraints);
 	}
 
+	/**
+	 * Returns new permissions with all state info <i>except marker states</i> removed.
+	 * @return new permissions with all state info <i>except marker states</i> removed.
+	 */
 	public FractionalPermissions withoutStateInfo() {
 		if(isBottom())
 			return this;

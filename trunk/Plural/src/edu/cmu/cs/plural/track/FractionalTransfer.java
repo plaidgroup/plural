@@ -196,20 +196,28 @@ public class FractionalTransfer extends
 		PluralDisjunctiveLE startLE = PluralDisjunctiveLE.createLE(start,
 				getAnalysisContext(), context);
 		
-		if(d.isConstructor() && !hasConstructorInvocation(d)) {
-			// TODO simulate default super constructor call
-			if(log.isLoggable(Level.FINE))
-				log.fine("Ignoring implicit super-constructor call");
-		}
-		
 		return startLE;
 	}
 
 	private Pair<DisjunctiveLE, SimpleMap<String, Aliasing>> createLatticeInfo(MethodDeclaration decl) {
 		PredicateMerger pre = context.getAnalyzedCase().getPreconditionMerger();
-		if(context.getAnalyzedCase().isConstructorCaseInstance())
+		if(decl.isConstructor()) {
+			boolean callsThisConstructor = false;
+			switch(findConstructorInvocation(decl)) {
+			case NONE:
+				// TODO simulate default super constructor call
+				if(log.isLoggable(Level.FINE))
+					log.fine("Ignoring implicit super-constructor call");
+				break;
+			case THIS:
+				callsThisConstructor = true;
+				break;
+			case SUPER:
+				break;
+			}
 			return InitialLECreator.createInitialConstructorLE(
-					pre, getAnalysisContext(), context, decl);
+					pre, getAnalysisContext(), context, decl, callsThisConstructor);
+		}
 		else
 			return InitialLECreator.createInitialMethodLE(
 					pre, getAnalysisContext(), context);
@@ -239,15 +247,31 @@ public class FractionalTransfer extends
 		return context.getAnalyzedCase().getInvocationCase().getSpecifiedMethodBinding();
 	}
 
-	private boolean hasConstructorInvocation(MethodDeclaration constructor) {
+	/**
+	 * Return type for {@link FractionalTransfer#findConstructorInvocation(MethodDeclaration)}
+	 * indicating what constructor a given constructor body invokes.
+	 * @author Kevin Bierhoff
+	 * @since Apr 2, 2009
+	 */
+	private enum InvokedConstructor {
+		NONE, SUPER, THIS
+	}
+	
+	private static InvokedConstructor findConstructorInvocation(MethodDeclaration constructor) {
 		// the call to statements() will trigger a NPE if constructor has no body
 		// (which shouldn't ever happen if it's actually a constructor
 		List<Statement> body = constructor.getBody().statements();
 		if(body.isEmpty())
-			return false;
+			return InvokedConstructor.NONE;
 		Statement firstStatement = body.get(0);
-		return firstStatement != null && (firstStatement instanceof ConstructorInvocation ||
-				firstStatement instanceof SuperConstructorInvocation);
+		if(firstStatement == null)
+			return InvokedConstructor.NONE;
+		else if(firstStatement instanceof ConstructorInvocation)
+			return InvokedConstructor.THIS;
+		else if(firstStatement instanceof SuperConstructorInvocation)
+			return InvokedConstructor.SUPER;
+		else
+			return InvokedConstructor.NONE;
 	}
 	
 	//

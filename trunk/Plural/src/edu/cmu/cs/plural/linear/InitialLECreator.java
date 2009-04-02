@@ -94,7 +94,8 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 			PredicateMerger pre, 
 			ITACAnalysisContext tacContext,
 			FractionAnalysisContext fractContext) {
-		assert tacContext.getAnalyzedMethod().isConstructor() == false;
+		// invoked directly for static and instance methods
+		// invoked from createInitialConstructorLE if the constructor calls this(...)
 		final TensorPluralTupleLE tuple =
 			new TensorPluralTupleLE(
 					FractionalPermissions.createEmpty(), // use top (no permissions) as default
@@ -117,7 +118,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		
 		final SimpleMap<String, Aliasing> vars = createStartMap(tacContext, tuple);
 		pre.mergeInPredicate(vars, c);
-		if(c.isVoid)
+		if(c.isVoid())
 			// void can prove anything: start with false
 			return Pair.create(ContextFactory.falseContext(), vars);
 		
@@ -141,6 +142,10 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	 * @param pre
 	 * @param tacContext
 	 * @param fractContext
+	 * @param callsThisConstructor pass <code>true</code> if the constructor for which we're
+	 * constructing initial lattice information calls another constructor in the same class using 
+	 * <code>this(...)</code>; <code>false</code> if the constructor 
+	 * (implicitly or explicitly) invokes a super-constructor. 
 	 * @return an initial lattice element for analyzing a constructor plus
 	 * a map from parameter names (including the receiver) to their initial locations.
 	 * @see #createInitialMethodLE(PredicateMerger, ITACAnalysisContext, FractionAnalysisContext)
@@ -149,8 +154,14 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 			PredicateMerger pre, 
 			ITACAnalysisContext tacContext,
 			FractionAnalysisContext fractContext, 
-			MethodDeclaration decl) {
+			MethodDeclaration decl, boolean callsThisConstructor) {
 		assert tacContext.getAnalyzedMethod().isConstructor();
+		if(callsThisConstructor)
+			// treat like a regular method if this constructor contains a this(...) call:
+			// the receiver permission will come from the invoked constructor,
+			// and we don't want to start out unpacked in this case
+			return createInitialMethodLE(pre, tacContext, fractContext);
+		
 		final ThisVariable receiverVar = tacContext.getThisVariable(); 
 		assert receiverVar.isUnqualifiedThis();
 		final TensorPluralTupleLE tuple =
@@ -170,21 +181,42 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 			// default takes care of this
 		}
 		
-		InitialLECreator c = new InitialConstructorLECreator(tuple, 
-				this_loc,
-				fractContext.getRepository().getStateSpace(receiverVar.resolveType()));
-		
+		InitialLECreator c = new InitialConstructorLECreator(tuple);
 		final SimpleMap<String, Aliasing> vars = createStartMap(tacContext, tuple);
 		pre.mergeInPredicate(vars, c);
-		if(c.isVoid)
+		if(c.isVoid())
 			// void can prove anything: start with false
 			return Pair.create(ContextFactory.falseContext(), vars);
 		
+		addUnpackedReceiver(tuple, this_loc,
+				fractContext.getRepository().getStateSpace(receiverVar.resolveType()));
 		// issue #61: make the receiver non-null
 		tuple.addNonNullVariable(this_loc);
 		return Pair.create(ContextFactory.tensor(tuple), vars);
 	}
 	
+	private static void addUnpackedReceiver(TensorPluralTupleLE value,
+			Aliasing receiverVar, StateSpace receiverSpace) {
+		// add an unpacked unique frame permission for alive
+		PermissionSetFromAnnotations thisFrame = PermissionSetFromAnnotations.createSingleton( 
+				PermissionFactory.INSTANCE.createUniqueOrphan(receiverSpace, receiverSpace.getRootState(), 
+						true /* frame permission */, receiverSpace.getRootState()),
+				true /* universals are named */);
+		
+		FractionalPermissions ps = value.get(receiverVar);
+//		if(ps.isEmpty()) {
+//			ps = thisFrame.toLatticeElement();
+//		}
+//		else {
+			// there shouldn't already be frame permissions
+			assert ps.getFramePermissions().isEmpty() :
+				"Specification error: a constructor cannot require frame permissions; instead, it starts out with an unpacked unique frame permission"; 
+			ps = ps.mergeIn(thisFrame);
+//		}
+		ps = ps.unpack(receiverSpace.getRootState());
+		value.put(receiverVar, ps);
+	}
+
 	/**
 	 * The returned map uses the given tuple's {@link TensorPluralTupleLE#getLocations(edu.cmu.cs.crystal.tac.Variable)}
 	 * method to map variables to locations.  Thus, the map will only represent the
@@ -238,37 +270,13 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	}
 	
 	protected static class InitialConstructorLECreator extends InitialLECreator {
-		private StateSpace receiverSpace;
-		private Aliasing receiverVar;
-
-		InitialConstructorLECreator(TensorPluralTupleLE value,
-				Aliasing receiverVar,
-				StateSpace receiverSpace) {
+		InitialConstructorLECreator(TensorPluralTupleLE value) {
 			super(value);
-			this.receiverVar = receiverVar;
-			this.receiverSpace = receiverSpace;
 		}
 
 		@Override
 		public void finishMerge() {
-			// add an unpacked unique frame permission for alive
-			PermissionSetFromAnnotations thisFrame = PermissionSetFromAnnotations.createSingleton( 
-					PermissionFactory.INSTANCE.createUniqueOrphan(receiverSpace, receiverSpace.getRootState(), 
-							true /* frame permission */, receiverSpace.getRootState()),
-					true /* universals are named */);
-			
-			FractionalPermissions ps = value.get(receiverVar);
-//			if(ps.isEmpty()) {
-//				ps = thisFrame.toLatticeElement();
-//			}
-//			else {
-				// there shouldn't already be frame permissions
-				assert ps.getFramePermissions().isEmpty() :
-					"Specification error: a constructor cannot require frame permissions; instead, it starts out with an unpacked unique frame permission"; 
-				ps = ps.mergeIn(thisFrame);
-//			}
-			ps = ps.unpack(receiverSpace.getRootState());
-			value.put(receiverVar, ps);
+			// nothing further
 		}
 	}
 	
@@ -277,6 +285,10 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	
 	protected InitialLECreator(TensorPluralTupleLE value) {
 		this.value = value;
+	}
+	
+	public boolean isVoid() {
+		return isVoid;
 	}
 
 	@Override
