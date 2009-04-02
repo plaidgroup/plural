@@ -402,6 +402,15 @@ public class PermParser {
 			}
 		} // else true
 		
+		/*
+		 * 7. Remove parameters with additional permissions from consideration for borrowing
+		 * This allows methods to "produce" permissions for parameters, which is in particular
+		 * the case in constructors.  If they borrow and produce something we're less precise
+		 * than we could, but that seems like a corner-case.
+		 * TODO allow borrowing *plus* additional permissions in post-condition
+		 */
+		pre.addNotBorrowed(post.getNotBorrowed());
+		
 		return Pair.<MethodPrecondition, MethodPostcondition>create(pre, post);
 	}
 	

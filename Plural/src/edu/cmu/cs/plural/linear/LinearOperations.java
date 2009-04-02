@@ -712,8 +712,6 @@ class LinearOperations extends TACAnalysisHelper {
 				// with the given permissions for borrowed locations
 				// (assuming the given locations are what we had before splitting and merging)
 				// but use the new state information after forgetting and merging
-				// TODO this is suboptimal because in theory we could have merged in permissions
-				// in addition to the borrowed ones, but we'll ignore this for now
 				for(Map.Entry<Aliasing, FractionalPermissions> b : borrowed.entrySet()) {
 					Aliasing var = b.getKey();
 					FractionalPermissions p = value.get(var);

@@ -177,8 +177,7 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 				boolean coerce;
 				if(hasReceiver()) {
 					// coerce == true iff dynamically dispatched call site
-					// TODO Use Modifier.isPrivate 
-					coerce = !isSuperCall && (binding.getModifiers() & Modifier.PRIVATE) == 0;
+					coerce = !isSuperCall && !Modifier.isPrivate(binding.getModifiers());
 				}
 				else
 					coerce = false;
