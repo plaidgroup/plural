@@ -59,6 +59,7 @@ import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 
 import edu.cmu.cs.fiddle.figure.CornerAnchor;
 import edu.cmu.cs.fiddle.figure.DimensionFigure;
+import edu.cmu.cs.fiddle.figure.StateFigure;
 import edu.cmu.cs.fiddle.model.Dimension;
 import edu.cmu.cs.fiddle.model.IConnection;
 import edu.cmu.cs.fiddle.model.IState;
@@ -81,10 +82,10 @@ public class DimensionEditPart extends AbstractGraphicalEditPart implements
 		// This is the last dimension if this is the last
 		// edit part in our parent's list of edit parts.
 		// This is a hack... is there a better way to do this?
-		int last_index_of = ((IState)this.getParent().getModel()).getDimensions().lastIndexOf(this.getModel());
-		boolean isLastDim = last_index_of == ((IState)this.getParent().getModel()).getDimensions().size() - 1;
+		int last_index_of = ((IState)this.getParent().getModel()).getDimensions().indexOf(this.getModel());
+		boolean isFirstDim = last_index_of == 0;
 		
-		return new DimensionFigure(modelAsDimension().getName(), isLastDim);
+		return new DimensionFigure(modelAsDimension().getName(), isFirstDim);
 	}
 
 	@Override protected void createEditPolicies() {}
@@ -239,7 +240,9 @@ public class DimensionEditPart extends AbstractGraphicalEditPart implements
 			Map<EditPart, Object> partsToNodes) {
 		// Change your bounds...
 		Node n = (Node)partsToNodes.get(this);
-		getFigure().setBounds(new Rectangle(n.x, n.y, n.width, n.height));
+		Node p = (Node)partsToNodes.get(this.getParent());
+		int height_pad = StateFigure.FOOTER_SIZE + StateFigure.HEADER_SIZE;
+		getFigure().setBounds(new Rectangle(n.x, n.y, n.width, p.height - height_pad));
 		// Layout connections.
 		for( Object connection_ : getSourceConnections() ) {
 			IEdgeToGraphContributor connection = (IEdgeToGraphContributor)connection_;
