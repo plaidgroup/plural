@@ -64,7 +64,7 @@ public class DimensionFigure extends Shape {
 	public static final int MIN_WIDTH = 80;
 	public static final int HEADER_SIZE = 15;
 	
-	private boolean isLastDim;
+	private boolean isFirstDim;
 	
 	public DimensionFigure(String name, boolean isLastDim) {
 		super();
@@ -72,7 +72,7 @@ public class DimensionFigure extends Shape {
 		this.setLayoutManager(new BorderLayout());
 		this.setOpaque(true);
 	
-		this.isLastDim = isLastDim;
+		this.isFirstDim = isLastDim;
 		this.name = new Label(" " + name);
 		this.name.setLabelAlignment(Label.LEFT);
 		this.add(this.name, BorderLayout.TOP);
@@ -113,13 +113,29 @@ public class DimensionFigure extends Shape {
 		
 		// Draw a dotted line to our right as long as this
 		// is not the last dimension.
-		if( !isLastDim ) {
+		if( !isFirstDim ) {
+			IFigure state_fig = this.getParent().getParent();
+			
+			assert(state_fig instanceof StateFigure);
+			
+			Point parent_bot = state_fig.getBounds().getBottom();
+			Point parent_top = state_fig.getBounds().getTop();
+			
+			// We are using the StateFigure size minus the headers because
+			// we had trouble getting the line to extend all the way from header
+			// to footer, when we just used the size of this figure or the contents
+			// pane.
+			int my_x = this.getBounds().getLeft().x;
+			Point line_top_left = new Point(my_x,
+					                        parent_top.y);
+			Point line_bot_left = new Point(my_x,
+					                        parent_bot.y);
+
 			graphics.setLineStyle(SWT.LINE_DASH);
 			graphics.setLineWidth(4);
 			graphics.setForegroundColor(ColorConstants.black);
 			graphics.setBackgroundColor(ColorConstants.black);
-			graphics.drawLine(this.getBounds().getTopRight(), 
-					this.getBounds().getBottomRight());
+			graphics.drawLine(line_top_left, line_bot_left);
 		}
 	}
 }
