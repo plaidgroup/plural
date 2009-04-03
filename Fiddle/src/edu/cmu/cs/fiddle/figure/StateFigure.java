@@ -38,13 +38,16 @@
 package edu.cmu.cs.fiddle.figure;
 
 import org.eclipse.draw2d.BorderLayout;
+import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.Shape;
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.swt.graphics.Color;
 
 /**
  * This figure represents a state. It's pretty simple, although it
@@ -73,6 +76,7 @@ public class StateFigure extends Shape {
 		this.nameLabel = new Label();
 		this.nameLabel.setText(name);
 		this.nameLabel.setFont(labelFont);
+		
 		this.add(nameLabel, BorderLayout.TOP);
 		
 		this.contentsFigure = new Figure();
@@ -84,7 +88,25 @@ public class StateFigure extends Shape {
 		return this.contentsFigure;
 	}
 	
-	@Override protected void fillShape(Graphics graphics) {}
+	@Override protected void fillShape(Graphics graphics) {
+		// Make the header blue
+		// We must do this here because we have to make it
+		// a rounded rectangle, which is not so easy.
+		Color color = new Color(null, 195, 199, 255);
+		
+		Rectangle label_rect = this.nameLabel.getBounds();
+		graphics.setBackgroundColor(color);
+		graphics.fillRoundRectangle(label_rect, 15, 15);
+		
+		// Now b/c the first rectangle was rounded, but we
+		// want the bottom of the filled-in area to be flat,
+		// we draw ANOTHER rectangle, this one half the size
+		// but complete at the bottom.
+		Dimension new_dim = new Dimension(label_rect.width, label_rect.height / 2 + 1);
+		Point new_loc = label_rect.getLeft();
+		Rectangle new_rect = new Rectangle(new_loc, new_dim);
+		graphics.fillRectangle(new_rect);		
+	}
 
 	@Override
 	protected void outlineShape(Graphics graphics) {

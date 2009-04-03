@@ -48,6 +48,7 @@ import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 
 /**
  * The figure for a dimension, it basically has a header with the
@@ -99,17 +100,27 @@ public class DimensionFigure extends Shape {
 		graphics.setBackgroundColor(ColorConstants.black);
 		graphics.drawLine(this.getBounds().getBottomLeft(), 
 				this.getBounds().getBottomRight());
+		
+		// Draw color under the label
+		graphics.setBackgroundColor(new Color(null, 255, 223, 208));
+		graphics.fillRectangle(getLabelRectangle());
 	}
 
+	private Rectangle getLabelRectangle() {
+		Rectangle r = this.getBounds();
+		int text_right_x = this.name.getTextBounds().getBottomRight().x + 3;
+		Point bot_right_label = new Point(text_right_x, r.y + HEADER_SIZE );
+		
+		Rectangle result = new Rectangle(r.getTopLeft().getTranslated(1, 1),
+				                         bot_right_label);
+		return result;
+	}
+	
 	@Override
 	protected void outlineShape(Graphics graphics) {
-		Rectangle r = this.getBounds();
-		int text_right_x = this.name.getTextBounds().getBottomRight().x + 3; 
-		Point left_header = new Point(r.x, r.y + HEADER_SIZE);
-		Point bot_right_label = new Point(text_right_x, r.y + HEADER_SIZE );
-		Point top_right_label = new Point(text_right_x, r.y );
-		graphics.drawLine(left_header, bot_right_label);
-		graphics.drawLine(bot_right_label, top_right_label);
+		Rectangle label_rect = getLabelRectangle();
+		graphics.drawLine(label_rect.getBottomLeft(), label_rect.getBottomRight());
+		graphics.drawLine(label_rect.getBottomRight(), label_rect.getTopRight());
 		
 		// Draw a dotted line to our right as long as this
 		// is not the last dimension.
