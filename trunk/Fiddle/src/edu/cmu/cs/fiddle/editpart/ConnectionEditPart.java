@@ -46,7 +46,6 @@ import java.util.Map;
 
 import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.Bendpoint;
-import org.eclipse.draw2d.FanRouter;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
 import org.eclipse.draw2d.MidpointLocator;
@@ -60,7 +59,6 @@ import org.eclipse.draw2d.graph.NodeList;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 
-import edu.cmu.cs.fiddle.figure.BendpointSelfConnectionRouter;
 import edu.cmu.cs.fiddle.model.Connection;
 import edu.cmu.cs.fiddle.model.IConnection;
 import edu.cmu.cs.fiddle.model.IHasProperties;
@@ -98,21 +96,10 @@ public class ConnectionEditPart extends AbstractConnectionEditPart
 	
 	@Override
 	protected IFigure createFigure() {
-		/*
-		 * If this connection represents a self connection (and
-		 * later a parent to child connection) we use a different
-		 * anchor and router to better display that connection. 
-		 */
 		PolylineConnection connection = (PolylineConnection) super.createFigure();
 		connection.setTargetDecoration(new PolygonDecoration());
-		if( isSelfConnection() || isChildToParent() ) {
-			// Self
-			connection.setConnectionRouter(new BendpointSelfConnectionRouter(connection));
-		}
-		else {
-			// other
-			connection.setConnectionRouter(new FanRouter());
-		}
+		
+		
 		MidpointLocator mpl = new MidpointLocator(connection, 0);
 		mpl.setRelativePosition(PositionConstants.EAST);
 		mpl.setGap(15);
