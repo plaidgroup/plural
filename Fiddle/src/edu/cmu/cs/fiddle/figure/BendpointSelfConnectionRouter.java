@@ -45,6 +45,7 @@ import java.util.Map;
 import org.eclipse.draw2d.AutomaticRouter;
 import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.ConnectionAnchor;
+import org.eclipse.draw2d.FanRouter;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PointList;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -61,6 +62,9 @@ import org.eclipse.draw2d.geometry.Rectangle;
  * @author Nels E. Beckman
  */
 public class BendpointSelfConnectionRouter extends AutomaticRouter {
+	
+	private final FanRouter fanRouter = new FanRouter();
+	
 	private int separation = 30;
 	private Map<HashKey,List<Connection>> connections = new HashMap<HashKey,List<Connection>>();
 	
@@ -102,11 +106,8 @@ public class BendpointSelfConnectionRouter extends AutomaticRouter {
 		}
 	}
 	
-	private final Connection conn;
-	
-	public BendpointSelfConnectionRouter(Connection conn) {
+	public BendpointSelfConnectionRouter() {
 		super();
-		this.conn = conn;
 	}
 	
 	/**
@@ -117,12 +118,8 @@ public class BendpointSelfConnectionRouter extends AutomaticRouter {
 		return this.separation;  
 	}//getSeparation()
 	  
-	/**
-	   * @see org.eclipse.draw2d.AutomaticRouter#handleCollision(org.eclipse.draw2d.geometry.PointList, int)
-	   */
-	@Override
-	protected void handleCollision(PointList list, int index) {
-		PointList points = list;
+	protected void handleCollision(Connection conn, int index) {
+		PointList points = conn.getPoints();
 		Point start = points.getFirstPoint();
 		Point end = points.getLastPoint();
 		
@@ -177,6 +174,13 @@ public class BendpointSelfConnectionRouter extends AutomaticRouter {
 	
 	@Override
 	public void route(Connection conn) {
+		if( !(conn.getSourceAnchor() instanceof CornerAnchor) ) {
+			// This is NOT a self connection, delegate to the
+			// FanRouter.
+			this.fanRouter.route(conn);
+			return;
+		}
+		
 		super.route(conn);
 		if (conn.getPoints().size() == 2) {
 			//PointList points = conn.getPoints();
@@ -198,8 +202,16 @@ public class BendpointSelfConnectionRouter extends AutomaticRouter {
 					index = connectionList.size() + 1;
 					put(connectionKey, conn);
 				}
-				handleCollision(conn.getPoints(), index);
+				handleCollision(conn, index);
 			} 
 		}
+		else {
+			System.err.println("Here");
+		}
+	}
+
+	@Override
+	protected void handleCollision(PointList list, int index) {
+		// Do nothing!
 	}
 }

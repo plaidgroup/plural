@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.draw2d.ConnectionLayer;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -50,8 +51,10 @@ import org.eclipse.draw2d.graph.CompoundDirectedGraph;
 import org.eclipse.draw2d.graph.Node;
 import org.eclipse.draw2d.graph.Subgraph;
 import org.eclipse.gef.EditPart;
+import org.eclipse.gef.LayerConstants;
 import org.eclipse.gef.editparts.AbstractGraphicalEditPart;
 
+import edu.cmu.cs.fiddle.figure.BendpointSelfConnectionRouter;
 import edu.cmu.cs.fiddle.model.IState;
 import edu.cmu.cs.fiddle.model.StateMachine;
 import edu.cmu.cs.fiddle.model.IHasProperties.PropertyType;
@@ -72,9 +75,12 @@ public class TopLevelEditPart extends AbstractGraphicalEditPart
 		// This code is directly from the tutorial
 		Figure f = new Figure();
         f.setOpaque(true);
-        // TODO Change to AutomaticLayoutManager
-        //f.setLayoutManager(new XYLayout());
+
         f.setLayoutManager(new AutomaticLayoutManager(this));
+        
+        ConnectionLayer cLayer = (ConnectionLayer) getLayer(LayerConstants.CONNECTION_LAYER);
+		cLayer.setConnectionRouter(new BendpointSelfConnectionRouter());
+		
         return f;
 	}
 
