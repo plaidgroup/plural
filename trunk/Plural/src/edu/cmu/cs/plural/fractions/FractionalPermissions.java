@@ -55,14 +55,16 @@ import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.states.StateSpace;
 
 /**
+ * Permission set representing lattice information for an object, to be tracked by a flow analysis.
  * @author Kevin Bierhoff
- * 
  */
 public class FractionalPermissions 
 extends AbstractFractionalPermissionSet<FractionalPermission> 
 implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 	
+	/** Singleton bottom element */
 	private static final FractionalPermissions BOTTOM = new FractionalPermissions(null, false);
+	@SuppressWarnings("unused")
 	private static final Logger log = Logger.getLogger(FractionalPermissions.class.getName());
 
 	private final FractionalPermission unpackedPermission;
@@ -70,6 +72,7 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 //	private final Map<String, Aliasing> parameters;
 //	private final Map<Aliasing, PermissionSetFromAnnotations> parameterPermissions;
 
+	/** This field "caches" the state space. */
 	private StateSpace stateSpace;
 	
 	public static FractionalPermissions bottom() {
@@ -255,6 +258,15 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 		return newPs;
 	}
 
+	/**
+	 * Creates a new permission set with the given content plus the same {@link #unpackedPermission} 
+	 * as this permission set.
+	 * @param newPermissions
+	 * @param newFramePermissions
+	 * @param newConstraints
+	 * @return a new permission set with the given content plus the same {@link #unpackedPermission} 
+	 * as this permission set.
+	 */
 	private FractionalPermissions createPermissions(
 			List<? extends FractionalPermission> newPermissions,
 			List<? extends FractionalPermission> newFramePermissions,
@@ -264,6 +276,14 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 				/*parameters, parameterPermissions,*/ unpackedPermission);
 	}
 
+	/**
+	 * Creates a new permission set with the given content.
+	 * @param newPermissions
+	 * @param newFramePermissions
+	 * @param new_cs
+	 * @param unpacked_perm
+	 * @return a new permission set with the given content.
+	 */
 	private FractionalPermissions createPermissions(
 			List<? extends FractionalPermission> newPermissions,
 			List<? extends FractionalPermission> newFramePermissions, FractionConstraints new_cs, FractionalPermission unpacked_perm) {
@@ -310,8 +330,6 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 			return false;
 		return true;
 	}
-	
-	
 
 	@Override
 	public FractionalPermissions copy() {
@@ -333,17 +351,6 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 		if(this.isBottom())
 			return other;
 
-//		return this.join(other, node, this.constraints.mutableCopy(), false); 
-		
-//		if(other.constraints.isImpossible())
-//			return this;
-//		if(this.constraints.isImpossible())
-//			return other;
-//		if(! other.constraints.isConsistent())
-//			return this;
-//		if(! this.constraints.isConsistent())
-//			return other;
-		
 		// join constraints from both permission sets only if this is a join after if or conditional
 		// drop constraints from loop body if this is a join for a loop
 		// if node is a loop, let's hope this is the lattice information from before the loop entry

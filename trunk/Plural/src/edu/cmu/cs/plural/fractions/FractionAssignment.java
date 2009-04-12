@@ -46,16 +46,29 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
+ * Manages equivalence classes of fraction terms and in particular attempts to
+ * assign "representatives" to every term.
+ * The assignment is built externally by calling <code>makeXxx</code> methods,
+ * and changes will make {@link #isChanged()} <code>true</code>.
+ * This is useful to determine when the process of equating terms has reached a fixed point.
+ * The "changed" flag can be reset using {@link #resetChangedFlag()}.
+ * Query methods are public, while modifying methods are package-private.
  * @author Kevin Bierhoff
- *
  */
 public class FractionAssignment {
 
+	/** Flag for tracking changes as a result of {@link #union(FractionTerm, FractionTerm)} calls. */
 	private boolean changed;
+	/** Equivalence classes for each term. */
 	private Map<FractionTerm, SortedSet<FractionTerm>> equivalenceClasses;
+	/** Terms known <b>not</b> to be zero. */
 	private Set<FractionTerm> nonZero;
 	
-	public FractionAssignment() {
+	/**
+	 * Creates an empty assignment object, ready to be populated using
+	 * <code>makeXxx</code> methods.
+	 */
+	FractionAssignment() {
 		equivalenceClasses = new HashMap<FractionTerm, SortedSet<FractionTerm>>();
 		equivalenceClasses.put(Fraction.zero(), mutableSet(Fraction.zero()));
 		equivalenceClasses.put(Fraction.one(), mutableSet(Fraction.one()));
@@ -64,6 +77,11 @@ public class FractionAssignment {
 		nonZero.add(Fraction.one());
 	}
 	
+	/**
+	 * Creates a fresh mutable set with the given initial elements.
+	 * @param initialElements
+	 * @return a fresh mutable set with the given initial elements.
+	 */
 	private static SortedSet<FractionTerm> mutableSet(FractionTerm... initialElements) {
 		TreeSet<FractionTerm> result = new TreeSet<FractionTerm>();
 		for(FractionTerm e : initialElements) {
@@ -72,28 +90,48 @@ public class FractionAssignment {
 		return result;
 	}
 
+	/**
+	 * Sets the changed flag back to <code>false</code>.
+	 */
 	void resetChangedFlag() {
 		changed = false;
 	}
 
+	/**
+	 * Returns the changed flag.
+	 * @return the changed flag.
+	 */
 	boolean isChanged() {
 		return changed;
 	}
 
-	public void makeEquivalent(Iterable<FractionTerm> terms) {
+	/**
+	 * Equates the given collection of terms.
+	 * @param terms
+	 */
+	void makeEquivalent(Iterable<FractionTerm> terms) {
 		for(FractionTerm t1 : terms)
 			for(FractionTerm t2 : terms) {
 				union(t1, t2);
 			}
 	}
 
-	public void makeEquivalent(FractionTerm... terms) {
+	/**
+	 * Equates the given terms.
+	 * @param terms
+	 */
+	void makeEquivalent(FractionTerm... terms) {
 		for(FractionTerm t1 : terms)
 			for(FractionTerm t2 : terms) {
 				union(t1, t2);
 			}
 	}
 
+	/**
+	 * Union the equivalence classes of the two given terms.
+	 * @param t1
+	 * @param t2
+	 */
 	private void union(FractionTerm t1, FractionTerm t2) {
 		if(t1.equals(t2)) {
 			if(equivalenceClasses.containsKey(t1) == false) {
@@ -132,18 +170,41 @@ public class FractionAssignment {
 		changed = true;
 	}
 
+	/**
+	 * Tests if the given term is known to be equivalent to 1.
+	 * @param f
+	 * @return <code>true</code> if the given term is known to be 1, <code>false</code> otherwise.
+	 */
 	public boolean isOne(FractionTerm f) {
 		return equivalenceClasses.get(Fraction.one()).contains(f);
 	}
 
+	/**
+	 * Tests if the given term is known to be equivalent to 0.
+	 * @param f
+	 * @return <code>true</code> if the given term is known to be 0, 
+	 * <code>false</code> otherwise.
+	 */
 	public boolean isZero(FractionTerm f) {
 		return equivalenceClasses.get(Fraction.zero()).contains(f);
 	}
 	
+	/**
+	 * Tests if the given term is known <b>not</b> to be 0.
+	 * @param f
+	 * @return <code>true</code> if the given term is known to be anything but 0, 
+	 * <code>false</code> otherwise.
+	 */
 	public boolean isNonZero(FractionTerm f) {
 		return nonZero.contains(f);
 	}
 	
+	/**
+	 * Returns a constant (0, 1, or a named fraction) that the given term is equivalent to, if any.
+	 * @param f
+	 * @return a constant (0, 1, or a named fraction) that the given term is equivalent to, 
+	 * or <code>null</code> if the given term is not known to be equivalent to a constant.
+	 */
 	public Fraction getConstant(FractionTerm f) {
 		Set<FractionTerm> eq = equivalenceClasses.get(f);
 		if(eq == null)
@@ -168,6 +229,12 @@ public class FractionAssignment {
 		return null;
 	}
 
+	/**
+	 * Returns a fraction that the given term is known to be equivalent to, if any.
+	 * @param f
+	 * @return a fraction that the given term is known to be equivalent to, 
+	 * or <code>null</code> if there is no such fraction known.
+	 */
 	public Fraction getLiteral(FractionTerm f) {
 		Set<FractionTerm> eq = equivalenceClasses.get(f);
 		if(eq == null)
@@ -196,9 +263,10 @@ public class FractionAssignment {
 	}
 	
 	/**
-	 * 
+	 * Returns the unique representative for the given fraction.
 	 * @param f
-	 * @return A fraction representing the given fraction, possibly the given fraction itself, but never <code>null</code>.
+	 * @return A fraction representing the given fraction, 
+	 * possibly the given fraction itself, but never <code>null</code>.
 	 */
 	public Fraction getRepresentative(Fraction f) {
 		Fraction lit = getLiteral(f);
@@ -207,20 +275,36 @@ public class FractionAssignment {
 		return lit;
 	}
 
-	public void makeZero(FractionTerm f) {
+	/**
+	 * Equates the given term with zero.
+	 * @param f
+	 */
+	void makeZero(FractionTerm f) {
 		union(f, Fraction.zero());
 	}
 
-	public void makeZero(List<FractionTerm> terms) {
+	/**
+	 * Equates the given collection of terms with zero.
+	 * @param terms
+	 */
+	void makeZero(List<FractionTerm> terms) {
 		for(FractionTerm f : terms)
 			makeZero(f);
 	}
 
-	public void makeOne(FractionTerm f) {
+	/**
+	 * Equates the given term with one.
+	 * @param f
+	 */
+	void makeOne(FractionTerm f) {
 		union(f, Fraction.one());
 	}
 
-	public void makeNonZero(FractionTerm t) {
+	/**
+	 * Makes the given term definitely not zero.
+	 * @param t
+	 */
+	void makeNonZero(FractionTerm t) {
 		if(nonZero.add(t))
 			changed = true;
 		Set<FractionTerm> eq = equivalenceClasses.get(t);
@@ -230,9 +314,11 @@ public class FractionAssignment {
 	}
 
 	/**
-	 * @param thisF
-	 * @param otherF
-	 * @return
+	 * Tests whether the two given terms are known to be equal.
+	 * @param t1
+	 * @param t2
+	 * @return <code>true</code> if the two given terms are known to be equal,
+	 * <code>false</code> otherwise.
 	 */
 	public boolean areEquivalent(FractionTerm t1, FractionTerm t2) {
 		if(t1.equals(t2)) return true;
@@ -243,28 +329,33 @@ public class FractionAssignment {
 		return eq1 != null && (eq1 == eq2 || eq1.contains(t2) || (eq2 != null && eq2.contains(t1)));
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
+	/**
+	 * Tests whether the two given terms are known to be or can be made 
+	 * equal under the given mapping of named fractions.
+	 * @param t1
+	 * @param t2
+	 * @param mapping Named fraction mapping that may possibly be extended to
+	 * make the given terms equal.
+	 * @return <code>true</code> if the two given terms could be made equal,
+	 * <code>false</code> otherwise.
 	 */
-	@Override
-	public String toString() {
-		StringBuffer result = new StringBuffer("[");
-		for(FractionTerm t : equivalenceClasses.keySet()) {
-			if(result.length() > 1) result.append(',');
-			Fraction f = getLiteral(t);
-			if(f == null)
-				result.append(t + " in " + equivalenceClasses.get(t));
-			else
-				result.append(t + "=" + f);
-		}
-		result.append(']');
-		return result.toString();
+	public boolean areEquivalent(FractionTerm t1, FractionTerm t2,
+			NamedFractionMapping mapping) {
+		if(areEquivalent(t1, t2))
+			return true;
+		Fraction l1 = getLiteral(t1);
+		Fraction l2 = getLiteral(t2);
+		if(l1 != null && l2 != null && l1 instanceof NamedFraction && l2 instanceof NamedFraction)
+			return mapping.map((NamedFraction) l1, (NamedFraction) l2);
+		else
+			return false;
 	}
 
 	/**
 	 * Checks if there is no more than one constant in every equivalence class.
 	 * Constants are {@link ZeroFraction}, {@link OneFraction}, and {@link NamedFraction}.
-	 * @return
+	 * @return <code>true</code> if this fraction assignment is consistent; 
+	 * <code>false</code> otherwise.
 	 */
 	public boolean isConsistent() {
 		for(Set<FractionTerm> eq  : equivalenceClasses.values()) {
@@ -285,6 +376,21 @@ public class FractionAssignment {
 		}
 		
 		return true;
+	}
+
+	@Override
+	public String toString() {
+		StringBuffer result = new StringBuffer("[");
+		for(FractionTerm t : equivalenceClasses.keySet()) {
+			if(result.length() > 1) result.append(',');
+			Fraction f = getLiteral(t);
+			if(f == null)
+				result.append(t + " in " + equivalenceClasses.get(t));
+			else
+				result.append(t + "=" + f);
+		}
+		result.append(']');
+		return result.toString();
 	}
 
 }

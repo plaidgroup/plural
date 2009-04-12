@@ -56,8 +56,11 @@ import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
 /**
+ * Representation of an individual permission as immutable objects, usually
+ * kept in a {@link FractionalPermissions} object.
+ * Many methods include {@link FractionConstraints} arguments, which reflects
+ * that permissions are usually kept in the surrounding permission set.
  * @author Kevin Bierhoff
- *
  */
 public class FractionalPermission extends AbstractFractionalPermission { 
 	
@@ -177,9 +180,14 @@ public class FractionalPermission extends AbstractFractionalPermission {
 	}
 
 	/**
+	 * Compares this with the given permission, at the given point in the AST
+	 * and using the given constraints.
+	 * This method does not modify the given constraints.
 	 * @param other
+	 * @param node
 	 * @param constraints 
-	 * @return
+	 * @return <code>true</code> if this permission is at least as precise as the given one;
+	 * <code>false</code> otherwise, including when the two permissions are incomparable.
 	 */
 	public boolean atLeastAsPrecise(FractionalPermission other, ASTNode node, FractionConstraints constraints) {
 		if(other == this) return true;
@@ -259,6 +267,16 @@ public class FractionalPermission extends AbstractFractionalPermission {
 			return false;
 	}
 
+	/**
+	 * Approximates this and the given permission with a single permission, 
+	 * at the given point in the AST and using the given <code>comparisonConstraints</code>,
+	 * possibly adding to <code>constraints</code>
+	 * @param other
+	 * @param node
+	 * @param constraints This set may be extended with additional constraints.
+	 * @param comparisonConstraints Constraints to compare the permissions with, not modified.
+	 * @return a permission that approximates this and the given permission.
+	 */
 	public FractionalPermission join(FractionalPermission other, ASTNode node,
 			FractionConstraints constraints, FractionConstraints comparisonConstraints) {
 		if(this == other) return this;
@@ -668,6 +686,13 @@ public class FractionalPermission extends AbstractFractionalPermission {
 		return AbstractFractionalPermission.filterStateInfo(stateSpace, stateInfo, newRootNode);
 	}
 
+	/**
+	 * Use this method only to move the root of a <b>single</b> permission "up" in the hierarchy. 
+	 * @param newRootNode
+	 * @param constraints
+	 * @return
+	 * @see #combine(Set, StateSpace, String, FractionConstraints)
+	 */
 	public FractionalPermission moveUp(String newRootNode,
 			FractionConstraints constraints) {
 		if(stateSpace.firstBiggerThanSecond(newRootNode, rootNode) == false)
@@ -686,6 +711,13 @@ public class FractionalPermission extends AbstractFractionalPermission {
 		return createPermission(stateSpace, newRootNode, newF, true /* can only move up full perm */, stateInfo, constraints);
 	}
 
+	/**
+	 * Merge this with the given permission, returning the resulting permission.
+	 * This and the given permission are not changed.
+	 * @param permission
+	 * @param constraints
+	 * @return A permission resulting from merging this with the given permission.
+	 */
 	public FractionalPermission mergeIn(FractionalPermission permission,
 			FractionConstraints constraints) {
 		if(permission instanceof PermissionFromAnnotation &&
@@ -860,6 +892,10 @@ public class FractionalPermission extends AbstractFractionalPermission {
 		return createPermission(stateSpace, rootNode, newF, newBelow.isOne() ? true : mutable, stateInfo, constraints);
 	}
 
+	/**
+	 * Drops all state info except marker states.
+	 * @return
+	 */
 	public FractionalPermission forgetStateInfo() {
 		LinkedHashSet<String> newStateInfo = new LinkedHashSet<String>();
 		for(String s : stateInfo) {
@@ -877,6 +913,11 @@ public class FractionalPermission extends AbstractFractionalPermission {
 			return createPermission(stateSpace, rootNode, mutable, newStateInfo);
 	}
 
+	/**
+	 * Creates a modifiable permission based on this one, possibly adding constraints.
+	 * @param constraints
+	 * @return a modifiable permission based on this one.
+	 */
 	public FractionalPermission makeModifiable(FractionConstraints constraints) {
 		if(mutable)
 			return this;
@@ -884,6 +925,12 @@ public class FractionalPermission extends AbstractFractionalPermission {
 		return createPermission(stateSpace, rootNode, true, stateInfo);
 	}
 
+	/**
+	 * Creates a permission based on this one but with the given state information.
+	 * This method can be too harsh because it drops all existing state information.
+	 * @param stateInfo
+	 * @return
+	 */
 	public FractionalPermission replaceStateInfo(Set<String> stateInfo) {
 		Set<String> newStates = null; 
 		for(String s : stateInfo) {
