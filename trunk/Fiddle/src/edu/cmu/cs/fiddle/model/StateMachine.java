@@ -268,7 +268,7 @@ public class StateMachine implements IHasProperties {
 	
 	private static String extractSignature(IMethodBinding method){
 		if(method == null) return "";
-		StringBuffer sb = new StringBuffer();
+		StringBuffer sb = new StringBuffer(" ");
 		sb.append(method.getName() + "(");
 		
 		ITypeBinding[] pt = method.getParameterTypes();
@@ -282,6 +282,7 @@ public class StateMachine implements IHasProperties {
 		sb.append(")");
 		sb.append(" : ");
 		sb.append(method.getReturnType().getName());
+		sb.append(" ");
 		
 		return sb.toString();
 	}
