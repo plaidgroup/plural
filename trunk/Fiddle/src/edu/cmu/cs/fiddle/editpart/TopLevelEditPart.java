@@ -46,6 +46,7 @@ import java.util.Map;
 import org.eclipse.draw2d.ConnectionLayer;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.ManhattanConnectionRouter;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.draw2d.graph.CompoundDirectedGraph;
 import org.eclipse.draw2d.graph.Node;
@@ -79,7 +80,7 @@ public class TopLevelEditPart extends AbstractGraphicalEditPart
         f.setLayoutManager(new AutomaticLayoutManager(this));
         
         ConnectionLayer cLayer = (ConnectionLayer) getLayer(LayerConstants.CONNECTION_LAYER);
-		cLayer.setConnectionRouter(new BendpointSelfConnectionRouter());
+		cLayer.setConnectionRouter(new ManhattanConnectionRouter());
 		
         return f;
 	}
