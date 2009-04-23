@@ -59,7 +59,6 @@ import org.eclipse.draw2d.graph.NodeList;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 
-import edu.cmu.cs.fiddle.figure.ConnectionFigure;
 import edu.cmu.cs.fiddle.model.Connection;
 import edu.cmu.cs.fiddle.model.IConnection;
 import edu.cmu.cs.fiddle.model.IHasProperties;
@@ -106,6 +105,8 @@ public class ConnectionEditPart extends AbstractConnectionEditPart
 		mpl.setGap(15);
 		Label lbl = new Label(((IConnection) this.getModel()).getName());
 		connection.add(lbl, mpl);
+		Label tip = new Label(((Connection)this.getModel()).getHover());
+		connection.setToolTip(tip);
 		return connection;
 	}
 
