@@ -59,6 +59,7 @@ import org.eclipse.draw2d.graph.NodeList;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.editparts.AbstractConnectionEditPart;
 
+import edu.cmu.cs.fiddle.figure.ConnectionFigure;
 import edu.cmu.cs.fiddle.model.Connection;
 import edu.cmu.cs.fiddle.model.IConnection;
 import edu.cmu.cs.fiddle.model.IHasProperties;
@@ -96,7 +97,7 @@ public class ConnectionEditPart extends AbstractConnectionEditPart
 	
 	@Override
 	protected IFigure createFigure() {
-		PolylineConnection connection = (PolylineConnection) super.createFigure();
+		PolylineConnection connection = new PolylineConnection();
 		connection.setTargetDecoration(new PolygonDecoration());
 		
 		

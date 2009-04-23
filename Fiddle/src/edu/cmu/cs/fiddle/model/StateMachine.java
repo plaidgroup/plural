@@ -245,7 +245,8 @@ public class StateMachine implements IHasProperties {
 								machine.getDefaultDimension().addState(newState);
 								s2 = newState;
 								stringToNode.put(finish, s2);
-								changed = true;
+							} else {
+								changed = false;
 							}
 
 							if(changed || !space.areOrthogonal(start, finish))
@@ -257,13 +258,6 @@ public class StateMachine implements IHasProperties {
 			}
 
 		}
-		
-		for( ITypeBinding face_bind : binding.getInterfaces() ) {
-			addTransitions(face_bind, machine, ssr, stringToNode);
-		}
-		
-		ITypeBinding super_type = binding.getSuperclass();
-		if (super_type!=null) addTransitions(super_type, machine, ssr, stringToNode);
 	}
 	
 	private static void createTransition(IConnectable s1, IConnectable s2, StateMachine machine, IMethodBinding method) {
