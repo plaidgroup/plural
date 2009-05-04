@@ -101,7 +101,7 @@ public class ConcurrentChecker extends FractionalAnalysis {
 		 * {@code nodes} must be inside mutex blocks as well.
 		 */
 		protected boolean isProtectedBySameBlock(ASTNode node, List<ASTNode> nodes) {
-			Option<? extends ASTNode> node_a_block = this.getMutexWalker().inWhichMutexBlock(node);
+			Option<? extends ASTNode> node_a_block = this.getMutexWalker().inWhichMutexBlockIsThisProtected(node);
 
 			// False if this node is not inside an mutex block
 			if( node_a_block.isNone() )
@@ -109,7 +109,7 @@ public class ConcurrentChecker extends FractionalAnalysis {
 
 			for( ASTNode other_node : nodes ) {
 				Option<? extends ASTNode> other_node_m_block = 
-					this.getMutexWalker().inWhichMutexBlock(other_node);
+					this.getMutexWalker().inWhichMutexBlockIsThisProtected(other_node);
 
 				// False if any other node is not inside an mutex block
 				if( other_node_m_block.isNone() ) 
@@ -123,6 +123,7 @@ public class ConcurrentChecker extends FractionalAnalysis {
 			return true;
 		}
 		
+		// Template method pattern
 		protected void assertProtectedIfTShared(ASTNode node) {
 			// Are we unpacked after this statement?
 			PluralDisjunctiveLE lattice = ConcurrentChecker.this.getFa().getResultsAfter(node);

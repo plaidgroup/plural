@@ -179,7 +179,7 @@ public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis
 	}
 
 	@Override
-	public Option<? extends ASTNode> inWhichMutexBlock(ASTNode node) {
+	public Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node) {
 		return this.inWhichAtomicBlock(node);
 	}	
 }
