@@ -36,7 +36,7 @@
  * release a modified version which carries forward this exception.
  */
 
-package edu.cmu.cs.syncorswim;
+package edu.cmu.cs.plural.concurrent.syncorswim;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -195,6 +195,13 @@ public final class IsSynchronizedRefAnalysis extends
 		
 	}
 		
+	/**
+	 * NodeTree is a memory-efficient way of storing which references have
+	 * been synchronized at each point. It works a lot like a cons list. Because
+	 * most nodes will be synchronized on exactly the same references as their
+	 * parents, or the same references plus one additional reference, NodeTrees
+	 * are designed to be shared by many different nodes.
+	 */
 	private abstract static class NodeTree {
 		abstract public boolean isSynced(SynchronizedVar v);
 	}

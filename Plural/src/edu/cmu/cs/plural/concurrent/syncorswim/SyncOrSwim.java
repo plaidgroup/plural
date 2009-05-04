@@ -36,47 +36,27 @@
  * release a modified version which carries forward this exception.
  */
 
-package edu.cmu.cs.syncorswim;
+package edu.cmu.cs.plural.concurrent.syncorswim;
 
-import org.eclipse.jdt.core.dom.IVariableBinding;
+import edu.cmu.cs.plural.track.FractionalAnalysis;
 
 /**
- * A wrapper for a field or a local variable.
- * 
+ * Sync or swim is a static analysis that uses the permission-based
+ * reasoning of NIMBY on Java programs that use synchronized blocks
+ * as the primary means of mutual exclusion.<br>
+ * <br>
+ * This analysis is very similar to Plural's FractionalAnalysis, which
+ * it extends, but it must forget some extra things and adds some
+ * additional constraints.<br>
+ * <br>
+ * Plan:<br> 
+ * - Proactively drop state to alive for non-synchronized pure & share<br>
+ * - make sure we have synchronized if we unpack for pure/share/full
  * @author Nels E. Beckman
- * @since Apr 30, 2009
+ * @since May 4, 2009
  */
-class SynchronizedFieldLocal implements SynchronizedVar {
-
-	private final IVariableBinding varBinding;
+public class SyncOrSwim extends FractionalAnalysis {
 	
-	public SynchronizedFieldLocal(IVariableBinding binding) {
-		this.varBinding = binding;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((varBinding == null) ? 0 : varBinding.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		SynchronizedFieldLocal other = (SynchronizedFieldLocal) obj;
-		if (varBinding == null) {
-			if (other.varBinding != null)
-				return false;
-		} else if (!varBinding.equals(other.varBinding))
-			return false;
-		return true;
-	}	
+	
+	
 }

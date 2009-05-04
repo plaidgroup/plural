@@ -36,19 +36,24 @@
  * release a modified version which carries forward this exception.
  */
 
-package edu.cmu.cs.syncorswim;
+package edu.cmu.cs.plural.concurrent;
+
+import org.eclipse.jdt.core.dom.ASTNode;
+
+import edu.cmu.cs.crystal.util.Option;
 
 /**
- * A variable that has been synchronized. Basically a wrapper for other
- * variable-representing classes defined elsewhere around Eclipse & Plural
- * & Crystal. The only reason I am writing another wrapper is because Eclipse
- * doesn't treat 'this' as a variable, and I can't reuse the Variable code
- * from crystal.Variable, as I don't have an EclipseTAC instance.
+ * The interface for AST walkers that look for mutual exclusion primitives and
+ * record which ASTNodes occur inside or outside them.
  * 
  * @author Nels E. Beckman
- * @since Apr 30, 2009
- *
+ * @since May 4, 2009
  */
-interface SynchronizedVar {
-	
+public interface MutexWalker {
+
+	/**
+	 * Which mutual exclusion block contains the given node, or none if
+	 * the given node is not inside of a mutual exclusion block.
+	 */
+	Option<? extends ASTNode> inWhichMutexBlock(ASTNode node);
 }
