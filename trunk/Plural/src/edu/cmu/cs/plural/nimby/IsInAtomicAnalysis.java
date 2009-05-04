@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.atomic;
+package edu.cmu.cs.plural.nimby;
 
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -46,7 +46,6 @@ import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
-import edu.cmu.cs.crystal.util.ConsList;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
 

@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.atomic;
+package edu.cmu.cs.plural.nimby;
 
 import java.util.HashSet;
 import java.util.List;

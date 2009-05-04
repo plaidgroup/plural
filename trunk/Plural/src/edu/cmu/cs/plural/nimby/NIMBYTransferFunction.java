@@ -35,17 +35,14 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.atomic;
+package edu.cmu.cs.plural.nimby;
 
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
-import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
@@ -65,17 +62,11 @@ import edu.cmu.cs.crystal.tac.SourceVariableDeclaration;
 import edu.cmu.cs.crystal.tac.SourceVariableRead;
 import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
-import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
-import edu.cmu.cs.crystal.tac.Variable;
-import edu.cmu.cs.crystal.util.ExtendedIterator;
 import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.FractionalTransfer;
-import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
-import edu.cmu.cs.plural.track.SingleTruthFractionalTransfer;
 
 /**
  * This class is the transfer function for my analysis of type-state in the
