@@ -197,11 +197,9 @@ public class StateEditPart extends AbstractGraphicalEditPart
 		me.width = StateFigure.MIN_WIDTH;
 		me.insets.top = StateFigure.HEADER_SIZE;
 		me.insets.bottom = StateFigure.FOOTER_SIZE;
-		me.insets.left = 0;
-		
-			
-		me.innerPadding = INNER_PADDING;
-		me.setPadding(PADDING);
+					
+		//me.innerPadding = INNER_PADDING;
+		//me.setPadding(PADDING);
 		partsToNodesOrEdges.put(this, me);
 		
 		@SuppressWarnings({"unused", "unchecked"})
