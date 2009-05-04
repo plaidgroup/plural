@@ -69,10 +69,10 @@
       </analysis>
       -->
       <analysis
-            class="edu.cmu.cs.plural.nimby.NIMBYChecker"
+            class="edu.cmu.cs.plural.concurrent.nimby.NIMBYChecker"
             name="Not In My Back Yard!"/>
       <analysis
-            class="edu.cmu.cs.syncorswim.SyncChecker"
+            class="edu.cmu.cs.plural.concurrent.syncorswim.SyncChecker"
             name="Sync Checker"/>
    </extension>
    <extension

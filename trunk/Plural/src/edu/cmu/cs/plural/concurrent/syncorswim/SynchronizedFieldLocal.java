@@ -36,25 +36,47 @@
  * release a modified version which carries forward this exception.
  */
 
-package edu.cmu.cs.syncorswim;
+package edu.cmu.cs.plural.concurrent.syncorswim;
 
-import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 
 /**
- * The 'this' variable, which is qualified.
+ * A wrapper for a field or a local variable.
  * 
  * @author Nels E. Beckman
- * @since May 1, 2009
+ * @since Apr 30, 2009
  */
-class SynchronizedQualifiedThis implements SynchronizedVar {
+class SynchronizedFieldLocal implements SynchronizedVar {
 
-	private final ITypeBinding qualifiedType;
+	private final IVariableBinding varBinding;
 	
-	public SynchronizedQualifiedThis(ITypeBinding qualifiedType) {
-		this.qualifiedType = qualifiedType;
+	public SynchronizedFieldLocal(IVariableBinding binding) {
+		this.varBinding = binding;
 	}
-	
-	public ITypeBinding getQualifiedType() {
-		return this.qualifiedType;
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((varBinding == null) ? 0 : varBinding.hashCode());
+		return result;
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		SynchronizedFieldLocal other = (SynchronizedFieldLocal) obj;
+		if (varBinding == null) {
+			if (other.varBinding != null)
+				return false;
+		} else if (!varBinding.equals(other.varBinding))
+			return false;
+		return true;
+	}	
 }

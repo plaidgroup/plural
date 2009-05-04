@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.nimby;
+package edu.cmu.cs.plural.concurrent.nimby;
 
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -48,6 +48,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.concurrent.MutexWalker;
 
 /**
  * This analysis is a wrapper for a visitor that records whether or not a
@@ -61,7 +62,8 @@ import edu.cmu.cs.crystal.util.Utilities;
  * @date Mar 4, 2008
  *
  */
-public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis {
+public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis 
+	implements	MutexWalker {
 
 	/*
 	 * Should be a set. There is no generic weak hash set. Weakness is important
@@ -175,5 +177,9 @@ public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis {
 			super.preVisit(node);
 		}	
 	}
-	
+
+	@Override
+	public Option<? extends ASTNode> inWhichMutexBlock(ASTNode node) {
+		return this.inWhichAtomicBlock(node);
+	}	
 }

@@ -36,7 +36,7 @@
  * release a modified version which carries forward this exception.
  */
 
-package edu.cmu.cs.syncorswim;
+package edu.cmu.cs.plural.concurrent.syncorswim;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.IVariableBinding;

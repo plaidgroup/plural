@@ -36,16 +36,19 @@
  * release a modified version which carries forward this exception.
  */
 
-package edu.cmu.cs.syncorswim;
+package edu.cmu.cs.plural.concurrent.syncorswim;
 
 /**
- * A representation of 'this' that has been synchronized. This is
- * the unqualified 'this,' which always refers to the inner-most
- * object according to my experiements.
+ * A variable that has been synchronized. Basically a wrapper for other
+ * variable-representing classes defined elsewhere around Eclipse & Plural
+ * & Crystal. The only reason I am writing another wrapper is because Eclipse
+ * doesn't treat 'this' as a variable, and I can't reuse the Variable code
+ * from crystal.Variable, as I don't have an EclipseTAC instance.
  * 
  * @author Nels E. Beckman
  * @since Apr 30, 2009
+ *
  */
-class SynchronizedThis implements SynchronizedVar {
-
+interface SynchronizedVar {
+	
 }
