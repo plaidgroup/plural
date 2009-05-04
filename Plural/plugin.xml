@@ -69,9 +69,11 @@
       </analysis>
       -->
       <analysis
-            class="edu.cmu.cs.plural.atomic.NIMBYChecker"
-            name="Not In My Back Yard!">
-      </analysis>
+            class="edu.cmu.cs.plural.nimby.NIMBYChecker"
+            name="Not In My Back Yard!"/>
+      <analysis
+            class="edu.cmu.cs.syncorswim.SyncChecker"
+            name="Sync Checker"/>
    </extension>
    <extension
          point="edu.cmu.cs.crystal.CrystalAnnotation">

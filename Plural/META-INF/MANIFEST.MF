@@ -17,11 +17,11 @@ Bundle-ClassPath: edu.cmu.cs.plural/,
  antlr-3.0.1/lib/antlr-runtime-3.0.1.jar
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Export-Package: edu.cmu.cs.plural.alias,
- edu.cmu.cs.plural.atomic,
  edu.cmu.cs.plural.fractions,
  edu.cmu.cs.plural.fractions.elim,
  edu.cmu.cs.plural.linear,
  edu.cmu.cs.plural.main,
+ edu.cmu.cs.plural.nimby,
  edu.cmu.cs.plural.perm,
  edu.cmu.cs.plural.perm.parser,
  edu.cmu.cs.plural.states,
