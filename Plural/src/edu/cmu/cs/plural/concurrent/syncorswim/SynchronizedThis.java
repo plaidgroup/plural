@@ -48,4 +48,12 @@ package edu.cmu.cs.plural.concurrent.syncorswim;
  */
 class SynchronizedThis implements SynchronizedVar {
 
+	
+	private static final SynchronizedThis INSTANCE = new SynchronizedThis();
+
+	private SynchronizedThis() {}
+	
+	public static SynchronizedThis instance() {
+		return INSTANCE;
+	}
 }

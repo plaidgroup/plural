@@ -56,6 +56,8 @@ import org.eclipse.jdt.core.dom.ThisExpression;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
 import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.concurrent.MutexWalker;
 
 /**
  * An analysis that will determine statically which references are
@@ -68,9 +70,10 @@ import edu.cmu.cs.crystal.util.Option;
  * @author Nels E. Beckman
  * @since Apr 10, 2009
  */
-public final class IsSynchronizedRefAnalysis extends
-		AbstractCrystalMethodAnalysis {
+public final class IsSynchronizedRefAnalysis extends AbstractCrystalMethodAnalysis 
+	implements MutexWalker {
 
+	private Option<Map<ASTNode, NodeTree>> syncedVarsAtNode = Option.none(); 
 	
 	@Override
 	public void analyzeMethod(MethodDeclaration d) {
@@ -85,7 +88,7 @@ public final class IsSynchronizedRefAnalysis extends
 			!Modifier.isStatic(d.getModifiers())) {
 			// Add 'this' to the list of synched things.
 			initialTree = new ExtensionTree(EMPTY_TREE_INSTANCE, 
-					new SynchronizedThis());
+					SynchronizedThis.instance(), d);
 		}
 		else {
 			initialTree = EMPTY_TREE_INSTANCE;
@@ -93,6 +96,8 @@ public final class IsSynchronizedRefAnalysis extends
 		
 		// Modifies our map in place!
 		d.accept(new IsSynchronizedVisitor(syncedVarsAtNode, initialTree));
+		
+		this.syncedVarsAtNode = Option.some(syncedVarsAtNode);
 	}
 	
 	// Is the given expression, 'this'?
@@ -171,23 +176,37 @@ public final class IsSynchronizedRefAnalysis extends
 			if( var_.isSome() ) {
 				// recur with var added to the node tree
 				SynchronizedVar var = new SynchronizedFieldLocal(var_.unwrap());
-				NodeTree extesion = new ExtensionTree(this.nodeTree, var);
-				IsSynchronizedVisitor visitor = 
-					new IsSynchronizedVisitor(this.syncedVarsAtNode, extesion);
 				
-				node.getExpression().accept(visitor);
-				node.getBody().accept(visitor);
-				return false;
+				// Only add if ref is not already protected
+				if( this.nodeTree.isSynced(var).isSome() ) {
+					return true;
+				} 
+				else {
+					NodeTree extesion = new ExtensionTree(this.nodeTree, var, node);
+					IsSynchronizedVisitor visitor = 
+						new IsSynchronizedVisitor(this.syncedVarsAtNode, extesion);
+
+					node.getExpression().accept(visitor);
+					node.getBody().accept(visitor);
+					return false;
+				}
 			} else if( isThis(sync_expr) ) {
 				// recur with var added to the node tree
-				SynchronizedVar thiz = new SynchronizedThis();
-				NodeTree extension= new ExtensionTree(this.nodeTree, thiz);
-				IsSynchronizedVisitor visitor = 
-					new IsSynchronizedVisitor(this.syncedVarsAtNode, extension);
+				SynchronizedVar thiz = SynchronizedThis.instance();
 				
-				node.getExpression().accept(visitor);
-				node.getBody().accept(visitor);
-				return false;
+				// Only add if ref is not already protected
+				if( this.nodeTree.isSynced(thiz).isSome() ) {
+					return true;
+				}
+				else {
+					NodeTree extension= new ExtensionTree(this.nodeTree, thiz, node);
+					IsSynchronizedVisitor visitor = 
+						new IsSynchronizedVisitor(this.syncedVarsAtNode, extension);
+
+					node.getExpression().accept(visitor);
+					node.getBody().accept(visitor);
+					return false;
+				}
 			} else {
 				return true;
 			}
@@ -203,30 +222,63 @@ public final class IsSynchronizedRefAnalysis extends
 	 * are designed to be shared by many different nodes.
 	 */
 	private abstract static class NodeTree {
-		abstract public boolean isSynced(SynchronizedVar v);
+		abstract public Option<ASTNode> isSynced(SynchronizedVar v);
 	}
 	// I am feeling really happy!
 	private static final EmptyTree EMPTY_TREE_INSTANCE = new EmptyTree();
 	
 	private static class EmptyTree extends NodeTree {
-		@Override public boolean isSynced(SynchronizedVar v) { return false; }
+		@Override public Option<ASTNode> isSynced(SynchronizedVar v) { 
+			return Option.none(); 
+		}
 	}
 	
 	private static class ExtensionTree extends NodeTree {
 		private final NodeTree parent;
 		private final SynchronizedVar syncedVar;
+		private final ASTNode synchronizingNode;
 		
-		public ExtensionTree(NodeTree parent, SynchronizedVar syncedVar) {
+		public ExtensionTree(NodeTree parent, 
+				SynchronizedVar syncedVar, ASTNode synchronizingNode) {
 			this.parent = parent;
 			this.syncedVar = syncedVar;
+			this.synchronizingNode = synchronizingNode;
 		}
 
 		@Override
-		public boolean isSynced(SynchronizedVar v) {
+		public Option<ASTNode> isSynced(SynchronizedVar v) {
 			if( v.equals(this.syncedVar) )
-				return true;
+				return Option.some(synchronizingNode);
 			else
 				return this.parent.isSynced(v);
+		}
+	}
+
+	@Override
+	public Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node) {
+		if( node == null ) {
+			return Option.none();
+		}
+		else {
+			// First, perform the analysis for the given method
+			final MethodDeclaration methodDecl = Utilities.getMethodDeclaration(node);
+			this.analyzeMethod(methodDecl);
+			
+			// Then find the NodeTree that tells us which refs are synced at the
+			// given node.
+			assert(this.syncedVarsAtNode != null);
+			Map<ASTNode, NodeTree> syncedVarsAtNode = this.syncedVarsAtNode.unwrap();
+			
+			// See if 'this' is one of the synced nodes
+			// TODO: Note that this code implicitly assumes that we want the inner-most this.
+			if( syncedVarsAtNode.containsKey(node) ) {
+				NodeTree synced_vars = syncedVarsAtNode.get(node);
+				
+				return synced_vars.isSynced(SynchronizedThis.instance());
+			}
+			else {
+				return Option.none();
+			}
 		}
 	}
 }

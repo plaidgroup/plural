@@ -38,7 +38,10 @@
 
 package edu.cmu.cs.plural.concurrent.syncorswim;
 
-import edu.cmu.cs.plural.track.FractionalAnalysis;
+import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.concurrent.ConcurrentChecker;
+import edu.cmu.cs.plural.concurrent.MutexWalker;
+import edu.cmu.cs.plural.track.FractionalTransfer;
 
 /**
  * Sync or swim is a static analysis that uses the permission-based
@@ -55,8 +58,34 @@ import edu.cmu.cs.plural.track.FractionalAnalysis;
  * @author Nels E. Beckman
  * @since May 4, 2009
  */
-public class SyncOrSwim extends FractionalAnalysis {
+public class SyncOrSwim extends ConcurrentChecker {
+
+	@Override
+	protected FractionalChecker createASTWalker() {
+		return new SynchronizedVisitor();
+	}
+
+	@Override
+	protected FractionalTransfer createNewFractionalTransfer() {
+		return super.createNewFractionalTransfer();
+		//		return Utilities.nyi();
+	}
 	
-	
+	private class SynchronizedVisitor extends ConcurrentVisitor {
+
+		private final IsSynchronizedRefAnalysis isSynchronizedRef = 
+			new IsSynchronizedRefAnalysis();
+		
+		@Override
+		protected MutexWalker getMutexWalker() {
+			return this.isSynchronizedRef;
+		}
+
+		@Override
+		protected String getUnpackedErrorMsg() {
+			return "The receiver is unpacked and has full, pure or share permission, " +
+					"but is not synchronized.";
+		}
+	}
 	
 }

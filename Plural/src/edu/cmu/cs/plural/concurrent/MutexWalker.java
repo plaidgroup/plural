@@ -52,8 +52,8 @@ import edu.cmu.cs.crystal.util.Option;
 public interface MutexWalker {
 
 	/**
-	 * Which mutual exclusion block contains the given node, or none if
-	 * the given node is not inside of a mutual exclusion block.
+	 * In which mutual exclusion block is the receiver object (this) protected?
+	 * This should refer to the inner-most this reference when it matters.
 	 */
-	Option<? extends ASTNode> inWhichMutexBlock(ASTNode node);
+	Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node);
 }

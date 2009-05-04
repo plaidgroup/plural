@@ -62,18 +62,16 @@
             class="edu.cmu.cs.plural.track.FractionalAnalysis"
             name="Fractional Analysis">
       </analysis>
-      <!--
-      <analysis
-            class="edu.cmu.cs.plural.track.LinearChecker"
-            name="Backtracking Analysis">
-      </analysis>
-      -->
+      
       <analysis
             class="edu.cmu.cs.plural.concurrent.nimby.NIMBYChecker"
             name="Not In My Back Yard!"/>
       <analysis
             class="edu.cmu.cs.plural.concurrent.syncorswim.SyncChecker"
             name="Sync Checker"/>
+      <analysis
+      		class="edu.cmu.cs.plural.concurrent.syncorswim.SyncOrSwim"
+      		name="Sync or Swim"/>
    </extension>
    <extension
          point="edu.cmu.cs.crystal.CrystalAnnotation">
