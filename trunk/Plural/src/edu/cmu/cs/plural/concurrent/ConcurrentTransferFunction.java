@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.concurrent.nimby;
+package edu.cmu.cs.plural.concurrent;
 
 import java.util.List;
 
@@ -64,26 +64,31 @@ import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
 import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.concurrent.nimby.IsInAtomicAnalysis;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.FractionalTransfer;
 
 /**
- * This class is the transfer function for my analysis of type-state in the
- * context of an <code>atomic</code> primitive. In reality, the functionality
+ * The superclass for all concurrent transfer functions, this class forgets
+ * permissions unless they are protected in a manner that is to be defined by
+ * subclasses. In reality, the functionality
  * of this class is fairly limited. It just acts as a wrapper for Kevin's
  * FractionalTransfer function, but forgets information in strategic places.
  * I wanted to delegate, but instead I had to extend...
+ * 
+ * This class is the transfer function for my analysis of type-state in the
+ * context of an <code>atomic</code> primitive.
  * 
  * @author Nels E. Beckman
  * @date Mar 4, 2008
  *
  */
-public class NIMBYTransferFunction extends FractionalTransfer {
+public class ConcurrentTransferFunction extends FractionalTransfer {
 
 	private IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
 
-	public NIMBYTransferFunction(IAnalysisInput input, FractionAnalysisContext context) {
+	public ConcurrentTransferFunction(IAnalysisInput input, FractionAnalysisContext context) {
 		super(input, context);
 	}
 	
@@ -227,7 +232,7 @@ public class NIMBYTransferFunction extends FractionalTransfer {
 	public IResult<PluralDisjunctiveLE> transfer(
 			SourceVariableDeclaration instr, List<ILabel> labels,
 			PluralDisjunctiveLE value) {
-		// I specifically do not do anyting here, since this is not
+		// I specifically do not do anything here, since this is not
 		// an expression.
 		return super.transfer(instr, labels, value);
 	}
