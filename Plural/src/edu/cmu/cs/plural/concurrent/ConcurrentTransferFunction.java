@@ -44,7 +44,6 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.flow.IResult;
-import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.BinaryOperation;
 import edu.cmu.cs.crystal.tac.CastInstruction;
@@ -64,7 +63,6 @@ import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
 import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.concurrent.nimby.IsInAtomicAnalysis;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.FractionalTransfer;
@@ -77,35 +75,34 @@ import edu.cmu.cs.plural.track.FractionalTransfer;
  * FractionalTransfer function, but forgets information in strategic places.
  * I wanted to delegate, but instead I had to extend...
  * 
- * This class is the transfer function for my analysis of type-state in the
- * context of an <code>atomic</code> primitive.
  * 
  * @author Nels E. Beckman
  * @date Mar 4, 2008
  *
  */
-public class ConcurrentTransferFunction extends FractionalTransfer {
-
-	private IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
+public abstract class ConcurrentTransferFunction extends FractionalTransfer {
 
 	public ConcurrentTransferFunction(IAnalysisInput input, FractionAnalysisContext context) {
 		super(input, context);
 	}
 	
-	private IResult<PluralDisjunctiveLE> forgetSharedPermissions(
-			IResult<PluralDisjunctiveLE> transfer_result, List<ILabel> labels,
-			PluralDisjunctiveLE value, ASTNode node) {
-		// Is there a better default? Could we get the default from the old one?
-		LabeledResult<PluralDisjunctiveLE> result = LabeledResult.createResult(labels, null);
-		for( ILabel label : labels ) {
-			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), node));
-		}
-		return result;
-	}
-
-	private IResult<PluralDisjunctiveLE> forgetIfNotInAtomic(
+	/**
+	 * This method to be implemented by subclasses depending on the appropriate
+	 * protection scheme.
+	 * @param node The AST node currently under analysis.
+	 * @param labels The input transfer labels.
+	 * @param value
+	 * @param result
+	 * @return
+	 */
+	protected abstract IResult<PluralDisjunctiveLE> forgetIfNotProtected(
 			ASTNode node, List<ILabel> labels,
-			PluralDisjunctiveLE value, IResult<PluralDisjunctiveLE> result) {
+			IResult<PluralDisjunctiveLE> result);
+	
+	
+	private IResult<PluralDisjunctiveLE> forgetIfNotProtectedAndNodeValid(
+			ASTNode node, List<ILabel> labels,
+			IResult<PluralDisjunctiveLE> result) {
 		
 		// If a node is outside of a method decl, say because it's a field
 		// initializer, we just kind of want to leave it alone.
@@ -113,14 +110,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			return result;
 		}
 		
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(node) ) {
-			result = this.forgetSharedPermissions(result, labels, value, node);
-		}
-		return result;
-	}
-	
-	private PluralDisjunctiveLE forgetSharedPermissions(PluralDisjunctiveLE lattice, ASTNode node) {
-		return lattice.forgetShareAndPureStates();
+		return forgetIfNotProtected(node, labels, result);
 	}
 
 	@Override
@@ -128,7 +118,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
@@ -136,7 +126,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(binop, labels, value);
 		
-		return forgetIfNotInAtomic(binop.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(binop.getNode(), labels, result);
 	}
 
 	@Override
@@ -144,7 +134,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
@@ -153,7 +143,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
@@ -161,7 +151,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
@@ -169,7 +159,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
@@ -177,7 +167,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
@@ -185,7 +175,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
@@ -193,7 +183,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
@@ -201,7 +191,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
@@ -209,7 +199,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
@@ -217,7 +207,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
@@ -225,7 +215,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
@@ -242,7 +232,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
@@ -250,7 +240,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
@@ -258,7 +248,7 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
 		
-		return forgetIfNotInAtomic(instr.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
@@ -266,6 +256,6 @@ public class ConcurrentTransferFunction extends FractionalTransfer {
 			List<ILabel> labels, PluralDisjunctiveLE value) {
 		IResult<PluralDisjunctiveLE> result = super.transfer(unop, labels, value);
 		
-		return forgetIfNotInAtomic(unop.getNode(), labels, value, result);
+		return forgetIfNotProtectedAndNodeValid(unop.getNode(), labels, result);
 	}
 }

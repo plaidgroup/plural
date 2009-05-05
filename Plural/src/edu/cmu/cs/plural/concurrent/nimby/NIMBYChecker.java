@@ -39,7 +39,6 @@ package edu.cmu.cs.plural.concurrent.nimby;
 
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concurrent.ConcurrentChecker;
-import edu.cmu.cs.plural.concurrent.ConcurrentTransferFunction;
 import edu.cmu.cs.plural.concurrent.MutexWalker;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionalTransfer;
@@ -59,7 +58,7 @@ public class NIMBYChecker extends ConcurrentChecker {
 	 */
 	@Override
 	protected FractionalTransfer createNewFractionalTransfer() {
-		return new ConcurrentTransferFunction(analysisInput, this);
+		return new NIMBYTransferFunction(analysisInput, this);
 	}
 	
 	@Override
