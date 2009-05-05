@@ -35,16 +35,15 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package simple.provider;
+
+package edu.cmu.cs.syncorwim.simple.provider;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
-import edu.cmu.cs.plural.annot.FalseIndicates;
-import edu.cmu.cs.plural.annot.Pure;
+import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
-import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Use;
 
 @FailingTest(1)
@@ -52,15 +51,12 @@ import edu.cmu.cs.plural.annot.Use;
 @States({"OPEN", "CLOSED"})
 @ClassStates({@State(name="OPEN", inv="fact == true"), 
 	          @State(name="CLOSED", inv="fact == false")})
-public class PureUnpackNoSync {
-	
+public class ShareUnpackNoSync {
+	@SuppressWarnings("unused")
 	private boolean fact;
 	
-	@TrueIndicates("OPEN")
-	@FalseIndicates("CLOSED")
-	@Pure(use = Use.FIELDS)
-	public boolean doUnpacking() {
-		return fact;
+	@Share(use = Use.FIELDS, requires="OPEN", ensures="CLOSED")
+	void doUnpacking() {
+		fact = false;
 	}
 }
-
