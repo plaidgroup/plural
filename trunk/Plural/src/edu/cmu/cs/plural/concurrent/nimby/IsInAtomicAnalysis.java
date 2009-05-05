@@ -46,6 +46,7 @@ import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concurrent.MutexWalker;
@@ -179,7 +180,7 @@ public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis
 	}
 
 	@Override
-	public Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node) {
+	public Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node, IAnalysisInput input) {
 		return this.inWhichAtomicBlock(node);
 	}	
 }

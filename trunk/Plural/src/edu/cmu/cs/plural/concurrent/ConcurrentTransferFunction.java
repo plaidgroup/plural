@@ -91,9 +91,8 @@ public abstract class ConcurrentTransferFunction extends FractionalTransfer {
 	 * protection scheme.
 	 * @param node The AST node currently under analysis.
 	 * @param labels The input transfer labels.
-	 * @param value
-	 * @param result
-	 * @return
+	 * @param result The result of transferring in the default analysis. 
+	 * @return The new result-holding thingy.
 	 */
 	protected abstract IResult<PluralDisjunctiveLE> forgetIfNotProtected(
 			ASTNode node, List<ILabel> labels,

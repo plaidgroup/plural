@@ -104,7 +104,7 @@ public class ConcurrentChecker extends FractionalAnalysis {
 		 * block" so that we can improve our error messages.
 		 */
 		protected boolean isProtectedBySameBlock(ASTNode node, List<ASTNode> nodes) {
-			Option<? extends ASTNode> node_a_block = this.getMutexWalker().inWhichMutexBlockIsThisProtected(node);
+			Option<? extends ASTNode> node_a_block = this.getMutexWalker().inWhichMutexBlockIsThisProtected(node, analysisInput);
 
 			// False if this node is not inside an mutex block
 			if( node_a_block.isNone() )
@@ -112,7 +112,7 @@ public class ConcurrentChecker extends FractionalAnalysis {
 
 			for( ASTNode other_node : nodes ) {
 				Option<? extends ASTNode> other_node_m_block = 
-					this.getMutexWalker().inWhichMutexBlockIsThisProtected(other_node);
+					this.getMutexWalker().inWhichMutexBlockIsThisProtected(other_node, analysisInput);
 
 				// False if any other node is not inside an mutex block
 				if( other_node_m_block.isNone() ) 

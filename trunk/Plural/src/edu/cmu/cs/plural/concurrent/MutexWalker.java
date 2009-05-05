@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.concurrent;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.util.Option;
 
 /**
@@ -55,5 +56,5 @@ public interface MutexWalker {
 	 * In which mutual exclusion block is the receiver object (this) protected?
 	 * This should refer to the inner-most this reference when it matters.
 	 */
-	Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node);
+	Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node, IAnalysisInput input);
 }

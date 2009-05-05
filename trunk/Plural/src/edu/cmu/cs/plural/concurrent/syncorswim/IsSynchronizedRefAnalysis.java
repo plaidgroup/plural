@@ -55,7 +55,11 @@ import org.eclipse.jdt.core.dom.SynchronizedStatement;
 import org.eclipse.jdt.core.dom.ThisExpression;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
+import edu.cmu.cs.crystal.IAnalysisInput;
+import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
 import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concurrent.MutexWalker;
 
@@ -70,34 +74,35 @@ import edu.cmu.cs.plural.concurrent.MutexWalker;
  * @author Nels E. Beckman
  * @since Apr 10, 2009
  */
-public final class IsSynchronizedRefAnalysis extends AbstractCrystalMethodAnalysis 
+public final class IsSynchronizedRefAnalysis  
 	implements MutexWalker {
-
-	private Option<Map<ASTNode, NodeTree>> syncedVarsAtNode = Option.none(); 
 	
-	@Override
-	public void analyzeMethod(MethodDeclaration d) {
+	private Map<ASTNode, NodeTree> analyzeMethod(MethodDeclaration d, IAnalysisInput input) {
 		// What are the synchronized variables at a given node?
 		Map<ASTNode, NodeTree> syncedVarsAtNode = 
 			new HashMap<ASTNode, NodeTree>();
 		NodeTree initialTree;
+
+		// Used to convert expressions to TAC variables.
+		EclipseTAC tac = input.getComUnitTACs().unwrap().getMethodTAC(d);
 		
 		// First, look at flags to determine if 'this'
 		// is synchronized.
 		if(  Modifier.isSynchronized(d.getModifiers()) && 
 			!Modifier.isStatic(d.getModifiers())) {
 			// Add 'this' to the list of synched things.
+			Variable this_var = tac.thisVariable();
 			initialTree = new ExtensionTree(EMPTY_TREE_INSTANCE, 
-					SynchronizedThis.instance(), d);
+					this_var, d);
 		}
 		else {
 			initialTree = EMPTY_TREE_INSTANCE;
 		}
 		
 		// Modifies our map in place!
-		d.accept(new IsSynchronizedVisitor(syncedVarsAtNode, initialTree));
+		d.accept(new IsSynchronizedVisitor(syncedVarsAtNode, initialTree, tac));
 		
-		this.syncedVarsAtNode = Option.some(syncedVarsAtNode);
+		return syncedVarsAtNode;
 	}
 	
 	// Is the given expression, 'this'?
@@ -149,15 +154,18 @@ public final class IsSynchronizedRefAnalysis extends AbstractCrystalMethodAnalys
 		// Map from nodes to NodeTrees that gets updated in place
 		private final Map<ASTNode, NodeTree> syncedVarsAtNode;
 		private final NodeTree nodeTree;
+		private final EclipseTAC tac;
 		
 		/**
 		 * @param syncedVarsAtNode
 		 * @param initialTree
+		 * @param tac 
 		 */
 		public IsSynchronizedVisitor(Map<ASTNode, NodeTree> syncedVarsAtNode,
-				NodeTree initialTree) {
+				NodeTree initialTree, EclipseTAC tac) {
 			this.syncedVarsAtNode = syncedVarsAtNode;
 			this.nodeTree = initialTree;
+			this.tac = tac;
 		}
 
 		@Override
@@ -175,7 +183,7 @@ public final class IsSynchronizedRefAnalysis extends AbstractCrystalMethodAnalys
 			
 			if( var_.isSome() ) {
 				// recur with var added to the node tree
-				SynchronizedVar var = new SynchronizedFieldLocal(var_.unwrap());
+				Variable var = this.tac.variable(sync_expr);
 				
 				// Only add if ref is not already protected
 				if( this.nodeTree.isSynced(var).isSome() ) {
@@ -183,8 +191,8 @@ public final class IsSynchronizedRefAnalysis extends AbstractCrystalMethodAnalys
 				} 
 				else {
 					NodeTree extesion = new ExtensionTree(this.nodeTree, var, node);
-					IsSynchronizedVisitor visitor = 
-						new IsSynchronizedVisitor(this.syncedVarsAtNode, extesion);
+					IsSynchronizedVisitor visitor = new IsSynchronizedVisitor(
+							this.syncedVarsAtNode, extesion, this.tac);
 
 					node.getExpression().accept(visitor);
 					node.getBody().accept(visitor);
@@ -192,7 +200,7 @@ public final class IsSynchronizedRefAnalysis extends AbstractCrystalMethodAnalys
 				}
 			} else if( isThis(sync_expr) ) {
 				// recur with var added to the node tree
-				SynchronizedVar thiz = SynchronizedThis.instance();
+				Variable thiz = this.tac.thisVariable();
 				
 				// Only add if ref is not already protected
 				if( this.nodeTree.isSynced(thiz).isSome() ) {
@@ -200,8 +208,8 @@ public final class IsSynchronizedRefAnalysis extends AbstractCrystalMethodAnalys
 				}
 				else {
 					NodeTree extension= new ExtensionTree(this.nodeTree, thiz, node);
-					IsSynchronizedVisitor visitor = 
-						new IsSynchronizedVisitor(this.syncedVarsAtNode, extension);
+					IsSynchronizedVisitor visitor = new IsSynchronizedVisitor(
+							this.syncedVarsAtNode, extension, this.tac);
 
 					node.getExpression().accept(visitor);
 					node.getBody().accept(visitor);
@@ -222,31 +230,31 @@ public final class IsSynchronizedRefAnalysis extends AbstractCrystalMethodAnalys
 	 * are designed to be shared by many different nodes.
 	 */
 	private abstract static class NodeTree {
-		abstract public Option<ASTNode> isSynced(SynchronizedVar v);
+		abstract public Option<ASTNode> isSynced(Variable v);
 	}
 	// I am feeling really happy!
 	private static final EmptyTree EMPTY_TREE_INSTANCE = new EmptyTree();
 	
 	private static class EmptyTree extends NodeTree {
-		@Override public Option<ASTNode> isSynced(SynchronizedVar v) { 
+		@Override public Option<ASTNode> isSynced(Variable v) { 
 			return Option.none(); 
 		}
 	}
 	
 	private static class ExtensionTree extends NodeTree {
 		private final NodeTree parent;
-		private final SynchronizedVar syncedVar;
+		private final Variable syncedVar;
 		private final ASTNode synchronizingNode;
 		
 		public ExtensionTree(NodeTree parent, 
-				SynchronizedVar syncedVar, ASTNode synchronizingNode) {
+				Variable syncedVar, ASTNode synchronizingNode) {
 			this.parent = parent;
 			this.syncedVar = syncedVar;
 			this.synchronizingNode = synchronizingNode;
 		}
 
 		@Override
-		public Option<ASTNode> isSynced(SynchronizedVar v) {
+		public Option<ASTNode> isSynced(Variable v) {
 			if( v.equals(this.syncedVar) )
 				return Option.some(synchronizingNode);
 			else
@@ -254,27 +262,35 @@ public final class IsSynchronizedRefAnalysis extends AbstractCrystalMethodAnalys
 		}
 	}
 
+	// Just cache the analysis runs for each method
+	private Pair<MethodDeclaration, Map<ASTNode, NodeTree>> cachedResult = null;
+	
 	@Override
-	public Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node) {
+	public Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node, IAnalysisInput input) {
 		if( node == null ) {
 			return Option.none();
 		}
 		else {
 			// First, perform the analysis for the given method
 			final MethodDeclaration methodDecl = Utilities.getMethodDeclaration(node);
-			this.analyzeMethod(methodDecl);
+			
+			Map<ASTNode, NodeTree> syncedVarsAtNode;
+			if( cachedResult != null && cachedResult.fst().equals(methodDecl) ) {
+				syncedVarsAtNode = cachedResult.snd();
+			} else {
+				syncedVarsAtNode = this.analyzeMethod(methodDecl, input);
+			}
 			
 			// Then find the NodeTree that tells us which refs are synced at the
 			// given node.
-			assert(this.syncedVarsAtNode != null);
-			Map<ASTNode, NodeTree> syncedVarsAtNode = this.syncedVarsAtNode.unwrap();
-			
 			// See if 'this' is one of the synced nodes
 			// TODO: Note that this code implicitly assumes that we want the inner-most this.
 			if( syncedVarsAtNode.containsKey(node) ) {
 				NodeTree synced_vars = syncedVarsAtNode.get(node);
 				
-				return synced_vars.isSynced(SynchronizedThis.instance());
+				EclipseTAC tac = input.getComUnitTACs().unwrap().getMethodTAC(methodDecl);
+				Variable this_var = tac.thisVariable();
+				return synced_vars.isSynced(this_var);
 			}
 			else {
 				return Option.none();

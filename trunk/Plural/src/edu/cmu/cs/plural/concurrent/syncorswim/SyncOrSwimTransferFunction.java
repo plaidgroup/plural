@@ -38,51 +38,45 @@
 
 package edu.cmu.cs.plural.concurrent.syncorswim;
 
-import edu.cmu.cs.plural.concurrent.ConcurrentChecker;
-import edu.cmu.cs.plural.concurrent.MutexWalker;
-import edu.cmu.cs.plural.track.FractionalTransfer;
+import java.util.List;
+
+import org.eclipse.jdt.core.dom.ASTNode;
+
+import edu.cmu.cs.crystal.IAnalysisInput;
+import edu.cmu.cs.crystal.ILabel;
+import edu.cmu.cs.crystal.flow.IResult;
+import edu.cmu.cs.crystal.flow.LabeledResult;
+import edu.cmu.cs.plural.concurrent.ConcurrentTransferFunction;
+import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.track.FractionAnalysisContext;
 
 /**
- * Sync or swim is a static analysis that uses the permission-based
- * reasoning of NIMBY on Java programs that use synchronized blocks
- * as the primary means of mutual exclusion.<br>
- * <br>
- * This analysis is very similar to Plural's FractionalAnalysis, which
- * it extends, but it must forget some extra things and adds some
- * additional constraints.<br>
- * <br>
- * Plan:<br> 
- * - Proactively drop state to alive for non-synchronized pure & share<br>
- * - make sure we have synchronized if we unpack for pure/share/full
+ * Transfer function for SyncOrSwim.
+ * 
  * @author Nels E. Beckman
- * @since May 4, 2009
+ * @since May 5, 2009
+ * @see {@link SyncOrSwim}
  */
-public class SyncOrSwim extends ConcurrentChecker {
+class SyncOrSwimTransferFunction extends ConcurrentTransferFunction {
 
-	@Override
-	protected FractionalChecker createASTWalker() {
-		return new SynchronizedVisitor();
+	public SyncOrSwimTransferFunction(IAnalysisInput input,
+			FractionAnalysisContext context) {
+		super(input, context);
 	}
 
 	@Override
-	protected FractionalTransfer createNewFractionalTransfer() {
-		return new SyncOrSwimTransferFunction(analysisInput, this);
+	protected IResult<PluralDisjunctiveLE> forgetIfNotProtected(ASTNode node,
+			List<ILabel> labels, IResult<PluralDisjunctiveLE> transfer_result) {
+		// TODO: Is there a better default? Could we get the default from the old one?
+		LabeledResult<PluralDisjunctiveLE> result = LabeledResult.createResult(labels, null);
+		for( ILabel label : labels ) {
+			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), node));
+		}
+		return result;
+	}
+
+	private PluralDisjunctiveLE forgetSharedPermissions(PluralDisjunctiveLE lattice, ASTNode node) {
+		return lattice.forgetShareAndPureStates();
 	}
 	
-	private class SynchronizedVisitor extends ConcurrentVisitor {
-
-		private final IsSynchronizedRefAnalysis isSynchronizedRef = 
-			new IsSynchronizedRefAnalysis();
-		
-		@Override
-		protected MutexWalker getMutexWalker() {
-			return this.isSynchronizedRef;
-		}
-
-		@Override
-		protected String getUnpackedErrorMsg() {
-			return "The receiver is unpacked and has full, pure or share permission, " +
-					"but is not synchronized.";
-		}
-	}	
 }
