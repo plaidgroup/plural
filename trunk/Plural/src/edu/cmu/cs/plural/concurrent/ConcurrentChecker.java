@@ -99,6 +99,9 @@ public class ConcurrentChecker extends FractionalAnalysis {
 		 * 
 		 * It must be true that {@code node} is inside an mutex block. All
 		 * {@code nodes} must be inside mutex blocks as well.
+		 * 
+		 * TODO: Separate the results for, "is protected" and "is in same protection
+		 * block" so that we can improve our error messages.
 		 */
 		protected boolean isProtectedBySameBlock(ASTNode node, List<ASTNode> nodes) {
 			Option<? extends ASTNode> node_a_block = this.getMutexWalker().inWhichMutexBlockIsThisProtected(node);
@@ -177,21 +180,5 @@ public class ConcurrentChecker extends FractionalAnalysis {
 			super.endVisit(node);
 			assertProtectedIfTShared(node);
 		}
-		
-//		public void endVisit(SimpleName node) {
-//		super.endVisit(node);
-//		IBinding name_binding = node.resolveBinding();
-//		
-//		if( name_binding == null ) return;
-//		
-//		if( name_binding.getKind() == IBinding.VARIABLE ) {
-//			IVariableBinding var_bind = (IVariableBinding)name_binding;
-//			if( var_bind.isField() ) {
-//				// Note that this will check for every field! Not just
-//				// the fields we care about.
-//				assertInAtomicIfTShared(node);
-//			}
-//		}
-//	}
 	}
 }
