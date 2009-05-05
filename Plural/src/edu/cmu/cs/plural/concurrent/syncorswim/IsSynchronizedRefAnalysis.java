@@ -38,8 +38,11 @@
 
 package edu.cmu.cs.plural.concurrent.syncorswim;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -54,7 +57,6 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SynchronizedStatement;
 import org.eclipse.jdt.core.dom.ThisExpression;
 
-import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
@@ -231,13 +233,25 @@ public final class IsSynchronizedRefAnalysis
 	 */
 	private abstract static class NodeTree {
 		abstract public Option<ASTNode> isSynced(Variable v);
+		abstract public Set<Variable> syncedVars();
+		abstract protected Set<Variable> syncedVarsHelper(Set<Variable> acc);
 	}
-	// I am feeling really happy!
+
 	private static final EmptyTree EMPTY_TREE_INSTANCE = new EmptyTree();
 	
 	private static class EmptyTree extends NodeTree {
 		@Override public Option<ASTNode> isSynced(Variable v) { 
 			return Option.none(); 
+		}
+
+		@Override
+		public Set<Variable> syncedVars() {
+			return Collections.emptySet();
+		}
+
+		@Override
+		protected Set<Variable> syncedVarsHelper(Set<Variable> acc) {
+			return Collections.unmodifiableSet(acc);
 		}
 	}
 	
@@ -259,6 +273,19 @@ public final class IsSynchronizedRefAnalysis
 				return Option.some(synchronizingNode);
 			else
 				return this.parent.isSynced(v);
+		}
+
+		@Override
+		public Set<Variable> syncedVars() {
+			Set<Variable> acc = new HashSet<Variable>();
+			acc.add(this.syncedVar);
+			return this.parent.syncedVarsHelper(acc);
+		}
+
+		@Override
+		protected Set<Variable> syncedVarsHelper(Set<Variable> acc) {
+			acc.add(this.syncedVar);
+			return this.parent.syncedVarsHelper(acc);
 		}
 	}
 

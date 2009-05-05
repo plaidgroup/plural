@@ -45,7 +45,6 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.LabeledStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
-import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
@@ -63,8 +62,7 @@ import edu.cmu.cs.plural.concurrent.MutexWalker;
  * @date Mar 4, 2008
  *
  */
-public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis 
-	implements	MutexWalker {
+public class IsInAtomicAnalysis implements MutexWalker {
 
 	/*
 	 * Should be a set. There is no generic weak hash set. Weakness is important
@@ -127,8 +125,7 @@ public class IsInAtomicAnalysis extends AbstractCrystalMethodAnalysis
 		}
 	}
 	
-	@Override
-	public void analyzeMethod(MethodDeclaration d) {
+	private void analyzeMethod(MethodDeclaration d) {
 		assert(d != null);
 		
 		if( !analyzedMethods.containsKey(d) ) {
