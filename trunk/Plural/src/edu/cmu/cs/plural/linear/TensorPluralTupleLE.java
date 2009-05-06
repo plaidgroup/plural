@@ -485,37 +485,6 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 					if(tried_nodes.add(try_node) == false)
 						// node already tried --> skip
 						continue state_iter;
-
-					/*
-					 * Optimization: skip state if we can't move root there
-					 */
-//					List<Fraction> toSum = new LinkedList<Fraction>();
-//					for(FractionalPermission p : rcvrPerms.getFramePermissions()) {
-//						if(p.getRootNode().equals(try_node)) {
-//							// permission with the right root available
-//							toSum.clear();
-//							break;
-//						}
-//						else if(p.getStateSpace().firstBiggerThanSecond(p.getRootNode(), try_node)) {
-//							// permission with bigger root available 
-//							if(! a.isOne(p.getFractions().get(try_node)))
-//								// not a full permission -> do not try to move its root down
-//								continue state_iter;
-//							toSum.clear();
-//							break;
-//						}
-//						else if(p.getStateSpace().firstBiggerThanSecond(try_node, p.getRootNode())) {
-//							// permission with smaller root available
-//							toSum.add(p.getFractions().get(try_node));
-//						}
-//					}
-//					if(toSum.isEmpty() == false) {
-//						// test if we can move root up
-//						if(! a.isOne(FractionSum.createSum(toSum)))
-//							// can't assemble a unique permission -> do not try to move up
-//							continue state_iter;
-//					}
-					// else root match or moving down
 					
 					TensorPluralTupleLE elem = this.mutableCopy();
 					elem.storeIdenticalAliasInfo(this);
@@ -532,17 +501,6 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		}
 	}
 	
-	private static boolean canUnpackNode(FractionalPermissions ps, String root) {
-		if(ps.getFramePermissions().isEmpty())
-			return false;
-		StateSpace space = ps.getStateSpace();
-		for(String n : ps.getStateInfo(true)) {
-			if(space.firstBiggerThanSecond(root, n))
-				return true;
-		}
-		return false;
-	}
-
 	/**
 	 * Tests whether there is an element in the tuple that is unsatisfiable.
 	 * @return <code>true</code> if there is an unsatisfiable element in the
@@ -567,5 +525,4 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		}
 		return false;
 	}
-
 }

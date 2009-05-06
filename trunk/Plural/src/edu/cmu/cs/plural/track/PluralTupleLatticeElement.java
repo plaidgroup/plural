@@ -46,7 +46,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -68,6 +67,7 @@ import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.util.ExtendedIterator;
 import edu.cmu.cs.crystal.util.Freezable;
+import edu.cmu.cs.crystal.util.Lambda;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.AliasAwareTupleLE;
@@ -79,7 +79,6 @@ import edu.cmu.cs.plural.concrete.ConcreteAnnotationUtils;
 import edu.cmu.cs.plural.concrete.DynamicStateLogic;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
-import edu.cmu.cs.plural.concrete.DynamicStateLogic.AliasingFilter;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionConstraints;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
@@ -576,6 +575,10 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 
 	public ExtendedIterator<FractionalPermissions> tupleInfoIterator() {
 		return tupleLatticeElement.iterator();
+	}
+	
+	public ExtendedIterator<FractionalPermissions> tupleInfoIterator(Lambda<ObjectLabel, Boolean> filter) {
+		return tupleLatticeElement.iterator(filter);
 	}
 	
 	public boolean isBottom() {
@@ -1107,7 +1110,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		
 		final AliasingLE aliasing = tupleLatticeElement.getLocationsAfter(instr.getNode());
 		
-		class Filter implements AliasingFilter, LabelFilter {
+		class Filter implements Lambda<Aliasing, Boolean>, LabelFilter {
 			
 			/**
 			 * Returns <code>true</code> if all locations in the given aliasing set
@@ -1116,7 +1119,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			 * @return
 			 */
 			@Override
-			public boolean isConsidered(Aliasing var) {
+			public Boolean call(Aliasing var) {
 				if(var.getLabels().isEmpty())
 					return false;
 				if(liveInImpl.contains(var))
@@ -1152,7 +1155,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 							return true;
 					}
 					else if(x instanceof ParamVariable) {
-						if(! isConsidered(((ParamVariable) x).getOwner()))
+						if(! call(((ParamVariable) x).getOwner()))
 							return true;
 					}
 					else
@@ -1248,4 +1251,35 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		// dynamicStateLogic.forgetTemporaryStateInImplications();
 	}
 	
+	/**
+	 * Discared temporary state information for share and pure permissions
+	 * that are not associated with variables in the given set.
+	 */
+	public void forgetShareAndPureStateInformationNotInSet(
+			Set<Variable> vars_to_not_forget) {
+		final Set<ObjectLabel> object_labels_synced = new HashSet<ObjectLabel>();
+		for( Variable v : vars_to_not_forget ) {
+			// 1- Get aliasing
+			Aliasing alias = this.mostRecentAliasInfo.get(v);
+			// 2- For each aliasing, get OL, and if size = 1, put in set
+			if( alias.getLabels().size() == 1 ) 
+				object_labels_synced.addAll(alias.getLabels());
+		}
+		
+		// 3- Filter returns true for all object labels that are not synced, so
+		// we can forget them.
+		Lambda<ObjectLabel, Boolean> filter = new Lambda<ObjectLabel,Boolean>() {
+			@Override public Boolean call(ObjectLabel i) {
+				return !object_labels_synced.contains(i);
+			}
+		};
+		// 4- forget all permissions returned by the filter
+		for(ExtendedIterator<FractionalPermissions> it = tupleInfoIterator(filter); 
+		    it.hasNext(); ) {
+			// Copied from above method
+			FractionalPermissions permissions = it.next();
+			permissions = permissions.forgetShareAndPureStates();
+			it.replace(permissions);
+		}
+	}
 }

@@ -60,6 +60,7 @@ import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.util.CollectionMethods;
 import edu.cmu.cs.crystal.util.ExtendedIterator;
 import edu.cmu.cs.crystal.util.Freezable;
+import edu.cmu.cs.crystal.util.Lambda;
 import edu.cmu.cs.plural.util.ReplacementGenerator;
 
 /**
@@ -266,7 +267,7 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	public LE get(TACInstruction instr, Variable x) {
 		return get(getLocations(instr, x));
 	}
-
+	
 	/**
 	 * Returns analysis information for the given aliasing set.
 	 * 
@@ -424,15 +425,40 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 	 */
 	@Override
 	public ExtendedIterator<LE> iterator() {
+		return
+		this.iterator(new Lambda<ObjectLabel, Boolean>(){
+			@Override public Boolean call(ObjectLabel i) { return true; }
+		});
+	}
+	
+	/**
+	 * A filtered iterator that will only return elements for which the
+	 * given filter returns true.
+	 */
+	public ExtendedIterator<LE> iterator(final Lambda<ObjectLabel, Boolean> filter) {
 		final Iterator<ObjectLabel> labelIt = new HashSet<ObjectLabel>(info.keySet()).iterator();
 		return new ExtendedIterator<LE>() {
 			private ObjectLabel cur = null;
+			private boolean hasNextCalled = false;
+			
 			@Override public boolean hasNext() {
-				return labelIt.hasNext();
+				this.hasNextCalled = true;
+				while( labelIt.hasNext() ) {
+					this.cur = labelIt.next();
+					if( filter.call(this.cur) )
+						return true;
+				}
+				return false;
 			}
 
 			@Override public LE next() {
-				return AliasAwareTupleLE.this.info.get(cur = labelIt.next());
+				if( this.hasNextCalled ) {
+					this.hasNextCalled = false;
+					return AliasAwareTupleLE.this.info.get(cur);
+				}
+				else {
+					return AliasAwareTupleLE.this.info.get(cur = labelIt.next());
+				}
 			}
 
 			@Override public void remove() {
@@ -450,7 +476,7 @@ public class AliasAwareTupleLE<LE extends LatticeElement<LE>> implements
 				AliasAwareTupleLE.this.info.put(cur, newValue);
 				cur = null;
 			}
-		};
+		};		
 	}
 	
 	/**

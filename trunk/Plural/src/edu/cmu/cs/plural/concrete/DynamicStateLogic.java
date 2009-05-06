@@ -55,6 +55,7 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.util.ConsList;
 import edu.cmu.cs.crystal.util.Freezable;
+import edu.cmu.cs.crystal.util.Lambda;
 import edu.cmu.cs.crystal.util.Lambda2;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.linear.ReleasePermissionImplication;
@@ -70,22 +71,6 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
  *
  */
 final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
-
-	/**
-	 * a filter is just a lambda that returns true or false
-	 * 
-	 * @author Kevin Bierhoff
-	 * @since 8/13/2008
-	 */
-	public interface AliasingFilter {
-
-		/**
-		 * @param var
-		 * @return
-		 */
-		boolean isConsidered(Aliasing var);
-
-	}
 
 	/*
 	 * Variables predicates known to be true. Weak because there may be a large number
@@ -222,10 +207,12 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 	 * all locations that are dead, and instead have the DSL ask me about the
 	 * locations it actually has facts for
 	 */
-	public List<ImplicationResult> solveFilteredVariables(PluralTupleLatticeElement value, AliasingFilter liveness) {
+	public List<ImplicationResult> solveFilteredVariables(PluralTupleLatticeElement value, 
+			Lambda<Aliasing, Boolean> liveness) {
+		
 		List<ImplicationResult> result = new LinkedList<ImplicationResult>();
 		for(Map.Entry<Aliasing, ConsList<Implication>> impls : knownImplications.entrySet()) {
-			if(liveness.isConsidered(impls.getKey())) {
+			if( liveness.call(impls.getKey()) ) {
 				for(Implication impl : impls.getValue()) {
 					if(impl.getAntecedant().isSatisfied(value))
 						result.add(impl.result());
@@ -730,14 +717,14 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 	 * for all variables to be deleted.
 	 * @return <code>true</code> if variables were removed, <code>false</code> otherwise.
 	 */
-	public boolean removeVariables(AliasingFilter filter) {
+	public boolean removeVariables(Lambda<Aliasing, Boolean> filter) {
 		if( frozen ) 
 			throw new IllegalStateException("Cannot change frozen object. Get a mutable copy to do this.");
 
 		boolean result = false;
 		for(Iterator<Aliasing> it = knownPredicates.keySet().iterator(); it.hasNext(); ) {
 			Aliasing var = it.next();
-			if(filter.isConsidered(var)) {
+			if( filter.call(var) ) {
 				result = true;
 				it.remove();
 			}
@@ -745,7 +732,7 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		
 		for(Iterator<Aliasing> it = knownImplications.keySet().iterator(); it.hasNext(); ) {
 			Aliasing var = it.next();
-			if(filter.isConsidered(var)) {
+			if( filter.call(var) ) {
 				result = true;
 				it.remove();
 			}
@@ -773,32 +760,5 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 			}
 		}
 		return result;
-	}
-	
-//	public void addDelayedImplication(Aliasing target, DelayedImplication impl) {
-//		assert impl.isImpliedVariable(target);
-//		if( this.delayedImplications.containsKey(target) ) {
-//			this.delayedImplications.get(target).add(impl);
-//		}
-//		else {
-//			List<DelayedImplication> l = new LinkedList<DelayedImplication>();
-//			l.add(impl);
-//			this.delayedImplications.put(target, l);
-//		}
-//	}
-//	
-//	public Collection<DelayedImplication> getDelayedImplications(Aliasing target) {
-//		List<DelayedImplication> l = this.delayedImplications.get(target);
-//		if(l == null)
-//			return Collections.emptyList();
-//		else
-//			return Collections.unmodifiableList(l);
-//	}
-//	
-//	public boolean removeDelayedImplication(Aliasing target, DelayedImplication impl) {
-//		assert impl.isImpliedVariable(target);
-//		List<DelayedImplication> l = this.delayedImplications.get(target);
-//		return l.remove(impl);
-//	}
-	
+	}	
 }

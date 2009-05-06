@@ -292,6 +292,32 @@ public final class IsSynchronizedRefAnalysis
 	// Just cache the analysis runs for each method
 	private Pair<MethodDeclaration, Map<ASTNode, NodeTree>> cachedResult = null;
 	
+	private Map<ASTNode, NodeTree> resultsAtNode(ASTNode node, IAnalysisInput input) {
+		final MethodDeclaration methodDecl = Utilities.getMethodDeclaration(node);
+		
+		Map<ASTNode, NodeTree> syncedVarsAtNode;
+		if( cachedResult != null && cachedResult.fst().equals(methodDecl) ) {
+			syncedVarsAtNode = cachedResult.snd();
+		} else {
+			syncedVarsAtNode = this.analyzeMethod(methodDecl, input);
+		}
+		return syncedVarsAtNode;
+	}
+	
+	/**
+	 * At the given AST node, which variables are known to be synchronized?
+	 * If the node is in any way 'weird,' like something that cannot contain
+	 * any synchronized references (e.g., field initializer) that's fine, this
+	 * method will just return the empty set.
+	 */
+	public Set<Variable> refsSyncedAtNode(ASTNode node, IAnalysisInput input) {
+		Map<ASTNode, NodeTree> synced = this.resultsAtNode(node, input);
+		if( synced.containsKey(node) )
+			return synced.get(node).syncedVars();
+		else
+			return Collections.emptySet();
+	}
+	
 	@Override
 	public Option<? extends ASTNode> inWhichMutexBlockIsThisProtected(ASTNode node, IAnalysisInput input) {
 		if( node == null ) {
@@ -299,14 +325,8 @@ public final class IsSynchronizedRefAnalysis
 		}
 		else {
 			// First, perform the analysis for the given method
-			final MethodDeclaration methodDecl = Utilities.getMethodDeclaration(node);
-			
-			Map<ASTNode, NodeTree> syncedVarsAtNode;
-			if( cachedResult != null && cachedResult.fst().equals(methodDecl) ) {
-				syncedVarsAtNode = cachedResult.snd();
-			} else {
-				syncedVarsAtNode = this.analyzeMethod(methodDecl, input);
-			}
+			Map<ASTNode, NodeTree> syncedVarsAtNode = this.resultsAtNode(node, input);
+			MethodDeclaration methodDecl = Utilities.getMethodDeclaration(node);
 			
 			// Then find the NodeTree that tells us which refs are synced at the
 			// given node.
