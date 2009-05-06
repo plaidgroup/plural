@@ -39,6 +39,7 @@
 package edu.cmu.cs.plural.concurrent.syncorswim;
 
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
@@ -46,12 +47,14 @@ import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
+import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.concurrent.ConcurrentTransferFunction;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 
 /**
- * Transfer function for SyncOrSwim.
+ * Transfer function for SyncOrSwim. Tells the lattice to forget all share/pures
+ * that may not be synchronized.
  * 
  * @author Nels E. Beckman
  * @since May 5, 2009
@@ -59,24 +62,32 @@ import edu.cmu.cs.plural.track.FractionAnalysisContext;
  */
 class SyncOrSwimTransferFunction extends ConcurrentTransferFunction {
 
+	private final IsSynchronizedRefAnalysis refAnalysis = new IsSynchronizedRefAnalysis();
+	private final IAnalysisInput analysisInput;
+	
 	public SyncOrSwimTransferFunction(IAnalysisInput input,
 			FractionAnalysisContext context) {
 		super(input, context);
+		this.analysisInput = input;
 	}
 
 	@Override
 	protected IResult<PluralDisjunctiveLE> forgetIfNotProtected(ASTNode node,
 			List<ILabel> labels, IResult<PluralDisjunctiveLE> transfer_result) {
+		// Get the set of variables that are synchronized at this point.
+		Set<Variable> synced_vars = this.refAnalysis.refsSyncedAtNode(node, 
+				this.analysisInput);
+		
 		// TODO: Is there a better default? Could we get the default from the old one?
 		LabeledResult<PluralDisjunctiveLE> result = LabeledResult.createResult(labels, null);
 		for( ILabel label : labels ) {
-			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), node));
+			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), synced_vars));
 		}
 		return result;
 	}
 
-	private PluralDisjunctiveLE forgetSharedPermissions(PluralDisjunctiveLE lattice, ASTNode node) {
-		return lattice.forgetShareAndPureStates();
+	private PluralDisjunctiveLE forgetSharedPermissions(PluralDisjunctiveLE lattice, 
+			Set<Variable> synced_vars) {
+		return lattice.forgetShareAndPureStatesNotInSet(synced_vars);
 	}
-	
 }

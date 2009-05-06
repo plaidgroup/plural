@@ -986,6 +986,24 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	}
 	
 	/**
+	 * Discards temporary state information for all permissions in every
+	 * disjunct of this lattice if that permission must be pure or share,
+	 * and that permission is not associated with one of the given variables.
+	 * The current aliasing for each variable will be looked up first.
+	 */
+	public PluralDisjunctiveLE forgetShareAndPureStatesNotInSet(
+			final Set<Variable> vars_to_not_forget) {
+		le.dispatch(new DescendingVisitor() {
+			@Override
+			public Boolean tuple(TensorPluralTupleLE tuple) {
+				tuple.forgetShareAndPureStateInformationNotInSet(vars_to_not_forget);
+				return true;
+			}
+		});
+		return this;
+	}
+	
+	/**
 	 * @param x
 	 * @param perms
 	 * @return
@@ -1005,5 +1023,4 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			
 		});
 	}
-
 }
