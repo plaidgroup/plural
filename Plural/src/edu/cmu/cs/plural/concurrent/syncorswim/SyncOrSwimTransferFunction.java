@@ -38,15 +38,18 @@
 
 package edu.cmu.cs.plural.concurrent.syncorswim;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
+import edu.cmu.cs.crystal.tac.MethodCallInstruction;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.concurrent.ConcurrentTransferFunction;
 import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
@@ -78,6 +81,16 @@ class SyncOrSwimTransferFunction extends ConcurrentTransferFunction {
 		Set<Variable> synced_vars = this.refAnalysis.refsSyncedAtNode(node, 
 				this.analysisInput);
 		
+		return forgetGivenSyncedVars(labels, transfer_result, synced_vars);
+	}
+
+	/**
+	 * Given a set of synchronized variables, forget the shares and pures that
+	 * are not synchronized.
+	 */
+	private IResult<PluralDisjunctiveLE> forgetGivenSyncedVars(
+			List<ILabel> labels, IResult<PluralDisjunctiveLE> transfer_result,
+			Set<Variable> synced_vars) {
 		// TODO: Is there a better default? Could we get the default from the old one?
 		LabeledResult<PluralDisjunctiveLE> result = LabeledResult.createResult(labels, null);
 		for( ILabel label : labels ) {
@@ -90,4 +103,45 @@ class SyncOrSwimTransferFunction extends ConcurrentTransferFunction {
 			Set<Variable> synced_vars) {
 		return lattice.forgetShareAndPureStatesNotInSet(synced_vars);
 	}
+
+	@Override
+	public IResult<PluralDisjunctiveLE> transfer(MethodCallInstruction instr,
+			List<ILabel> labels, PluralDisjunctiveLE value) {
+		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+		
+		// Is this a call to wait? If so, forget ALL shares and pures.
+		if( isCallToWait(instr.resolveBinding()) ) {
+			return forgetGivenSyncedVars(labels, result, Collections.<Variable>emptySet());
+		} else {
+			return result;
+		}
+	}
+
+	/**
+	 * Is this a method call to Object.wait() or any of its two variants?
+	 */
+	private boolean isCallToWait(IMethodBinding resolvedBinding) {
+		if( "wait".equals(resolvedBinding.getName()) ) {
+			// There are three types of 'wait' method:
+			if( resolvedBinding.getParameterTypes().length == 0 ) {
+				// First has no arguments
+				return true;
+			} 
+			else if( resolvedBinding.getParameterTypes().length == 1 ) {
+				// Second takes one long
+				return "long".equals(resolvedBinding.getParameterTypes()[0].getName());
+			}
+			else if( resolvedBinding.getParameterTypes().length == 2 ) {
+				// Third takes one long and one int
+				boolean is_long = "long".equals(resolvedBinding.getParameterTypes()[0].getName());
+				boolean is_int = "int".equals(resolvedBinding.getParameterTypes()[1].getName());
+				return is_long && is_int;
+			}
+			else {
+				return false;
+			}
+		} else {
+			return false;	
+		}
+	}	
 }
