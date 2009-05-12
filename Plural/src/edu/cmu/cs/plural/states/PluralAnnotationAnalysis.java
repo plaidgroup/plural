@@ -49,6 +49,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
+import org.eclipse.jdt.core.dom.ArrayInitializer;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IAnnotationBinding;
@@ -511,7 +512,8 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		private ASTNode getAnnotatedElement(Annotation node) {
 			// FIXME this doesn't work b/c of the intermediate value nodes between annotation nodes
 			ASTNode result = node;
-			while(result != null && result instanceof Annotation)
+			while(result != null && (result instanceof Annotation || 
+					                  result instanceof ArrayInitializer) )
 				result = result.getParent();
 			return result;
 		}
