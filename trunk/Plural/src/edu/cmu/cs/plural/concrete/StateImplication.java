@@ -255,6 +255,9 @@ public final class StateImplication implements Implication {
 	public Set<Aliasing> getConsequenceVariables() {
 		return Collections.singleton(describedVar);
 	}
-	
-	
+
+	@Override
+	public boolean isImpliedBy(Implication impl) {
+		return this.equals(impl);
+	}	
 }

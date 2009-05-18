@@ -182,4 +182,8 @@ public class NullImplication implements Implication {
 		return Collections.singleton(consequencePred.getVariable());
 	}
 
+	@Override
+	public boolean isImpliedBy(Implication impl) {
+		return this.equals(impl);
+	}
 }
