@@ -177,4 +177,8 @@ public class ReleasePermissionImplication implements Implication {
 		return result;
 	}
 
+	@Override
+	public boolean isImpliedBy(Implication impl) {
+		return this.equals(impl);
+	}
 }

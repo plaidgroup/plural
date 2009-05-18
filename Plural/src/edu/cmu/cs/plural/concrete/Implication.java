@@ -95,4 +95,9 @@ public interface Implication extends Predicate {
 	 */
 	Implication createCopyWithoutTemporaryState();
 
+	
+	/**
+	 * Is this implication implied by the given implication? 
+	 */
+	boolean isImpliedBy(Implication impl);
 }

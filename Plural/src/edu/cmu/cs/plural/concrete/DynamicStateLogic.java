@@ -58,8 +58,10 @@ import edu.cmu.cs.crystal.util.Freezable;
 import edu.cmu.cs.crystal.util.Lambda;
 import edu.cmu.cs.crystal.util.Lambda2;
 import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.linear.ReleasePermissionImplication;
 import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
+import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
@@ -631,10 +633,20 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 
 	public boolean isKnownImplication(Aliasing v, Implication impl) {
 		List<Implication> v_impls = knownImplications.get(v);
-		if(v_impls != null && v_impls.contains(impl)) {
-			// we know about the implication in question
+		if( v_impls == null )
+			return false;
+		
+		if( v_impls.contains(impl) ) {
+			// We know this exact implication
 			return true;
 		}
+		
+		// Maybe it doesn't contain it, but it still could imply it...
+		for( Implication v_impl : v_impls ) {
+			if( impl.isImpliedBy(v_impl) )
+				return true;
+		}
+		
 		return false;
 	}
 
