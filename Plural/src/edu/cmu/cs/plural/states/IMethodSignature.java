@@ -61,6 +61,9 @@ public interface IMethodSignature extends IInvocationSignature {
 	 */
 	Set<Set<String>> getEnsuredResultStateOptions();
 
-	List<IMethodCaseInstance> createPermissionsForCases(boolean forAnalyzingBody, boolean isSuperCall);
+	List<IMethodCaseInstance> createPermissionsForCases(
+			MethodCheckingKind checkingKind,
+			
+			boolean forAnalyzingBody, boolean isSuperCall);
 	
 }

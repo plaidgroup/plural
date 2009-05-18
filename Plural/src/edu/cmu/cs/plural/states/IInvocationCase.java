@@ -72,7 +72,10 @@ public interface IInvocationCase {
 	 * @return
 	 * @see IInvocationSignature#createPermissionsForCases(boolean, boolean)
 	 */
-	IInvocationCaseInstance createPermissions(boolean forAnalyzingBody, boolean isSuperCall);
+	IInvocationCaseInstance createPermissions(
+			MethodCheckingKind checkingKind,
+			
+			boolean forAnalyzingBody, boolean isSuperCall);
 	
 	boolean isReentrant();
 	

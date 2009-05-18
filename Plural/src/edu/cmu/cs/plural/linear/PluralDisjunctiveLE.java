@@ -75,6 +75,7 @@ import edu.cmu.cs.plural.states.IConstructorCaseInstance;
 import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IMethodCaseInstance;
 import edu.cmu.cs.plural.states.IMethodSignature;
+import edu.cmu.cs.plural.states.MethodCheckingKind;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
@@ -574,7 +575,13 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 //			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost,
 //			final PermissionSetFromAnnotations resultPost
 			) {
-		final List<IMethodCaseInstance> cases = sig.createPermissionsForCases(false, instr.isSuperCall());
+		final List<IMethodCaseInstance> cases = 
+			sig.createPermissionsForCases(instr.isSuperCall() ? 
+					MethodCheckingKind.METHOD_CALL_STATIC_DISPATCH : 
+					MethodCheckingKind.METHOD_CALL_DYNAMIC_DISPATCH,
+					
+					false, instr.isSuperCall());
+		
 		assert ! cases.isEmpty();
 		final int caseCount = cases.size();
 		final IMethodCaseInstance singleCase;
@@ -618,7 +625,8 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 //			final PermissionSetFromAnnotations rcvrPost,
 //			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost
 			) {
-		final List<IConstructorCaseInstance> cases = sig.createPermissionsForCases(false, false);
+		final List<IConstructorCaseInstance> cases = 
+			sig.createPermissionsForCases(MethodCheckingKind.CONSTRUCTOR_NEW, false, false);
 		assert ! cases.isEmpty();
 		final IConstructorCaseInstance singleCase;
 		final int caseCount = cases.size();
@@ -659,7 +667,8 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void handleConstructorCall(
 			final ConstructorCallInstruction instr,
 			final IConstructorSignature sig) {
-		final List<IConstructorCaseInstance> cases = sig.createPermissionsForCases(false, true);
+		final List<IConstructorCaseInstance> cases = 
+			sig.createPermissionsForCases(MethodCheckingKind.CONSTRUCTOR_SUPER_CALL, false, true);
 		assert ! cases.isEmpty();
 		final IConstructorCaseInstance singleCase;
 		final int caseCount = cases.size();

@@ -139,6 +139,9 @@ public abstract interface IInvocationSignature {
 	 * @param isSuperCall ignored if <code>forAnalyzingBody</code> is <code>true</code>.
 	 * @return
 	 */
-	List<? extends IInvocationCaseInstance> createPermissionsForCases(boolean forAnalyzingBody, boolean isSuperCall);
+	List<? extends IInvocationCaseInstance> createPermissionsForCases(
+			MethodCheckingKind checkingKind,
+			
+			boolean forAnalyzingBody, boolean isSuperCall);
 	
 }

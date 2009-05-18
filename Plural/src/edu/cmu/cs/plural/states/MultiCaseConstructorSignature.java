@@ -82,10 +82,12 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 
 	@Override
 	public List<IConstructorCaseInstance> createPermissionsForCases(
+			MethodCheckingKind checkingKind,
+			
 			boolean forAnalyzingBody, boolean isConstructorCall) {
 		List<IConstructorCaseInstance> result = new ArrayList<IConstructorCaseInstance>(cases().size());
 		for(IConstructorCase c : cases()) {
-			result.add(c.createPermissions(forAnalyzingBody, isConstructorCall));
+			result.add(c.createPermissions(checkingKind, forAnalyzingBody, isConstructorCall));
 		}
 		return result;
 	}
@@ -143,18 +145,23 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 		 *
 		 */
 		@Override
-		public IConstructorCaseInstance createPermissions(final boolean forAnalyzingBody, boolean isConstructorCall) {
+		public IConstructorCaseInstance createPermissions(
+				MethodCheckingKind checkingKind,
+				final boolean forAnalyzingBody, boolean isConstructorCall) {
 			final Pair<MethodPrecondition, MethodPostcondition> preAndPost;
 			if(forAnalyzingBody) {
 				preAndPost = preAndPost(
 						forAnalyzingBody, preAndPostString, 
+						checkingKind,
 						false, 
 						false, 
 						isConstructorCall);
 			}
 			else {
 				preAndPost = preAndPost(
-						forAnalyzingBody, preAndPostString, !isConstructorCall, 
+						forAnalyzingBody, preAndPostString, 
+						checkingKind,
+						!isConstructorCall, 
 						!isConstructorCall, !isConstructorCall);
 			}
 			
@@ -255,6 +262,5 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 
 			};
 		}
-	
 	}
 }
