@@ -43,6 +43,9 @@ package edu.cmu.cs.plural.states;
  */
 public interface IConstructorCase extends IInvocationCase {
 
-	IConstructorCaseInstance createPermissions(boolean forAnalyzingBody, boolean isSuperCall);
+	IConstructorCaseInstance createPermissions(
+			MethodCheckingKind checkingKind,
+			
+			boolean forAnalyzingBody, boolean isSuperCall);
 
 }

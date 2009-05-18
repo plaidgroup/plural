@@ -75,6 +75,7 @@ import edu.cmu.cs.plural.states.IInvocationCase;
 import edu.cmu.cs.plural.states.IInvocationCaseInstance;
 import edu.cmu.cs.plural.states.IInvocationSignature;
 import edu.cmu.cs.plural.states.IMethodSignature;
+import edu.cmu.cs.plural.states.MethodCheckingKind;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 
 /**
@@ -157,6 +158,30 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	}
 	
 	/**
+	 * Given whether or not we want to check a constructor, and whether or not
+	 * the current frame is equal to the virtual frame, but assuming we want to
+	 * check an implementation, returns the MethodCheckingKind.
+	 * @param isConstructor Are we checking a constructor?
+	 * @param currentFrameEqVirtual Does the current frame = the virtual one?
+	 * @return The MethodCheckingKind, assuming we are checking a body.
+	 */
+	private MethodCheckingKind methodCheckingKindImpl(boolean isConstructor,
+			boolean currentFrameEqVirtual) {
+		if( isConstructor ) {
+			if( currentFrameEqVirtual )
+				return MethodCheckingKind.CONSTRUCTOR_IMPL_CUR_IS_VIRTUAL;
+			else
+				return MethodCheckingKind.CONSTRUCTOR_IMPL_CUR_NOT_VIRTUAL;
+		}
+		else {
+			if( currentFrameEqVirtual )
+				return MethodCheckingKind.METHOD_IMPL_CUR_IS_VIRTUAL;
+			else
+				return MethodCheckingKind.METHOD_IMPL_CUR_NOT_VIRTUAL;
+		}
+	}
+	
+	/**
 	 * @param d
 	 * @param sig
 	 * @param c
@@ -167,7 +192,9 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	private void analyzeCase(MethodDeclaration d, IInvocationSignature sig,
 			IInvocationCase c, Boolean assumeVirtualFrame) {
 		this.assumeVirtualFrame = assumeVirtualFrame != null && assumeVirtualFrame;
-		analyzedCase = c.createPermissions(true, this.assumeVirtualFrame);
+		MethodCheckingKind checkingKind = methodCheckingKindImpl(d.isConstructor(), this.assumeVirtualFrame);
+		
+		analyzedCase = c.createPermissions(checkingKind, true, this.assumeVirtualFrame);
 		tf = createNewFractionalTransfer();
 		
 		// need local to be able to set monitor
@@ -313,7 +340,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 				return;
 			}
 			
-			checkCases(node, before, sig, null /* no receiver yet */, 
+			checkCasesOfInvocation(node, before, sig, null /* no receiver yet */, 
 					variables((List<Expression>) node.arguments()), false /* "new" */);
 			
 			// arguments
@@ -392,7 +419,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //				++argIdx;
 //			}
 
-			checkCases(node, before, sig, receiver, 
+			checkCasesOfInvocation(node, before, sig, receiver, 
 					variables((List<Expression>) node.arguments()), false /* dynamic dispatch or static method call */);
 			
 			// debug
@@ -415,7 +442,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 				return;
 			}
 			
-			checkCases(node, before, sig, null /* lattice fills in super */, 
+			checkCasesOfInvocation(node, before, sig, null /* lattice fills in super */, 
 					variables((List<Expression>) node.arguments()), true /* static dispatch */);
 			
 			// debug
@@ -479,7 +506,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			// receiver is always "this"  (super constructor call is different node type)
 			final Variable receiver = getFa().getImplicitThisVariable(constructorBinding);
 			
-			checkCases(node, before, sig, receiver, 
+			checkCasesOfInvocation(node, before, sig, receiver, 
 					variables((List<Expression>) node.arguments()), true);
 			
 			//			if(! after.checkConstraintsSatisfiable(receiver))
@@ -532,7 +559,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 				return;
 			}
 			
-			checkCases(node, before, sig, null /* lattice fills in super variable */, 
+			checkCasesOfInvocation(node, before, sig, null /* lattice fills in super variable */, 
 					variables((List<Expression>) node.arguments()), true /* static dispatch */);
 
 			// receiver
@@ -575,6 +602,31 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		}
 
 		/**
+		 * Given that we are checking a method invocation, returns the 
+		 * MethodCheckingKind based on whether or not we are checking a 
+		 * constructor and whether or not the receiver type is known
+		 * statically.
+		 * @param isConstructor Are we checking a constructor invocation?
+		 * @param isStaticallyDispatched Is the receiver type known statically?
+		 * @return The MethodCheckingKind given we are checking an invocation.
+		 */
+		private MethodCheckingKind methodCheckingKindInvoc(boolean isConstructor,
+				boolean isStaticallyDispatched) {
+			if( isConstructor ) {
+				if( isStaticallyDispatched )
+					return MethodCheckingKind.CONSTRUCTOR_SUPER_CALL;
+				else
+					return MethodCheckingKind.CONSTRUCTOR_NEW;
+			}
+			else {
+				if( isStaticallyDispatched )
+					return MethodCheckingKind.METHOD_CALL_STATIC_DISPATCH;
+				else
+					return MethodCheckingKind.METHOD_CALL_DYNAMIC_DISPATCH;
+			}
+		}
+		
+		/**
 		 * @param node
 		 * @param before
 		 * @param sig
@@ -585,11 +637,13 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		 * or a constructor invocation on <code>this</code>, but <b>not</b> a object instantiation
 		 * with <code>new</code>.
 		 */
-		private void checkCases(ASTNode node,
+		private void checkCasesOfInvocation(ASTNode node,
 				final PluralDisjunctiveLE before, final IInvocationSignature sig,
 				final Variable receiver, List<Variable> arguments, boolean receiverIsStaticallyBound) {
 			List<String> errors = new LinkedList<String>();
-			for(IInvocationCaseInstance c : sig.createPermissionsForCases(false, receiverIsStaticallyBound)) {
+			MethodCheckingKind checkingKind = methodCheckingKindInvoc(sig.isConstructorSignature(),
+					receiverIsStaticallyBound);
+			for(IInvocationCaseInstance c : sig.createPermissionsForCases(checkingKind, false, receiverIsStaticallyBound)) {
 				String err;
 				if(receiver == null && receiverIsStaticallyBound)
 					err = before.checkSuperCallPrecondition(node, 

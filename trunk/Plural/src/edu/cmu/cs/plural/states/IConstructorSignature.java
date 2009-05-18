@@ -51,6 +51,9 @@ public interface IConstructorSignature extends IInvocationSignature {
 	
 	String getConstructedClassName();
 
-	List<IConstructorCaseInstance> createPermissionsForCases(boolean forAnalyzingBody, boolean isSuperCall);
+	List<IConstructorCaseInstance> createPermissionsForCases(
+			MethodCheckingKind checkingKind,
+			
+			boolean forAnalyzingBody, boolean isSuperCall);
 	
 }

@@ -47,6 +47,9 @@ public interface IMethodCase extends IInvocationCase {
 	
 	Set<String> getEnsuredResultStates();
 	
-	IMethodCaseInstance createPermissions(boolean forAnalyzingBody, boolean isSuperCall);
+	IMethodCaseInstance createPermissions(
+			MethodCheckingKind checkingKind,
+			
+			boolean forAnalyzingBody, boolean isSuperCall);
 
 }

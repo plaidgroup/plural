@@ -137,6 +137,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	
 	protected Pair<MethodPrecondition, MethodPostcondition> preAndPost(
 			boolean forAnalyzingBody, Pair<String, String> preAndPostString,
+			MethodCheckingKind checkingKind,
 			boolean frameAsVirtual, boolean noReceiverPre, boolean noReceiverVirtual) {
 		final Map<String, StateSpace> spaces = new HashMap<String, StateSpace>();
 		Map<String, PermissionSetFromAnnotations> pre = 
@@ -159,7 +160,8 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> rcvr_borrowed = 
 				prePostFromAnnotations(rcvr_space, 
 						getReceiverAnnotations(), 
-						namedFractions, 
+						namedFractions,
+						checkingKind, 
 						frameAsVirtual,
 						noReceiverVirtual);
 			
@@ -194,6 +196,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 				prePostFromAnnotations(space, 
 					CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), 
 					namedFractions,
+					checkingKind,
 					false /* TODO replace frame with virtual permissions to "overlook" spec errors? */, 
 					false /* do not ever ignore virtual permissions for parameters */);
 			pre.put(paramName, param_borrowed.fst());
@@ -342,6 +345,8 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	private Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> prePostFromAnnotations(
 			StateSpace space, List<ParameterPermissionAnnotation> annos, 
 			FractionCreation namedFractions, 
+			MethodCheckingKind checkingKind,
+			//TODO Get rid of
 			boolean frameAsVirtual, boolean ignoreVirtual) {
 		PermissionSetFromAnnotations pre = PermissionSetFromAnnotations.createEmpty(space);
 		PermissionSetFromAnnotations post = PermissionSetFromAnnotations.createEmpty(space);
@@ -354,9 +359,23 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			// frame with virtual permissions, and in this case we don't
 			// want to end up with double the virtual permissions if
 			// ignoreVirtual is false
-			boolean needVirtual = (a.isVirtualPermission() && !ignoreVirtual)
-					|| (a.isFramePermission() && frameAsVirtual);
-			boolean needFrame = (a.isFramePermission() && !frameAsVirtual);
+			
+			// Better fix...
+			boolean needVirtual = MethodCheckingKind.needVirtual(
+					checkingKind, a.isVirtualPermission(), a.isFramePermission());
+			boolean needFrame = MethodCheckingKind.needFrame(
+					checkingKind, a.isVirtualPermission(), a.isFramePermission());
+			
+			// My fix...
+//			boolean needVirtual = (a.isVirtualPermission() && !ignoreVirtual)
+//					|| (a.isFramePermission() && frameAsVirtual);
+//			boolean needFrame = (a.isFramePermission() && !frameAsVirtual) 
+//			        || (ignoreVirtual && a.isVirtualPermission());
+			
+//			boolean needVirtual = (a.isVirtualPermission() ) 
+//					|| (a.isFramePermission() && frameAsVirtual);
+//			boolean needFrame = (a.isFramePermission() && !frameAsVirtual);
+			
 			
 			if(needVirtual) {
 				PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(

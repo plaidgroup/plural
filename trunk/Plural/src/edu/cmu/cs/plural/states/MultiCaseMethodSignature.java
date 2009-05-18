@@ -108,10 +108,12 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 
 	@Override
 	public List<IMethodCaseInstance> createPermissionsForCases(
+			MethodCheckingKind checkingKind,
+			
 			boolean forAnalyzingBody, boolean isSuperCall) {
 		List<IMethodCaseInstance> result = new ArrayList<IMethodCaseInstance>(cases().size());
 		for(IMethodCase c : cases()) {
-			result.add(c.createPermissions(forAnalyzingBody, isSuperCall));
+			result.add(c.createPermissions(checkingKind, forAnalyzingBody, isSuperCall));
 		}
 		return result;
 	}
@@ -165,10 +167,14 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 		}
 		
 		@Override
-		public IMethodCaseInstance createPermissions(final boolean forAnalyzingBody, boolean isSuperCall) {
+		public IMethodCaseInstance createPermissions(
+				MethodCheckingKind checkingKind,
+				
+				final boolean forAnalyzingBody, boolean isSuperCall) {
 			final Pair<MethodPrecondition,MethodPostcondition> preAndPost;
 			if(forAnalyzingBody) {
 				preAndPost = preAndPost(forAnalyzingBody, preAndPostString, 
+						checkingKind,
 						false,
 						false,
 						isSuperCall);
@@ -182,6 +188,7 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 				else
 					coerce = false;
 				preAndPost = preAndPost(forAnalyzingBody, preAndPostString, 
+						checkingKind,
 						coerce, 
 						false,
 						false);
