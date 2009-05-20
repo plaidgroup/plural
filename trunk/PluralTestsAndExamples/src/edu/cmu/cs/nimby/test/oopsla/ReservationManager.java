@@ -124,13 +124,15 @@ class Itinerary {
 	
 	@Pure(use = Use.FIELDS)
 	void emailReminder() {
-		if( myFlightRsvn.isConfirmed() ) {
-			System.out.println("Reminder, Flight: " + myFlightRsvn.toString() );
+		atomic: {
+			if( myFlightRsvn.isConfirmed() ) {
+				System.out.println("Reminder, Flight: " + myFlightRsvn.toString() );
+			}
+			else if( myBusRsvn.isConfirmed() ) {
+				System.out.println("Reminder, Bus: " + myFlightRsvn.toString() );
+			}
+			return;
 		}
-		else if( myBusRsvn.isConfirmed() ) {
-			System.out.println("Reminder, Bus: " + myFlightRsvn.toString() );
-		}
-		return;
 	}
 	
 	@Perm(requires="full(#0) in confirmed", ensures="unique(this!fr) in byLand")
