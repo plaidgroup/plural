@@ -38,9 +38,9 @@
 
 package edu.cmu.cs.syncorswim.blockingqueue;
 
-import java.util.Collection;
-
+import edu.cmu.cs.plural.annot.NoEffects;
 import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.Pure;
 
 // Exists so I can annotate the constructor 
 public class LinkedList<E> extends java.util.LinkedList<E> {
@@ -49,4 +49,12 @@ public class LinkedList<E> extends java.util.LinkedList<E> {
 	public LinkedList() {
 		super();
 	}
+	
+	@Override
+	@NoEffects
+	@Pure
+	public int size() {
+		return super.size();
+	}
+
 }
