@@ -45,7 +45,10 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
@@ -167,6 +170,19 @@ public class ConcurrentChecker extends FractionalAnalysis {
 		public void endVisit(FieldAccess node) {
 			super.endVisit(node);
 			assertProtectedIfTShared(node);
+		}
+
+		@Override
+		public void endVisit(SimpleName node) {
+			super.endVisit(node);
+			// SimpleName sucks because they are all over the place,
+			// including in method parameter declarations. This is why
+			// I first check to see if this is a field.
+			
+			if( node.resolveBinding() instanceof IVariableBinding && 
+			  ((IVariableBinding)node.resolveBinding()).isField() ) {
+				assertProtectedIfTShared(node);
+			}
 		}
 
 		@Override
