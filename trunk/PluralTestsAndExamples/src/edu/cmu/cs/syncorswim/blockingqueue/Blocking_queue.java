@@ -101,20 +101,20 @@ public class Blocking_queue
 		notify(); 										//#notify
 	}
 
-	//	/*******************************************************************
-	//	 * Enqueue an item, and thereafter reject any requests to enqueue
-	//	 * additional items. The queue is closed automatically when the
-	//	 * final item is dequeued.
-	//	 */
-	//	//@Perm(requires="full(this,PROTOCOL) in CLOSING * share(this,STRUCTURE)")
-	//	@Full(requires="OPEN", guarantee="PROTOCOL", returned=false)
-	//	@Share(guarantee="STRUCTURE", use=Use.DISP_FIELDS)
-	//	public synchronized final void enqueue_final_item( Object new_element )	//#final.start
-	//											//			throws Closed
-	//	{	
-	//		enqueue( new_element );
-	//		reject_enqueue_requests = true;
-	//	}															//#final.end
+	/*******************************************************************
+	 * Enqueue an item, and thereafter reject any requests to enqueue
+	 * additional items. The queue is closed automatically when the
+	 * final item is dequeued.
+	 */
+	//@Perm(requires="full(this,PROTOCOL) in CLOSING * share(this,STRUCTURE)")
+	@Full(requires="OPEN", guarantee="PROTOCOL", returned=false)
+	@Share(guarantee="STRUCTURE", use=Use.DISP_FIELDS)
+	public synchronized final void enqueue_final_item( Object new_element )	//#final.start
+				throws Closed
+	{	
+		enqueue( new_element );
+		reject_enqueue_requests = true;
+	}															//#final.end
 	//
 	//	/*******************************************************************
 	//	 *	Dequeues an element; blocks if the queue is empty
@@ -200,11 +200,12 @@ public class Blocking_queue
 	 *	methods.
 	 */
 	@Pures({
-		@Pure(guarantee="PROTOCOL", requires="STILLOPEN"),
+		@Pure(guarantee="PROTOCOL", requires="STILLOPEN", ensures="STILLOPEN"),
 		@Pure(guarantee="STRUCTURE", use=Use.FIELDS)
 	})
-	public final boolean is_empty()
-	{	return elements.size() <= 0;
+	public final synchronized boolean is_empty()
+	{	
+		return elements.size() <= 0;
 	}
 
 	/*******************************************************************
@@ -244,7 +245,6 @@ public class Blocking_queue
 	{	closed 	 = true;
 		forcePack(); // NEB: Added by me
 		elements = null;
-		this.reject_enqueue_requests = false; // NEB: Added by me
 		notifyAll();
 	}
 	
