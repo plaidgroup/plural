@@ -123,6 +123,18 @@ public class ContextFactory {
 	}
 
 	/**
+	 * Return a true context that holds information about which state we were
+	 * trying to pack to when we realized we couldn't.
+	 * 
+	 * @param state Which state were we trying to pack to when we failed?
+	 * @param invariant What was the particular invariant that failed?
+	 * @return A context representing true (1) which also stores error info.
+	 */
+	public static DisjunctiveLE failedPack(String state, String invariant) {
+		return new FailingPackContext(state, invariant);
+	}
+	
+	/**
 	 * Tests if the given disjunctive context is equivalent to the  
 	 * {@link #falseContext()}.  That essentially means
 	 * that {@link #choice(Set)} contexts 
@@ -153,6 +165,8 @@ public class ContextFactory {
 			return tuple.isBottom();
 		}
 	};
+	
+	
 	
 	/**
 	 * Tests if the given disjunctive context is equivalent to the  

@@ -70,33 +70,70 @@ public class TrueContext implements DisjunctiveLE {
 	}
 
 	@Override
-	public boolean atLeastAsPrecise(DisjunctiveLE other, ASTNode node) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean atLeastAsPrecise(DisjunctiveLE other, final ASTNode node) {
+		// Copied from ContextChoiceLE.asLeastAsPrecise(DisjunctiveLE, ASTNode)
+		this.freeze();
+		if(this == other)
+			return true;
+		other.freeze();
+		
+		// This implements proving other with the given choices
+		// For completeness, first break down other until atoms (tuples)
+		// are found.  Then, break down the receiver using the helper
+		// atLeastAsPrecise method.
+		final DisjunctiveVisitor<Boolean> compVisitor = new DisjunctiveVisitor<Boolean>() {
+			
+			@Override
+			public Boolean choice(ContextChoiceLE other) {
+				for(DisjunctiveLE otherElem : other.getElements()) {
+					if(! otherElem.dispatch(this))
+						return false;
+				}
+				return true;
+			}
+
+			@Override
+			public Boolean trueContext(TrueContext trueContext) {
+				return true;
+			}
+			
+			@Override
+			public Boolean context(LinearContextLE other) {
+				return TrueContext.this.atLeastAsPrecise(other.getTuple(), node);
+			}
+
+			@Override
+			public Boolean all(ContextAllLE other) {
+				for(DisjunctiveLE otherElem : other.getElements()) {
+					if(otherElem.dispatch(this))
+						return true;
+				}
+				return false;
+			}
+		};
+		return other.dispatch(compVisitor);
 	}
 
 	@Override
 	public DisjunctiveLE copy() {
-		// TODO Auto-generated method stub
-		return null;
+		return new TrueContext();
 	}
 
 	@Override
 	public DisjunctiveLE join(DisjunctiveLE other, ASTNode node) {
-		// TODO Auto-generated method stub
-		return null;
+		this.freeze();
+		if(other == this) return this;
+		
+		return new TrueContext();
 	}
 
 	@Override
 	public DisjunctiveLE freeze() {
-		// TODO Auto-generated method stub
-		return null;
+		return this;
 	}
 
 	@Override
 	public DisjunctiveLE mutableCopy() {
-		// TODO Auto-generated method stub
-		return null;
+		return new TrueContext();
 	}
-
 }

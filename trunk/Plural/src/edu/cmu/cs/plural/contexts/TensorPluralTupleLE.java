@@ -304,9 +304,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 				setNodeWhereUnpacked(null);
 				
 				String state = state_and_inv.fst();
-				String fail_msg = "Could not pack to state " + state + " because " +
-						"the following invariant was not satisfied: " + inv;
-				return FailedPack.fail(fail_msg);	
+				return FailedPack.fail(state, inv);	
 			}
 		}
 		
