@@ -63,7 +63,7 @@ import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
 import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.FractionalTransfer;
 

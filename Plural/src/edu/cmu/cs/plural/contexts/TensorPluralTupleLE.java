@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
+package edu.cmu.cs.plural.contexts;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -61,6 +61,8 @@ import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.AliasAwareTupleLE;
 import edu.cmu.cs.plural.concrete.DynamicStateLogic;
+import edu.cmu.cs.plural.errors.FailedPack;
+import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.perm.parser.PermParser;
@@ -256,7 +258,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	}
 	
 	@Override
-	public boolean packReceiver(Variable rcvrVar,
+	public PackingResult packReceiver(Variable rcvrVar,
 			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
 			Set<String> desiredState) {
 		
@@ -300,7 +302,11 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 				put(rcvrLoc, rcvr_perms.invalidPack());
 				setUnpackedVar(null);
 				setNodeWhereUnpacked(null);
-				return false;	
+				
+				String state = state_and_inv.fst();
+				String fail_msg = "Could not pack to state " + state + " because " +
+						"the following invariant was not satisfied: " + inv;
+				return FailedPack.fail(fail_msg);	
 			}
 		}
 		
@@ -310,7 +316,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		setUnpackedVar(null);
 		setNodeWhereUnpacked(null);
 		
-		return true;
+		return PackingResult.success;
 	}
 	
 	/**
@@ -414,7 +420,8 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		for(String n : statesWorthTrying) {
 			TensorPluralTupleLE elem = this.mutableCopy();
 			elem.storeIdenticalAliasInfo(this);
-			if(elem.packReceiver(rcvrVar, stateRepo, locs, Collections.singleton(n)))
+			PackingResult pack_result = elem.packReceiver(rcvrVar, stateRepo, locs, Collections.singleton(n));
+			if(pack_result.worked())
 				// could check for satisfiability here
 				resultElems.add(LinearContextLE.tensor(elem));
 		}

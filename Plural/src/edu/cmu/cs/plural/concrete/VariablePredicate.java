@@ -38,7 +38,7 @@
 package edu.cmu.cs.plural.concrete;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.plural.linear.TensorPluralTupleLE;
+import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**

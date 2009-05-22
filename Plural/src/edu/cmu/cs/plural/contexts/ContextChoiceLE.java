@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
+package edu.cmu.cs.plural.contexts;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -43,6 +43,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+
+import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
  * Intended for the case where you need to prove something in 
@@ -59,7 +61,7 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 	 * @param elements
 	 * @return an alternative disjunction with the given elements.
 	 */
-	static ContextChoiceLE choice(Set<DisjunctiveLE> elements) {
+	public static ContextChoiceLE choice(Set<DisjunctiveLE> elements) {
 		return new ContextChoiceLE(elements);
 	}
 
@@ -67,7 +69,7 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 	 * Returns the empty choice, which corresponds to <b>true</b> (<b>1</b>).
 	 * @return the empty choice.
 	 */
-	static ContextChoiceLE trueContext() {
+	public static ContextChoiceLE trueContext() {
 		return new ContextChoiceLE();
 	}
 
@@ -176,6 +178,11 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 				return true;
 			}
 
+			@Override
+			public Boolean trueContext(TrueContext trueContext) {
+				return true;
+			}
+			
 			@Override
 			public Boolean context(LinearContextLE other) {
 				return ContextChoiceLE.this.atLeastAsPrecise(other.getTuple(), node);

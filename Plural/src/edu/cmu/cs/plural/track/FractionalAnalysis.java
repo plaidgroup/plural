@@ -69,7 +69,7 @@ import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
 import edu.cmu.cs.crystal.util.Option;
-import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IInvocationCase;
 import edu.cmu.cs.plural.states.IInvocationCaseInstance;

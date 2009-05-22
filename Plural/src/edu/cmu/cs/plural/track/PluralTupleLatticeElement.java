@@ -79,6 +79,7 @@ import edu.cmu.cs.plural.concrete.ConcreteAnnotationUtils;
 import edu.cmu.cs.plural.concrete.DynamicStateLogic;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
+import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionConstraints;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
@@ -648,10 +649,10 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 * rest of the permission details.
 	 * Does nothing if receiver is already packed.
 	 * @param stateInfo
-	 * @return Did we successfully pack?
+	 * @return Result which indicates whether or not packing was successful.
 	 * @tag todo.general -id="6023977" : fix problems with locations in receiver
 	 */
-	public boolean packReceiver(Variable rcvrVar, StateSpaceRepository stateRepo,
+	public PackingResult packReceiver(Variable rcvrVar, StateSpaceRepository stateRepo,
 			SimpleMap<Variable, Aliasing> locs, Set<String> desiredState) {
 		
 		throw new IllegalStateException("This method should no longer be called.");

@@ -75,6 +75,11 @@ import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.FrameLabel;
 import edu.cmu.cs.plural.alias.ParamVariable;
 import edu.cmu.cs.plural.concrete.StateImplication;
+import edu.cmu.cs.plural.contexts.ContextFactory;
+import edu.cmu.cs.plural.contexts.DisjunctiveLE;
+import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
+import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionAssignment;
@@ -101,7 +106,7 @@ import edu.cmu.cs.plural.util.TACAnalysisHelper;
  * @author Kevin Bierhoff
  * @since 4/15/2008
  */
-class LinearOperations extends TACAnalysisHelper {
+public class LinearOperations extends TACAnalysisHelper {
 	
 	private static final Logger log = Logger.getLogger(LinearOperations.class.getName());
 	
@@ -2183,152 +2188,6 @@ class LinearOperations extends TACAnalysisHelper {
 		
 	}
 
-	/**
-	 * This method makes sure that the 'packing' condition is fulfilled, which boils
-	 * down to checking the post condition for fields.
-	 * 
-	 * This method should be extremely similar to checkParameterPostCondtion, at least
-	 * at the outset.
-	 * @return 
-	 */
-//	private PluralDisjunctiveLE checkRecvrFieldsPostCondition(PluralDisjunctiveLE curLattice,
-//			ASTNode node) {
-//		// get results first so the post-condition is populated
-//		//PluralTupleLatticeElement exit = fa.getResultsBefore(node);
-//		if( curLattice.isBottom() ) return curLattice; // Means unreachable node.
-//		
-//		curLattice = curLattice.mutableCopy();
-//		final Aliasing this_loc = curLattice.getLocationsAfter(node, tf.getAnalysisContext().getThisVariable());
-//		final PermissionSetFromAnnotations this_post_perm = tf.getParameterPostConditions().get(this_loc);
-//		
-//		Set<String> needed_rcvr_states;
-//		if(this_post_perm == null)
-//			needed_rcvr_states = Collections.emptySet();
-//		else
-//			needed_rcvr_states = this_post_perm.getStateInfo();
-//		
-//		PluralDisjunctiveLE packed_lattice =
-//			this.wrangleIntoPackedStates(node, needed_rcvr_states, curLattice);
-//		
-//		if( packed_lattice == null ) {
-//			if(needed_rcvr_states.isEmpty())
-//				crystal.reportUserProblem("Could not pack receiver to any state " +
-//						"due to insufficient field permissions",
-//						node, LinearChecker.this);					
-//			else
-//				crystal.reportUserProblem("Could not pack receiver to post-condition states " +
-//						needed_rcvr_states + " due to insufficient field permissions",
-//						node, LinearChecker.this);	
-//			return curLattice;
-//		}
-//		else if(this_post_perm != null) {
-//			FractionalPermissions remainder_perm = 
-//				packed_lattice.get(this_loc).splitOff(this_post_perm);
-//			if( remainder_perm.isUnsatisfiable() ) {
-//				crystal.reportUserProblem("Receiver returns no suitable permissions for post-condition",
-//						node, LinearChecker.this);
-//			}
-//			packed_lattice.put(this_loc, remainder_perm);
-//		}
-//		return packed_lattice;
-//	}
-	
-	/**
-	 * Check to ensure the correspondence between the return value and the receiver state,
-	 * if this is a state test. 
-	 * @return 
-	 */
-//	private PluralDisjunctiveLE checkDynamicStateTest(PluralDisjunctiveLE curLattice,
-//			ReturnStatement node) {
-//		/*
-//		 * There might not even be a dynamic state test!
-//		 */
-//		if( node.getExpression() == null || !node.getExpression().resolveTypeBinding().isPrimitive() )
-//			return curLattice;
-//		
-//		/*
-//		 * If this is going to work for more than just booleans, it needs to become
-//		 * a lot more general.
-//		 */
-//		String true_state  = tf.getDynamicStateTest().get(Boolean.TRUE);
-//		String false_state = tf.getDynamicStateTest().get(Boolean.FALSE);
-//
-//		/*
-//		 * We need to know what the return variable is so we can query the
-//		 * dynamicStateTestLogic.
-//		 */
-//		Variable ret_var =
-//			tf.getAnalysisContext().getVariable(node.getExpression());
-////			EclipseTAC.getInstance(currentMethod).variable(node.getExpression());
-//		Aliasing ret_loc = 
-//			curLattice.getLocationsAfter(node, ret_var);
-//		
-//		if( curLattice.isBooleanTrue(ret_loc) ) {
-//			/*
-//			 * If we know the result to be true universally, then we don't have to check
-//			 * the false branch.  
-//			 */
-//			if( true_state != null ) {
-//				curLattice = curLattice.mutableCopy();
-//				PluralDisjunctiveLE l =
-//					wrangleIntoPackedState(node, true_state, curLattice);
-//				if( l == null ) {
-//					crystal.reportUserProblem("On true branch of return, receiver is not in " +
-//							true_state + " as is specified.", node, LinearChecker.this);
-//				}
-//				else {
-//					curLattice = l;
-//				}
-//			}
-//		}
-//		else if( curLattice.isBooleanFalse(ret_loc) ) {
-//			/*
-//			 * Same for the false. We don't have to check the true branch.
-//			 */
-//			if( false_state != null ) {
-//				curLattice = curLattice.mutableCopy();
-//				PluralDisjunctiveLE l = wrangleIntoPackedState(node, false_state, curLattice);
-//				if( l == null ) {
-//					crystal.reportUserProblem("On false branch of return, receiver is not in " +
-//							false_state + " as is specified.", node, LinearChecker.this);					
-//				}
-//				else {
-//					curLattice = l;
-//				}
-//			}
-//		}
-//		else {
-//			/*
-//			 * We couldn't be sure that the result was definitely true or definitely
-//			 * false, we need to check both the true and false lattices.
-//			 */
-//			if(true_state != null) {
-//				PluralDisjunctiveLE true_lattice = 
-//					fa.getLabeledResultsAfter(node).get(BooleanLabel.getBooleanLabel(true));
-//				
-//				true_lattice = true_lattice.mutableCopy();
-//				true_lattice = wrangleIntoPackedState(node, true_state, true_lattice);
-//				if( true_lattice == null ) {
-//					crystal.reportUserProblem("On true branch of return, receiver is not in " +
-//							true_state + " as is specified.", node, LinearChecker.this);
-//				}
-//			}
-//			
-//			if(false_state != null) {
-//				PluralDisjunctiveLE false_lattice = 
-//					fa.getLabeledResultsAfter(node).get(BooleanLabel.getBooleanLabel(false));
-//
-//				false_lattice = false_lattice.mutableCopy();
-//				false_lattice = wrangleIntoPackedState(node, false_state, false_lattice);
-//				if( false_lattice == null ) {
-//					crystal.reportUserProblem("On false branch of return, receiver is not in " +
-//							false_state + " as is specified.", node, LinearChecker.this);					
-//				}
-//			}
-//		}
-//		
-//		return curLattice;
-//	}
 	
 	/**
 	 * Attempts to pack the current method receiver for a return from the method being analyzed.
@@ -2413,10 +2272,11 @@ class LinearOperations extends TACAnalysisHelper {
 					states,
 					root);
 
-			final boolean packed = 
+			PackingResult packed = 
 				value.packReceiver(getThisVar(),
 					getRepository(), loc_map, packToStates);
-			if(! packed)
+			// TODO: Put packing error into this true context...
+			if( !packed.worked() )
 				// couldn't pack to needed states -> fail
 				return ContextFactory.trueContext();
 			// else see if all states are satisfied below
@@ -2496,12 +2356,14 @@ class LinearOperations extends TACAnalysisHelper {
 						// else n is outside unpacked_perm and rcvr is currently in n --> ignore
 					}
 					
-					if(le.getTuple().packReceiver(
+					PackingResult pack_result = le.getTuple().packReceiver(
 							this_var, 
 							getRepository(), 
 							loc_map, 
 							filteredPackToStates 
-							))
+							);
+					// TODO: Put message from failing pack into trueContext
+					if(pack_result.worked())
 						return le;
 					else
 						return ContextFactory.trueContext();

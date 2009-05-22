@@ -37,12 +37,19 @@
  */
 package edu.cmu.cs.plural.linear;
 
+import edu.cmu.cs.plural.contexts.ContextAllLE;
+import edu.cmu.cs.plural.contexts.ContextChoiceLE;
+import edu.cmu.cs.plural.contexts.DisjunctiveLE;
+import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
+import edu.cmu.cs.plural.contexts.TrueContext;
+
 /**
  * A visitor that descends different elements of a disjunction. For
  * all methods, returning true indicates that the visitor should
  * continue visiting, while false indicates that it should not.
  */
-abstract class DescendingVisitor extends DisjunctiveVisitor<Boolean> {
+public abstract class DescendingVisitor extends DisjunctiveVisitor<Boolean> {
 
 	/**
 	 * Visit a tuple, indicating whether to continue visiting or not.
@@ -60,6 +67,11 @@ abstract class DescendingVisitor extends DisjunctiveVisitor<Boolean> {
 		for(DisjunctiveLE e : le.getElements())
 			if(!e.dispatch(this))
 				return false;
+		return true;
+	}
+
+	@Override
+	public Boolean trueContext(TrueContext trueContext) {
 		return true;
 	}
 

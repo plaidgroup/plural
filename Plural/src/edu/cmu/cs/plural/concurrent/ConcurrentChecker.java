@@ -52,7 +52,7 @@ import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionalAnalysis;
 
 /**

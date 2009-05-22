@@ -43,9 +43,9 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.concrete.Implication;
+import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.linear.DefaultPredicateMerger;
-import edu.cmu.cs.plural.linear.TensorPluralTupleLE;
 
 /**
  * An extension of {@link DefaultPredicateMerger} that works for unpacking

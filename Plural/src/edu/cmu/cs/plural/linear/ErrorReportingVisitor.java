@@ -39,6 +39,13 @@ package edu.cmu.cs.plural.linear;
 
 import java.util.LinkedHashSet;
 
+import edu.cmu.cs.plural.contexts.ContextAllLE;
+import edu.cmu.cs.plural.contexts.ContextChoiceLE;
+import edu.cmu.cs.plural.contexts.DisjunctiveLE;
+import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
+import edu.cmu.cs.plural.contexts.TrueContext;
+
 /**
  * Simple visitor to find errors according to the semantics of disjunctive
  * contexts and generate an appropriate error message where needed.  
@@ -47,7 +54,7 @@ import java.util.LinkedHashSet;
  * @author Kevin Bierhoff
  * @since 4/24/2008
  */
-abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
+public abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
 
 	/**
 	 * Formats a error string from the given error enumeration, by inserting
@@ -121,5 +128,12 @@ abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
 			return "[ " + result + " ]";
 		else
 			return result;
+	}
+
+	@Override
+	public String trueContext(TrueContext trueContext) {
+		// fail for empty (true) choice: true cannot prove anything
+		// TODO This is where we'd really like to give a real error message.
+		return "No available context--usually due to a previous failure or error during packing/unpacking";
 	}
 }

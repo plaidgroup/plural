@@ -36,59 +36,36 @@
  * release a modified version which carries forward this exception.
  */
 
-package edu.cmu.cs.plural.concurrent.nimby;
-
-import java.util.List;
+package edu.cmu.cs.plural.errors;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import edu.cmu.cs.crystal.IAnalysisInput;
-import edu.cmu.cs.crystal.ILabel;
-import edu.cmu.cs.crystal.flow.IResult;
-import edu.cmu.cs.crystal.flow.LabeledResult;
-import edu.cmu.cs.plural.concurrent.ConcurrentTransferFunction;
-import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
-import edu.cmu.cs.plural.track.FractionAnalysisContext;
+import edu.cmu.cs.crystal.util.Option;
 
 /**
- * This class is the transfer function for my analysis of type-state in the
- * context of an <code>atomic</code> primitive. It overrides the abstract
- * forgetIfNotProtected method of its superclass, forgetting all share, pure
- * permissions that are not inside of an atomic block.
+ * A failed pack. Must have an error message, so we know why it has failed.
  * 
  * @author Nels E. Beckman
- * @since May 5, 2009
+ * @since May 21, 2009
  */
-class NIMBYTransferFunction extends ConcurrentTransferFunction {
+public class FailedPack implements PackingResult {
 
-	private IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
+	private final String failureMessage;
+	private Option<ASTNode> failureLocation;
 	
-	public NIMBYTransferFunction(IAnalysisInput input,
-			FractionAnalysisContext context) {
-		super(input, context);
-	}
-
-	@Override
-	protected IResult<PluralDisjunctiveLE> forgetIfNotProtected(ASTNode node,
-			List<ILabel> labels, IResult<PluralDisjunctiveLE> result) {
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(node) ) {
-			result = this.forgetSharedPermissions(result, labels, node);
-		}
-		return result;
+	/**
+	 * Return a failing pack result.
+	 * @param failureMessage A message to be associated with this failed pack.
+	 * @return A packing result indicating the failure.
+	 */
+	public static PackingResult fail(String failureMessage) {
+		return new FailedPack(failureMessage);
 	}
 	
-	private IResult<PluralDisjunctiveLE> forgetSharedPermissions(
-			IResult<PluralDisjunctiveLE> transfer_result, List<ILabel> labels,
-			ASTNode node) {
-		// TODO: Is there a better default? Could we get the default from the old one?
-		LabeledResult<PluralDisjunctiveLE> result = LabeledResult.createResult(labels, null);
-		for( ILabel label : labels ) {
-			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), node));
-		}
-		return result;
+	public FailedPack(String failureMessage) {
+		this.failureMessage = failureMessage;
 	}
-
-	private PluralDisjunctiveLE forgetSharedPermissions(PluralDisjunctiveLE lattice, ASTNode node) {
-		return lattice.forgetShareAndPureStates();
-	}
+	
+	@Override public Option<String> errorMsg() { return Option.some(failureMessage); }
+	@Override public boolean worked() { return false; }
 }

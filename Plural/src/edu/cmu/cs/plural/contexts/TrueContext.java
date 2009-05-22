@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
+ * Copyright (C) 2007-2009 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
  *
@@ -35,51 +35,68 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.pred;
 
-import java.util.Set;
+package edu.cmu.cs.plural.contexts;
 
-import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
-import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.linear.AbstractPredicateChecker;
+import org.eclipse.jdt.core.dom.ASTNode;
+
+import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
- * This class is an analogue to DefaultInvariantMerger. It provides
- * the call-back functionality, SplitOffTuple, that will be used to
- * check that all invariants are satisfied at pack-time.
+ * A context that corresponds to true, or 1 in the linear logic.
+ * This concept used to be implemented as an empty 
+ * {@link ContextChoiceLE}.
  * 
  * @author Nels E. Beckman
- * @since Sep 26, 2008
- * @see {@link DefaultInvariantMerger}
+ * @since May 22, 2009
+ *
  */
-public class DefaultInvariantChecker extends AbstractPredicateChecker {
+public class TrueContext implements DisjunctiveLE {
 
-	private final boolean purify;
-	
-	public DefaultInvariantChecker(TensorPluralTupleLE value,
-			Aliasing thisLoc, boolean purify) {
-		super(value, thisLoc);
-		this.purify = purify;
+	@Override
+	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node) {
+		// Always false, this this contains no information.
+		return false;
 	}
 
 	@Override
-	public boolean splitOffPermission(Aliasing var, String var_name,
-			PermissionSetFromAnnotations perms) {
-		// Purify if we need to.
-		return super.splitOffPermission(var, var_name, purify ? perms.purify() : perms);
-	}
-
-	// Weirdo methods...
-
-	@Override
-	public void announceBorrowed(Set<Aliasing> borrowedVars) {
-		Utilities.nyi("I wasn't ever expecting this method to be called.");		
+	public DisjunctiveLE compact(ASTNode node, boolean freeze) {
+		return freeze ? this.freeze() : this.mutableCopy();
 	}
 
 	@Override
-	public boolean finishSplit() {
-		return true;
+	public <T> T dispatch(DisjunctiveVisitor<T> visitor) {
+		return visitor.trueContext(this);
 	}
+
+	@Override
+	public boolean atLeastAsPrecise(DisjunctiveLE other, ASTNode node) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public DisjunctiveLE copy() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DisjunctiveLE join(DisjunctiveLE other, ASTNode node) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DisjunctiveLE freeze() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public DisjunctiveLE mutableCopy() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

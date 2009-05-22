@@ -52,7 +52,7 @@ import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.tac.MethodCallInstruction;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.concurrent.ConcurrentTransferFunction;
-import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 
 /**

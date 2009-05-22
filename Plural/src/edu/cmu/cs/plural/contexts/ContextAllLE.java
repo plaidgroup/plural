@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
+package edu.cmu.cs.plural.contexts;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -43,6 +43,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+
+import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
  * {@code ContextAllLE} is currently unused, but it's intended for the case where
@@ -55,11 +57,11 @@ import org.eclipse.jdt.core.dom.ASTNode;
  */
 public final class ContextAllLE extends AbstractDisjunctiveLE implements DisjunctiveLE {
 	
-	static ContextAllLE all(Set<DisjunctiveLE> elements) {
+	public static ContextAllLE all(Set<DisjunctiveLE> elements) {
 		return new ContextAllLE(elements);
 	}
 	
-	static ContextAllLE falseContext() {
+	public static ContextAllLE falseContext() {
 		return new ContextAllLE();
 	}
 
@@ -171,6 +173,11 @@ public final class ContextAllLE extends AbstractDisjunctiveLE implements Disjunc
 				return true;
 			}
 
+			@Override
+			public Boolean trueContext(TrueContext trueContext) {
+				return true;
+			}
+			
 			@Override
 			public Boolean context(LinearContextLE other) {
 				return ContextAllLE.this.atLeastAsPrecise(other.getTuple(), node);
