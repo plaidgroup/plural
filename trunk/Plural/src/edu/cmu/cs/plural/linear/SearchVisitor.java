@@ -37,6 +37,12 @@
  */
 package edu.cmu.cs.plural.linear;
 
+import edu.cmu.cs.plural.contexts.ContextAllLE;
+import edu.cmu.cs.plural.contexts.ContextChoiceLE;
+import edu.cmu.cs.plural.contexts.DisjunctiveLE;
+import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
+
 /**
  * @author Kevin Bierhoff
  *

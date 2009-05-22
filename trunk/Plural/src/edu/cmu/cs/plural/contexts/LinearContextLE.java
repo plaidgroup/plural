@@ -35,12 +35,15 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
+package edu.cmu.cs.plural.contexts;
 
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+
+import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
  * {@code LinearContextLE} wraps a {@code TensorPluralTupleLE}.
@@ -50,7 +53,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
  */
 public class LinearContextLE implements DisjunctiveLE {
 	
-	static LinearContextLE tensor(TensorPluralTupleLE tuple) {
+	public static LinearContextLE tensor(TensorPluralTupleLE tuple) {
 		return new LinearContextLE(tuple);
 	}
 
@@ -124,6 +127,11 @@ public class LinearContextLE implements DisjunctiveLE {
 			}
 
 			@Override
+			public Boolean trueContext(TrueContext trueContext) {
+				return true;
+			}
+			
+			@Override
 			public Boolean context(LinearContextLE other) {
 				return LinearContextLE.this.atLeastAsPrecise(other.tuple, node);
 			}
@@ -158,6 +166,12 @@ public class LinearContextLE implements DisjunctiveLE {
 				return ContextChoiceLE.choice(joinElems(other.getElements()));
 			}
 
+			@Override
+			public DisjunctiveLE trueContext(TrueContext trueContext) {
+				Set<DisjunctiveLE> emptySet = Collections.<DisjunctiveLE>emptySet();
+				return ContextChoiceLE.choice(joinElems(emptySet));
+			}
+			
 			@Override
 			public DisjunctiveLE context(LinearContextLE other) {
 //				if(LinearContextLE.this.tuple.isUnsatisfiable() || other.tuple.isUnsatisfiable())

@@ -135,8 +135,7 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 
 	@Override
 	public boolean hasReceiver() {
-		// TODO Use Modifier.isStatic 
-		return (binding.getModifiers() & Modifier.STATIC) == 0;
+		return (!Modifier.isStatic(binding.getModifiers()));
 	}
 
 	private class MultiMethodCase extends AbstractBindingCase implements

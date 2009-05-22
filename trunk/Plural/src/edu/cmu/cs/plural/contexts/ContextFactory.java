@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
+package edu.cmu.cs.plural.contexts;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -43,6 +43,8 @@ import java.util.Set;
 import edu.cmu.cs.crystal.util.CollectionMethods;
 import edu.cmu.cs.plural.fractions.FractionConstraints;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
+import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
+import edu.cmu.cs.plural.linear.TestVisitor;
 
 /**
  * Factory methods to create linear logic connectives.
@@ -214,10 +216,14 @@ public class ContextFactory {
 				if(! isImpossible(e))
 					return false;
 			}
-			// returns true for empty context
 			return true;
 		}
 
+		@Override
+		public Boolean trueContext(TrueContext trueContext) {
+			return true;
+		}
+		
 		@Override
 		public Boolean context(LinearContextLE le) {
 			for(Iterator<FractionalPermissions> it = le.getTuple().tupleInfoIterator(); it.hasNext(); ) {
@@ -235,8 +241,7 @@ public class ContextFactory {
 			}
 			// returns false for empty context
 			return false;
-		}
-		
+		}		
 	};
 
 	/**
@@ -273,10 +278,14 @@ public class ContextFactory {
 		}
 
 		@Override
+		public Boolean trueContext(TrueContext trueContext) {
+			return false;
+		}
+		
+		@Override
 		public Boolean context(LinearContextLE le) {
 			// found the single element
 			return true;
-		}
-		
+		}		
 	};
 }

@@ -49,6 +49,7 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.util.ConsList;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.concrete.Implication;
+import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.fractions.VirtualFramePermissionSet;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;

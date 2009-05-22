@@ -37,6 +37,13 @@
  */
 package edu.cmu.cs.plural.linear;
 
+import edu.cmu.cs.plural.contexts.ContextAllLE;
+import edu.cmu.cs.plural.contexts.ContextChoiceLE;
+import edu.cmu.cs.plural.contexts.DisjunctiveLE;
+import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
+import edu.cmu.cs.plural.contexts.TrueContext;
+
 /**
  * Tests the tuples of a given lattice element and combines the
  * test results according to the choice-vs.-all semantics of
@@ -44,7 +51,7 @@ package edu.cmu.cs.plural.linear;
  * @author Kevin Bierhoff
  * @since 4/22/2008
  */
-abstract class TestVisitor extends DisjunctiveVisitor<Boolean> {
+public abstract class TestVisitor extends DisjunctiveVisitor<Boolean> {
 
 	/**
 	 * Test an individual tuple.
@@ -76,6 +83,11 @@ abstract class TestVisitor extends DisjunctiveVisitor<Boolean> {
 			if(e.dispatch(this))
 				return true;
 		}
+		return false;
+	}
+
+	@Override
+	public Boolean trueContext(TrueContext trueContext) {
 		return false;
 	}
 }

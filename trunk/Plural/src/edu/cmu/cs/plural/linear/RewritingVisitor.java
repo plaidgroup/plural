@@ -40,6 +40,13 @@ package edu.cmu.cs.plural.linear;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
+import edu.cmu.cs.plural.contexts.AbstractDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.ContextAllLE;
+import edu.cmu.cs.plural.contexts.ContextChoiceLE;
+import edu.cmu.cs.plural.contexts.DisjunctiveLE;
+import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.TrueContext;
+
 /**
  * @author Kevin
  *
@@ -52,6 +59,11 @@ public class RewritingVisitor extends DisjunctiveVisitor<DisjunctiveLE> {
 	@Override
 	public DisjunctiveLE choice(ContextChoiceLE le) {
 		return descend(le);
+	}
+	
+	@Override
+	public DisjunctiveLE trueContext(TrueContext trueContext) {
+		return trueContext.copy();
 	}
 
 	/* (non-Javadoc)
@@ -87,5 +99,4 @@ public class RewritingVisitor extends DisjunctiveVisitor<DisjunctiveLE> {
 		le.getElements().addAll(newElems);
 		return le;
 	}
-
 }

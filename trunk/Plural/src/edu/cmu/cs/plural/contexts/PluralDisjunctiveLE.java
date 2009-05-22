@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
+package edu.cmu.cs.plural.contexts;
 
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
@@ -65,11 +65,17 @@ import edu.cmu.cs.crystal.util.Freezable;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
+import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionConstraint;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.linear.DescendingVisitor;
+import edu.cmu.cs.plural.linear.ErrorReportingVisitor;
+import edu.cmu.cs.plural.linear.LinearOperations;
+import edu.cmu.cs.plural.linear.RewritingVisitor;
+import edu.cmu.cs.plural.linear.TestVisitor;
 import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.states.IConstructorCaseInstance;
 import edu.cmu.cs.plural.states.IConstructorSignature;
@@ -536,7 +542,9 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			@Override
 			public DisjunctiveLE context(LinearContextLE le) {
 				if(! le.getTuple().isRcvrPacked()) {
-					if(le.getTuple().packReceiver(rcvrVar, stateRepo, locs, neededStates))
+					PackingResult pack_result = le.getTuple().packReceiver(rcvrVar, stateRepo, locs, neededStates);
+					// TODO: Put packing message into true context
+					if( pack_result.worked() )
 						return le;
 					else
 						return ContextFactory.trueContext();

@@ -37,6 +37,12 @@
  */
 package edu.cmu.cs.plural.linear;
 
+import edu.cmu.cs.plural.contexts.ContextAllLE;
+import edu.cmu.cs.plural.contexts.ContextChoiceLE;
+import edu.cmu.cs.plural.contexts.DisjunctiveLE;
+import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.TrueContext;
+
 /**
  * Visitor for {@link DisjunctiveLE} object trees.
  * @author Kevin Bierhoff
@@ -56,4 +62,5 @@ public abstract class DisjunctiveVisitor<T> {
 		return null;
 	}
 
+	public abstract T trueContext(TrueContext trueContext);
 }

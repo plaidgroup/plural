@@ -35,12 +35,13 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
+package edu.cmu.cs.plural.contexts;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.simple.LatticeElement;
 import edu.cmu.cs.crystal.util.Freezable;
+import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
  * This interface represents the abstract super-type of classes used for

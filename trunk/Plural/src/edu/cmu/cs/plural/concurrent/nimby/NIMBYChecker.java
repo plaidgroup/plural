@@ -40,7 +40,7 @@ package edu.cmu.cs.plural.concurrent.nimby;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concurrent.ConcurrentChecker;
 import edu.cmu.cs.plural.concurrent.MutexWalker;
-import edu.cmu.cs.plural.linear.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
 import edu.cmu.cs.plural.track.FractionalTransfer;
 
 /**

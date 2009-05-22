@@ -35,7 +35,7 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.linear;
+package edu.cmu.cs.plural.contexts;
 
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -47,7 +47,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */
-abstract class AbstractDisjunctiveLE implements DisjunctiveLE {
+public abstract class AbstractDisjunctiveLE implements DisjunctiveLE {
 	
 	private Set<DisjunctiveLE> elements;
 	private boolean frozen;

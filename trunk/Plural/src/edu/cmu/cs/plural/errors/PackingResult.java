@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
+ * Copyright (C) 2007-2009 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
  *
@@ -35,51 +35,33 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.pred;
 
-import java.util.Set;
+package edu.cmu.cs.plural.errors;
 
-import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
-import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.linear.AbstractPredicateChecker;
+import edu.cmu.cs.crystal.util.Option;
 
 /**
- * This class is an analogue to DefaultInvariantMerger. It provides
- * the call-back functionality, SplitOffTuple, that will be used to
- * check that all invariants are satisfied at pack-time.
+ * The result of trying to pack the receiver. Could either be successful or
+ * not successful.
  * 
  * @author Nels E. Beckman
- * @since Sep 26, 2008
- * @see {@link DefaultInvariantMerger}
+ * @since May 21, 2009
+ *
  */
-public class DefaultInvariantChecker extends AbstractPredicateChecker {
-
-	private final boolean purify;
+public interface PackingResult {
+	/** Did packing work? */
+	boolean worked();
+	/** Optional error message. Must be SOME if worked is False. */
+	Option<String> errorMsg();
 	
-	public DefaultInvariantChecker(TensorPluralTupleLE value,
-			Aliasing thisLoc, boolean purify) {
-		super(value, thisLoc);
-		this.purify = purify;
-	}
+	/** Singleton instance, represents a successful pack. */
+	static PackingResult success = new SuccessfulPack();
+}
 
-	@Override
-	public boolean splitOffPermission(Aliasing var, String var_name,
-			PermissionSetFromAnnotations perms) {
-		// Purify if we need to.
-		return super.splitOffPermission(var, var_name, purify ? perms.purify() : perms);
-	}
-
-	// Weirdo methods...
-
-	@Override
-	public void announceBorrowed(Set<Aliasing> borrowedVars) {
-		Utilities.nyi("I wasn't ever expecting this method to be called.");		
-	}
-
-	@Override
-	public boolean finishSplit() {
-		return true;
-	}
+/**
+ * A successful pack.
+ */
+class SuccessfulPack implements PackingResult {
+	@Override public boolean worked() { return true; }
+	@Override public Option<String> errorMsg() { return Option.none(); }
 }

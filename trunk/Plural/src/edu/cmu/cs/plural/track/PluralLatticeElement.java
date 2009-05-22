@@ -43,12 +43,9 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.tac.TACInstruction;
-import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
-import edu.cmu.cs.crystal.util.ExtendedIterator;
 import edu.cmu.cs.crystal.util.SimpleMap;
-import edu.cmu.cs.plural.fractions.FractionalPermissions;
+import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 
 /**
@@ -56,39 +53,6 @@ import edu.cmu.cs.plural.states.StateSpaceRepository;
  * @since 4/15/2008
  */
 public interface PluralLatticeElement {
-
-//	public boolean isNull(Aliasing loc);
-//
-//	public boolean isNonNull(Aliasing loc);
-//
-//	public boolean isBooleanTrue(Aliasing var);
-//
-//	public boolean isBooleanFalse(Aliasing var);
-//
-//	public void addFalseImplication(Aliasing ant, Aliasing object, String state);
-//
-//	public void addFalseVarPredicate(Aliasing v);
-//
-//	public void addNonNullVariable(Aliasing var);
-//
-//	public void addNullVariable(Aliasing var);
-//
-//	public void addNullImplication(Aliasing v_1, boolean is_v1_true,
-//			Aliasing v_2, boolean is_v2_null);
-//
-//	public void addTrueImplication(Aliasing ant, Aliasing object, String state);
-//
-//	public void addTrueVarPredicate(Aliasing v);
-//
-//	public void addEquality(Aliasing v_1, Aliasing v_2);
-//
-//	public void addInequality(Aliasing v_1, Aliasing v_2);
-//
-//	public List<ImplicationResult> solve();
-//
-//	public List<ImplicationResult> solveWithHint(Aliasing v);
-//
-//	public List<ImplicationResult> solveWithHints(Aliasing... vs);
 
 	/**
 	 * Calling this method signals to the object that it is a good time
@@ -113,38 +77,16 @@ public interface PluralLatticeElement {
 	public PluralTupleLatticeElement storeInitialAliasingInfo(
 			MethodDeclaration decl);
 
-//	public void put(TACInstruction<?> instr, Variable x, FractionalPermissions l);
-//
-//	public FractionalPermissions get(Aliasing objects);
-//
-//	public FractionalPermissions get(TACInstruction<?> instr, Variable x);
-//
-//	public void put(Aliasing a, FractionalPermissions l);
-//
-//	public FractionalPermissions get(ASTNode n, Variable x);
-//
-//	public void put(ASTNode n, Variable x, FractionalPermissions l);
-//
-//	public PluralTupleLatticeElement bottom();
-//
-//	public ExtendedIterator<FractionalPermissions> tupleInfoIterator();
-
 	public boolean isBottom();
-
-//	public Aliasing getLocationsAfter(ASTNode n, Variable x);
-//
-//	public Aliasing getLocationsBefore(ASTNode n, Variable x);
-
-//	public boolean isRcvrPacked();
 
 	/**
 	 * Pack the receiver to the given state with suitable defaults for the
 	 * rest of the permission details.
 	 * Does nothing if receiver is already packed.
 	 * @param stateInfo
-	 * @return Did we successfully pack?
+	 * @return A result indicating whether or not the pack was succesful.
 	 */
-	public boolean packReceiver(Variable rcvrVar,
+	public PackingResult packReceiver(Variable rcvrVar,
 			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
 			Set<String> desiredState);
 

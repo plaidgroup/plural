@@ -365,7 +365,7 @@ class PermissionSet {
 				newPs.add(newP);
 				return true;
 			}
-			else if(! permission.getStateSpace().areOrthogonal(p.getRootNode(), permission.getRootNode())) {
+			else if( !permission.getStateSpace().areOrthogonal(p.getRootNode(), permission.getRootNode()) ) {
 				// this is an error: presented a permission for a mutually exclusive node, or
 				// a node above or below p's root--permission and p cannot co-exist
 				constraints.addConstraint(FractionConstraint.impossible());
