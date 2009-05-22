@@ -50,22 +50,39 @@ import edu.cmu.cs.crystal.util.Option;
  */
 public class FailedPack implements PackingResult {
 
-	private final String failureMessage;
+	/**
+	 * The state and invariant that we tried to pack to but
+	 * could not.
+	 */
+	private final String state;
+	private final String invariant;
+	
 	private Option<ASTNode> failureLocation;
 	
 	/**
 	 * Return a failing pack result.
-	 * @param failureMessage A message to be associated with this failed pack.
+	 * @param state The state that we unsuccessfully tried to pack to.
+	 * @param invariant The invariant of that state that could not be satisfied.
 	 * @return A packing result indicating the failure.
 	 */
-	public static PackingResult fail(String failureMessage) {
-		return new FailedPack(failureMessage);
+	public static PackingResult fail(String state, String invariant) {
+		return new FailedPack(state, invariant);
 	}
 	
-	public FailedPack(String failureMessage) {
-		this.failureMessage = failureMessage;
+	public FailedPack(String state, String invariant) {
+		this.state = state;
+		this.invariant = invariant;
 	}
 	
-	@Override public Option<String> errorMsg() { return Option.some(failureMessage); }
 	@Override public boolean worked() { return false; }
+
+	@Override
+	public Option<String> failedInvariant() {
+		return Option.some(invariant);
+	}
+
+	@Override
+	public Option<String> failedState() {
+		return Option.some(state);
+	}
 }

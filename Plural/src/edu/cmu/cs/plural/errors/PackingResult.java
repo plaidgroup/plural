@@ -49,10 +49,20 @@ import edu.cmu.cs.crystal.util.Option;
  *
  */
 public interface PackingResult {
+	
 	/** Did packing work? */
 	boolean worked();
-	/** Optional error message. Must be SOME if worked is False. */
-	Option<String> errorMsg();
+	
+	/** 
+	 * Optional state that we tried to pack to but failed. 
+	 * Must be SOME if worked is False. 
+	 * */
+	Option<String> failedState();
+	/** 
+	 * Optional invariant that we could not satisfy when we tried
+	 * to pack. Must be SOME if worked is False. 
+	 * */
+	Option<String> failedInvariant();
 	
 	/** Singleton instance, represents a successful pack. */
 	static PackingResult success = new SuccessfulPack();
@@ -63,5 +73,6 @@ public interface PackingResult {
  */
 class SuccessfulPack implements PackingResult {
 	@Override public boolean worked() { return true; }
-	@Override public Option<String> errorMsg() { return Option.none(); }
+	@Override public Option<String> failedInvariant() { return Option.none(); }
+	@Override public Option<String> failedState() { return Option.none(); }
 }

@@ -42,6 +42,7 @@ import java.util.LinkedHashSet;
 import edu.cmu.cs.plural.contexts.ContextAllLE;
 import edu.cmu.cs.plural.contexts.ContextChoiceLE;
 import edu.cmu.cs.plural.contexts.DisjunctiveLE;
+import edu.cmu.cs.plural.contexts.FailingPackContext;
 import edu.cmu.cs.plural.contexts.LinearContextLE;
 import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 import edu.cmu.cs.plural.contexts.TrueContext;
@@ -132,8 +133,20 @@ public abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
 
 	@Override
 	public String trueContext(TrueContext trueContext) {
-		// fail for empty (true) choice: true cannot prove anything
-		// TODO This is where we'd really like to give a real error message.
-		return "No available context--usually due to a previous failure or error during packing/unpacking";
+		// Is it horrible to have a instanceof check inside of a visitor?
+		// I didn't want to have an extra method for every other visitor,
+		// since none of them care about this context type.
+		if( trueContext instanceof FailingPackContext ) {
+			FailingPackContext fail = (FailingPackContext)trueContext;
+			String state = fail.failingState();
+			String inv = fail.failingInvariant();
+			return "Previously attempted to pack to " + state + " but could not" +
+					" because the following invariant was unsatisfiable: " +
+					inv;
+		}
+		else {
+			// fail for empty (true) choice: true cannot prove anything
+			return "No available context--usually due to a previous failure or error during packing/unpacking";
+		}		
 	}
 }

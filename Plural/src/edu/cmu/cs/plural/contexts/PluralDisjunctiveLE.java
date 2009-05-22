@@ -543,11 +543,14 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			public DisjunctiveLE context(LinearContextLE le) {
 				if(! le.getTuple().isRcvrPacked()) {
 					PackingResult pack_result = le.getTuple().packReceiver(rcvrVar, stateRepo, locs, neededStates);
-					// TODO: Put packing message into true context
+
 					if( pack_result.worked() )
 						return le;
-					else
-						return ContextFactory.trueContext();
+					else {
+						String failed_state = pack_result.failedState().unwrap();
+						String failed_inv = pack_result.failedInvariant().unwrap();
+						return ContextFactory.failedPack(failed_state, failed_inv);
+					}
 				}
 				else {
 					if(le.getTuple().get(locs.get(rcvrVar)).isInStates(neededStates, true))
