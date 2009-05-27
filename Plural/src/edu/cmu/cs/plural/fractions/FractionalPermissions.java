@@ -50,7 +50,7 @@ import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 
-import edu.cmu.cs.crystal.simple.LatticeElement;
+import edu.cmu.cs.crystal.bridge.LatticeElement;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.states.StateSpace;
 

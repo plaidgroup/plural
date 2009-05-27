@@ -282,7 +282,7 @@ public final class FractionConstraints implements Freezable<FractionConstraints>
 	 * @return <code>true</code> if this constraint set has at least the constraints
 	 * of the given set, <code>false</code> otherwise.
 	 * @deprecated This is not the comparison one would want.
-	 * @see edu.cmu.cs.crystal.simple.LatticeElement#atLeastAsPrecise(edu.cmu.cs.crystal.simple.LatticeElement, ASTNode)
+	 * @see edu.cmu.cs.crystal.bridge.LatticeElement#atLeastAsPrecise(edu.cmu.cs.crystal.bridge.LatticeElement, ASTNode)
 	 */
 	@Deprecated
 	public boolean atLeastAsPrecise(FractionConstraints other) {
