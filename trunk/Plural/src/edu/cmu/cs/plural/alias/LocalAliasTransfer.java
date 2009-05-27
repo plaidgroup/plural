@@ -55,13 +55,13 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.DefaultObjectLabel;
 import edu.cmu.cs.crystal.analysis.alias.MayAliasTransferFunction;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
-import edu.cmu.cs.crystal.analysis.metrics.LoopCountingAnalysis;
+import edu.cmu.cs.crystal.analysis.metrics.LoopCounter;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.bridge.LatticeElementOps;
 import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledSingleResult;
-import edu.cmu.cs.crystal.simple.LatticeElementOps;
 import edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.AssignmentInstruction;
@@ -99,7 +99,7 @@ public class LocalAliasTransfer extends
 		AbstractTACBranchSensitiveTransferFunction<AliasingLE> implements
 		ITACBranchSensitiveTransferFunction<AliasingLE> {
 	
-	private final LoopCountingAnalysis loopCounter;
+	private final LoopCounter loopCounter;
 //	private final LivenessProxy liveness;
 	private Map<Variable, ObjectLabel> labelContext;
 
@@ -112,7 +112,7 @@ public class LocalAliasTransfer extends
 	
 	public LocalAliasTransfer(AnnotationDatabase adb, Map<IVariableBinding, Variable> map) {
 		this.annodb = adb;
-		loopCounter = new LoopCountingAnalysis();
+		loopCounter = new LoopCounter();
 //		liveness = LivenessProxy.create();
 		labelContext = new HashMap<Variable, ObjectLabel>();
 		receiverFields = map;

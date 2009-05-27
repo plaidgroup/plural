@@ -49,7 +49,7 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
-import edu.cmu.cs.crystal.simple.LatticeElement;
+import edu.cmu.cs.crystal.bridge.LatticeElement;
 import edu.cmu.cs.crystal.tac.KeywordVariable;
 import edu.cmu.cs.crystal.tac.SourceVariable;
 import edu.cmu.cs.crystal.tac.Variable;

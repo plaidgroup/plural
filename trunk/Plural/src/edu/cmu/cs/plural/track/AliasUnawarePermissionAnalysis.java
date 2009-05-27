@@ -53,12 +53,13 @@ import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
 import edu.cmu.cs.crystal.BooleanLabel;
 import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.bridge.LatticeElementOps;
 import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.flow.LabeledSingleResult;
-import edu.cmu.cs.crystal.simple.LatticeElementOps;
 import edu.cmu.cs.crystal.simple.TupleLatticeElement;
+import edu.cmu.cs.crystal.simple.TupleLatticeOperations;
 import edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction;
 import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
 import edu.cmu.cs.crystal.tac.AssignmentInstruction;
@@ -163,20 +164,20 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 		
 		private MethodDeclaration analyzedMethod;
 
-		private TupleLatticeElement<Variable, Permissions> entry =
-			new TupleLatticeElement<Variable, Permissions>(Permissions.BOTTOM, Permissions.BOTTOM);
+		private TupleLatticeOperations<Variable, Permissions> ops =
+			new TupleLatticeOperations<Variable, Permissions>(LatticeElementOps.create(Permissions.BOTTOM), Permissions.BOTTOM);
 
 		public PermTransferFunction(MethodDeclaration analyzedMethod) {
 			this.analyzedMethod = analyzedMethod;
 		}
 
 		public ILatticeOperations<TupleLatticeElement<Variable, Permissions>> createLatticeOperations(MethodDeclaration d) {
-			return LatticeElementOps.create(entry.bottom());
+			return ops;
 		}
 		
 		public TupleLatticeElement<Variable, Permissions> createEntryValue(MethodDeclaration d) {
 			// TODO initialize receiver and parameters
-			return entry.copy();
+			return ops.getDefault();
 		}
 		
 		public Permissions get(Variable x, TupleLatticeElement<Variable, Permissions> value) {
