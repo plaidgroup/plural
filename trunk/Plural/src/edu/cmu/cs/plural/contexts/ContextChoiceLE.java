@@ -54,7 +54,7 @@ import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */
-public final class ContextChoiceLE extends AbstractDisjunctiveLE implements LinearContext {
+public final class ContextChoiceLE implements LinearContext {
 	
 	/**
 	 * Creates an alternative disjunction with the given elements.
@@ -74,11 +74,12 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Line
 	}
 
 	private ContextChoiceLE() {
-		super();
+		elements = new LinkedHashSet<LinearContext>();
 	}
 
 	private ContextChoiceLE(Set<LinearContext> elements) {
-		super(elements);
+		this.elements = elements;
+		
 	}
 	
 	//
@@ -114,7 +115,7 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Line
 				continue;
 			if(this.getClass().equals(e.getClass())) {
 				LinkedHashSet<LinearContext> subElems = 
-					new LinkedHashSet<LinearContext>(((AbstractDisjunctiveLE) e).getElements());
+					new LinkedHashSet<LinearContext>(((ContextChoiceLE) e).getElements());
 				next_sub:
 				for(Iterator<LinearContext> subIt = subElems.iterator(); subIt.hasNext(); ) {
 					// compare all sub-elements in e with elements in compacted  
@@ -208,16 +209,114 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Line
 
 	@Override
 	public String toString() {
-		return super.elemString("UNIT", " & ");
+		return elemString("UNIT", " & ");
 	}
 	
 	/*
 	 * AbstractDisjunctiveLE methods
 	 */
-
-	@Override
 	protected LinearContext create(Set<LinearContext> newElements) {
 		return choice(newElements);
 	}
 
+	private Set<LinearContext> elements;
+	private boolean frozen;
+	
+	public Set<LinearContext> getElements() {
+		return elements;
+	}
+	
+	/**
+	 * This method must not be called when frozen.
+	 * @param elements
+	 */
+	protected void setElements(Set<LinearContext> elements) {
+		if(frozen)
+			throw new IllegalStateException("Cannot modify frozen object");
+		this.elements = elements;
+	}
+
+	protected final String elemString(String empty, String separator) {
+		if(elements.isEmpty())
+			return empty;
+		StringBuffer result = new StringBuffer();
+		boolean first = true;
+		for(LinearContext e : elements) {
+			if(first)
+				first = false;
+			else
+				result.append(separator);
+			result.append(e.toString());
+		}
+		return result.toString();
+	}
+	
+	//
+	// Freezable methods
+	//
+
+	@Override
+	public LinearContext freeze() {
+		if(!frozen) {
+			frozen = true;
+			LinkedHashSet<LinearContext> compacted = new LinkedHashSet<LinearContext>();
+			for(LinearContext e : elements) {
+				e = e.freeze();
+				/*if(ContextFactory.isFalseContext(e)) {
+					// drop it
+				}
+				else*/ if(this.getClass().equals(e.getClass())) {
+					compacted.addAll(((ContextChoiceLE) e).getElements());
+				}
+				else {
+					compacted.add(e);
+				}
+			}
+			elements = Collections.unmodifiableSet(compacted);
+		}
+		return this;
+	}
+	
+	@Override
+	public LinearContext mutableCopy() {
+		LinkedHashSet<LinearContext> mutableSet = new LinkedHashSet<LinearContext>(elements.size());
+		for(LinearContext e : elements) {
+			mutableSet.add(e.mutableCopy());
+		}
+		return create(mutableSet);
+	}
+
+	protected boolean isFrozen() {
+		return frozen;
+	}
+	
+	protected void setFrozen(boolean newFrozen) {
+		if(this.frozen && !newFrozen)
+			throw new IllegalStateException("Cannot unfreeze frozen object");
+		this.frozen = newFrozen;
+	}
+
+	//
+	// LatticeElement methods
+	//
+
+	@Override
+	public LinearContext join(LinearContext other, ASTNode node) {
+		this.freeze();
+		if(other == this)
+			return this;
+		other.freeze();
+		
+		LinkedHashSet<LinearContext> newElems = new LinkedHashSet<LinearContext>(getElements().size());
+		for(LinearContext e : getElements()) {
+			newElems.add(e.join(other, node));
+		}
+		return create(newElems);
+	}
+
+	@Override
+	public LinearContext copy() {
+		freeze();
+		return this;
+	}
 }
