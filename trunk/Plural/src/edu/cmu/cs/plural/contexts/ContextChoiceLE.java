@@ -65,14 +65,6 @@ public final class ContextChoiceLE implements LinearContext {
 		return new ContextChoiceLE(elements);
 	}
 
-	/**
-	 * Returns the empty choice, which corresponds to <b>true</b> (<b>1</b>).
-	 * @return the empty choice.
-	 */
-	public static ContextChoiceLE trueContext() {
-		return new ContextChoiceLE();
-	}
-
 	private ContextChoiceLE() {
 		elements = new LinkedHashSet<LinearContext>();
 	}
