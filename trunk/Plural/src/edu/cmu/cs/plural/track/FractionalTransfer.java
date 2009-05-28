@@ -88,9 +88,9 @@ import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.LivenessProxy;
-import edu.cmu.cs.plural.contexts.DisjunctiveLE;
+import edu.cmu.cs.plural.contexts.LinearContext;
 import edu.cmu.cs.plural.contexts.InitialLECreator;
-import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
@@ -109,7 +109,7 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
  * @author Nels Beckman
  */
 public class FractionalTransfer extends
-		AbstractTACBranchSensitiveTransferFunction<PluralDisjunctiveLE> {
+		AbstractTACBranchSensitiveTransferFunction<PluralContext> {
 	
 	private static final Logger log = Logger.getLogger(FractionalTransfer.class.getName());
 	
@@ -175,31 +175,31 @@ public class FractionalTransfer extends
 	 * For state invariants, I will insert information into the lattice about this object's
 	 * fields based on what the precondition state implies.
 	 */
-	public ILatticeOperations<PluralDisjunctiveLE> createLatticeOperations(MethodDeclaration d) {
-		return LatticeElementOps.create(PluralDisjunctiveLE.bottom());
+	public ILatticeOperations<PluralContext> createLatticeOperations(MethodDeclaration d) {
+		return LatticeElementOps.create(PluralContext.bottom());
 	}
 	
-	public PluralDisjunctiveLE createEntryValue(MethodDeclaration d) {
+	public PluralContext createEntryValue(MethodDeclaration d) {
 		if(initialLocations != null || dynamicStateTest != null)
 			throw new IllegalStateException("getLattice() called twice--must create a new instance of this class for every method being analyzed");
 		
 		liveness.switchToMethod(d);
 		
-		Pair<DisjunctiveLE, SimpleMap<String, Aliasing>> li = createLatticeInfo(d);
-		DisjunctiveLE start = li.fst();
+		Pair<LinearContext, SimpleMap<String, Aliasing>> li = createLatticeInfo(d);
+		LinearContext start = li.fst();
 		// put location map in a field so it can be used for post-condition checking
 		this.initialLocations = li.snd(); 
 		
 		dynamicStateTest = new HashMap<Boolean, String>(2);
 		populateDynamicStateTest();
 		
-		PluralDisjunctiveLE startLE = PluralDisjunctiveLE.createLE(start,
+		PluralContext startLE = PluralContext.createLE(start,
 				getAnalysisContext(), context);
 		
 		return startLE;
 	}
 
-	private Pair<DisjunctiveLE, SimpleMap<String, Aliasing>> createLatticeInfo(MethodDeclaration decl) {
+	private Pair<LinearContext, SimpleMap<String, Aliasing>> createLatticeInfo(MethodDeclaration decl) {
 		PredicateMerger pre = context.getAnalyzedCase().getPreconditionMerger();
 		if(decl.isConstructor()) {
 			boolean callsThisConstructor = false;
@@ -281,9 +281,9 @@ public class FractionalTransfer extends
 	//
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			ArrayInitInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 		
 		// killing dead variables is the last thing we do
@@ -307,9 +307,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			BinaryOperation binop, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(binop.getNode());
 		
 		// this code is highly suspicious for going wrong if one of the operands is the target
@@ -317,7 +317,7 @@ public class FractionalTransfer extends
 		Variable op2_loc = binop.getOperand2();
 		Variable target_loc = binop.getTarget();
 		
-		PluralDisjunctiveLE true_value = null;
+		PluralContext true_value = null;
 		if( labels.contains(BooleanLabel.getBooleanLabel(true)) ) {
 			/*
 			 * TRUE BRANCH
@@ -352,7 +352,7 @@ public class FractionalTransfer extends
 			true_value.freeze(); // done with this lattice element--freeze it
 		}
 		
-		PluralDisjunctiveLE false_value = null;
+		PluralContext false_value = null;
 		if( labels.contains(BooleanLabel.getBooleanLabel(false)) ) {
 			/*
 			 * FALSE BRANCH
@@ -392,7 +392,7 @@ public class FractionalTransfer extends
 				NormalLabel.getNormalLabel()));
 		value.freeze(); // done with this lattice element--freeze it
 		
-		LabeledResult<PluralDisjunctiveLE> result = 
+		LabeledResult<PluralContext> result = 
 			LabeledResult.createResult(labels, value);
 		if(true_value != null)
 			result.put(BooleanLabel.getBooleanLabel(true), true_value);
@@ -410,10 +410,10 @@ public class FractionalTransfer extends
 	 * @param vs
 	 * @return
 	 */
-	private static PluralDisjunctiveLE addNewlyDeducedFacts(
+	private static PluralContext addNewlyDeducedFacts(
 			// TODO not needed parameter
 			TACInstruction instr, 
-			PluralDisjunctiveLE value,
+			PluralContext value,
 			Variable... vs) {
 		value.addNewlyDeducedFacts(vs);
 		
@@ -427,9 +427,9 @@ public class FractionalTransfer extends
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			CastInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -438,9 +438,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			ConstructorCallInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -452,9 +452,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			CopyInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -463,9 +463,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			DotClassInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -473,9 +473,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			InstanceofInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -483,9 +483,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			LoadArrayInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -493,9 +493,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			LoadFieldInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -540,10 +540,10 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			LoadLiteralInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE initial_value) {
-		PluralDisjunctiveLE new_value = 
+			PluralContext initial_value) {
+		PluralContext new_value = 
 			initial_value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		new_value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -575,9 +575,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			final MethodCallInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 
@@ -637,8 +637,8 @@ public class FractionalTransfer extends
 	 * @param false_result
 	 * @return modified <code>value</code>.
 	 */
-	private PluralDisjunctiveLE addIndicatedImplications(MethodCallInstruction instr,
-			PluralDisjunctiveLE value, Variable indicated_loc,
+	private PluralContext addIndicatedImplications(MethodCallInstruction instr,
+			PluralContext value, Variable indicated_loc,
 			IndicatesAnnotation true_result, IndicatesAnnotation false_result) {
 		/*
 		 * Add implications for any state indicator annotations
@@ -656,9 +656,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			NewArrayInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -675,9 +675,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			NewObjectInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -696,9 +696,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			SourceVariableDeclaration instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 		
 		// If this variable is the parameter to a catch block, we default
@@ -738,9 +738,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			StoreArrayInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -752,9 +752,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			StoreFieldInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -775,9 +775,9 @@ public class FractionalTransfer extends
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			UnaryOperation unop, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(unop.getNode());
 //		value.killDeadVariables(unop, createVariableLivenessAfter(unop));
 		
@@ -796,9 +796,9 @@ public class FractionalTransfer extends
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			SourceVariableRead instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
@@ -815,11 +815,11 @@ public class FractionalTransfer extends
 	 * @param labels Labels out of the instruction <b>as given to the transfer function</b>. 
 	 * @param value Analysis information.
 	 * @return Transfer result with frozen analysis information for return to framework.
-	 * @see #finishTransfer(TACInstruction, Variable, List, PluralDisjunctiveLE)
+	 * @see #finishTransfer(TACInstruction, Variable, List, PluralContext)
 	 */
-	private IResult<PluralDisjunctiveLE> finishTransfer(
+	private IResult<PluralContext> finishTransfer(
 			AssignmentInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		return finishTransfer(instr, instr.getTarget(), labels, value);
 	}
 
@@ -835,11 +835,11 @@ public class FractionalTransfer extends
 	 * @param value Analysis information.
 	 * @return Transfer result with frozen analysis information for return to framework.
 	 */
-	private IResult<PluralDisjunctiveLE> finishTransfer(
+	private IResult<PluralContext> finishTransfer(
 			TACInstruction instr,
 			final Variable testedVar, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
-		PluralDisjunctiveLE true_value = null;
+			PluralContext value) {
+		PluralContext true_value = null;
 		if( labels.contains(BooleanLabel.getBooleanLabel(true)) ) {
 
 			/*
@@ -857,7 +857,7 @@ public class FractionalTransfer extends
 			true_value.freeze(); // done with this lattice element--freeze it
 		}
 
-		PluralDisjunctiveLE false_value = null;
+		PluralContext false_value = null;
 		if( labels.contains(BooleanLabel.getBooleanLabel(false)) ) {
 			/*
 			 * Same, but we know the variable is false.
@@ -878,7 +878,7 @@ public class FractionalTransfer extends
 				createVariableLivenessAfter(instr, NormalLabel.getNormalLabel()));
 		value.freeze(); // done with this lattice element--freeze it
 
-		LabeledResult<PluralDisjunctiveLE> result = 
+		LabeledResult<PluralContext> result = 
 			LabeledResult.createResult(labels, value);
 		if(true_value != null)
 			result.put(BooleanLabel.getBooleanLabel(true), true_value);

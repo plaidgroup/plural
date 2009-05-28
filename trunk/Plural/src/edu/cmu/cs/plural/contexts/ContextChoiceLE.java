@@ -54,14 +54,14 @@ import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */
-public final class ContextChoiceLE extends AbstractDisjunctiveLE implements DisjunctiveLE {
+public final class ContextChoiceLE extends AbstractDisjunctiveLE implements LinearContext {
 	
 	/**
 	 * Creates an alternative disjunction with the given elements.
 	 * @param elements
 	 * @return an alternative disjunction with the given elements.
 	 */
-	public static ContextChoiceLE choice(Set<DisjunctiveLE> elements) {
+	public static ContextChoiceLE choice(Set<LinearContext> elements) {
 		return new ContextChoiceLE(elements);
 	}
 
@@ -77,7 +77,7 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 		super();
 	}
 
-	private ContextChoiceLE(Set<DisjunctiveLE> elements) {
+	private ContextChoiceLE(Set<LinearContext> elements) {
 		super(elements);
 	}
 	
@@ -94,16 +94,16 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 	 * Keeps only the most precise elements in the choice, since only one has to be satisfied.
 	 * @tag artifact.explanation -id="676301" : ContextAllLE.compact is a near code-clone of this method
 	 * @tag todo.general -id="676303" : get rid of hack for case where no freezing happens
-	 * @see DisjunctiveLE#compact(ASTNode, boolean)
+	 * @see LinearContext#compact(ASTNode, boolean)
 	 */
 	@Override
-	public DisjunctiveLE compact(ASTNode node, boolean freeze) {
+	public LinearContext compact(ASTNode node, boolean freeze) {
 		if(isFrozen())
 			return this;
-		LinkedHashSet<DisjunctiveLE> compacted = new LinkedHashSet<DisjunctiveLE>();
+		LinkedHashSet<LinearContext> compacted = new LinkedHashSet<LinearContext>();
 		
 		next_elem:
-		for(DisjunctiveLE e : getElements()) {
+		for(LinearContext e : getElements()) {
 			e = e.compact(node, freeze);
 			if(ContextFactory.isFalseContext(e))
 				// one false makes the whole thing false, since false more precise than anything
@@ -113,14 +113,14 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 				// dropping everything makes the whole thing true
 				continue;
 			if(this.getClass().equals(e.getClass())) {
-				LinkedHashSet<DisjunctiveLE> subElems = 
-					new LinkedHashSet<DisjunctiveLE>(((AbstractDisjunctiveLE) e).getElements());
+				LinkedHashSet<LinearContext> subElems = 
+					new LinkedHashSet<LinearContext>(((AbstractDisjunctiveLE) e).getElements());
 				next_sub:
-				for(Iterator<DisjunctiveLE> subIt = subElems.iterator(); subIt.hasNext(); ) {
+				for(Iterator<LinearContext> subIt = subElems.iterator(); subIt.hasNext(); ) {
 					// compare all sub-elements in e with elements in compacted  
-					DisjunctiveLE sub = subIt.next();
-					for(Iterator<DisjunctiveLE> it = compacted.iterator(); it.hasNext(); ) {
-						DisjunctiveLE in = it.next();
+					LinearContext sub = subIt.next();
+					for(Iterator<LinearContext> it = compacted.iterator(); it.hasNext(); ) {
+						LinearContext in = it.next();
 						// if in and sub are comparable keep the MORE precise one
 						if(freeze && in.atLeastAsPrecise(sub, node)) {
 							subIt.remove();
@@ -134,8 +134,8 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 			}
 			else {
 				// compare e to elements already in compacted
-				for(Iterator<DisjunctiveLE> it = compacted.iterator(); it.hasNext(); ) {
-					DisjunctiveLE in = it.next();
+				for(Iterator<LinearContext> it = compacted.iterator(); it.hasNext(); ) {
+					LinearContext in = it.next();
 					// if in and e are comparable keep the MORE precise one
 					if(freeze && in.atLeastAsPrecise(e, node))
 						continue next_elem; // skip e
@@ -157,7 +157,7 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 	//
 
 	@Override
-	public boolean atLeastAsPrecise(DisjunctiveLE other, final ASTNode node) {
+	public boolean atLeastAsPrecise(LinearContext other, final ASTNode node) {
 		this.freeze();
 		if(this == other)
 			return true;
@@ -171,7 +171,7 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 			
 			@Override
 			public Boolean choice(ContextChoiceLE other) {
-				for(DisjunctiveLE otherElem : other.getElements()) {
+				for(LinearContext otherElem : other.getElements()) {
 					if(! otherElem.dispatch(this))
 						return false;
 				}
@@ -184,16 +184,12 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 			}
 			
 			@Override
-			public Boolean context(LinearContextLE other) {
+			public Boolean context(TensorContext other) {
 				return ContextChoiceLE.this.atLeastAsPrecise(other.getTuple(), node);
 			}
 
 			@Override
-			public Boolean all(ContextAllLE other) {
-				for(DisjunctiveLE otherElem : other.getElements()) {
-					if(otherElem.dispatch(this))
-						return true;
-				}
+			public Boolean falseContext(FalseContext falseContext) {
 				return false;
 			}
 		};
@@ -203,7 +199,7 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 	@Override
 	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node) {
 		// all choices we could make have to be more precise than other
-		for(DisjunctiveLE e : getElements()) {
+		for(LinearContext e : getElements()) {
 			if(e.atLeastAsPrecise(other, node))
 				return true;
 		}
@@ -220,7 +216,7 @@ public final class ContextChoiceLE extends AbstractDisjunctiveLE implements Disj
 	 */
 
 	@Override
-	protected DisjunctiveLE create(Set<DisjunctiveLE> newElements) {
+	protected LinearContext create(Set<LinearContext> newElements) {
 		return choice(newElements);
 	}
 

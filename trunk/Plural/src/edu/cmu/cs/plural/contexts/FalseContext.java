@@ -40,47 +40,74 @@ package edu.cmu.cs.plural.contexts;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
- * A context that is the result of a failed attempt to pack!
- * It is exactly like a {@link TrueContext} (i.e., 1) except
- * that it also contains information about what state we tried
- * to pack to and which invariant could not be satisfied. 
+ * A context representing the value False, or <b>0</b> which is
+ * printed VOID.
  * 
  * @author Nels E. Beckman
- * @since May 22, 2009
+ * @since May 28, 2009
  *
  */
-public class FailingPackContext extends TrueContext {
+public class FalseContext implements LinearContext {
 
-	private final String packingState;
-	private final String invariant;
-	
-	public FailingPackContext(String packingState, String invariant) {
-		this.packingState = packingState;
-		this.invariant = invariant;
+	@Override
+	public <T> T dispatch(DisjunctiveVisitor<T> visitor) {
+		return visitor.falseContext(this);
 	}
 
 	/**
-	 * @return The state that the analysis attempted to pack to when it
-	 * failed to pack.
+	 * Keeps only the least precise elements in the disjunction, since all have to be satisfied.
+	 * @tag artifact.explanation -id="676302" : this is a near code-clone of ContextChoiceLE.compact
+	 * @see LinearContext#compact(ASTNode, boolean)
 	 */
-	public String failingState() {
-		return packingState;
+	@Override
+	public LinearContext compact(ASTNode node, boolean freeze) {
+		return this;
 	}
-	
-	/**
-	 * @return The invariant that the analysis could not satisfy when it
-	 * failed to pack.
+
+	//
+	// LatticeElement methods
+	//
+
+	@Override
+	public boolean atLeastAsPrecise(LinearContext other, final ASTNode node) {
+		this.freeze();
+		if(this == other)
+			return true;
+		other.freeze();
+		
+		return true;
+	}
+
+	@Override
+	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node) {
+		return true;
+	}
+
+	/*
+	 * Overriden from Object
 	 */
-	public String failingInvariant() {
-		return invariant;
+
+	@Override
+	public String toString() {
+		return "VOID";
 	}
-	
+
+	@Override
+	public LinearContext join(LinearContext other, ASTNode node) {
+		this.freeze();
+		if(other == this)
+			return this;
+		other.freeze();
+		
+		return this;
+	}
+
 	@Override
 	public LinearContext copy() {
-		return this;
+		return new FalseContext();
 	}
 
 	@Override
@@ -89,53 +116,8 @@ public class FailingPackContext extends TrueContext {
 	}
 
 	@Override
-	public LinearContext join(LinearContext other, ASTNode node) {
-		if( other instanceof FailingPackContext ) {
-			if( !this.equals(other) )
-				return Utilities.nyi("I wasn't ready for this.");
-			else 
-				return this;
-		}
-		else {
-			return super.join(other, node);
-		}
-	}
-
-	@Override
 	public LinearContext mutableCopy() {
-		return this;
+		return new FalseContext();
 	}
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((invariant == null) ? 0 : invariant.hashCode());
-		result = prime * result
-				+ ((packingState == null) ? 0 : packingState.hashCode());
-		return result;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		FailingPackContext other = (FailingPackContext) obj;
-		if (invariant == null) {
-			if (other.invariant != null)
-				return false;
-		} else if (!invariant.equals(other.invariant))
-			return false;
-		if (packingState == null) {
-			if (other.packingState != null)
-				return false;
-		} else if (!packingState.equals(other.packingState))
-			return false;
-		return true;
-	}	
 }

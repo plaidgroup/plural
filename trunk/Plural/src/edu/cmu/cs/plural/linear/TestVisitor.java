@@ -37,10 +37,10 @@
  */
 package edu.cmu.cs.plural.linear;
 
-import edu.cmu.cs.plural.contexts.ContextAllLE;
 import edu.cmu.cs.plural.contexts.ContextChoiceLE;
-import edu.cmu.cs.plural.contexts.DisjunctiveLE;
-import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.FalseContext;
+import edu.cmu.cs.plural.contexts.LinearContext;
+import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 import edu.cmu.cs.plural.contexts.TrueContext;
 
@@ -62,24 +62,19 @@ public abstract class TestVisitor extends DisjunctiveVisitor<Boolean> {
 	public abstract boolean testTuple(TensorPluralTupleLE tuple);
 
 	@Override
-	public Boolean context(LinearContextLE le) {
+	public Boolean context(TensorContext le) {
 		return testTuple(le.getTuple());
 	}
-
+	
 	@Override
-	public Boolean all(ContextAllLE le) {
-		// succeeds for the empty (false) disjunction
-		for(DisjunctiveLE e : le.getElements()) {
-			if(! e.dispatch(this))
-				return false;
-		}
+	public Boolean falseContext(FalseContext falseContext) {
 		return true;
 	}
 
 	@Override
 	public Boolean choice(ContextChoiceLE le) {
 		// fails for the empty (true) conjunction
-		for(DisjunctiveLE e : le.getElements()) {
+		for(LinearContext e : le.getElements()) {
 			if(e.dispatch(this))
 				return true;
 		}

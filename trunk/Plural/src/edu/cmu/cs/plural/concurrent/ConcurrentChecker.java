@@ -52,7 +52,7 @@ import org.eclipse.jdt.internal.compiler.lookup.FieldBinding;
 
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.track.FractionalAnalysis;
 
 /**
@@ -75,7 +75,7 @@ public class ConcurrentChecker extends FractionalAnalysis {
 		 * that it be protected? Can be overriden, but by default returns true for
 		 * pure, full and share permission.
 		 */
-		protected boolean doesRcvrPermissionRequireProtection(PluralDisjunctiveLE lattice) {
+		protected boolean doesRcvrPermissionRequireProtection(PluralContext lattice) {
 			// By default, pure/full/share
 			return lattice.isRcvrFullSharePureInAnyDisjunct();
 		}
@@ -132,7 +132,7 @@ public class ConcurrentChecker extends FractionalAnalysis {
 		// Template method pattern
 		protected void assertProtectedIfTShared(ASTNode node) {
 			// Are we unpacked after this statement?
-			PluralDisjunctiveLE lattice = ConcurrentChecker.this.getFa().getResultsAfter(node);
+			PluralContext lattice = ConcurrentChecker.this.getFa().getResultsAfter(node);
 
 			// There are lots of 'expressions' and 'statements' that are not actually inside
 			// of code... Also, there are real expressions that are just not inside of methods.

@@ -76,8 +76,8 @@ import edu.cmu.cs.plural.alias.FrameLabel;
 import edu.cmu.cs.plural.alias.ParamVariable;
 import edu.cmu.cs.plural.concrete.StateImplication;
 import edu.cmu.cs.plural.contexts.ContextFactory;
-import edu.cmu.cs.plural.contexts.DisjunctiveLE;
-import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.LinearContext;
+import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
@@ -135,7 +135,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @return The resulting context, possibly containing multiple tuples or
 	 * {@link ContextFactory#trueContext() false}.
 	 */
-	public DisjunctiveLE handleMethodCall(
+	public LinearContext handleMethodCall(
 			final MethodCallInstruction instr,
 			final TensorPluralTupleLE value,
 			final IMethodCaseInstance sigCase,
@@ -145,7 +145,7 @@ public class LinearOperations extends TACAnalysisHelper {
 				instr, value, instr.getReceiverOperand(), instr.getTarget());
 		if(instr.isSuperCall() && value.isRcvrPacked()) {
 			// may have to unpack to get super-frame permissions
-			DisjunctiveLE unpacked = value.fancyUnpackReceiver(
+			LinearContext unpacked = value.fancyUnpackReceiver(
 					getThisVar(), instr.getNode(), getRepository(),
 					new SimpleMap<Variable,Aliasing>() {
 						@Override
@@ -159,7 +159,7 @@ public class LinearOperations extends TACAnalysisHelper {
 			final boolean failFaster = failFast || ! ContextFactory.isSingleContext(unpacked);
 			return unpacked.dispatch(new RewritingVisitor() {
 				@Override
-				public DisjunctiveLE context(LinearContextLE le) {
+				public LinearContext context(TensorContext le) {
 					return handleInvocation(instr, le.getTuple(), 
 							sigCase, failFaster, paramMap);
 				}
@@ -185,7 +185,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @return The resulting context, possibly containing multiple tuples or
 	 * {@link ContextFactory#trueContext() false}.
 	 */
-	public DisjunctiveLE handleNewObject(
+	public LinearContext handleNewObject(
 			NewObjectInstruction instr,
 			TensorPluralTupleLE value,
 			IConstructorCaseInstance sigCase,
@@ -211,7 +211,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @return The resulting context, possibly containing multiple tuples or
 	 * {@link ContextFactory#trueContext() false}.
 	 */
-	public DisjunctiveLE handleConstructorCall(
+	public LinearContext handleConstructorCall(
 			ConstructorCallInstruction instr,
 			TensorPluralTupleLE value,
 			IConstructorCaseInstance sigCase,
@@ -234,7 +234,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @return The resulting context, possibly containing multiple tuples or
 	 * {@link ContextFactory#trueContext() false}.
 	 */
-	private DisjunctiveLE handleInvocation(final TACInvocation instr,
+	private LinearContext handleInvocation(final TACInvocation instr,
 			TensorPluralTupleLE value, final IInvocationCaseInstance sigCase,
 			boolean failFast, final SimpleMap<String, Aliasing> paramMap) {
 		// 1. split off pre-condition
@@ -244,7 +244,7 @@ public class LinearOperations extends TACAnalysisHelper {
 		CallHandlerContinuation cont = new CallHandlerContinuation() {
 
 			@Override
-			public DisjunctiveLE mergePostIntoTuple(TensorPluralTupleLE tuple,
+			public LinearContext mergePostIntoTuple(TensorPluralTupleLE tuple,
 					Map<Aliasing, FractionalPermissions> borrowedPerms) {
 				// 2. forget state information for remaining permissions
 				if(sigCase.isEffectFree() == false) {
@@ -424,7 +424,7 @@ public class LinearOperations extends TACAnalysisHelper {
 		 * permissions.
 		 * @return The resulting context(s).
 		 */
-		DisjunctiveLE mergePostIntoTuple(TensorPluralTupleLE tuple,
+		LinearContext mergePostIntoTuple(TensorPluralTupleLE tuple,
 				Map<Aliasing, FractionalPermissions> borrowedPerms);
 		
 	}
@@ -462,7 +462,7 @@ public class LinearOperations extends TACAnalysisHelper {
 
 		// populated
 		/** Final lattice after pre- and post-condition processing, from {@link #finishSplit()} */
-		private DisjunctiveLE result = null;
+		private LinearContext result = null;
 		/** Borrowed locations, populated in {@link #announceBorrowed(Set)}. */
 		private Set<Aliasing> borrowed = null;
 		/** Permission splits delayed until after packing (internal). */
@@ -506,7 +506,7 @@ public class LinearOperations extends TACAnalysisHelper {
 		 * the continuation for post-condition processing.
 		 * @return
 		 */
-		public DisjunctiveLE getResult() {
+		public LinearContext getResult() {
 			return result;
 		}
 
@@ -561,7 +561,7 @@ public class LinearOperations extends TACAnalysisHelper {
 			result = result.dispatch(new RewritingVisitor() {
 
 				@Override
-				public DisjunctiveLE context(LinearContextLE le) {
+				public LinearContext context(TensorContext le) {
 					TensorPluralTupleLE tuple = le.getTuple();
 					
 					/*
@@ -747,7 +747,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @return Context(s) after preparing the receiver
 	 * @see #wrangleIntoPackedStates(ASTNode, TensorPluralTupleLE, Set, boolean)  
 	 */
-	private DisjunctiveLE prepareAnalyzedMethodReceiverForCall(
+	private LinearContext prepareAnalyzedMethodReceiverForCall(
 			final ASTNode node,
 			final TensorPluralTupleLE value,
 			Set<String> neededAnalyzedMethodReceiverState) {
@@ -1010,7 +1010,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @param instr
 	 * @return Possibly a disjunction of new lattice information.
 	 */
-	public DisjunctiveLE handleFieldAccess(
+	public LinearContext handleFieldAccess(
 			TensorPluralTupleLE value,
 			final Variable assignmentSource,
 			final TACFieldAccess instr) {
@@ -1051,7 +1051,7 @@ public class LinearOperations extends TACAnalysisHelper {
 				 * override the permission for the source operand
 				 * TODO Maybe we can avoid affecting the source operand during unpacking?
 				 */
-				DisjunctiveLE result = internalHandleFieldAccess(value, isAssignment, instr);
+				LinearContext result = internalHandleFieldAccess(value, isAssignment, instr);
 				
 //				if(isAssignment) {
 //					result.dispatch(new DescendingVisitor() {
@@ -1102,7 +1102,7 @@ public class LinearOperations extends TACAnalysisHelper {
 		return ContextFactory.tensor(value);
 	}
 	
-	private DisjunctiveLE internalHandleFieldAccess(
+	private LinearContext internalHandleFieldAccess(
 			final TensorPluralTupleLE value,
 			final boolean isAssignment, 
 			final TACFieldAccess instr) {
@@ -1336,7 +1336,7 @@ public class LinearOperations extends TACAnalysisHelper {
 		if(node != null && (node instanceof SuperMethodInvocation) && value.isRcvrPacked()) {
 			// super-method call....
 			// may have to unpack to get super-frame permissions
-			DisjunctiveLE unpacked = value.fancyUnpackReceiver(
+			LinearContext unpacked = value.fancyUnpackReceiver(
 					getThisVar(), node, getRepository(),
 					new SimpleMap<Variable,Aliasing>() {
 						@Override
@@ -1533,7 +1533,7 @@ public class LinearOperations extends TACAnalysisHelper {
 				return hasErrors();
 			}
 			
-			DisjunctiveLE packed_lattice = isReturnCheck ?
+			LinearContext packed_lattice = isReturnCheck ?
 					// TODO combine wrangle and prepare
 					prepareAnalyzedMethodReceiverForReturn(node, value, getNeededReceiverStates()) :
 						prepareAnalyzedMethodReceiverForCall(node, value, 
@@ -1724,7 +1724,7 @@ public class LinearOperations extends TACAnalysisHelper {
 			curLattice.solveWithHints(vars.toArray(new Aliasing[0]));
 		}
 		
-		final DisjunctiveLE packed_lattice;
+		final LinearContext packed_lattice;
 		if(getThisVar() != null) {
 			final Aliasing this_loc = curLattice.getLocationsAfter(node, getThisVar());
 			final PermissionSetFromAnnotations this_post_perm = paramPost.get(this_loc);
@@ -1796,7 +1796,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * if packing was unsuccessful, but the resulting permissions need not be in the right state.
 	 * {@link #wrangleIntoPackedStates(ASTNode, TensorPluralTupleLE, Set, boolean)} 
 	 */
-	private DisjunctiveLE prepareAnalyzedMethodReceiverForReturn(
+	private LinearContext prepareAnalyzedMethodReceiverForReturn(
 			final ASTNode node, 
 			final TensorPluralTupleLE value, 
 			final Set<String> neededStates) {
@@ -1817,7 +1817,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @see #prepareAnalyzedMethodReceiverForCall(ASTNode, TensorPluralTupleLE, Set)
 	 * @see #prepareAnalyzedMethodReceiverForReturn(ASTNode, TensorPluralTupleLE, Set) 
 	 */
-	private DisjunctiveLE wrangleIntoPackedStates(
+	private LinearContext wrangleIntoPackedStates(
 			final ASTNode node, 
 			final TensorPluralTupleLE value, 
 			final Set<String> neededStates, boolean needNotPack) {
@@ -1921,7 +1921,7 @@ public class LinearOperations extends TACAnalysisHelper {
 			/*
 			 * We have to try to unpack and pack to the correct states.
 			 */
-			DisjunctiveLE unpacked = 
+			LinearContext unpacked = 
 			value.fancyUnpackReceiver(this_var, node, 
 					getRepository(),
 					loc_map, unpack_state, 
@@ -1938,7 +1938,7 @@ public class LinearOperations extends TACAnalysisHelper {
 
 			unpacked = unpacked.dispatch(new RewritingVisitor() {
 				@Override
-				public DisjunctiveLE context(LinearContextLE le) {
+				public LinearContext context(TensorContext le) {
 					if(le.getTuple().isRcvrPacked())
 						// unpack doesn't always unpack
 						return le;

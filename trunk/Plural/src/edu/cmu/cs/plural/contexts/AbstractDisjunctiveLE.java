@@ -47,20 +47,20 @@ import org.eclipse.jdt.core.dom.ASTNode;
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */
-public abstract class AbstractDisjunctiveLE implements DisjunctiveLE {
+public abstract class AbstractDisjunctiveLE implements LinearContext {
 	
-	private Set<DisjunctiveLE> elements;
+	private Set<LinearContext> elements;
 	private boolean frozen;
 	
 	protected AbstractDisjunctiveLE() {
-		elements = new LinkedHashSet<DisjunctiveLE>();
+		elements = new LinkedHashSet<LinearContext>();
 	}
 
-	protected AbstractDisjunctiveLE(Set<DisjunctiveLE> elements) {
+	protected AbstractDisjunctiveLE(Set<LinearContext> elements) {
 		this.elements = elements;
 	}
 	
-	public Set<DisjunctiveLE> getElements() {
+	public Set<LinearContext> getElements() {
 		return elements;
 	}
 	
@@ -68,7 +68,7 @@ public abstract class AbstractDisjunctiveLE implements DisjunctiveLE {
 	 * This method must not be called when frozen.
 	 * @param elements
 	 */
-	protected void setElements(Set<DisjunctiveLE> elements) {
+	protected void setElements(Set<LinearContext> elements) {
 		if(frozen)
 			throw new IllegalStateException("Cannot modify frozen object");
 		this.elements = elements;
@@ -79,7 +79,7 @@ public abstract class AbstractDisjunctiveLE implements DisjunctiveLE {
 			return empty;
 		StringBuffer result = new StringBuffer();
 		boolean first = true;
-		for(DisjunctiveLE e : elements) {
+		for(LinearContext e : elements) {
 			if(first)
 				first = false;
 			else
@@ -94,11 +94,11 @@ public abstract class AbstractDisjunctiveLE implements DisjunctiveLE {
 	//
 
 	@Override
-	public DisjunctiveLE freeze() {
+	public LinearContext freeze() {
 		if(!frozen) {
 			frozen = true;
-			LinkedHashSet<DisjunctiveLE> compacted = new LinkedHashSet<DisjunctiveLE>();
-			for(DisjunctiveLE e : elements) {
+			LinkedHashSet<LinearContext> compacted = new LinkedHashSet<LinearContext>();
+			for(LinearContext e : elements) {
 				e = e.freeze();
 				/*if(ContextFactory.isFalseContext(e)) {
 					// drop it
@@ -116,9 +116,9 @@ public abstract class AbstractDisjunctiveLE implements DisjunctiveLE {
 	}
 	
 	@Override
-	public DisjunctiveLE mutableCopy() {
-		LinkedHashSet<DisjunctiveLE> mutableSet = new LinkedHashSet<DisjunctiveLE>(elements.size());
-		for(DisjunctiveLE e : elements) {
+	public LinearContext mutableCopy() {
+		LinkedHashSet<LinearContext> mutableSet = new LinkedHashSet<LinearContext>(elements.size());
+		for(LinearContext e : elements) {
 			mutableSet.add(e.mutableCopy());
 		}
 		return create(mutableSet);
@@ -139,25 +139,25 @@ public abstract class AbstractDisjunctiveLE implements DisjunctiveLE {
 	//
 
 	@Override
-	public DisjunctiveLE join(DisjunctiveLE other, ASTNode node) {
+	public LinearContext join(LinearContext other, ASTNode node) {
 		this.freeze();
 		if(other == this)
 			return this;
 		other.freeze();
 		
-		LinkedHashSet<DisjunctiveLE> newElems = new LinkedHashSet<DisjunctiveLE>(getElements().size());
-		for(DisjunctiveLE e : getElements()) {
+		LinkedHashSet<LinearContext> newElems = new LinkedHashSet<LinearContext>(getElements().size());
+		for(LinearContext e : getElements()) {
 			newElems.add(e.join(other, node));
 		}
 		return create(newElems);
 	}
 
 	@Override
-	public DisjunctiveLE copy() {
+	public LinearContext copy() {
 		freeze();
 		return this;
 	}
 
-	protected abstract DisjunctiveLE create(Set<DisjunctiveLE> newElements);
+	protected abstract LinearContext create(Set<LinearContext> newElements);
 
 }

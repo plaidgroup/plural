@@ -385,7 +385,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 * @param statesToTry
 	 * @return
 	 */
-	public DisjunctiveLE fancyPackReceiverToBestGuess(ThisVariable rcvrVar,
+	public LinearContext fancyPackReceiverToBestGuess(ThisVariable rcvrVar,
 			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
 			String... statesToTry) {
 		// need not be frozen because we create mutable copies...
@@ -414,14 +414,14 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 
 		// try packing to each state; discard unsuccessful attempts
 		// TODO try state combinations for states from different dimensions
-		LinkedHashSet<DisjunctiveLE> resultElems = new LinkedHashSet<DisjunctiveLE>();
+		LinkedHashSet<LinearContext> resultElems = new LinkedHashSet<LinearContext>();
 		for(String n : statesWorthTrying) {
 			TensorPluralTupleLE elem = this.mutableCopy();
 			elem.storeIdenticalAliasInfo(this);
 			PackingResult pack_result = elem.packReceiver(rcvrVar, stateRepo, locs, Collections.singleton(n));
 			if(pack_result.worked())
 				// could check for satisfiability here
-				resultElems.add(LinearContextLE.tensor(elem));
+				resultElems.add(TensorContext.tensor(elem));
 		}
 		return ContextChoiceLE.choice(resultElems);
 	}
@@ -443,13 +443,13 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 * @return The resulting lattice value, possibly a disjunction of different
 	 * states we tried to unpack from.
 	 */
-	public DisjunctiveLE fancyUnpackReceiver(Variable rcvrVar,
+	public LinearContext fancyUnpackReceiver(Variable rcvrVar,
 			ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
 			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, 
 			String assignedField, boolean includeOriginal) {
 		// this need not be unfrozen because we create mutable copies...
 
-		LinkedHashSet<DisjunctiveLE> resultElems = new LinkedHashSet<DisjunctiveLE>();
+		LinkedHashSet<LinearContext> resultElems = new LinkedHashSet<LinearContext>();
 		if(includeOriginal)
 			resultElems.add(ContextFactory.tensor(this));
 		
@@ -499,7 +499,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 						return ContextFactory.falseContext();
 					if(elem.get(rcvr_loc).getConstraints().seemsConsistent())
 						// could check for satisfiability here
-						resultElems.add(LinearContextLE.tensor(elem));
+						resultElems.add(TensorContext.tensor(elem));
 				}
 			}
 			return ContextChoiceLE.choice(resultElems);

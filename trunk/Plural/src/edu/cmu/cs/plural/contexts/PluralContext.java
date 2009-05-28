@@ -90,17 +90,17 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
  * @author Kevin Bierhoff
  *
  */
-public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>, Freezable<PluralDisjunctiveLE> {
+public class PluralContext implements LatticeElement<PluralContext>, Freezable<PluralContext> {
 	
-	private static final Logger log = Logger.getLogger(PluralDisjunctiveLE.class.getName());
+	private static final Logger log = Logger.getLogger(PluralContext.class.getName());
 	
-	private static final PluralDisjunctiveLE BOTTOM = new PluralDisjunctiveLE();
+	private static final PluralContext BOTTOM = new PluralContext();
 	
 	/**
 	 * @param start
 	 * @return
 	 */
-	public static PluralDisjunctiveLE tuple(TensorPluralTupleLE start,
+	public static PluralContext tuple(TensorPluralTupleLE start,
 			ITACAnalysisContext tacContext, FractionAnalysisContext fractContext) {
 		return createLE(ContextFactory.tensor(start), tacContext, fractContext);
 	}
@@ -109,9 +109,9 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @param start
 	 * @return
 	 */
-	public static PluralDisjunctiveLE createLE(DisjunctiveLE start,
+	public static PluralContext createLE(LinearContext start,
 			ITACAnalysisContext tacContext, FractionAnalysisContext fractContext) {
-		return new PluralDisjunctiveLE(start, new LinearOperations(tacContext, fractContext));
+		return new PluralContext(start, new LinearOperations(tacContext, fractContext));
 	}
 	
 	/**
@@ -119,17 +119,17 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @return Bottom
 	 * TODO Use false context for bottom
 	 */
-	public static PluralDisjunctiveLE bottom() {
+	public static PluralContext bottom() {
 		return BOTTOM;
 	}
 
 	/**
 	 * Linear proof contexts or <code>null</code> if this is bottom.
 	 */
-	private DisjunctiveLE le;
+	private LinearContext le;
 	private final LinearOperations op;
 	
-	private PluralDisjunctiveLE() {
+	private PluralContext() {
 		this.le = null;
 		this.op = null;
 	}
@@ -142,7 +142,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @param fractContext
 	 * @param reEntrant 
 	 */
-	private PluralDisjunctiveLE(DisjunctiveLE le, AnnotationDatabase annoDB, 
+	private PluralContext(LinearContext le, AnnotationDatabase annoDB, 
 			ITACAnalysisContext tacContext, 
 			FractionAnalysisContext fractContext) {
 		assert le != null;
@@ -153,7 +153,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	/**
 	 * @param le
 	 */
-	private PluralDisjunctiveLE(DisjunctiveLE le, LinearOperations op) {
+	private PluralContext(LinearContext le, LinearOperations op) {
 		assert le != null;
 		this.le = le;
 		this.op = op;
@@ -163,7 +163,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @see edu.cmu.cs.crystal.flow.LatticeElement#atLeastAsPrecise(edu.cmu.cs.crystal.flow.LatticeElement, org.eclipse.jdt.core.dom.ASTNode)
 	 */
 	@Override
-	public boolean atLeastAsPrecise(PluralDisjunctiveLE other, ASTNode node) {
+	public boolean atLeastAsPrecise(PluralContext other, ASTNode node) {
 		freeze();
 		if(this == other)
 			return true;
@@ -180,7 +180,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @see edu.cmu.cs.crystal.flow.LatticeElement#copy()
 	 */
 	@Override
-	public PluralDisjunctiveLE copy() {
+	public PluralContext copy() {
 		freeze();
 		return this;
 	}
@@ -189,7 +189,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @see edu.cmu.cs.crystal.flow.LatticeElement#join(edu.cmu.cs.crystal.flow.LatticeElement, org.eclipse.jdt.core.dom.ASTNode)
 	 */
 	@Override
-	public PluralDisjunctiveLE join(PluralDisjunctiveLE other, ASTNode node) {
+	public PluralContext join(PluralContext other, ASTNode node) {
 		freeze();
 		if(this == other)
 			return this;
@@ -199,14 +199,14 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		if(this.isBottom())
 			return other;
 		assert this.op == other.op;
-		return new PluralDisjunctiveLE(this.le.join(other.le, node).compact(node, true), op);
+		return new PluralContext(this.le.join(other.le, node).compact(node, true), op);
 	}
 
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.crystal.internal.Freezable#freeze()
 	 */
 	@Override
-	public PluralDisjunctiveLE freeze() {
+	public PluralContext freeze() {
 		if(!isBottom())
 			le = le.compact(null, true);
 		return this;
@@ -216,8 +216,8 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @see edu.cmu.cs.crystal.internal.Freezable#mutableCopy()
 	 */
 	@Override
-	public PluralDisjunctiveLE mutableCopy() {
-		return new PluralDisjunctiveLE(le.mutableCopy(), op);
+	public PluralContext mutableCopy() {
+		return new PluralContext(le.mutableCopy(), op);
 	}
 	
 	//
@@ -239,7 +239,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * @param node
 	 * @return
 	 */
-	public PluralDisjunctiveLE storeCurrentAliasingInfo(final ASTNode node) {
+	public PluralContext storeCurrentAliasingInfo(final ASTNode node) {
 		le.dispatch(new DescendingVisitor() {
 			@Override
 			public Boolean tuple(TensorPluralTupleLE tuple) {
@@ -522,7 +522,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			final String desiredRoot, final String assignedField) {
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public DisjunctiveLE context(LinearContextLE le) {
+			public LinearContext context(TensorContext le) {
 				if(le.getTuple().isRcvrPacked()) {
 					return le.getTuple().fancyUnpackReceiver(
 							rcvrVar, nodeWhereUnpacked, stateRepo, locs, 
@@ -540,7 +540,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			final Set<String> neededStates) {
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public DisjunctiveLE context(LinearContextLE le) {
+			public LinearContext context(TensorContext le) {
 				if(! le.getTuple().isRcvrPacked()) {
 					PackingResult pack_result = le.getTuple().packReceiver(rcvrVar, stateRepo, locs, neededStates);
 
@@ -568,7 +568,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 			final SimpleMap<Variable, Aliasing> locs, final String[] statesToTry) {
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public DisjunctiveLE context(LinearContextLE le) {
+			public LinearContext context(TensorContext le) {
 				if(! le.getTuple().isRcvrPacked()) {
 					return le.getTuple().fancyPackReceiverToBestGuess(rcvrVar, stateRepo, locs, statesToTry);
 				}
@@ -603,7 +603,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		final boolean failFast = caseCount > 1 || ! ContextFactory.isSingleContext(le);
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public DisjunctiveLE context(LinearContextLE le) {
+			public LinearContext context(TensorContext le) {
 				if(singleCase != null) {
 					return op.handleMethodCall(instr, 
 							le.getTuple(), // need not copy the tuple
@@ -611,7 +611,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 							failFast);
 				}
 				else {
-					Set<DisjunctiveLE> choices = new LinkedHashSet<DisjunctiveLE>(caseCount); 
+					Set<LinearContext> choices = new LinkedHashSet<LinearContext>(caseCount); 
 					for(IMethodCaseInstance prePost : cases) {
 						TensorPluralTupleLE context = le.getTuple().mutableCopy();
 						context.storeCurrentAliasingInfo(instr.getNode());
@@ -648,7 +648,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		final boolean failFast = caseCount > 1 || ! ContextFactory.isSingleContext(le);
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public DisjunctiveLE context(LinearContextLE le) {
+			public LinearContext context(TensorContext le) {
 				if(singleCase != null) {
 					return op.handleNewObject(instr,
 							le.getTuple(), // need not copy the tuple
@@ -656,7 +656,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 							failFast);
 				}
 				else {
-					Set<DisjunctiveLE> choices = new LinkedHashSet<DisjunctiveLE>(caseCount); 
+					Set<LinearContext> choices = new LinkedHashSet<LinearContext>(caseCount); 
 					for(IConstructorCaseInstance prePost : cases) {
 						TensorPluralTupleLE context = le.getTuple().mutableCopy();
 						context.storeCurrentAliasingInfo(instr.getNode());
@@ -690,7 +690,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 		final boolean failFast = caseCount > 1 || ! ContextFactory.isSingleContext(le);
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public DisjunctiveLE context(LinearContextLE le) {
+			public LinearContext context(TensorContext le) {
 				if(singleCase != null) {
 					return op.handleConstructorCall(instr,
 							le.getTuple(), // need not copy the tuple
@@ -698,7 +698,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 							failFast);
 				}
 				else {
-					Set<DisjunctiveLE> choices = new LinkedHashSet<DisjunctiveLE>(cases.size()); 
+					Set<LinearContext> choices = new LinkedHashSet<LinearContext>(cases.size()); 
 					for(IConstructorCaseInstance prePost : cases) {
 						TensorPluralTupleLE context = le.getTuple().mutableCopy();
 						context.storeCurrentAliasingInfo(instr.getNode());
@@ -720,7 +720,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void prepareForFieldRead(final LoadFieldInstruction instr) {
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public DisjunctiveLE context(LinearContextLE le) {
+			public LinearContext context(TensorContext le) {
 				return op.handleFieldAccess(le.getTuple(), 
 						null /* not an assignment */, instr);
 			}
@@ -730,7 +730,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	public void prepareForFieldWrite(final StoreFieldInstruction instr) {
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public DisjunctiveLE context(LinearContextLE le) {
+			public LinearContext context(TensorContext le) {
 				return op.handleFieldAccess(le.getTuple(),
 						instr.getSourceOperand(),
 						instr);
@@ -994,7 +994,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * disjunct of this lattice if that permission <i>must</i> be
 	 * {@code @Pure} or {@code @Share}.
 	 */
-	public PluralDisjunctiveLE forgetShareAndPureStates() {
+	public PluralContext forgetShareAndPureStates() {
 		le.dispatch(new DescendingVisitor() {
 			@Override
 			public Boolean tuple(TensorPluralTupleLE tuple) {
@@ -1011,7 +1011,7 @@ public class PluralDisjunctiveLE implements LatticeElement<PluralDisjunctiveLE>,
 	 * and that permission is not associated with one of the given variables.
 	 * The current aliasing for each variable will be looked up first.
 	 */
-	public PluralDisjunctiveLE forgetShareAndPureStatesNotInSet(
+	public PluralContext forgetShareAndPureStatesNotInSet(
 			final Set<Variable> vars_to_not_forget) {
 		le.dispatch(new DescendingVisitor() {
 			@Override

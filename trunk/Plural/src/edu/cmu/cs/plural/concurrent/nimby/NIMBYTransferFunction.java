@@ -47,7 +47,7 @@ import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.plural.concurrent.ConcurrentTransferFunction;
-import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 
 /**
@@ -69,26 +69,26 @@ class NIMBYTransferFunction extends ConcurrentTransferFunction {
 	}
 
 	@Override
-	protected IResult<PluralDisjunctiveLE> forgetIfNotProtected(ASTNode node,
-			List<ILabel> labels, IResult<PluralDisjunctiveLE> result) {
+	protected IResult<PluralContext> forgetIfNotProtected(ASTNode node,
+			List<ILabel> labels, IResult<PluralContext> result) {
 		if( !this.isInAtomicAnalysis.isInAtomicBlock(node) ) {
 			result = this.forgetSharedPermissions(result, labels, node);
 		}
 		return result;
 	}
 	
-	private IResult<PluralDisjunctiveLE> forgetSharedPermissions(
-			IResult<PluralDisjunctiveLE> transfer_result, List<ILabel> labels,
+	private IResult<PluralContext> forgetSharedPermissions(
+			IResult<PluralContext> transfer_result, List<ILabel> labels,
 			ASTNode node) {
 		// TODO: Is there a better default? Could we get the default from the old one?
-		LabeledResult<PluralDisjunctiveLE> result = LabeledResult.createResult(labels, null);
+		LabeledResult<PluralContext> result = LabeledResult.createResult(labels, null);
 		for( ILabel label : labels ) {
 			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), node));
 		}
 		return result;
 	}
 
-	private PluralDisjunctiveLE forgetSharedPermissions(PluralDisjunctiveLE lattice, ASTNode node) {
+	private PluralContext forgetSharedPermissions(PluralContext lattice, ASTNode node) {
 		return lattice.forgetShareAndPureStates();
 	}
 }

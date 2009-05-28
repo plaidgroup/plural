@@ -39,11 +39,11 @@ package edu.cmu.cs.plural.linear;
 
 import java.util.LinkedHashSet;
 
-import edu.cmu.cs.plural.contexts.ContextAllLE;
 import edu.cmu.cs.plural.contexts.ContextChoiceLE;
-import edu.cmu.cs.plural.contexts.DisjunctiveLE;
 import edu.cmu.cs.plural.contexts.FailingPackContext;
-import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.FalseContext;
+import edu.cmu.cs.plural.contexts.LinearContext;
+import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 import edu.cmu.cs.plural.contexts.TrueContext;
 
@@ -86,28 +86,13 @@ public abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
 	public abstract String checkTuple(TensorPluralTupleLE tuple);
 
 	@Override
-	public String context(LinearContextLE le) {
+	public String context(TensorContext le) {
 		return checkTuple(le.getTuple());
 	}
 
 	@Override
-	public String all(ContextAllLE le) {
-		LinkedHashSet<String> errors = new LinkedHashSet<String>();
-		// succeed for empty (false) conjunction: false can prove anything
-		for(DisjunctiveLE e : le.getElements()) {
-			String error = e.dispatch(this);
-			// more complete error message: find *all* failing contexts,
-			// not just the first one
-			if(error != null)
-				errors.add(error); 
-		}
-		if(errors.isEmpty())
-			return null;
-		String result = errorString(errors, " AND ");
-		if(errors.size() > 1)
-			return "{ " + result + " }";
-		else
-			return result;
+	public String falseContext(FalseContext falseContext) {
+		return null;
 	}
 
 	@Override
@@ -117,7 +102,7 @@ public abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
 			// TODO Suppress these warnings, because they result from previous failure?
 			return "No available context--usually due to a previous failure or error during packing/unpacking";
 		LinkedHashSet<String> errors = new LinkedHashSet<String>();
-		for(DisjunctiveLE e : le.getElements()) {
+		for(LinearContext e : le.getElements()) {
 			String error = e.dispatch(this);
 			if(error == null)
 				return null;
