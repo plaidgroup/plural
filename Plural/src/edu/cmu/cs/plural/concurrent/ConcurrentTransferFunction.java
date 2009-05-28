@@ -63,7 +63,7 @@ import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.UnaryOperation;
 import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.FractionalTransfer;
 
@@ -94,14 +94,14 @@ public abstract class ConcurrentTransferFunction extends FractionalTransfer {
 	 * @param result The result of transferring in the default analysis. 
 	 * @return The new result-holding thingy.
 	 */
-	protected abstract IResult<PluralDisjunctiveLE> forgetIfNotProtected(
+	protected abstract IResult<PluralContext> forgetIfNotProtected(
 			ASTNode node, List<ILabel> labels,
-			IResult<PluralDisjunctiveLE> result);
+			IResult<PluralContext> result);
 	
 	
-	private IResult<PluralDisjunctiveLE> forgetIfNotProtectedAndNodeValid(
+	private IResult<PluralContext> forgetIfNotProtectedAndNodeValid(
 			ASTNode node, List<ILabel> labels,
-			IResult<PluralDisjunctiveLE> result) {
+			IResult<PluralContext> result) {
 		
 		// If a node is outside of a method decl, say because it's a field
 		// initializer, we just kind of want to leave it alone.
@@ -113,147 +113,147 @@ public abstract class ConcurrentTransferFunction extends FractionalTransfer {
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(ArrayInitInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(ArrayInitInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(BinaryOperation binop,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(binop, labels, value);
+	public IResult<PluralContext> transfer(BinaryOperation binop,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(binop, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(binop.getNode(), labels, result);
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(CastInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(CastInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			ConstructorCallInstruction instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+			PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(CopyInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(CopyInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(DotClassInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(DotClassInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(InstanceofInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(InstanceofInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(LoadArrayInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(LoadArrayInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(LoadFieldInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(LoadFieldInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(LoadLiteralInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(LoadLiteralInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(MethodCallInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(MethodCallInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(NewArrayInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(NewArrayInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(NewObjectInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(NewObjectInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(
+	public IResult<PluralContext> transfer(
 			SourceVariableDeclaration instr, List<ILabel> labels,
-			PluralDisjunctiveLE value) {
+			PluralContext value) {
 		// I specifically do not do anything here, since this is not
 		// an expression.
 		return super.transfer(instr, labels, value);
 	}
 	
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(SourceVariableRead instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(SourceVariableRead instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(StoreArrayInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(StoreArrayInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(StoreFieldInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(StoreFieldInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(instr.getNode(), labels, result);
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(UnaryOperation unop,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(unop, labels, value);
+	public IResult<PluralContext> transfer(UnaryOperation unop,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(unop, labels, value);
 		
 		return forgetIfNotProtectedAndNodeValid(unop.getNode(), labels, result);
 	}

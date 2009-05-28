@@ -51,15 +51,15 @@ import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */
-public class LinearContextLE implements DisjunctiveLE {
+public class TensorContext implements LinearContext {
 	
-	public static LinearContextLE tensor(TensorPluralTupleLE tuple) {
-		return new LinearContextLE(tuple);
+	public static TensorContext tensor(TensorPluralTupleLE tuple) {
+		return new TensorContext(tuple);
 	}
 
 	private final TensorPluralTupleLE tuple;
 	
-	private LinearContextLE(TensorPluralTupleLE tuple) {
+	private TensorContext(TensorPluralTupleLE tuple) {
 		this.tuple = tuple;
 	}
 
@@ -80,7 +80,7 @@ public class LinearContextLE implements DisjunctiveLE {
 	}
 	
 	@Override
-	public DisjunctiveLE compact(ASTNode node, boolean freeze) {
+	public LinearContext compact(ASTNode node, boolean freeze) {
 		if(freeze)
 			tuple.freeze();
 		return this;
@@ -91,13 +91,13 @@ public class LinearContextLE implements DisjunctiveLE {
 	 */
 
 	@Override
-	public LinearContextLE freeze() {
+	public TensorContext freeze() {
 		tuple.freeze();
 		return this;
 	}
 
 	@Override
-	public LinearContextLE mutableCopy() {
+	public TensorContext mutableCopy() {
 		return create(tuple.mutableCopy());
 	}
 
@@ -106,7 +106,7 @@ public class LinearContextLE implements DisjunctiveLE {
 	 */
 
 	@Override
-	public boolean atLeastAsPrecise(DisjunctiveLE other, final ASTNode node) {
+	public boolean atLeastAsPrecise(LinearContext other, final ASTNode node) {
 		this.freeze();
 		if(this == other)
 			return true;
@@ -119,7 +119,7 @@ public class LinearContextLE implements DisjunctiveLE {
 			
 			@Override
 			public Boolean choice(ContextChoiceLE other) {
-				for(DisjunctiveLE otherElem : other.getElements()) {
+				for(LinearContext otherElem : other.getElements()) {
 					if(! otherElem.dispatch(this))
 						return false;
 				}
@@ -132,16 +132,12 @@ public class LinearContextLE implements DisjunctiveLE {
 			}
 			
 			@Override
-			public Boolean context(LinearContextLE other) {
-				return LinearContextLE.this.atLeastAsPrecise(other.tuple, node);
+			public Boolean context(TensorContext other) {
+				return TensorContext.this.atLeastAsPrecise(other.tuple, node);
 			}
-
+			
 			@Override
-			public Boolean all(ContextAllLE other) {
-				for(DisjunctiveLE otherElem : other.getElements()) {
-					if(otherElem.dispatch(this))
-						return true;
-				}
+			public Boolean falseContext(FalseContext falseContext) {
 				return false;
 			}
 		};
@@ -154,45 +150,45 @@ public class LinearContextLE implements DisjunctiveLE {
 	}
 
 	@Override
-	public DisjunctiveLE join(DisjunctiveLE other, final ASTNode node) {
+	public LinearContext join(LinearContext other, final ASTNode node) {
 		this.freeze();
 		if(this == other)
 			return this;
 		other.freeze();
-		final DisjunctiveVisitor<DisjunctiveLE> joinVisitor = new DisjunctiveVisitor<DisjunctiveLE>() {
+		final DisjunctiveVisitor<LinearContext> joinVisitor = new DisjunctiveVisitor<LinearContext>() {
 
 			@Override
-			public DisjunctiveLE choice(ContextChoiceLE other) {
+			public LinearContext choice(ContextChoiceLE other) {
 				return ContextChoiceLE.choice(joinElems(other.getElements()));
 			}
 
 			@Override
-			public DisjunctiveLE trueContext(TrueContext trueContext) {
-				Set<DisjunctiveLE> emptySet = Collections.<DisjunctiveLE>emptySet();
-				return ContextChoiceLE.choice(joinElems(emptySet));
+			public LinearContext trueContext(TrueContext trueContext) {
+				return trueContext;
 			}
 			
 			@Override
-			public DisjunctiveLE context(LinearContextLE other) {
+			public LinearContext context(TensorContext other) {
 //				if(LinearContextLE.this.tuple.isUnsatisfiable() || other.tuple.isUnsatisfiable())
 //					return ContextFactory.falseContext();
-				TensorPluralTupleLE result = LinearContextLE.this.tuple.join(other.tuple, node);
+				TensorPluralTupleLE result = TensorContext.this.tuple.join(other.tuple, node);
 				result.freeze();
 //				if(result.isUnsatisfiable())
 //					return ContextFactory.falseContext();
 //				else
 					return create(result);
 			}
-
+			
 			@Override
-			public DisjunctiveLE all(ContextAllLE other) {
-				return ContextAllLE.all(joinElems(other.getElements()));
+			public LinearContext falseContext(FalseContext falseContext) {
+				Set<LinearContext> emptySet = Collections.<LinearContext>emptySet();
+				return falseContext;
 			}
 			
-			private Set<DisjunctiveLE> joinElems(Set<DisjunctiveLE> otherElems) {
-				LinkedHashSet<DisjunctiveLE> joinedElems = 
-					new LinkedHashSet<DisjunctiveLE>(otherElems.size());
-				for(DisjunctiveLE otherElem : otherElems) {
+			private Set<LinearContext> joinElems(Set<LinearContext> otherElems) {
+				LinkedHashSet<LinearContext> joinedElems = 
+					new LinkedHashSet<LinearContext>(otherElems.size());
+				for(LinearContext otherElem : otherElems) {
 					joinedElems.add(otherElem.dispatch(this));
 				}
 				return joinedElems;
@@ -202,7 +198,7 @@ public class LinearContextLE implements DisjunctiveLE {
 	}
 	
 	@Override
-	public DisjunctiveLE copy() {
+	public LinearContext copy() {
 		freeze();
 		return this;
 	}
@@ -211,8 +207,8 @@ public class LinearContextLE implements DisjunctiveLE {
 	 * Helper methods
 	 */
 
-	private LinearContextLE create(TensorPluralTupleLE mutableCopy) {
-		return new LinearContextLE(mutableCopy);
+	private TensorContext create(TensorPluralTupleLE mutableCopy) {
+		return new TensorContext(mutableCopy);
 	}
 
 	/*

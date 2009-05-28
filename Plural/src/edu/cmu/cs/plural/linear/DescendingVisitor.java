@@ -37,10 +37,10 @@
  */
 package edu.cmu.cs.plural.linear;
 
-import edu.cmu.cs.plural.contexts.ContextAllLE;
 import edu.cmu.cs.plural.contexts.ContextChoiceLE;
-import edu.cmu.cs.plural.contexts.DisjunctiveLE;
-import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.FalseContext;
+import edu.cmu.cs.plural.contexts.LinearContext;
+import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 import edu.cmu.cs.plural.contexts.TrueContext;
 
@@ -64,7 +64,7 @@ public abstract class DescendingVisitor extends DisjunctiveVisitor<Boolean> {
 	 */
 	@Override
 	public Boolean choice(ContextChoiceLE le) {
-		for(DisjunctiveLE e : le.getElements())
+		for(LinearContext e : le.getElements())
 			if(!e.dispatch(this))
 				return false;
 		return true;
@@ -79,19 +79,12 @@ public abstract class DescendingVisitor extends DisjunctiveVisitor<Boolean> {
 	 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#tensor(edu.cmu.cs.plural.linear.LinearContextLE)
 	 */
 	@Override
-	public Boolean context(LinearContextLE le) {
+	public Boolean context(TensorContext le) {
 		return tuple(le.getTuple());
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#with(edu.cmu.cs.plural.linear.ContextAllLE)
-	 */
 	@Override
-	public Boolean all(ContextAllLE le) {
-		for(DisjunctiveLE e : le.getElements())
-			if(!e.dispatch(this))
-				return false;
+	public Boolean falseContext(FalseContext falseContext) {
 		return true;
 	}
-	
 }

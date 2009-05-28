@@ -90,7 +90,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	 * to their initial locations.
 	 * @see #createInitialConstructorLE(PredicateMerger, ITACAnalysisContext, FractionAnalysisContext)
 	 */
-	public static Pair<DisjunctiveLE, SimpleMap<String, Aliasing>> createInitialMethodLE(
+	public static Pair<LinearContext, SimpleMap<String, Aliasing>> createInitialMethodLE(
 			PredicateMerger pre, 
 			ITACAnalysisContext tacContext,
 			FractionAnalysisContext fractContext) {
@@ -150,7 +150,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 	 * a map from parameter names (including the receiver) to their initial locations.
 	 * @see #createInitialMethodLE(PredicateMerger, ITACAnalysisContext, FractionAnalysisContext)
 	 */
-	public static Pair<DisjunctiveLE, SimpleMap<String, Aliasing>> createInitialConstructorLE(
+	public static Pair<LinearContext, SimpleMap<String, Aliasing>> createInitialConstructorLE(
 			PredicateMerger pre, 
 			ITACAnalysisContext tacContext,
 			FractionAnalysisContext fractContext, 

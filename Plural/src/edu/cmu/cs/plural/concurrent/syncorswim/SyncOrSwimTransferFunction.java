@@ -52,7 +52,7 @@ import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.tac.MethodCallInstruction;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.plural.concurrent.ConcurrentTransferFunction;
-import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 
 /**
@@ -75,8 +75,8 @@ class SyncOrSwimTransferFunction extends ConcurrentTransferFunction {
 	}
 
 	@Override
-	protected IResult<PluralDisjunctiveLE> forgetIfNotProtected(ASTNode node,
-			List<ILabel> labels, IResult<PluralDisjunctiveLE> transfer_result) {
+	protected IResult<PluralContext> forgetIfNotProtected(ASTNode node,
+			List<ILabel> labels, IResult<PluralContext> transfer_result) {
 		// Get the set of variables that are synchronized at this point.
 		Set<Variable> synced_vars = this.refAnalysis.refsSyncedAtNode(node, 
 				this.analysisInput);
@@ -88,26 +88,26 @@ class SyncOrSwimTransferFunction extends ConcurrentTransferFunction {
 	 * Given a set of synchronized variables, forget the shares and pures that
 	 * are not synchronized.
 	 */
-	private IResult<PluralDisjunctiveLE> forgetGivenSyncedVars(
-			List<ILabel> labels, IResult<PluralDisjunctiveLE> transfer_result,
+	private IResult<PluralContext> forgetGivenSyncedVars(
+			List<ILabel> labels, IResult<PluralContext> transfer_result,
 			Set<Variable> synced_vars) {
 		// TODO: Is there a better default? Could we get the default from the old one?
-		LabeledResult<PluralDisjunctiveLE> result = LabeledResult.createResult(labels, null);
+		LabeledResult<PluralContext> result = LabeledResult.createResult(labels, null);
 		for( ILabel label : labels ) {
 			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), synced_vars));
 		}
 		return result;
 	}
 
-	private PluralDisjunctiveLE forgetSharedPermissions(PluralDisjunctiveLE lattice, 
+	private PluralContext forgetSharedPermissions(PluralContext lattice, 
 			Set<Variable> synced_vars) {
 		return lattice.forgetShareAndPureStatesNotInSet(synced_vars);
 	}
 
 	@Override
-	public IResult<PluralDisjunctiveLE> transfer(MethodCallInstruction instr,
-			List<ILabel> labels, PluralDisjunctiveLE value) {
-		IResult<PluralDisjunctiveLE> result = super.transfer(instr, labels, value);
+	public IResult<PluralContext> transfer(MethodCallInstruction instr,
+			List<ILabel> labels, PluralContext value) {
+		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		
 		// Is this a call to wait? If so, forget ALL shares and pures.
 		if( isCallToWait(instr.resolveBinding()) ) {

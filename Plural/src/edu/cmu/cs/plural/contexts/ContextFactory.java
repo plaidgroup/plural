@@ -59,8 +59,8 @@ public class ContextFactory {
 	 * @param le
 	 * @return
 	 */
-	public static DisjunctiveLE tensor(TensorPluralTupleLE le) {
-		return LinearContextLE.tensor(le);
+	public static LinearContext tensor(TensorPluralTupleLE le) {
+		return TensorContext.tensor(le);
 	}
 
 	/**
@@ -68,9 +68,9 @@ public class ContextFactory {
 	 * @param elements
 	 * @return
 	 */
-	public static DisjunctiveLE all(Set<DisjunctiveLE> elements) {
-		return ContextAllLE.all(elements);
-	}
+//	public static LinearContext all(Set<LinearContext> elements) {
+//		return ContextAllLE.all(elements);
+//	}
 	
 	/**
 	 * Creates an alternative conjunction with the given elements.
@@ -78,9 +78,9 @@ public class ContextFactory {
 	 * @param elements
 	 * @return
 	 */
-	public static DisjunctiveLE all(DisjunctiveLE... elements) {
-		return ContextAllLE.all(CollectionMethods.mutableSet(elements));
-	}
+//	public static LinearContext all(LinearContext... elements) {
+//		return ContextAllLE.all(CollectionMethods.mutableSet(elements));
+//	}
 	
 	/**
 	 * This is the <b>false</b> context, which can prove anything.
@@ -88,8 +88,8 @@ public class ContextFactory {
 	 * (usually written <b>0</b>).
 	 * @return the <b>false</b> context.
 	 */
-	public static DisjunctiveLE falseContext() {
-		return ContextAllLE.falseContext();
+	public static LinearContext falseContext() {
+		return new FalseContext();
 	}
 
 	/**
@@ -97,7 +97,7 @@ public class ContextFactory {
 	 * @param elements
 	 * @return
 	 */
-	public static DisjunctiveLE choice(Set<DisjunctiveLE> elements) {
+	public static LinearContext choice(Set<LinearContext> elements) {
 		return ContextChoiceLE.choice(elements);
 	}
 
@@ -107,7 +107,7 @@ public class ContextFactory {
 	 * @param elements
 	 * @return
 	 */
-	public static DisjunctiveLE choice(DisjunctiveLE... elements) {
+	public static LinearContext choice(LinearContext... elements) {
 		return ContextChoiceLE.choice(CollectionMethods.mutableSet(elements));
 	}
 	
@@ -118,7 +118,7 @@ public class ContextFactory {
 	 * @return A <b>true</b> context.
 	 * 
 	 */
-	public static DisjunctiveLE trueContext() {
+	public static LinearContext trueContext() {
 		return ContextChoiceLE.trueContext();
 	}
 
@@ -130,7 +130,7 @@ public class ContextFactory {
 	 * @param invariant What was the particular invariant that failed?
 	 * @return A context representing true (1) which also stores error info.
 	 */
-	public static DisjunctiveLE failedPack(String state, String invariant) {
+	public static LinearContext failedPack(String state, String invariant) {
 		return new FailingPackContext(state, invariant);
 	}
 	
@@ -147,15 +147,15 @@ public class ContextFactory {
 	 * @param le
 	 * @return <code>true</code> if this context is equivalent to 
 	 * {@link #falseContext()}, <code>false</code> otherwise.
-	 * @see #isImpossible(DisjunctiveLE)
+	 * @see #isImpossible(LinearContext)
 	 */
-	public static boolean isFalseContext(DisjunctiveLE le) {
+	public static boolean isFalseContext(LinearContext le) {
 		// simply test for emptiness of tuples; TestVisitor already does the right thing for empty contexts
 		return le.dispatch(emptyVisitor);
 	}
 	
 	/**
-	 * Helper test visitor for {@link #isFalseContext(DisjunctiveLE)}.
+	 * Helper test visitor for {@link #isFalseContext(LinearContext)}.
 	 * @author Kevin Bierhoff
 	 */
 	private static final TestVisitor emptyVisitor = new TestVisitor() {
@@ -179,15 +179,15 @@ public class ContextFactory {
 	 * @param le
 	 * @return <code>true</code> if this context is equivalent to 
 	 * {@link #trueContext()}, <code>false</code> otherwise.
-	 * @see #isImpossible(DisjunctiveLE)
+	 * @see #isImpossible(LinearContext)
 	 */
-	public static boolean isTrueContext(DisjunctiveLE le) {
+	public static boolean isTrueContext(LinearContext le) {
 		// turns out the way TestVisitor works, we have to negate the result
 		return ! le.dispatch(anyTupleVisitor);
 	}
 	
 	/**
-	 * Helper test visitor for {@link #isTrueContext(DisjunctiveLE)}.
+	 * Helper test visitor for {@link #isTrueContext(LinearContext)}.
 	 * @author Kevin Bierhoff
 	 */
 	private static final TestVisitor anyTupleVisitor = new TestVisitor() {
@@ -212,21 +212,21 @@ public class ContextFactory {
 	 * @param le
 	 * @return <code>true</code> if this context is impossible, 
 	 * <code>false</code> otherwise.
-	 * @see #isFalseContext(DisjunctiveLE)
+	 * @see #isFalseContext(LinearContext)
 	 */
-	public static boolean isImpossible(DisjunctiveLE le) {
+	public static boolean isImpossible(LinearContext le) {
 		return le.dispatch(impossibleVisitor);
 	}
 	
 	/**
-	 * Helper descending visitor for {@link #isImpossible(DisjunctiveLE)}.
+	 * Helper descending visitor for {@link #isImpossible(LinearContext)}.
 	 * @author Kevin Bierhoff
 	 */
 	private static final DisjunctiveVisitor<Boolean> impossibleVisitor = new DisjunctiveVisitor<Boolean>() {
 
 		@Override
 		public Boolean choice(ContextChoiceLE le) {
-			for(DisjunctiveLE e : le.getElements()) {
+			for(LinearContext e : le.getElements()) {
 				if(! isImpossible(e))
 					return false;
 			}
@@ -239,7 +239,7 @@ public class ContextFactory {
 		}
 		
 		@Override
-		public Boolean context(LinearContextLE le) {
+		public Boolean context(TensorContext le) {
 			for(Iterator<FractionalPermissions> it = le.getTuple().tupleInfoIterator(); it.hasNext(); ) {
 				if(it.next().isImpossible())
 					return true;
@@ -248,12 +248,7 @@ public class ContextFactory {
 		}
 
 		@Override
-		public Boolean all(ContextAllLE le) {
-			for(DisjunctiveLE e : le.getElements()) {
-				if(isImpossible(e))
-					return true;
-			}
-			// returns false for empty context
+		public Boolean falseContext(FalseContext falseContext) {
 			return false;
 		}		
 	};
@@ -265,23 +260,15 @@ public class ContextFactory {
 	 * @return <code>true</code> if the given lattice element contains a single
 	 * context, <code>false</code> otherwise.
 	 */
-	public static boolean isSingleContext(DisjunctiveLE le) {
+	public static boolean isSingleContext(LinearContext le) {
 		return le.dispatch(singleContextVisitor);
 	}
 	
 	/**
-	 * Helper descending visitor for {@link #isSingleContext(DisjunctiveLE)}.
+	 * Helper descending visitor for {@link #isSingleContext(LinearContext)}.
 	 * @author Kevin Bierhoff
 	 */
 	private static final DisjunctiveVisitor<Boolean> singleContextVisitor = new DisjunctiveVisitor<Boolean>() {
-
-		@Override
-		public Boolean all(ContextAllLE le) {
-			if(le.getElements().isEmpty() || le.getElements().size() > 1)
-				return false;
-			// visit the one element
-			return le.getElements().iterator().next().dispatch(this);
-		}
 
 		@Override
 		public Boolean choice(ContextChoiceLE le) {
@@ -297,9 +284,14 @@ public class ContextFactory {
 		}
 		
 		@Override
-		public Boolean context(LinearContextLE le) {
+		public Boolean context(TensorContext le) {
 			// found the single element
 			return true;
+		}
+
+		@Override
+		public Boolean falseContext(FalseContext falseContext) {
+			return false;
 		}		
 	};
 }

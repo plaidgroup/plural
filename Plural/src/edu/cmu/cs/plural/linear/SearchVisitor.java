@@ -37,10 +37,9 @@
  */
 package edu.cmu.cs.plural.linear;
 
-import edu.cmu.cs.plural.contexts.ContextAllLE;
 import edu.cmu.cs.plural.contexts.ContextChoiceLE;
-import edu.cmu.cs.plural.contexts.DisjunctiveLE;
-import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.LinearContext;
+import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 
 /**
@@ -74,23 +73,11 @@ abstract class SearchVisitor<T> extends DisjunctiveVisitor<T> {
 	}
 
 	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#all(edu.cmu.cs.plural.linear.ContextAllLE)
-	 */
-	@Override
-	public T all(ContextAllLE le) {
-		for(DisjunctiveLE e : le.getElements()) {
-			if(stopSearch(e.dispatch(this)))
-				break;
-		}
-		return result;
-	}
-
-	/* (non-Javadoc)
 	 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#choice(edu.cmu.cs.plural.linear.ContextChoiceLE)
 	 */
 	@Override
 	public T choice(ContextChoiceLE le) {
-		for(DisjunctiveLE e : le.getElements()) {
+		for(LinearContext e : le.getElements()) {
 			if(stopSearch(e.dispatch(this)))
 				break;
 		}
@@ -101,7 +88,7 @@ abstract class SearchVisitor<T> extends DisjunctiveVisitor<T> {
 	 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#context(edu.cmu.cs.plural.linear.LinearContextLE)
 	 */
 	@Override
-	public T context(LinearContextLE le) {
+	public T context(TensorContext le) {
 		result = tupleAccess(le.getTuple());
 		return result;
 	}

@@ -40,7 +40,7 @@ package edu.cmu.cs.plural.concurrent.nimby;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concurrent.ConcurrentChecker;
 import edu.cmu.cs.plural.concurrent.MutexWalker;
-import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.track.FractionalTransfer;
 
 /**
@@ -87,7 +87,7 @@ public class NIMBYChecker extends ConcurrentChecker {
 		private final IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
 
 		@Override
-		protected boolean doesRcvrPermissionRequireProtection(PluralDisjunctiveLE lattice) {
+		protected boolean doesRcvrPermissionRequireProtection(PluralContext lattice) {
 			if( FULL_PERMISSION_MUST_UNPACK_IN_ATOMIC ) {
 				return lattice.isRcvrFullSharePureInAnyDisjunct();
 			} else {

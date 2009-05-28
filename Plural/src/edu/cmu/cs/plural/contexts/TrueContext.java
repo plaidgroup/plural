@@ -51,7 +51,7 @@ import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
  * @since May 22, 2009
  *
  */
-public class TrueContext implements DisjunctiveLE {
+public class TrueContext implements LinearContext {
 
 	@Override
 	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node) {
@@ -60,7 +60,7 @@ public class TrueContext implements DisjunctiveLE {
 	}
 
 	@Override
-	public DisjunctiveLE compact(ASTNode node, boolean freeze) {
+	public LinearContext compact(ASTNode node, boolean freeze) {
 		return freeze ? this.freeze() : this.mutableCopy();
 	}
 
@@ -70,7 +70,7 @@ public class TrueContext implements DisjunctiveLE {
 	}
 
 	@Override
-	public boolean atLeastAsPrecise(DisjunctiveLE other, final ASTNode node) {
+	public boolean atLeastAsPrecise(LinearContext other, final ASTNode node) {
 		// Copied from ContextChoiceLE.asLeastAsPrecise(DisjunctiveLE, ASTNode)
 		this.freeze();
 		if(this == other)
@@ -85,7 +85,7 @@ public class TrueContext implements DisjunctiveLE {
 			
 			@Override
 			public Boolean choice(ContextChoiceLE other) {
-				for(DisjunctiveLE otherElem : other.getElements()) {
+				for(LinearContext otherElem : other.getElements()) {
 					if(! otherElem.dispatch(this))
 						return false;
 				}
@@ -98,16 +98,12 @@ public class TrueContext implements DisjunctiveLE {
 			}
 			
 			@Override
-			public Boolean context(LinearContextLE other) {
+			public Boolean context(TensorContext other) {
 				return TrueContext.this.atLeastAsPrecise(other.getTuple(), node);
 			}
 
 			@Override
-			public Boolean all(ContextAllLE other) {
-				for(DisjunctiveLE otherElem : other.getElements()) {
-					if(otherElem.dispatch(this))
-						return true;
-				}
+			public Boolean falseContext(FalseContext falseContext) {
 				return false;
 			}
 		};
@@ -115,12 +111,12 @@ public class TrueContext implements DisjunctiveLE {
 	}
 
 	@Override
-	public DisjunctiveLE copy() {
+	public LinearContext copy() {
 		return new TrueContext();
 	}
 
 	@Override
-	public DisjunctiveLE join(DisjunctiveLE other, ASTNode node) {
+	public LinearContext join(LinearContext other, ASTNode node) {
 		this.freeze();
 		if(other == this) return this;
 		
@@ -128,12 +124,12 @@ public class TrueContext implements DisjunctiveLE {
 	}
 
 	@Override
-	public DisjunctiveLE freeze() {
+	public LinearContext freeze() {
 		return this;
 	}
 
 	@Override
-	public DisjunctiveLE mutableCopy() {
+	public LinearContext mutableCopy() {
 		return new TrueContext();
 	}
 }

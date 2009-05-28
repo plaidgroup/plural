@@ -69,7 +69,7 @@ import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
 import edu.cmu.cs.crystal.util.Option;
-import edu.cmu.cs.plural.contexts.PluralDisjunctiveLE;
+import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IInvocationCase;
 import edu.cmu.cs.plural.states.IInvocationCaseInstance;
@@ -91,7 +91,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	 */
 	public static boolean checkArrays = false;
 
-	private ITACFlowAnalysis<PluralDisjunctiveLE> fa;
+	private ITACFlowAnalysis<PluralContext> fa;
 	private static Logger logger = Logger.getLogger(FractionalAnalysis.class.getName());
 
 	private FractionalTransfer tf;
@@ -122,7 +122,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		return new FractionalChecker();
 	}
 	
-	protected ITACFlowAnalysis<PluralDisjunctiveLE> getFa() {
+	protected ITACFlowAnalysis<PluralContext> getFa() {
 		return fa;
 	}
 
@@ -198,8 +198,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		tf = createNewFractionalTransfer();
 		
 		// need local to be able to set monitor
-		TACFlowAnalysis<PluralDisjunctiveLE> temp; 
-		fa = temp = new TACFlowAnalysis<PluralDisjunctiveLE>(getTf(),
+		TACFlowAnalysis<PluralContext> temp; 
+		fa = temp = new TACFlowAnalysis<PluralContext>(getTf(),
 				this.analysisInput.getComUnitTACs().unwrap());
 		temp.setMonitor(analysisInput.getProgressMonitor());
 		
@@ -275,7 +275,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			if(isAbstract(node) == false) {
 				final Block block = node.getBody();
 				// check whether post-conditions for parameters are validated
-				PluralDisjunctiveLE exit = getFa().getResultsBefore(block);
+				PluralContext exit = getFa().getResultsBefore(block);
 				
 				// Sometimes this method is called on unreachable statements :-(
 				if( exit.isBottom() ) {
@@ -302,7 +302,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		@Override
 		public void endVisit(ReturnStatement node) {
 			// pull results first
-			PluralDisjunctiveLE exit = getFa().getResultsBefore(node);
+			PluralContext exit = getFa().getResultsBefore(node);
 
 			if(exit.isBottom()) {
 				logger.warning("Bottom encountered before return: " + node);
@@ -330,7 +330,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 		@Override
 		public void endVisit(ClassInstanceCreation node) {
-			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final PluralContext before = getFa().getResultsBefore(node);
 //			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
@@ -372,7 +372,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 		@Override
 		public void endVisit(MethodInvocation node) {
-			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final PluralContext before = getFa().getResultsBefore(node);
 //			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding methodBinding = node.resolveMethodBinding();
 			final IMethodSignature sig = getRepository().getMethodSignature(methodBinding);
@@ -433,7 +433,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 		@Override
 		public void endVisit(SuperMethodInvocation node) {
-			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final PluralContext before = getFa().getResultsBefore(node);
 			final IMethodBinding methodBinding = node.resolveMethodBinding();
 			final IMethodSignature sig = getRepository().getMethodSignature(methodBinding);
 			
@@ -459,8 +459,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			if(checkArrays  && node.getParent() instanceof Assignment) {
 				Assignment store = (Assignment) node.getParent();
 				if(store.getLeftHandSide().equals(node)) {
-					final PluralDisjunctiveLE before = getFa().getResultsBefore(store);
-					final PluralDisjunctiveLE after = getFa().getResultsAfter(store);
+					final PluralContext before = getFa().getResultsBefore(store);
+					final PluralContext after = getFa().getResultsAfter(store);
 
 					if(FractionalAnalysis.isBottom(before, after, node)) {
 						super.endVisit(node);
@@ -493,7 +493,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 		@Override
 		public void endVisit(ConstructorInvocation node) {
-			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final PluralContext before = getFa().getResultsBefore(node);
 //			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
@@ -549,7 +549,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		 */
 		@Override
 		public void endVisit(SuperConstructorInvocation node) {
-			final PluralDisjunctiveLE before = getFa().getResultsBefore(node);
+			final PluralContext before = getFa().getResultsBefore(node);
 //			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
@@ -638,7 +638,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		 * with <code>new</code>.
 		 */
 		private void checkCasesOfInvocation(ASTNode node,
-				final PluralDisjunctiveLE before, final IInvocationSignature sig,
+				final PluralContext before, final IInvocationSignature sig,
 				final Variable receiver, List<Variable> arguments, boolean receiverIsStaticallyBound) {
 			List<String> errors = new LinkedList<String>();
 			MethodCheckingKind checkingKind = methodCheckingKindInvoc(sig.isConstructorSignature(),
@@ -691,8 +691,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	}
 
 	private static boolean isBottom(
-			PluralDisjunctiveLE before,
-			PluralDisjunctiveLE after,
+			PluralContext before,
+			PluralContext after,
 			ASTNode node) {
 		if(before.isBottom())
 			logger.warning("Encountered bottom before node: " + node);
@@ -704,7 +704,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	}
 
 	private static boolean isBottom(
-			PluralDisjunctiveLE before,
+			PluralContext before,
 			ASTNode node) {
 		if(before.isBottom())
 			logger.warning("Encountered bottom before node: " + node);

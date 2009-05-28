@@ -41,28 +41,28 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 import edu.cmu.cs.plural.contexts.AbstractDisjunctiveLE;
-import edu.cmu.cs.plural.contexts.ContextAllLE;
 import edu.cmu.cs.plural.contexts.ContextChoiceLE;
-import edu.cmu.cs.plural.contexts.DisjunctiveLE;
-import edu.cmu.cs.plural.contexts.LinearContextLE;
+import edu.cmu.cs.plural.contexts.FalseContext;
+import edu.cmu.cs.plural.contexts.LinearContext;
+import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TrueContext;
 
 /**
  * @author Kevin
  *
  */
-public class RewritingVisitor extends DisjunctiveVisitor<DisjunctiveLE> {
+public class RewritingVisitor extends DisjunctiveVisitor<LinearContext> {
 
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#alt(edu.cmu.cs.plural.linear.ContextChoiceLE)
 	 */
 	@Override
-	public DisjunctiveLE choice(ContextChoiceLE le) {
+	public LinearContext choice(ContextChoiceLE le) {
 		return descend(le);
 	}
 	
 	@Override
-	public DisjunctiveLE trueContext(TrueContext trueContext) {
+	public LinearContext trueContext(TrueContext trueContext) {
 		return trueContext.copy();
 	}
 
@@ -70,27 +70,24 @@ public class RewritingVisitor extends DisjunctiveVisitor<DisjunctiveLE> {
 	 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#tensor(edu.cmu.cs.plural.linear.LinearContextLE)
 	 */
 	@Override
-	public DisjunctiveLE context(LinearContextLE le) {
+	public LinearContext context(TensorContext le) {
 		return le;
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.linear.DisjunctiveVisitor#with(edu.cmu.cs.plural.linear.ContextAllLE)
-	 */
 	@Override
-	public DisjunctiveLE all(ContextAllLE le) {
-		return descend(le);
+	public LinearContext falseContext(FalseContext falseContext) {
+		return falseContext.copy();
 	}
-
+	
 	/**
 	 * @param le
 	 * @return le
 	 */
 	private AbstractDisjunctiveLE descend(AbstractDisjunctiveLE le) {
-		LinkedHashSet<DisjunctiveLE> newElems = new LinkedHashSet<DisjunctiveLE>();
-		for(Iterator<DisjunctiveLE> it = le.getElements().iterator(); it.hasNext(); ) {
-			DisjunctiveLE e = it.next();
-			DisjunctiveLE newE = e.dispatch(this);
+		LinkedHashSet<LinearContext> newElems = new LinkedHashSet<LinearContext>();
+		for(Iterator<LinearContext> it = le.getElements().iterator(); it.hasNext(); ) {
+			LinearContext e = it.next();
+			LinearContext newE = e.dispatch(this);
 			if(e != newE) {
 				it.remove();
 				newElems.add(newE);
