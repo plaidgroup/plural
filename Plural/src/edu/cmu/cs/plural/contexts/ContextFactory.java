@@ -119,7 +119,7 @@ public class ContextFactory {
 	 * 
 	 */
 	public static LinearContext trueContext() {
-		return ContextChoiceLE.trueContext();
+		return new TrueContext();
 	}
 
 	/**
