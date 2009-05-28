@@ -40,7 +40,6 @@ package edu.cmu.cs.plural.linear;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
-import edu.cmu.cs.plural.contexts.AbstractDisjunctiveLE;
 import edu.cmu.cs.plural.contexts.ContextChoiceLE;
 import edu.cmu.cs.plural.contexts.FalseContext;
 import edu.cmu.cs.plural.contexts.LinearContext;
@@ -83,7 +82,7 @@ public class RewritingVisitor extends DisjunctiveVisitor<LinearContext> {
 	 * @param le
 	 * @return le
 	 */
-	private AbstractDisjunctiveLE descend(AbstractDisjunctiveLE le) {
+	private ContextChoiceLE descend(ContextChoiceLE le) {
 		LinkedHashSet<LinearContext> newElems = new LinkedHashSet<LinearContext>();
 		for(Iterator<LinearContext> it = le.getElements().iterator(); it.hasNext(); ) {
 			LinearContext e = it.next();

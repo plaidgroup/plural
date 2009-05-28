@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src"/>
+	<classpathentry excluding="edu/cmu/cs/plural/contexts/AbstractDisjunctiveLE.java" kind="src" path="src"/>
 	<classpathentry kind="src" path="generated"/>
 	<classpathentry exported="true" kind="lib" path="antlr-3.0.1/lib/antlr-runtime-3.0.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
