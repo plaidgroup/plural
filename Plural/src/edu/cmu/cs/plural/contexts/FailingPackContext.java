@@ -41,6 +41,7 @@ package edu.cmu.cs.plural.contexts;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.errors.ChoiceID;
 
 /**
  * A context that is the result of a failed attempt to pack!
@@ -57,7 +58,9 @@ public class FailingPackContext extends TrueContext {
 	private final String packingState;
 	private final String invariant;
 	
-	public FailingPackContext(String packingState, String invariant) {
+	public FailingPackContext(String packingState, 
+			String invariant, ChoiceID parentChoiceID, ChoiceID choiceID) {
+		super(parentChoiceID, choiceID);
 		this.packingState = packingState;
 		this.invariant = invariant;
 	}

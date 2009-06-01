@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.contexts;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
@@ -53,6 +54,19 @@ import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
  */
 public class TrueContext implements LinearContext {
 
+	private final ChoiceID parentChoiceID;
+	private final ChoiceID choiceID;
+	
+	public TrueContext(ChoiceID parentChoiceID) {
+		this.parentChoiceID = parentChoiceID;
+		this.choiceID = new ChoiceID();
+	}
+	
+	public TrueContext(ChoiceID parentChoiceID, ChoiceID choiceID) {
+		this.parentChoiceID = parentChoiceID;
+		this.choiceID = choiceID;
+	} 
+	
 	@Override
 	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node) {
 		// Always false, this this contains no information.
@@ -112,7 +126,7 @@ public class TrueContext implements LinearContext {
 
 	@Override
 	public LinearContext copy() {
-		return new TrueContext();
+		return new TrueContext(parentChoiceID, choiceID);
 	}
 
 	@Override
@@ -120,7 +134,7 @@ public class TrueContext implements LinearContext {
 		this.freeze();
 		if(other == this) return this;
 		
-		return new TrueContext();
+		return new TrueContext(parentChoiceID, choiceID);
 	}
 
 	@Override
@@ -130,6 +144,21 @@ public class TrueContext implements LinearContext {
 
 	@Override
 	public LinearContext mutableCopy() {
-		return new TrueContext();
+		return new TrueContext(parentChoiceID, choiceID);
+	}
+
+	@Override
+	public ChoiceID getChoiceID() {
+		return this.choiceID;
+	}
+
+	@Override
+	public ChoiceID getParentChoiceID() {
+		return this.parentChoiceID;
+	}
+
+	@Override
+	public String toString() {
+		return "1";
 	}
 }

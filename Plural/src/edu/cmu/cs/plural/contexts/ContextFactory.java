@@ -41,6 +41,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.util.CollectionMethods;
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.fractions.FractionConstraints;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
@@ -59,37 +60,8 @@ public class ContextFactory {
 	 * @param le
 	 * @return
 	 */
-	public static LinearContext tensor(TensorPluralTupleLE le) {
-		return TensorContext.tensor(le);
-	}
-
-	/**
-	 * Creates an alternative conjunction with the given elements.
-	 * @param elements
-	 * @return
-	 */
-//	public static LinearContext all(Set<LinearContext> elements) {
-//		return ContextAllLE.all(elements);
-//	}
-	
-	/**
-	 * Creates an alternative conjunction with the given elements.
-	 * Duplicates in the given array will be dropped.
-	 * @param elements
-	 * @return
-	 */
-//	public static LinearContext all(LinearContext... elements) {
-//		return ContextAllLE.all(CollectionMethods.mutableSet(elements));
-//	}
-	
-	/**
-	 * This is the <b>false</b> context, which can prove anything.
-	 * This corresponds to the linear logic <b>void</b> predicate
-	 * (usually written <b>0</b>).
-	 * @return the <b>false</b> context.
-	 */
-	public static LinearContext falseContext() {
-		return new FalseContext();
+	public static LinearContext tensor(TensorPluralTupleLE le, ChoiceID parentChoiceID, ChoiceID choiceID) {
+		return TensorContext.tensor(le, parentChoiceID, choiceID);
 	}
 
 	/**
@@ -115,13 +87,27 @@ public class ContextFactory {
 	 * This is the <b>true</b> context, which can essentially prove nothing
 	 * but <b>true</b> itself.  This corresponds to the linear logic <b>unit</b> 
 	 * (universal truth, usually written <b>1</b>).
+	 * @param parentChoiceID 
+	 * @param choiceID
 	 * @return A <b>true</b> context.
 	 * 
 	 */
-	public static LinearContext trueContext() {
-		return new TrueContext();
+	public static LinearContext trueContext(ChoiceID parentChoiceID, ChoiceID choiceID) {
+		return new TrueContext(parentChoiceID, choiceID);
 	}
 
+	/**
+	 * This is the <b>false</b> context, which can prove anything.
+	 * This corresponds to the linear logic <b>void</b> predicate
+	 * (usually written <b>0</b>).
+	 * @param parentChoiceID The id of the parent of the choice node for this new context.
+	 * @param choiceID The id of the choice node that this new context should have.
+	 * @return the <b>false</b> context.
+	 */
+	public static LinearContext falseContext(ChoiceID parentChoiceID, ChoiceID choiceID) {
+		return new FalseContext(parentChoiceID, choiceID);
+	}
+	
 	/**
 	 * Return a true context that holds information about which state we were
 	 * trying to pack to when we realized we couldn't.
@@ -130,8 +116,8 @@ public class ContextFactory {
 	 * @param invariant What was the particular invariant that failed?
 	 * @return A context representing true (1) which also stores error info.
 	 */
-	public static LinearContext failedPack(String state, String invariant) {
-		return new FailingPackContext(state, invariant);
+	public static LinearContext failedPack(String state, String invariant, ChoiceID parentChoiceID, ChoiceID choiceID) {
+		return new FailingPackContext(state, invariant, parentChoiceID, choiceID);
 	}
 	
 	/**

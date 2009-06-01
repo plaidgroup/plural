@@ -45,6 +45,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.util.SimpleMap;
+import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 
@@ -83,12 +84,13 @@ public interface PluralLatticeElement {
 	 * Pack the receiver to the given state with suitable defaults for the
 	 * rest of the permission details.
 	 * Does nothing if receiver is already packed.
+	 * @param curContext TODO
 	 * @param stateInfo
 	 * @return A result indicating whether or not the pack was succesful.
 	 */
-	public PackingResult packReceiver(Variable rcvrVar,
-			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
-			Set<String> desiredState);
+	public PackingResult packReceiver(TensorContext curContext,
+			Variable rcvrVar, StateSpaceRepository stateRepo,
+			SimpleMap<Variable, Aliasing> locs, Set<String> desiredState);
 
 	/**
 	 * This method will attempt to pack the receiver to a suitably 'good' permission/state,
@@ -126,11 +128,4 @@ public interface PluralLatticeElement {
 	public boolean unpackReceiver(Variable rcvrVar,
 			ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
 			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, String assignedField);
-
-//	public boolean maybeFieldAccess(TACInstruction<?> instr, Variable x);
-//
-//	public Aliasing getEndLocations(Variable var, MethodDeclaration d);
-//
-//	public Aliasing getStartLocations(Variable var, MethodDeclaration d);
-
 }
