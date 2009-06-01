@@ -44,13 +44,13 @@
    <extension
          point="org.eclipse.ui.views">
       <category
-            name="Fiddle"
-            id="Fiddle">
+            name="Plural"
+            id="Plural">
       </category>
       <view
-            name="Statechart View"
+            name="Fiddle Statechart View"
             icon="icons/plural.gif"
-            category="Fiddle"
+            category="Plural"
             class="edu.cmu.cs.fiddle.view.StatechartView"
             id="edu.cmu.cs.fiddle.view.StatechartView">
       </view>
