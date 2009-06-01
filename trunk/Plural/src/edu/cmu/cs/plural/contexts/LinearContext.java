@@ -41,6 +41,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.bridge.LatticeElement;
 import edu.cmu.cs.crystal.util.Freezable;
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
@@ -84,4 +85,19 @@ public interface LinearContext extends LatticeElement<LinearContext>, Freezable<
 	 */
 	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node);
 
+	/**
+	 * What is this choice ID of this object? In other words, assuming that
+	 * this context is one branch of a choice, what is the unique id of that
+	 * choice? New ids are only introduced at the introduction of choices
+	 * (packing, unpacking, call to a method w/ multiple cases, join of a
+	 * choice). Otherwise, consecutive contexts will have the same ID.
+	 */
+	public ChoiceID getChoiceID();
+	
+	/**
+	 * The id of the lattice that this lattice was created from as part
+	 * of a choice introduction (packing, unpacking, call to method w/
+	 * multiple cases, join of a choice).
+	 */
+	public ChoiceID getParentChoiceID();
 }

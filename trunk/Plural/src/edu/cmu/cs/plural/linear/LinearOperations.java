@@ -37,7 +37,6 @@
  */
 package edu.cmu.cs.plural.linear;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,8 +57,6 @@ import org.eclipse.jdt.core.dom.SuperMethodInvocation;
 
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.annotations.AnnotationSummary;
-import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.tac.ConstructorCallInstruction;
 import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
 import edu.cmu.cs.crystal.tac.MethodCallInstruction;
@@ -72,8 +69,8 @@ import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
+import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.alias.FrameLabel;
-import edu.cmu.cs.plural.alias.ParamVariable;
 import edu.cmu.cs.plural.concrete.StateImplication;
 import edu.cmu.cs.plural.contexts.ContextFactory;
 import edu.cmu.cs.plural.contexts.LinearContext;
@@ -137,10 +134,11 @@ public class LinearOperations extends TACAnalysisHelper {
 	 */
 	public LinearContext handleMethodCall(
 			final MethodCallInstruction instr,
-			final TensorPluralTupleLE value,
+			final TensorContext current_context,
 			final IMethodCaseInstance sigCase,
 			boolean failFast) {
 		// create parameter map suitable for method call
+		final TensorPluralTupleLE value = current_context.getTuple();
 		final SimpleMap<String, Aliasing> paramMap = createParameterMap(
 				instr, value, instr.getReceiverOperand(), instr.getTarget());
 		if(instr.isSuperCall() && value.isRcvrPacked()) {
@@ -154,13 +152,15 @@ public class LinearOperations extends TACAnalysisHelper {
 						}},
 					StateSpace.STATE_ALIVE /* super always mapped to root node */, 
 					null /* not an assignment */,
-					true /* also keep the packed version */);
+					true /* also keep the packed version */, 
+					current_context.getParentChoiceID(), 
+					current_context.getChoiceID());
 			
 			final boolean failFaster = failFast || ! ContextFactory.isSingleContext(unpacked);
 			return unpacked.dispatch(new RewritingVisitor() {
 				@Override
 				public LinearContext context(TensorContext le) {
-					return handleInvocation(instr, le.getTuple(), 
+					return handleInvocation(instr, le, 
 							sigCase, failFaster, paramMap);
 				}
 			});
@@ -171,7 +171,7 @@ public class LinearOperations extends TACAnalysisHelper {
 			//   will just fail if super-frame permission missing
 			//   super is mapped to alive, so any unpacked node will do
 			//   no need to check like in handleFieldAccess
-			return handleInvocation(instr, value, sigCase, failFast, paramMap);
+			return handleInvocation(instr, current_context, sigCase, failFast, paramMap);
 	}
 	
 	/**
@@ -187,17 +187,18 @@ public class LinearOperations extends TACAnalysisHelper {
 	 */
 	public LinearContext handleNewObject(
 			NewObjectInstruction instr,
-			TensorPluralTupleLE value,
+			TensorContext cur_context,
 			IConstructorCaseInstance sigCase,
 			boolean failFast) {
 		// create parameter map suitable for "new"
+		TensorPluralTupleLE value = cur_context.getTuple();
 		final Aliasing target_loc = value.getLocationsAfter(instr, instr.getTarget());
 		final SimpleMap<String, Aliasing> paramMap = createParameterMap(
 				instr, value, 
 				target_loc, // target is receiver
 				target_loc, // target is receiver
 				null);	// no result
-		return handleInvocation(instr, value, sigCase, failFast, paramMap);
+		return handleInvocation(instr, cur_context, sigCase, failFast, paramMap);
 	}
 
 	/**
@@ -213,15 +214,15 @@ public class LinearOperations extends TACAnalysisHelper {
 	 */
 	public LinearContext handleConstructorCall(
 			ConstructorCallInstruction instr,
-			TensorPluralTupleLE value,
+			TensorContext cur_context,
 			IConstructorCaseInstance sigCase,
 			boolean failFast) {
 		// create parameter map suitable for constructor invocation
 		final SimpleMap<String, Aliasing> paramMap = createParameterMap(
-				instr, value, 
+				instr, cur_context.getTuple(), 
 				instr.getConstructionObject(),	 
 				null); // no result
-		return handleInvocation(instr, value, sigCase, failFast, paramMap);
+		return handleInvocation(instr, cur_context, sigCase, failFast, paramMap);
 	}
 
 	/**
@@ -235,8 +236,11 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * {@link ContextFactory#trueContext() false}.
 	 */
 	private LinearContext handleInvocation(final TACInvocation instr,
-			TensorPluralTupleLE value, final IInvocationCaseInstance sigCase,
+			final TensorContext cur_context, final IInvocationCaseInstance sigCase,
 			boolean failFast, final SimpleMap<String, Aliasing> paramMap) {
+		
+		TensorPluralTupleLE value = cur_context.getTuple();
+		
 		// 1. split off pre-condition
 		PredicateChecker pre = sigCase.getPreconditionChecker();
 		Aliasing this_loc = value.getLocationsBefore(instr, getThisVar());
@@ -244,8 +248,9 @@ public class LinearOperations extends TACAnalysisHelper {
 		CallHandlerContinuation cont = new CallHandlerContinuation() {
 
 			@Override
-			public LinearContext mergePostIntoTuple(TensorPluralTupleLE tuple,
+			public LinearContext mergePostIntoTuple(TensorContext tensor,
 					Map<Aliasing, FractionalPermissions> borrowedPerms) {
+				TensorPluralTupleLE tuple = tensor.getTuple();
 				// 2. forget state information for remaining permissions
 				if(sigCase.isEffectFree() == false) {
 					tuple = forgetStateInfo(tuple);
@@ -259,48 +264,24 @@ public class LinearOperations extends TACAnalysisHelper {
 				post.mergeInPredicate(paramMap, merger);
 				
 				if(merger.isVoid())
-					return ContextFactory.falseContext();
+					return ContextFactory.falseContext(tensor.getParentChoiceID(), tensor.getChoiceID());
 				else
-					return ContextFactory.tensor(tuple);
+					return ContextFactory.tensor(tuple, tensor.getParentChoiceID(), tensor.getChoiceID());
 			}
 			
 		};
 		
 		CallPreconditionHandler splitter = createSplitter(
-				instr, value, this_loc, cont, failFast);
+				instr, cur_context, this_loc, cont, failFast);
 		
 		// the splitter will also merge in the post-condition
 		if(! pre.splitOffPredicate(
 				paramMap, 
 				splitter))
-			return ContextFactory.trueContext();
+			return ContextFactory.trueContext(cur_context.getParentChoiceID(),
+					cur_context.getChoiceID());
 		
 		return splitter.getResult();
-//		result = result.dispatch(new RewritingVisitor() {
-//			
-//			@Override
-//			public DisjunctiveLE context(LinearContextLE le) {
-//				TensorPluralTupleLE tuple = le.getTuple();
-//				
-//				// 2. forget state information for remaining permissions
-//				if(sigCase.isEffectFree() == false) {
-//					tuple = forgetStateInfo(tuple);
-//					tuple = forgetFieldPermissionsIfNeeded(tuple, getThisVar(), instr);
-//				}
-//				
-//				// 3. merge in post-condition
-//				CallPostPredicateMerger merger = new CallPostPredicateMerger(
-//						instr.getNode(), tuple, borrowed);
-//				post.mergeInPredicate(paramMap, merger);
-//				
-//				if(merger.isVoid())
-//					return ContextFactory.falseContext();
-//				else
-//					return le;
-//			}
-//		});
-//		
-//		return result;
 	}
 
 	/**
@@ -314,7 +295,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * result variables.
 	 * @see #createNodeArgumentMap(ASTNode, TensorPluralTupleLE, Variable, List)
 	 * creating AST-based maps for checkers
-	 * @see #handleMethodCall(MethodCallInstruction, TensorPluralTupleLE, IMethodCaseInstance, boolean)
+	 * @see #handleMethodCall(MethodCallInstruction, TensorContext, IMethodCaseInstance, boolean)
 	 * @see #handleConstructorCall(ConstructorCallInstruction, TensorPluralTupleLE, IConstructorCaseInstance, boolean)
 	 */
 	private SimpleMap<String, Aliasing> createParameterMap(
@@ -398,10 +379,11 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @see #handleInvocation(TACInvocation, TensorPluralTupleLE, IMethodCaseInstance, boolean, SimpleMap)  
 	 */
 	private CallPreconditionHandler createSplitter(
-			final TACInvocation instr, TensorPluralTupleLE value,
+			final TACInvocation instr, TensorContext cur_context,
 			final Aliasing this_loc, CallHandlerContinuation cont, boolean failFast) {
-		return failFast ? new CallPreconditionHandler(instr, value, this_loc, cont) :
-					new LazyPreconditionHandler(instr, value, this_loc, cont);
+		
+		return failFast ? new CallPreconditionHandler(instr, cur_context, this_loc, cont) :
+					new LazyPreconditionHandler(instr, cur_context, this_loc, cont);
 	}
 	
 	/**
@@ -419,12 +401,12 @@ public class LinearOperations extends TACAnalysisHelper {
 		/**
 		 * Call this method to merge the post-condition of an invocation
 		 * into the given tuple, assuming the given borrowed permissions.
-		 * @param tuple
+		 * @param tensor
 		 * @param borrowedPerms Map from borrowed locations to their original
 		 * permissions.
 		 * @return The resulting context(s).
 		 */
-		LinearContext mergePostIntoTuple(TensorPluralTupleLE tuple,
+		LinearContext mergePostIntoTuple(TensorContext tensor,
 				Map<Aliasing, FractionalPermissions> borrowedPerms);
 		
 	}
@@ -478,9 +460,9 @@ public class LinearOperations extends TACAnalysisHelper {
 		 * @see #CallPreconditionHandler(ASTNode, TensorPluralTupleLE, Aliasing, CallHandlerContinuation)
 		 */
 		public CallPreconditionHandler(TACInvocation instr,
-				TensorPluralTupleLE value, Aliasing thisLoc,
+				TensorContext cur_context, Aliasing thisLoc,
 				CallHandlerContinuation cont) {
-			super(value, thisLoc);
+			super(cur_context, thisLoc);
 			this.node = instr.getNode();
 			this.cont = cont;
 		}
@@ -494,9 +476,9 @@ public class LinearOperations extends TACAnalysisHelper {
 		 * @see #CallPreconditionHandler(TACInvocation, TensorPluralTupleLE, Aliasing, CallHandlerContinuation)
 		 */
 		protected CallPreconditionHandler(ASTNode node,
-				TensorPluralTupleLE value, Aliasing thisLoc,
+				TensorContext cur_context, Aliasing thisLoc,
 				CallHandlerContinuation cont) {
-			super(value, thisLoc);
+			super(cur_context, thisLoc);
 			this.node = node;
 			this.cont = cont;
 		}
@@ -553,7 +535,7 @@ public class LinearOperations extends TACAnalysisHelper {
 
 		@Override
 		public boolean finishSplit() {
-			result = prepareAnalyzedMethodReceiverForCall(node, value,
+			result = prepareAnalyzedMethodReceiverForCall(node, incomingContext,
 					getNeededReceiverStates());
 			
 			final boolean forceFail = !ContextFactory.isSingleContext(result);
@@ -580,13 +562,15 @@ public class LinearOperations extends TACAnalysisHelper {
 						// split off delayed permissions
 						for(Pair<Aliasing, PermissionSetFromAnnotations> d : delayed) {
 							if(! doSplitOffInternal(d.fst(), tuple, d.snd(), forceFail))
-								return ContextFactory.trueContext();
+								return ContextFactory.trueContext(le.getParentChoiceID(),
+										le.getChoiceID());
 						}
 						
 						// split off permissions for packed frame
 						for(PermissionSetFromAnnotations pa : getSplitFromThis()) {
 							if(! doSplitOffInternal(this_loc, tuple, pa, forceFail))
-								return ContextFactory.trueContext();
+								return ContextFactory.trueContext(le.getParentChoiceID(),
+										le.getChoiceID());
 						}
 					}
 					else
@@ -595,7 +579,7 @@ public class LinearOperations extends TACAnalysisHelper {
 					/*
 					 * Call continuation to forget state info and merge
 					 */
-					return cont.mergePostIntoTuple(tuple, borrowedPerms);
+					return cont.mergePostIntoTuple(le, borrowedPerms);
 				}
 				
 			});
@@ -623,18 +607,18 @@ public class LinearOperations extends TACAnalysisHelper {
 		 * @see CallPreconditionHandler#CallPreconditionHandler(TACInvocation, TensorPluralTupleLE, Aliasing, CallHandlerContinuation)
 		 */
 		public LazyPreconditionHandler(TACInvocation instr,
-				TensorPluralTupleLE value, Aliasing thisLoc,
+				TensorContext cur_context, Aliasing thisLoc,
 				CallHandlerContinuation cont) {
-			super(instr, value, thisLoc, cont);
+			super(instr, cur_context, thisLoc, cont);
 		}
 
 		/**
 		 * @see CallPreconditionHandler#CallPreconditionHandler(ASTNode, TensorPluralTupleLE, Aliasing, CallHandlerContinuation)
 		 */
 		protected LazyPreconditionHandler(ASTNode node,
-				TensorPluralTupleLE value, Aliasing thisLoc,
+				TensorContext cur_lattice, Aliasing thisLoc,
 				CallHandlerContinuation cont) {
-			super(node, value, thisLoc, cont);
+			super(node, cur_lattice, thisLoc, cont);
 		}
 		
 		@Override
@@ -749,9 +733,9 @@ public class LinearOperations extends TACAnalysisHelper {
 	 */
 	private LinearContext prepareAnalyzedMethodReceiverForCall(
 			final ASTNode node,
-			final TensorPluralTupleLE value,
+			final TensorContext cur_context,
 			Set<String> neededAnalyzedMethodReceiverState) {
-		return wrangleIntoPackedStates(node, value, neededAnalyzedMethodReceiverState,
+		return wrangleIntoPackedStates(node, cur_context, neededAnalyzedMethodReceiverState,
 				!packBeforeCall);
 	}
 
@@ -1011,9 +995,12 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @return Possibly a disjunction of new lattice information.
 	 */
 	public LinearContext handleFieldAccess(
-			TensorPluralTupleLE value,
+			TensorContext cur_context,
 			final Variable assignmentSource,
 			final TACFieldAccess instr) {
+		
+		TensorPluralTupleLE value = cur_context.getTuple();
+		
 		if("length".equals(instr.getFieldName()) &&
 				instr.getAccessedObjectOperand().resolveType().isArray()) {
 			// reading the array length
@@ -1051,40 +1038,10 @@ public class LinearOperations extends TACAnalysisHelper {
 				 * override the permission for the source operand
 				 * TODO Maybe we can avoid affecting the source operand during unpacking?
 				 */
-				LinearContext result = internalHandleFieldAccess(value, isAssignment, instr);
+				LinearContext result = internalHandleFieldAccess(cur_context, 
+						isAssignment,
+						instr);
 				
-//				if(isAssignment) {
-//					result.dispatch(new DescendingVisitor() {
-//
-//						@Override
-//						public Boolean tuple(
-//								TensorPluralTupleLE tuple) {
-//							if(tuple.isRcvrPacked())
-//								// may not have actually unpacked
-//								return true;
-//							
-//							/*
-//							 * 3. Force unpacked permission to be modifiable, to allow assignment.
-//							 */
-//							FractionalPermissions rcvrPerms = tuple.get(loc);
-//							rcvrPerms = rcvrPerms.makeUnpackedPermissionModifiable();
-//							tuple.put(loc, rcvrPerms);
-//							
-//							/*
-//							 * 4. Override potential permission for assigned field from unpacking
-//							 * with saved permission being assigned.  This will fix the permission
-//							 * associated with the source operand as well, because of aliasing. 
-//							 */
-//							tuple.put(instr.getNode(), 
-//									new FieldVariable(instr.resolveFieldBinding()), 
-//									new_field_perms);
-//							
-//							return true;
-//						}
-//						
-//					});
-//					
-//				}
 				
 				return result;
 			}
@@ -1099,13 +1056,14 @@ public class LinearOperations extends TACAnalysisHelper {
 			if(log.isLoggable(Level.WARNING))
 				log.warning("Unsupported static field access: " + instr.getNode());
 		}
-		return ContextFactory.tensor(value);
+		return ContextFactory.tensor(value, cur_context.getParentChoiceID(), cur_context.getChoiceID());
 	}
 	
 	private LinearContext internalHandleFieldAccess(
-			final TensorPluralTupleLE value,
+			TensorContext cur_context,
 			final boolean isAssignment, 
 			final TACFieldAccess instr) {
+		final TensorPluralTupleLE value = cur_context.getTuple();
 		/*
 		 * Better see if fields have been unpacked...
 		 */
@@ -1115,29 +1073,6 @@ public class LinearOperations extends TACAnalysisHelper {
 			this_space.getFieldRootNode(instr.resolveFieldBinding());
 		
 		if(unpacking_root != null) {
-
-			// don't need to wiggle root since we'll try all nodes anyway
-//			for(FractionalPermission p : value.get(instr.getNode(), thisVar).getPermissions()) {
-//				if(p.getRootNode().equals(unpacking_root))
-//					// permission with the right root available
-//					break;
-//				if(p.getStateSpace().firstBiggerThanSecond(p.getRootNode(), unpacking_root)) {
-//					// permission with bigger root available 
-//					FractionAssignment a = value.get(instr.getNode(), thisVar).getConstraints().simplify();
-//					if(! a.isOne(p.getFractions().get(unpacking_root)))
-//						// not a full permission -> do not try to move its root down
-//						unpacking_root = p.getRootNode();
-//					break;
-//				}
-//				if(p.getStateSpace().firstBiggerThanSecond(unpacking_root, p.getRootNode())) {
-//					// permission with smaller root available
-//					FractionAssignment a = value.get(instr.getNode(), thisVar).getConstraints().simplify();
-//					if(! a.isOne(p.getFractions().get(unpacking_root)))
-//						// not a unique permission -> do not try to move its root up
-//						unpacking_root = p.getRootNode();
-//					break;
-//				}
-//			}
 			
 			if(value.isRcvrPacked()) {
 				return value.fancyUnpackReceiver(thisVar, instr.getNode(), 
@@ -1149,7 +1084,9 @@ public class LinearOperations extends TACAnalysisHelper {
 						}},
 					unpacking_root, 
 					isAssignment ? instr.getFieldName() : null,
-					false /* do not keep packed tuple */);
+					false /* do not keep packed tuple */, 
+					cur_context.getParentChoiceID(), 
+					cur_context.getChoiceID());
 			}
 			else { // already unpacked...
 				final Aliasing loc = 
@@ -1163,7 +1100,8 @@ public class LinearOperations extends TACAnalysisHelper {
 					if(!this_space.firstBiggerThanSecond(
 							rcvrPerms.getUnpackedPermission().getRootNode(), 
 							unpacking_root)) {
-						return ContextFactory.trueContext();
+						return ContextFactory.trueContext(cur_context.getParentChoiceID(),
+								cur_context.getChoiceID());
 					}
 					/*
 					 * Force unpacked permission to be modifiable, to allow assignment.
@@ -1179,15 +1117,16 @@ public class LinearOperations extends TACAnalysisHelper {
 					if(this_space.areOrthogonal(
 							rcvrPerms.getUnpackedPermission().getRootNode(), 
 							unpacking_root)) {
-						return ContextFactory.trueContext();
+						return ContextFactory.trueContext(cur_context.getParentChoiceID(),
+								cur_context.getChoiceID());
 					}
 				}
-				return ContextFactory.tensor(value);
+				return ContextFactory.tensor(value, cur_context.getParentChoiceID(), cur_context.getChoiceID());
 			}
 		}
 		else {
 			// field is not mapped -> no unpack, no modifiable permission for assignment needed
-			return ContextFactory.tensor(value);
+			return ContextFactory.tensor(value, cur_context.getParentChoiceID(), cur_context.getChoiceID());
 		}
 	}
 	
@@ -1216,7 +1155,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * check was successful.
 	 */
 	public String checkPostCondition(ASTNode node, 
-			TensorPluralTupleLE curLattice,
+			TensorContext cur_context,
 			Variable resultVar,
 			PredicateChecker post,
 			SimpleMap<String, Aliasing> parameterVars,
@@ -1224,8 +1163,9 @@ public class LinearOperations extends TACAnalysisHelper {
 			Pair<String, String> falseTest) {
 		// 0. determine receiver and result locations
 		Aliasing this_loc = inStaticMethod() ? null : parameterVars.get("this!fr");
-
+		TensorPluralTupleLE curLattice = cur_context.getTuple();
 		Aliasing res_loc;
+		
 		if(resultVar == null) {
 			res_loc = null;
 			assert trueTest == null && falseTest == null; // can't have state tests without result
@@ -1239,7 +1179,7 @@ public class LinearOperations extends TACAnalysisHelper {
 		// 1. Check without state tests
 		{
 			PredicateErrorReporter checks = new PredicateErrorReporter(true, // return checker 
-					node, curLattice, this_loc);
+					node, cur_context, this_loc);
 			post.splitOffPredicate(vars, checks);
 			if(checks.hasErrors())
 				return checks.getErrors().iterator().next();
@@ -1249,10 +1189,10 @@ public class LinearOperations extends TACAnalysisHelper {
 		if(trueTest != null && ! curLattice.isBooleanFalse(res_loc)) {
 			// checker makes a copy of the lattice
 			PredicateErrorReporter checks = new PredicateErrorReporter(true, // return checker 
-					node, curLattice, this_loc);
+					node, cur_context, this_loc);
 			
 			// TODO hack: slam antecedent in
-			checks.value.addTrueVarPredicate(res_loc);
+			checks.incomingContext.getTuple().addTrueVarPredicate(res_loc);
 			
 			// check whether state is indicated
 			Aliasing tested_loc = parameterVars.get(trueTest.fst());
@@ -1271,10 +1211,10 @@ public class LinearOperations extends TACAnalysisHelper {
 		if(falseTest != null && ! curLattice.isBooleanTrue(res_loc)) {
 			// checker makes a copy of the lattice
 			PredicateErrorReporter checks = new PredicateErrorReporter(true, // return checker 
-					node, curLattice, this_loc);
+					node, cur_context, this_loc);
 			
 			// TODO hack: slam antecedent in
-			checks.value.addFalseVarPredicate(res_loc);
+			checks.incomingContext.getTuple().addFalseVarPredicate(res_loc);
 			
 			// check whether state is indicated
 			Aliasing tested_loc = parameterVars.get(falseTest.fst());
@@ -1327,9 +1267,10 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * check was successful.
 	 */
 	public String checkCallPrecondition(final ASTNode node,
-			final TensorPluralTupleLE value,
+			TensorContext cur_context,
 			Variable receiver,
 			List<Variable> arguments, final PredicateChecker pre) {
+		final TensorPluralTupleLE value = cur_context.getTuple();
 		final SimpleMap<String, Aliasing> argLocs = createNodeArgumentMap(node, value, receiver, arguments);
 		final Aliasing this_loc = value.getLocationsBefore(node, getThisVar());
 		
@@ -1345,23 +1286,31 @@ public class LinearOperations extends TACAnalysisHelper {
 						}},
 					StateSpace.STATE_ALIVE /* super always mapped to root node */, 
 					null /* not an assignment */,
-					true /* also keep the packed version */);
+					true /* also keep the packed version */, 
+					cur_context.getParentChoiceID(), 
+					cur_context.getChoiceID());
 			// keeping the original means there is at least one tuple in unpacked
 			// that's good because we'll visit at least one tuple below and 
 			// get error messages from it
 			
 			return unpacked.dispatch(new ErrorReportingVisitor() {
+				
+				@Override
+				public String context(TensorContext le) {
+					return checkCallPreconditionInternal(node, le, pre, 
+							argLocs, this_loc);
+				}
+
 				@Override
 				public String checkTuple(TensorPluralTupleLE tuple) {
-					return checkCallPreconditionInternal(node, tuple, pre, 
-							argLocs, this_loc);
+					return Utilities.nyi("Should be prevented by overriding context");
 				}
 			});
 		}
 		else 
 			// standard case
 			// just do the pre-condition check outright
-			return checkCallPreconditionInternal(node, value, pre, argLocs,
+			return checkCallPreconditionInternal(node, cur_context, pre, argLocs,
 					this_loc);
 	}
 
@@ -1374,11 +1323,11 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @return
 	 */
 	private String checkCallPreconditionInternal(ASTNode node,
-			final TensorPluralTupleLE value, PredicateChecker pre,
+			TensorContext cur_context, PredicateChecker pre,
 			SimpleMap<String, Aliasing> argLocs, Aliasing this_loc) {
 		PredicateErrorReporter checker = new PredicateErrorReporter(
 				false /* pre-checker */,
-				node, value, this_loc);
+				node, cur_context, this_loc);
 		pre.splitOffPredicate(argLocs, checker);
 		if(checker.hasErrors())
 			return ErrorReportingVisitor.errorString(checker.getErrors(), " and ");
@@ -1485,8 +1434,8 @@ public class LinearOperations extends TACAnalysisHelper {
 		 * @param thisLoc
 		 */
 		public PredicateErrorReporter(boolean isReturnCheck, ASTNode node,
-				TensorPluralTupleLE value, Aliasing thisLoc) {
-			super(value.mutableCopy(), thisLoc);
+				TensorContext cur_context, Aliasing thisLoc) {
+			super(cur_context.mutableCopy(), thisLoc);
 			this.isReturnCheck = isReturnCheck;
 			this.node = node;
 		}
@@ -1535,8 +1484,8 @@ public class LinearOperations extends TACAnalysisHelper {
 			
 			LinearContext packed_lattice = isReturnCheck ?
 					// TODO combine wrangle and prepare
-					prepareAnalyzedMethodReceiverForReturn(node, value, getNeededReceiverStates()) :
-						prepareAnalyzedMethodReceiverForCall(node, value, 
+					prepareAnalyzedMethodReceiverForReturn(node, this.incomingContext, getNeededReceiverStates()) :
+						prepareAnalyzedMethodReceiverForCall(node, this.incomingContext, 
 								getNeededReceiverStates());
 			
 			// fail right away if wrangling was unsuccessful
@@ -1563,12 +1512,12 @@ public class LinearOperations extends TACAnalysisHelper {
 						if(!tuple.get(this_loc).isInStates(pa.getStateInfo(false), false)) {
 							return "After packing, receiver must be in state " + 
 									pa.getStateInfo(false) + " but is in " + 
-									value.get(this_loc).getStateInfo(false);
+									tuple.get(this_loc).getStateInfo(false);
 						}
 						else if(!tuple.get(this_loc).isInStates(pa.getStateInfo(true), true)) {
 							return "After packing, receiver frame must be in state " + 
 									pa.getStateInfo(true) + " but is in " + 
-									value.get(this_loc).getStateInfo(true);
+									tuple.get(this_loc).getStateInfo(true);
 						}
 						// keep going anyway....
 
@@ -1631,6 +1580,8 @@ public class LinearOperations extends TACAnalysisHelper {
 		public boolean checkStateInfo(Aliasing var, String var_name, 
 				Set<String> stateInfo, boolean inFrame) {
 			boolean result = super.checkStateInfo(var, var_name, stateInfo, inFrame);
+			
+			final TensorPluralTupleLE value = this.incomingContext.getTuple();
 			if(! result) {
 				List<String> actual = value.get(var).getStateInfo(inFrame);
 				if(inFrame)
@@ -1704,11 +1655,13 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @return
 	 */
 	private String checkPostConditionOption(final ASTNode node,
-			TensorPluralTupleLE curLattice,
+			final TensorContext cur_context,
 			final Map<Aliasing, PermissionSetFromAnnotations> paramPost,
 			final Aliasing resultLoc,
 			final PermissionSetFromAnnotations resultPost,
 			final Map<Aliasing, StateImplication> indicatedStates) {
+		TensorPluralTupleLE curLattice = cur_context.getTuple();
+		
 		curLattice = curLattice.mutableCopy();
 		
 		if(indicatedStates.isEmpty() == false) {
@@ -1756,7 +1709,7 @@ public class LinearOperations extends TACAnalysisHelper {
 			
 			// pack receiver, if necessary
 			packed_lattice =
-				this.prepareAnalyzedMethodReceiverForReturn(node, curLattice, needed_rcvr_states);
+				this.prepareAnalyzedMethodReceiverForReturn(node, cur_context, needed_rcvr_states);
 			
 			// fail right away if wrangling was unsuccessful
 			if( ContextFactory.isImpossible(packed_lattice) ) {
@@ -1798,9 +1751,9 @@ public class LinearOperations extends TACAnalysisHelper {
 	 */
 	private LinearContext prepareAnalyzedMethodReceiverForReturn(
 			final ASTNode node, 
-			final TensorPluralTupleLE value, 
+			final TensorContext cur_context,
 			final Set<String> neededStates) {
-		return wrangleIntoPackedStates(node, value, neededStates, false);
+		return wrangleIntoPackedStates(node, cur_context, neededStates, false);
 	}
 	/**
 	 * When the receiver is in some dubious state, this method packs/unpacks the
@@ -1819,8 +1772,10 @@ public class LinearOperations extends TACAnalysisHelper {
 	 */
 	private LinearContext wrangleIntoPackedStates(
 			final ASTNode node, 
-			final TensorPluralTupleLE value, 
+			TensorContext cur_context,
 			final Set<String> neededStates, boolean needNotPack) {
+		
+		final TensorPluralTupleLE value = cur_context.getTuple();
 		
 		final SimpleMap<Variable, Aliasing> loc_map = new SimpleMap<Variable, Aliasing>() {
 			@Override
@@ -1835,14 +1790,14 @@ public class LinearOperations extends TACAnalysisHelper {
 			 */
 			if( value.isRcvrPacked() )
 				// already packed -> done
-				return ContextFactory.tensor(value);
+				return ContextFactory.tensor(value, cur_context.getParentChoiceID(), cur_context.getChoiceID());
 			else if(needNotPack || isUniqueOrImmutableUnpacked(value, node, getThisVar()))
 				// don't have to pack if needNotPack true or unique / immutable
-				return ContextFactory.tensor(value);
+				return ContextFactory.tensor(value, cur_context.getParentChoiceID(), cur_context.getChoiceID());
 			else
 				// try packing to any state
-				return value.fancyPackReceiverToBestGuess(getThisVar(),
-						getRepository(), loc_map) ;
+				return value.fancyPackReceiverToBestGuess(cur_context, getThisVar(),
+						getRepository(), loc_map, cur_context.getChoiceID()) ;
 		}
 
 		/*
@@ -1869,14 +1824,15 @@ public class LinearOperations extends TACAnalysisHelper {
 					root);
 
 			PackingResult packed = 
-				value.packReceiver(getThisVar(),
-					getRepository(), loc_map, packToStates);
+				value.packReceiver(cur_context,
+					getThisVar(), getRepository(), loc_map, packToStates);
 
 			if( !packed.worked() ) {
 				// couldn't pack to needed states -> fail
 				String state = packed.failedState().unwrap();
 				String inv = packed.failedInvariant().unwrap();
-				return ContextFactory.failedPack(state, inv);
+				return ContextFactory.failedPack(state, inv, 
+						cur_context.getParentChoiceID(), cur_context.getChoiceID());
 			}
 			// else see if all states are satisfied below
 		}
@@ -1889,7 +1845,7 @@ public class LinearOperations extends TACAnalysisHelper {
 		Set<String> unsatStates = filterFrameUnsatisfied(this_perms, states);
 		if( unsatStates.isEmpty() ) {
 			// home free: all needed states there
-			return ContextFactory.tensor(value);
+			return ContextFactory.tensor(value, cur_context.getParentChoiceID(), cur_context.getChoiceID());
 		}
 		else {
 			// there are states we need to get to that we're not already in
@@ -1916,7 +1872,8 @@ public class LinearOperations extends TACAnalysisHelper {
 			}
 			if(unpack_state == null)
 				// no permission could be unpacked to reach desired state -> fail
-				return ContextFactory.trueContext();
+				return ContextFactory.trueContext(cur_context.getParentChoiceID(),
+						cur_context.getChoiceID());
 			
 			/*
 			 * We have to try to unpack and pack to the correct states.
@@ -1926,7 +1883,9 @@ public class LinearOperations extends TACAnalysisHelper {
 					getRepository(),
 					loc_map, unpack_state, 
 					null /* no assigned field */, 
-					false /* do not keep packed version */);
+					false /* do not keep packed version */, 
+					cur_context.getParentChoiceID(),
+					cur_context.getChoiceID());
 
 			// find the states we need to re-pack to
 			final Set<String> packToStates = AbstractFractionalPermission.cleanStateInfo(
@@ -1951,15 +1910,16 @@ public class LinearOperations extends TACAnalysisHelper {
 							filteredPackToStates.add(n);
 						else if(! le.getTuple().get(this_loc).isInState(n, true))
 							// cannot pack to n and rcvr is not currently in n --> fail
-							return ContextFactory.trueContext();
+							return ContextFactory.trueContext(le.getParentChoiceID(),
+									le.getChoiceID());
 						// else n is outside unpacked_perm and rcvr is currently in n --> ignore
 					}
 					
 					PackingResult pack_result = le.getTuple().packReceiver(
+							le, 
 							this_var, 
 							getRepository(), 
-							loc_map, 
-							filteredPackToStates 
+							loc_map, filteredPackToStates 
 							);
 
 					if(pack_result.worked())
@@ -1967,7 +1927,8 @@ public class LinearOperations extends TACAnalysisHelper {
 					else {
 						String state = pack_result.failedState().unwrap();
 						String inv = pack_result.failedInvariant().unwrap();
-						return ContextFactory.failedPack(state, inv);
+						return ContextFactory.failedPack(state, inv,
+								le.getParentChoiceID(), le.getChoiceID());
 					}
 				}
 			});

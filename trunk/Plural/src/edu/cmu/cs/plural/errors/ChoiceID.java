@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
+ * Copyright (C) 2007-2009 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
  *
@@ -35,51 +35,80 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.pred;
 
-import java.util.Set;
+package edu.cmu.cs.plural.errors;
 
-import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.contexts.TensorContext;
-import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.linear.AbstractPredicateChecker;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * This class is an analogue to DefaultInvariantMerger. It provides
- * the call-back functionality, SplitOffTuple, that will be used to
- * check that all invariants are satisfied at pack-time.
+ * A choice id uniquely identifies a node in the choice tree. Choices
+ * (as in &) come from things like method cases and inference of
+ * which state to pack to. In order to track the tree of choices
+ * over time, we give them ids. A choice ID has an age, so we can
+ * say that one choice id is newer or older than another.
  * 
  * @author Nels E. Beckman
- * @since Sep 26, 2008
- * @see {@link DefaultInvariantMerger}
+ * @since May 29, 2009
  */
-public class DefaultInvariantChecker extends AbstractPredicateChecker {
+public final class ChoiceID implements Comparable<ChoiceID> {
 
-	private final boolean purify;
+	private static final AtomicLong ID_GENERATOR = new AtomicLong(0L);
 	
-	public DefaultInvariantChecker(TensorContext curContext,
-			Aliasing thisLoc, boolean purify) {
-		super(curContext, thisLoc);
-		this.purify = purify;
+	private final long id;
+	
+	public ChoiceID() {
+		id = ID_GENERATOR.incrementAndGet();
+	}
+	
+	@Override
+	public int compareTo(ChoiceID arg0) {
+		// I didn't just subtract because the return value of
+		// this method is an int and I didn't want to have to
+		// worry about annoying overflow garbage.
+		return 
+			this.id < arg0.id ? -1 :
+				(this.id == arg0.id ? 0 : 1);
 	}
 
 	@Override
-	public boolean splitOffPermission(Aliasing var, String var_name,
-			PermissionSetFromAnnotations perms) {
-		// Purify if we need to.
-		return super.splitOffPermission(var, var_name, purify ? perms.purify() : perms);
-	}
-
-	// Weirdo methods...
-
-	@Override
-	public void announceBorrowed(Set<Aliasing> borrowedVars) {
-		Utilities.nyi("I wasn't ever expecting this method to be called.");		
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + (int) (id ^ (id >>> 32));
+		return result;
 	}
 
 	@Override
-	public boolean finishSplit() {
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ChoiceID other = (ChoiceID) obj;
+		if (id != other.id)
+			return false;
 		return true;
 	}
+	
+	/**
+	 * Returns the 'younger' of the two given choice ids, or the first
+	 * one if they are the same.
+	 */
+	public static ChoiceID younger(ChoiceID first, ChoiceID second) {
+		int compareTo = first.compareTo(second);
+		if( compareTo < 0 )
+			return first;
+		else if( compareTo == 0 )
+			return first;
+		else
+			return second;
+			
+	}
+
+	@Override
+	public String toString() {
+		return "Choice ID: " + this.id;
+	}	
 }

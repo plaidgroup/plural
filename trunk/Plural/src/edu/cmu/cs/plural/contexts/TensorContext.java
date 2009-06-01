@@ -37,12 +37,13 @@
  */
 package edu.cmu.cs.plural.contexts;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
@@ -53,14 +54,19 @@ import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
  */
 public class TensorContext implements LinearContext {
 	
-	public static TensorContext tensor(TensorPluralTupleLE tuple) {
-		return new TensorContext(tuple);
+	public static TensorContext tensor(TensorPluralTupleLE tuple, ChoiceID parentChoiceID, ChoiceID choiceID) {
+		return new TensorContext(tuple, parentChoiceID, choiceID);
 	}
 
 	private final TensorPluralTupleLE tuple;
+
+	private final ChoiceID choiceID;
+	private final ChoiceID parentChoiceID;
 	
-	private TensorContext(TensorPluralTupleLE tuple) {
+	private TensorContext(TensorPluralTupleLE tuple, ChoiceID parentChoiceID, ChoiceID choiceID) {
 		this.tuple = tuple;
+		this.parentChoiceID = parentChoiceID;
+		this.choiceID = choiceID;
 	}
 
 	/**
@@ -80,7 +86,7 @@ public class TensorContext implements LinearContext {
 	}
 	
 	@Override
-	public LinearContext compact(ASTNode node, boolean freeze) {
+	public TensorContext compact(ASTNode node, boolean freeze) {
 		if(freeze)
 			tuple.freeze();
 		return this;
@@ -98,7 +104,7 @@ public class TensorContext implements LinearContext {
 
 	@Override
 	public TensorContext mutableCopy() {
-		return create(tuple.mutableCopy());
+		return tensor(tuple.mutableCopy(), this.parentChoiceID, this.choiceID);
 	}
 
 	/*
@@ -169,19 +175,28 @@ public class TensorContext implements LinearContext {
 			
 			@Override
 			public LinearContext context(TensorContext other) {
-//				if(LinearContextLE.this.tuple.isUnsatisfiable() || other.tuple.isUnsatisfiable())
-//					return ContextFactory.falseContext();
-				TensorPluralTupleLE result = TensorContext.this.tuple.join(other.tuple, node);
+				TensorPluralTupleLE result = TensorContext.this.tuple.join(TensorContext.this, other, node);
 				result.freeze();
-//				if(result.isUnsatisfiable())
-//					return ContextFactory.falseContext();
-//				else
-					return create(result);
+				
+				// Choice ID
+				ChoiceID new_choice_id;
+				if( other.choiceID.equals(choiceID) )
+					new_choice_id = choiceID;
+				else
+					new_choice_id = new ChoiceID();
+				
+				// Parent choice ID
+				ChoiceID parent_choice_id;
+				if( other.parentChoiceID.equals(parentChoiceID) )
+					parent_choice_id = parentChoiceID;
+				else
+					parent_choice_id = ChoiceID.younger(choiceID, other.choiceID);
+				
+				return tensor(result, parent_choice_id, new_choice_id);
 			}
 			
 			@Override
 			public LinearContext falseContext(FalseContext falseContext) {
-				Set<LinearContext> emptySet = Collections.<LinearContext>emptySet();
 				return falseContext;
 			}
 			
@@ -198,17 +213,9 @@ public class TensorContext implements LinearContext {
 	}
 	
 	@Override
-	public LinearContext copy() {
+	public TensorContext copy() {
 		freeze();
 		return this;
-	}
-
-	/*
-	 * Helper methods
-	 */
-
-	private TensorContext create(TensorPluralTupleLE mutableCopy) {
-		return new TensorContext(mutableCopy);
 	}
 
 	/*
@@ -221,7 +228,15 @@ public class TensorContext implements LinearContext {
 			return "BOT";
 		else
 			return "CTX";
-//		return tuple.toString();
 	}
 
+	@Override
+	public ChoiceID getChoiceID() {
+		return this.choiceID;
+	}
+
+	@Override
+	public ChoiceID getParentChoiceID() {
+		return this.parentChoiceID;
+	}
 }

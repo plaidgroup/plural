@@ -64,7 +64,9 @@ import edu.cmu.cs.crystal.util.Box;
 import edu.cmu.cs.crystal.util.Freezable;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
+import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionConstraint;
@@ -87,6 +89,10 @@ import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
 
 /**
+ * There are many different context classes in Plural, but this one is the top level context
+ * which actually is has its methods called directly by the dataflow analysis engine of
+ * Crystal.
+ * 
  * @author Kevin Bierhoff
  *
  */
@@ -96,14 +102,6 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 	
 	private static final PluralContext BOTTOM = new PluralContext();
 	
-	/**
-	 * @param start
-	 * @return
-	 */
-	public static PluralContext tuple(TensorPluralTupleLE start,
-			ITACAnalysisContext tacContext, FractionAnalysisContext fractContext) {
-		return createLE(ContextFactory.tensor(start), tacContext, fractContext);
-	}
 	
 	/**
 	 * @param start
@@ -520,13 +518,17 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			final ASTNode nodeWhereUnpacked,
 			final StateSpaceRepository stateRepo, final SimpleMap<Variable, Aliasing> locs,
 			final String desiredRoot, final String assignedField) {
+		final ChoiceID parentChoiceID = le.getParentChoiceID();
+		final ChoiceID choiceID = le.getChoiceID();
+		
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
 			public LinearContext context(TensorContext le) {
 				if(le.getTuple().isRcvrPacked()) {
 					return le.getTuple().fancyUnpackReceiver(
 							rcvrVar, nodeWhereUnpacked, stateRepo, locs, 
-							desiredRoot, assignedField, false);
+							desiredRoot, assignedField, false, 
+							parentChoiceID,	choiceID);
 				}
 				// else ?
 				return le;
@@ -538,25 +540,28 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			final StateSpaceRepository stateRepo,
 			final SimpleMap<Variable, Aliasing> locs,
 			final Set<String> neededStates) {
+		final ChoiceID choiceID = le.getChoiceID();
+		final ChoiceID parentChoiceID = le.getParentChoiceID();
+		
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
 			public LinearContext context(TensorContext le) {
 				if(! le.getTuple().isRcvrPacked()) {
-					PackingResult pack_result = le.getTuple().packReceiver(rcvrVar, stateRepo, locs, neededStates);
+					PackingResult pack_result = le.getTuple().packReceiver(le, rcvrVar, stateRepo, locs, neededStates);
 
 					if( pack_result.worked() )
 						return le;
 					else {
 						String failed_state = pack_result.failedState().unwrap();
 						String failed_inv = pack_result.failedInvariant().unwrap();
-						return ContextFactory.failedPack(failed_state, failed_inv);
+						return ContextFactory.failedPack(failed_state, failed_inv, le.getParentChoiceID(), le.getChoiceID());
 					}
 				}
 				else {
 					if(le.getTuple().get(locs.get(rcvrVar)).isInStates(neededStates, true))
 						return le;
 					else
-						return ContextFactory.trueContext();
+						return ContextFactory.trueContext(parentChoiceID, choiceID);
 				}
 			}
 		});
@@ -570,7 +575,9 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			@Override
 			public LinearContext context(TensorContext le) {
 				if(! le.getTuple().isRcvrPacked()) {
-					return le.getTuple().fancyPackReceiverToBestGuess(rcvrVar, stateRepo, locs, statesToTry);
+					return le.getTuple().fancyPackReceiverToBestGuess(le, rcvrVar, stateRepo, locs, 
+							le.getChoiceID(),
+							statesToTry);
 				}
 				// else ?
 				return le;
@@ -582,9 +589,6 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 	public void handleMethodCall(			
 			final MethodCallInstruction instr,
 			final IMethodSignature sig
-//			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> rcvrPrePost,
-//			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost,
-//			final PermissionSetFromAnnotations resultPost
 			) {
 		final List<IMethodCaseInstance> cases = 
 			sig.createPermissionsForCases(instr.isSuperCall() ? 
@@ -606,17 +610,18 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			public LinearContext context(TensorContext le) {
 				if(singleCase != null) {
 					return op.handleMethodCall(instr, 
-							le.getTuple(), // need not copy the tuple
+							le, // need not copy the tuple
 							singleCase, 
 							failFast);
 				}
 				else {
 					Set<LinearContext> choices = new LinkedHashSet<LinearContext>(caseCount); 
 					for(IMethodCaseInstance prePost : cases) {
-						TensorPluralTupleLE context = le.getTuple().mutableCopy();
-						context.storeCurrentAliasingInfo(instr.getNode());
+						TensorContext context_copy = le.mutableCopy();
+						TensorPluralTupleLE tuple = context_copy.getTuple();
+						tuple.storeCurrentAliasingInfo(instr.getNode());
 						choices.add(op.handleMethodCall(instr, 
-								context, 
+								context_copy, 
 								prePost,
 								failFast));
 					}
@@ -627,7 +632,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		
 		// stop True from poisoning the remainder of the method or the surrounding loop
 		if(ContextFactory.isTrueContext(le))
-			le = ContextFactory.falseContext();
+			le = ContextFactory.falseContext(le.getParentChoiceID(), le.getChoiceID());
 	}
 
 	public void handleNewObject(			
@@ -651,17 +656,18 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			public LinearContext context(TensorContext le) {
 				if(singleCase != null) {
 					return op.handleNewObject(instr,
-							le.getTuple(), // need not copy the tuple
+							le, // need not copy the tuple
 							singleCase, 
 							failFast);
 				}
 				else {
 					Set<LinearContext> choices = new LinkedHashSet<LinearContext>(caseCount); 
 					for(IConstructorCaseInstance prePost : cases) {
-						TensorPluralTupleLE context = le.getTuple().mutableCopy();
-						context.storeCurrentAliasingInfo(instr.getNode());
+						TensorContext context_copy = le.mutableCopy();
+						TensorPluralTupleLE tuple = context_copy.getTuple();
+						tuple.storeCurrentAliasingInfo(instr.getNode());
 						choices.add(op.handleNewObject(instr,
-								context, 
+								context_copy, 
 								prePost, 
 								failFast));
 					}
@@ -672,7 +678,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 
 		// stop True from poisoning the remainder of the method or the surrounding loop
 		if(ContextFactory.isTrueContext(le))
-			le = ContextFactory.falseContext();
+			le = ContextFactory.falseContext(le.getParentChoiceID(), le.getChoiceID());
 	}
 
 	public void handleConstructorCall(
@@ -693,17 +699,18 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			public LinearContext context(TensorContext le) {
 				if(singleCase != null) {
 					return op.handleConstructorCall(instr,
-							le.getTuple(), // need not copy the tuple
+							le, // need not copy the tuple
 							singleCase,
 							failFast);
 				}
 				else {
 					Set<LinearContext> choices = new LinkedHashSet<LinearContext>(cases.size()); 
 					for(IConstructorCaseInstance prePost : cases) {
-						TensorPluralTupleLE context = le.getTuple().mutableCopy();
-						context.storeCurrentAliasingInfo(instr.getNode());
+						TensorContext context_copy = le.mutableCopy();
+						TensorPluralTupleLE tuple = context_copy.getTuple();
+						tuple.storeCurrentAliasingInfo(instr.getNode());
 						choices.add(op.handleConstructorCall(instr,
-								context, 
+								context_copy, 
 								prePost,
 								failFast));
 					}
@@ -714,14 +721,14 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 
 		// stop True from poisoning the remainder of the method or the surrounding loop
 		if(ContextFactory.isTrueContext(le))
-			le = ContextFactory.falseContext();
+			le = ContextFactory.falseContext(le.getParentChoiceID(), le.getChoiceID());
 	}
 
 	public void prepareForFieldRead(final LoadFieldInstruction instr) {
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
 			public LinearContext context(TensorContext le) {
-				return op.handleFieldAccess(le.getTuple(), 
+				return op.handleFieldAccess(le, 
 						null /* not an assignment */, instr);
 			}
 		});
@@ -731,7 +738,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
 			public LinearContext context(TensorContext le) {
-				return op.handleFieldAccess(le.getTuple(),
+				return op.handleFieldAccess(le,
 						instr.getSourceOperand(),
 						instr);
 			}
@@ -894,9 +901,14 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		freeze(); // force-freeze before any checks
 		return le.dispatch(new ErrorReportingVisitor() {
 			@Override
-			public String checkTuple(TensorPluralTupleLE tuple) {
+			public String context(TensorContext le) {
 				return op.checkCallPrecondition(
-						node, tuple, receiver, arguments, pre);
+						node, le, receiver, arguments, pre);
+			}
+
+			@Override
+			public String checkTuple(TensorPluralTupleLE tuple) {
+				return Utilities.nyi("Shouldn't be called b/c we are overriding the TensorContext version.");
 			}
 		});
 	}
@@ -918,11 +930,16 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		freeze(); // force-freeze before any checks
 		return le.dispatch(new ErrorReportingVisitor() {
 			@Override
-			public String checkTuple(TensorPluralTupleLE tuple) {
+			public String context(TensorContext le) {
 				return op.checkCallPrecondition(
-						node, tuple, 
+						node, le, 
 						op.getAnalysisContext().getSuperVariable(), // just stick it in 
 						arguments, pre);
+			}
+
+			@Override
+			public String checkTuple(TensorPluralTupleLE tuple) {
+				return Utilities.nyi("I don't expect this to ever be called b/c I am overriding context.");
 			}
 		});
 	}
@@ -949,8 +966,9 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			return null;
 		freeze(); // force-freeze before any checks
 		return le.dispatch(new ErrorReportingVisitor() {
+			
 			@Override
-			public String checkTuple(TensorPluralTupleLE tuple) {
+			public String context(TensorContext le) {
 				Pair<String, String> trueTest = null;
 				Pair<String, String> falseTest = null;
 				if(stateTests.containsKey(true))
@@ -958,7 +976,12 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 				if(stateTests.containsKey(false))
 					falseTest = Pair.create("this!fr", stateTests.get(false));
 				return op.checkPostCondition(
-						node, tuple, resultVar, post, parameterVars, trueTest, falseTest);
+						node, le, resultVar, post, parameterVars, trueTest, falseTest);
+			}
+
+			@Override
+			public String checkTuple(TensorPluralTupleLE tuple) {
+				return Utilities.nyi("I don't expect this to ever be called b/c I am overriding context");
 			}
 		});
 	}

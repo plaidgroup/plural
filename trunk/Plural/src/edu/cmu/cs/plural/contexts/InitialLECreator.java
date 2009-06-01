@@ -53,6 +53,7 @@ import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.concrete.Implication;
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
@@ -120,7 +121,8 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		pre.mergeInPredicate(vars, c);
 		if(c.isVoid())
 			// void can prove anything: start with false
-			return Pair.create(ContextFactory.falseContext(), vars);
+			// New choice ids for both the parent and the new context, when we are creating an LE
+			return Pair.create(ContextFactory.falseContext(new ChoiceID(), new ChoiceID()), vars);
 		
 		if(!Modifier.isStatic(tacContext.getAnalyzedMethod().getModifiers())) {
 			// issue #61: make the receiver non-null
@@ -128,8 +130,9 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 			assert t != null;
 			tuple.addNonNullVariable(t);
 		}
-		
-		return Pair.create(ContextFactory.tensor(tuple), vars);
+
+		// New choice ids for both the parent and the new context, when we are creating an LE
+		return Pair.create(ContextFactory.tensor(tuple, new ChoiceID(), new ChoiceID()), vars);
 	}
 	
 	/**
@@ -186,13 +189,16 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		pre.mergeInPredicate(vars, c);
 		if(c.isVoid())
 			// void can prove anything: start with false
-			return Pair.create(ContextFactory.falseContext(), vars);
+			// New choice ids for both the parent and the new context, when we are creating an LE
+			return Pair.create(ContextFactory.falseContext(new ChoiceID(), new ChoiceID()), vars);
 		
 		addUnpackedReceiver(tuple, this_loc,
 				fractContext.getRepository().getStateSpace(receiverVar.resolveType()));
 		// issue #61: make the receiver non-null
 		tuple.addNonNullVariable(this_loc);
-		return Pair.create(ContextFactory.tensor(tuple), vars);
+		
+		// New choice ids for both the parent and the new context, when we are creating an LE
+		return Pair.create(ContextFactory.tensor(tuple, new ChoiceID(), new ChoiceID()), vars);
 	}
 	
 	private static void addUnpackedReceiver(TensorPluralTupleLE value,

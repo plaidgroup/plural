@@ -61,6 +61,7 @@ import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.AliasAwareTupleLE;
 import edu.cmu.cs.plural.concrete.DynamicStateLogic;
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.errors.FailedPack;
 import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
@@ -146,10 +147,11 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		return (TensorPluralTupleLE) super.mutableCopy();
 	}
 
-	public TensorPluralTupleLE join(TensorPluralTupleLE other,
+	public TensorPluralTupleLE join(TensorContext this_context, 
+			TensorContext other_context,
 			ASTNode node) {
 		// super.join() calls create(), which we override
-		return (TensorPluralTupleLE) super.join(other, node);
+		return (TensorPluralTupleLE) super.join(this_context, other_context, node);
 	}
 
 	/**
@@ -258,9 +260,12 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	}
 	
 	@Override
-	public PackingResult packReceiver(Variable rcvrVar,
-			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
-			Set<String> desiredState) {
+	public PackingResult packReceiver(TensorContext curContext,
+			Variable rcvrVar, StateSpaceRepository stateRepo,
+			SimpleMap<Variable, Aliasing> locs, Set<String> desiredState) {
+		
+//		if( curContext.getTuple() != this )
+//			throw new IllegalArgumentException("Attached TensorContext must be the context associated with this.");
 		
 		if( isFrozen() || isRcvrPacked() )
 			throw new IllegalStateException("Object cannot be packed or is frozen.");
@@ -291,7 +296,7 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 				createFieldNameToAliasingMapping(locs, rcvr_type, rcvrLoc);
 			
 			final SplitOffTuple callback =
-				new DefaultInvariantChecker(this, rcvrLoc, purify);
+				new DefaultInvariantChecker(curContext, rcvrLoc, purify);
 			
 			// Call splitOff to see if we have enough permission
 			boolean split_worked = 
@@ -385,10 +390,13 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 * @param statesToTry
 	 * @return
 	 */
-	public LinearContext fancyPackReceiverToBestGuess(ThisVariable rcvrVar,
+	public LinearContext fancyPackReceiverToBestGuess(TensorContext curContext, ThisVariable rcvrVar,
 			StateSpaceRepository stateRepo, SimpleMap<Variable, Aliasing> locs,
-			String... statesToTry) {
+			ChoiceID parentID, String... statesToTry) {
 		// need not be frozen because we create mutable copies...
+		
+//		if( curContext.getTuple() != this )
+//			throw new IllegalArgumentException("TensorContext must be context associated with this.");
 		
 		if( isRcvrPacked() )
 			throw new IllegalStateException("Double pack on the receiver. Not cool.");
@@ -418,10 +426,12 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		for(String n : statesWorthTrying) {
 			TensorPluralTupleLE elem = this.mutableCopy();
 			elem.storeIdenticalAliasInfo(this);
-			PackingResult pack_result = elem.packReceiver(rcvrVar, stateRepo, locs, Collections.singleton(n));
-			if(pack_result.worked())
+			PackingResult pack_result = elem.packReceiver(curContext, rcvrVar, stateRepo, locs, Collections.singleton(n));
+			if(pack_result.worked()) {
 				// could check for satisfiability here
-				resultElems.add(TensorContext.tensor(elem));
+				// New choice ID for each packed direction.
+				resultElems.add(TensorContext.tensor(elem, parentID, new ChoiceID()));
+			}
 		}
 		return ContextChoiceLE.choice(resultElems);
 	}
@@ -440,18 +450,23 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 	 * or <code>null</code> if the unpack happens for a field read
 	 * @param includeOriginal set to <code>true</code> to include
 	 * the receiver tuple as-is in the result.
+	 * @param parentChoiceID The id of the parent of this choice.
+	 * @param choiceID The id of this choice.
 	 * @return The resulting lattice value, possibly a disjunction of different
 	 * states we tried to unpack from.
 	 */
 	public LinearContext fancyUnpackReceiver(Variable rcvrVar,
 			ASTNode nodeWhereUnpacked, StateSpaceRepository stateRepo,
 			SimpleMap<Variable, Aliasing> locs, String rcvrRoot, 
-			String assignedField, boolean includeOriginal) {
+			String assignedField, boolean includeOriginal, 
+			ChoiceID parentChoiceID, ChoiceID choiceID) {
 		// this need not be unfrozen because we create mutable copies...
 
 		LinkedHashSet<LinearContext> resultElems = new LinkedHashSet<LinearContext>();
-		if(includeOriginal)
-			resultElems.add(ContextFactory.tensor(this));
+		if(includeOriginal) {
+			// Every choice in the tuple starts a new choice path
+			resultElems.add(ContextFactory.tensor(this, choiceID, new ChoiceID()));
+		}
 		
 		StateSpace rcvr_space = stateRepo.getStateSpace(rcvrVar.resolveType());
 		Aliasing rcvr_loc = locs.get(rcvrVar);
@@ -461,13 +476,13 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		if(rcvrPerms.isBottom()) {
 			// receiver is bottom
 			// trivially succeed, but no injected field permissions
-			return ContextFactory.tensor(this);
+			return ContextFactory.tensor(this, parentChoiceID, choiceID);
 		}
 		else if(rcvrPerms.getFramePermissions().isEmpty()) {
 			// fail: must have permission for unpacking
 			return includeOriginal ?
-					ContextFactory.tensor(this) :
-					ContextFactory.trueContext();
+					ContextFactory.tensor(this, parentChoiceID, choiceID) :
+					ContextFactory.trueContext(parentChoiceID, choiceID);
 		}
 		// the above should just be an optimization for below
 		else {
@@ -496,10 +511,12 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 					if(!elem.unpackReceiverInternal(rcvrVar, nodeWhereUnpacked, stateRepo, locs, try_node, assignedField))
 						// tried to unpack to a state with VOID invariant
 						// anything is possible after that... 
-						return ContextFactory.falseContext();
-					if(elem.get(rcvr_loc).getConstraints().seemsConsistent())
+						return ContextFactory.falseContext(parentChoiceID, choiceID);
+					if(elem.get(rcvr_loc).getConstraints().seemsConsistent()) {
 						// could check for satisfiability here
-						resultElems.add(TensorContext.tensor(elem));
+						// A new choice path starts here!
+						resultElems.add(TensorContext.tensor(elem, choiceID, new ChoiceID()));
+					}
 				}
 			}
 			return ContextChoiceLE.choice(resultElems);

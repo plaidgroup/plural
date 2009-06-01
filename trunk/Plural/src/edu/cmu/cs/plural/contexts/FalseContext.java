@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.contexts;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
@@ -52,6 +53,19 @@ import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
  */
 public class FalseContext implements LinearContext {
 
+	private final ChoiceID parentChoiceID;
+	private final ChoiceID choiceID;
+	
+	public FalseContext(ChoiceID parentChoiceID) {
+		this.parentChoiceID = parentChoiceID;
+		this.choiceID = new ChoiceID();
+	}
+	
+	public FalseContext(ChoiceID parentChoiceID, ChoiceID choiceID) {
+		this.parentChoiceID = parentChoiceID;
+		this.choiceID = choiceID;
+	}
+	
 	@Override
 	public <T> T dispatch(DisjunctiveVisitor<T> visitor) {
 		return visitor.falseContext(this);
@@ -107,7 +121,7 @@ public class FalseContext implements LinearContext {
 
 	@Override
 	public LinearContext copy() {
-		return new FalseContext();
+		return new FalseContext(this.parentChoiceID, this.choiceID);
 	}
 
 	@Override
@@ -117,7 +131,16 @@ public class FalseContext implements LinearContext {
 
 	@Override
 	public LinearContext mutableCopy() {
-		return new FalseContext();
+		return new FalseContext(this.parentChoiceID, this.choiceID);
 	}
 
+	@Override
+	public ChoiceID getChoiceID() {
+		return this.choiceID;
+	}
+
+	@Override
+	public ChoiceID getParentChoiceID() {
+		return this.parentChoiceID;
+	}
 }

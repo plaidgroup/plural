@@ -49,6 +49,7 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.util.ConsList;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.concrete.Implication;
+import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.fractions.VirtualFramePermissionSet;
@@ -79,22 +80,24 @@ import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	
 	// given
-	protected final TensorPluralTupleLE value;
+	protected final TensorContext incomingContext;
 	protected final Aliasing this_loc;
 	// constructed
 	private ConsList<PermissionSetFromAnnotations> splitFromThis = empty();
 	private final Set<String> neededReceiverStates = new HashSet<String>();
 	private final boolean delayVirtualReceiverPermissions;
 	
-	public AbstractPredicateChecker(TensorPluralTupleLE value, Aliasing thisLoc) {
-		this.value = value;
+	public AbstractPredicateChecker(TensorContext incomingContext, Aliasing thisLoc) {
+		this.incomingContext = incomingContext;
 		this.this_loc = thisLoc;
-		if(this_loc != null /* && ! this_loc.getLabels().isEmpty()*/)
+		if(this_loc != null /* && ! this_loc.getLabels().isEmpty()*/) {
 			// this is a hack to determine whether we're treating virtual as frame permissions
 			// we're just looking whether receiver permissions are tracked with special permission set implementation
 			// TODO clean way of determining whether virtual receiver permissions need to be delayed
+			TensorPluralTupleLE value = incomingContext.getTuple();
 			this.delayVirtualReceiverPermissions = 
 				(value.get(thisLoc) instanceof VirtualFramePermissionSet);
+		}
 		else
 			this.delayVirtualReceiverPermissions = false;
 	}
@@ -120,12 +123,13 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	 */
 	protected boolean checkStateInfoInternal(Aliasing var,
 			Set<String> stateInfo, boolean inFrame) {
+		TensorPluralTupleLE value = incomingContext.getTuple();
 		return value.get(var).isInStates(stateInfo, inFrame);
 	}
 	
 	@Override
 	public boolean checkImplication(Aliasing var, Implication impl) {
-		
+		TensorPluralTupleLE value = incomingContext.getTuple();
 		if( value.isKnownImplication(var, impl) ) {
 			// TODO: We only have to remove this if the implication is linear!
 			// Need a new subclass of implcation, with isLinear method.
@@ -172,6 +176,7 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 			}
 		}
 		// split virtual permissions
+		TensorPluralTupleLE value = incomingContext.getTuple();
 		return splitOffInternal(var, var_name, value, perms);
 	}
 
@@ -196,21 +201,25 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 
 	@Override
 	public boolean checkFalse(Aliasing var, String var_name) {
+		TensorPluralTupleLE value = incomingContext.getTuple();
 		return value.isBooleanFalse(var);
 	}
 
 	@Override
 	public boolean checkNonNull(Aliasing var, String var_name) {
+		TensorPluralTupleLE value = incomingContext.getTuple();
 		return value.isNonNull(var);
 	}
 
 	@Override
 	public boolean checkNull(Aliasing var, String var_name) {
+		TensorPluralTupleLE value = incomingContext.getTuple();
 		return value.isNull(var);
 	}
 
 	@Override
 	public boolean checkTrue(Aliasing var, String var_name) {
+		TensorPluralTupleLE value = incomingContext.getTuple();
 		return value.isBooleanTrue(var);
 	}
 

@@ -59,11 +59,9 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.bridge.LatticeElement;
 import edu.cmu.cs.crystal.tac.SourceVariable;
 import edu.cmu.cs.crystal.tac.TACInstruction;
 import edu.cmu.cs.crystal.tac.TempVariable;
-import edu.cmu.cs.crystal.tac.ThisVariable;
 import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.util.ExtendedIterator;
 import edu.cmu.cs.crystal.util.Freezable;
@@ -79,7 +77,7 @@ import edu.cmu.cs.plural.concrete.ConcreteAnnotationUtils;
 import edu.cmu.cs.plural.concrete.DynamicStateLogic;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
-import edu.cmu.cs.plural.errors.PackingResult;
+import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionConstraints;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
@@ -94,10 +92,10 @@ import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 
 
 /**
- * Subclass of TupleLatticeElement that includes anything we need specifically
- * for the Plural protocol analysis.
- * 
- * Examples include facilities for keeping track of dynamic state tests.
+ * The gnarliest class (perhaps) in all of plural. This class really
+ * has the nitty-gritty details of one tensor context. But it also
+ * knows about aliasing information and stuff like that. In an ideal
+ * world, this class would not be separate from TensorPluralTupleLE.
  * 
  * @author Nels Beckman
  * @date Feb 13, 2008
@@ -105,8 +103,8 @@ import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
  * @param <K>
  * @param <LE>
  */
-public class PluralTupleLatticeElement  
-implements LatticeElement<PluralTupleLatticeElement>,
+public abstract class PluralTupleLatticeElement  
+implements //LatticeElement<PluralTupleLatticeElement>,
 Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 
 	/**
@@ -167,34 +165,10 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		this.nodeWhereUnpacked = nodeWhereUnpacked;
 	}
 	
-	/**
-	 * Creates a PluralTupleLatticeElement suitable for use by constructors.
-	 * Constructors are different in that they are initialized to be unpacked.
-	 * We have to get around the strange problem of assigning the 'unpackedVar'
-	 * variable and getting aliasing information at the same time.
-	 * @param bottom
-	 * @param annotationDatabase
-	 * @param repository
-	 * @return
-	 */
-	public static PluralTupleLatticeElement createConstructorLattice(
-			FractionalPermissions fps,
-			FractionAnalysisContext context,
-			ThisVariable thisVar, MethodDeclaration decl) {
-		// This seems to violate the mostly-functional spirit of this class, but
-		// I am not sure how else to do this.
-		PluralTupleLatticeElement tuple = new PluralTupleLatticeElement(
-				fps, context, thisVar, decl);
-		return tuple;
-	}
-	
-	protected PluralTupleLatticeElement create(
+	protected abstract PluralTupleLatticeElement create(
 			AliasAwareTupleLE<FractionalPermissions> a, FractionAnalysisContext context,
 			Variable unpackedVar, ASTNode nodeWhereUnpacked,
-			DynamicStateLogic dsl) {
-		return new PluralTupleLatticeElement(
-				a, context, unpackedVar, nodeWhereUnpacked, dsl);
-	}
+			DynamicStateLogic dsl);
 
 	public boolean isNull(Aliasing loc) {
 		return dynamicStateLogic.isNull(loc);
@@ -334,7 +308,6 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		return this;
 	}
 
-	@Override
 	public PluralTupleLatticeElement copy() {
 		return freeze();
 	}
@@ -346,7 +319,10 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 	 * @param other
 	 * @param node Can be null.
 	 */
-	public PluralTupleLatticeElement join(PluralTupleLatticeElement other, ASTNode node) {
+	public PluralTupleLatticeElement join(TensorContext this_context, 
+			TensorContext other_context,
+			ASTNode node) {
+		PluralTupleLatticeElement other = other_context.getTuple();
 		assert(this.mostRecentAliasInfo != null && other.mostRecentAliasInfo != null);
 		
 		this.freeze();
@@ -354,7 +330,8 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			return this;
 		other.freeze();
 		
-		PluralTupleLatticeElement this_copy = this.mutableCopy();
+		this_context = this_context.mutableCopy();
+		PluralTupleLatticeElement this_copy = this_context.getTuple();
 		// This is getting uglier and uglier...
 		this_copy.mostRecentAliasInfo = this.mostRecentAliasInfo;
 		
@@ -403,13 +380,15 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 					boolean first_is_this = this_perms.getStateSpace().firstBiggerThanSecond(other_root, this_root);
 					if(first_is_this) {
 						// We need a mutable version b/c we have to pack, but we want it to keep the same aliasing.
-						first = this_copy.mutableCopy();  // Nels: do we really copy again???
+						this_context = this_context.mutableCopy();
+						first = this_context.getTuple();  // Nels: do we really copy again???
 						first.mostRecentAliasInfo = this_copy.mostRecentAliasInfo;
 						this_copy = first; // replace original with copy
 					}
 					else {
 						// We need a mutable version b/c we have to pack, but we want it to keep the same aliasing.
-						first = other.mutableCopy();
+						other_context = other_context.mutableCopy();
+						first = other_context.getTuple();
 						first.mostRecentAliasInfo = other.mostRecentAliasInfo;
 						other = first; // replace original with copy
 					}
@@ -430,12 +409,14 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 						// first couldn't be packed--try packing second anyway and move on
 						final PluralTupleLatticeElement second;
 						if(first_is_this) {
-							second = other.mutableCopy();
+							other_context = other_context.mutableCopy();
+							second = other_context.getTuple();
 							second.mostRecentAliasInfo = other.mostRecentAliasInfo;
 							other = second; // replace original with copy
 						}
 						else {
-							second = this_copy.mutableCopy();  // Nels: do we really copy again???
+							this_context = this_context.mutableCopy();
+							second = this_context.getTuple();  // Nels: do we really copy again???
 							second.mostRecentAliasInfo = this_copy.mostRecentAliasInfo;
 							this_copy = second; // replace original with copy
 						}
@@ -474,17 +455,18 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 				
 				// We need a mutable version b/c we have to pack, but we want it to keep the same aliasing.
 				final AliasingLE locs = other.mostRecentAliasInfo;
-				other = other.mutableCopy();
+				other_context = other_context.mutableCopy();
+				other = other_context.getTuple();
 				other.mostRecentAliasInfo = locs;
 				
 				// create map for variable locations.
-				other.packReceiver(unpacked_var, other.getStateRepo(), 
+				other.packReceiver(other_context, unpacked_var, 
+						other.getStateRepo(),
 						new SimpleMap<Variable,Aliasing>() {
 					@Override
 					public Aliasing get(Variable key) {
 						return locs.get(key);
-					}},
-					states_to_pack_to);
+					}}, states_to_pack_to);
 			}
 			
 			if( ! this_copy.isRcvrPacked() ){
@@ -502,16 +484,17 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 				
 				// We need a mutable version b/c we have to pack, but we want it to keep the same aliasing.
 				final AliasingLE locs = this.mostRecentAliasInfo;
-				this_copy = this_copy.mutableCopy();   // Nels: do we really copy again???
+				this_context = this_context.mutableCopy();
+				this_copy = this_context.getTuple();
 				
 				// create map for variable locations
-				this_copy.packReceiver(unpacked_var, this_copy.getStateRepo(),
+				this_copy.packReceiver(this_context, unpacked_var,
+						this_copy.getStateRepo(),
 						new SimpleMap<Variable, Aliasing>() {
 					@Override
 					public Aliasing get(Variable key) {
 						return locs.get(key);
-					}},
-					states_to_pack_to);
+					}}, states_to_pack_to);
 			}
 		}
 		
@@ -642,20 +625,6 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 			throw new IllegalStateException("Can't call this method unless unpacked.");
 		}
 		return nodeWhereUnpacked;
-	}
-	
-	/**
-	 * Pack the receiver to the given state with suitable defaults for the
-	 * rest of the permission details.
-	 * Does nothing if receiver is already packed.
-	 * @param stateInfo
-	 * @return Result which indicates whether or not packing was successful.
-	 * @tag todo.general -id="6023977" : fix problems with locations in receiver
-	 */
-	public PackingResult packReceiver(Variable rcvrVar, StateSpaceRepository stateRepo,
-			SimpleMap<Variable, Aliasing> locs, Set<String> desiredState) {
-		
-		throw new IllegalStateException("This method should no longer be called.");
 	}
 	
 	/**

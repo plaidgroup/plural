@@ -44,6 +44,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
@@ -65,13 +66,15 @@ public final class ContextChoiceLE implements LinearContext {
 		return new ContextChoiceLE(elements);
 	}
 
+	private static final ChoiceID CHOICE_CHOICE_ID = new ChoiceID();
+	private static final ChoiceID CHOICE_PARENT_ID = new ChoiceID();
+	
 	private ContextChoiceLE() {
-		elements = new LinkedHashSet<LinearContext>();
+		this.elements = new LinkedHashSet<LinearContext>();
 	}
 
 	private ContextChoiceLE(Set<LinearContext> elements) {
 		this.elements = elements;
-		
 	}
 	
 	//
@@ -100,7 +103,7 @@ public final class ContextChoiceLE implements LinearContext {
 			e = e.compact(node, freeze);
 			if(ContextFactory.isFalseContext(e))
 				// one false makes the whole thing false, since false more precise than anything
-				return ContextFactory.falseContext();
+				return ContextFactory.falseContext(this.getParentChoiceID(), this.getChoiceID());
 			if(ContextFactory.isTrueContext(e))
 				// true contexts less precise than anything--drop it
 				// dropping everything makes the whole thing true
@@ -310,5 +313,15 @@ public final class ContextChoiceLE implements LinearContext {
 	public LinearContext copy() {
 		freeze();
 		return this;
+	}
+
+	@Override
+	public ChoiceID getChoiceID() {
+		return CHOICE_CHOICE_ID;
+	}
+
+	@Override
+	public ChoiceID getParentChoiceID() {
+		return CHOICE_PARENT_ID;
 	}
 }
