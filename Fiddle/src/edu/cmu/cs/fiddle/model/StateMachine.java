@@ -53,9 +53,9 @@ import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
-import edu.cmu.cs.crystal.Crystal;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
+import edu.cmu.cs.crystal.internal.Crystal;
 import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.plural.states.IInvocationSignature;
 import edu.cmu.cs.plural.states.StateSpace;
