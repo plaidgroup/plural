@@ -43,6 +43,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -99,6 +100,24 @@ class HistoryVisitor {
 		return visitor.buildTree();
 	}
 
+	private LinearContext extractSingleContext(TACFlowAnalysis<PluralContext> analysis, ASTNode node) {
+		PluralContext ctx = analysis.getResultsBefore(node);
+		LinearContext l_ctx = ctx.getLinearContext();
+		
+		// For now, to see what kind of contexts we can get, make
+		// assert there was no choice.
+		Boolean was_singleton =
+		l_ctx.dispatch(new DisjunctiveVisitor<Boolean>(){
+			@Override public Boolean falseContext(FalseContext falseContext) { return true; }
+			@Override public Boolean trueContext(TrueContext trueContext) { return true; }
+			@Override public Boolean choice(ContextChoiceLE le) { return false; }
+			@Override public Boolean context(TensorContext le) { return true;	}				
+		});
+		assert(was_singleton);
+		
+		return l_ctx;
+	}
+	
 	/**
 	 * Populates a history tree, which must be done after
 	 * the visitor has been called.
@@ -116,9 +135,15 @@ class HistoryVisitor {
 	 */
 	private void visit(MethodDeclaration method_decl,
 			TACFlowAnalysis<PluralContext> analysis) {
-		method_decl.accept((new HelperVisitor(analysis)));
+		// So we expect there to be one choice only at the beginning node 
+		LinearContext root_context = this.extractSingleContext(analysis, method_decl);
+		HistoryNode root_node = new HistoryNode(root_context);
+		this.rootContext = Option.some(root_node);
+		this.idToNodeMap.put(root_context);
+		
+		method_decl.getBody().accept((new HelperVisitor(analysis)));
 	}
-
+	
 	/** 
 	 * The helper visitor does the hard work. It's a private
 	 * member class so that it can 
@@ -136,24 +161,6 @@ class HistoryVisitor {
 		@Override public boolean visit(TypeDeclaration node) {return false;}
 		@Override public boolean visit(TypeDeclarationStatement node) {return false;}
 		
-		private LinearContext extractSingleContext(ASTNode node) {
-			PluralContext ctx = analysis.getResultsBefore(node);
-			LinearContext l_ctx = ctx.getLinearContext();
-			
-			// For now, to see what kind of contexts we can get, make
-			// assert there was no choice.
-			Boolean was_singleton =
-			l_ctx.dispatch(new DisjunctiveVisitor<Boolean>(){
-				@Override public Boolean falseContext(FalseContext falseContext) { return true; }
-				@Override public Boolean trueContext(TrueContext trueContext) { return true; }
-				@Override public Boolean choice(ContextChoiceLE le) { return false; }
-				@Override public Boolean context(TensorContext le) { return true;	}				
-			});
-			assert(was_singleton);
-			
-			return l_ctx;
-		}
-		
 		/** 
 		 * This method pulls out a mapping from Choice IDs to history nodes from
 		 * the linear context BEFORE the given ast node. Additionally, it looks
@@ -163,8 +170,9 @@ class HistoryVisitor {
 		 */
 		private Pair<IDHistoryNodeMap, Option<HistoryNode>> 
 		extractAllChoicesAfterNode(ASTNode node) {
-			PluralContext ctx = analysis.getResultsBefore(node);
+			PluralContext ctx = analysis.getResultsAfter(node);
 			LinearContext l_ctx = ctx.getLinearContext();
+			
 			
 			
 			// Dispatch on linear context, adding only singleton contexts, and not
@@ -223,17 +231,6 @@ class HistoryVisitor {
 		}
 		
 		@Override
-		public void endVisit(MethodDeclaration node) {
-			// So we expect there to be one choice only at the beginning node 
-			LinearContext root = extractSingleContext(node);
-			HistoryNode root_node = new HistoryNode(root);
-			HistoryVisitor.this.rootContext = Option.some(root_node);
-			
-			// But also add that to the map, so we can make a tree
-			HistoryVisitor.this.idToNodeMap.put(root);
-		}
-		
-		@Override
 		public void endVisit(ConstructorInvocation node) {
 			Pair<IDHistoryNodeMap, Option<HistoryNode>> ctxs = extractAllChoicesAfterNode(node);
 			HistoryVisitor.this.idToNodeMap.merge(ctxs.fst());
@@ -279,6 +276,14 @@ class HistoryVisitor {
 
 		@Override
 		public void endVisit(SimpleName node) {
+			// This is just to catch any other field accesses.
+			if( !(node.resolveBinding() instanceof IVariableBinding) )
+				return;
+			
+			IVariableBinding binding = (IVariableBinding)node.resolveBinding();
+			if( !binding.isField() )
+				return;
+			
 			Pair<IDHistoryNodeMap, Option<HistoryNode>> ctxs = extractAllChoicesAfterNode(node);
 			HistoryVisitor.this.idToNodeMap.merge(ctxs.fst());
 			

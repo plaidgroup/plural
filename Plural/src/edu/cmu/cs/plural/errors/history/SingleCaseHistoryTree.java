@@ -38,6 +38,7 @@
 
 package edu.cmu.cs.plural.errors.history;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -62,7 +63,7 @@ public class SingleCaseHistoryTree {
 	/** A map from nodes to their parents. */
 	private final Map<HistoryNode, HistoryNode> parentMap;
 	
-	/** A map from nodes to their childen, of which there may be many. */
+	/** A map from nodes to their children, of which there may be many. */
 	private final Map<HistoryNode, Set<HistoryNode>> childMap;
 	
 	private SingleCaseHistoryTree(Map<HistoryNode, HistoryNode> parentMap,
@@ -148,6 +149,18 @@ public class SingleCaseHistoryTree {
 	public boolean contains(HistoryNode node) {
 		return this.parentMap.containsKey(node) ||
 			this.childMap.containsKey(node);
+	}
+
+	/**
+	 * Returns the children of the given history node.
+	 */
+	public Set<HistoryNode> getChildren(HistoryNode node) {
+		if( this.childMap.containsKey(node) )		
+			return this.childMap.get(node);
+		else if( this.parentMap.containsKey(node) )
+			return Collections.emptySet();
+		else
+			throw new IllegalArgumentException("Given a node not described by this tree.");		
 	}
 
 }

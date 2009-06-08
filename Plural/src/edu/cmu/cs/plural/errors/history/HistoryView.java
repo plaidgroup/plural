@@ -39,6 +39,7 @@
 package edu.cmu.cs.plural.errors.history;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -76,7 +77,6 @@ import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concurrent.nimby.NIMBYTransferFunction;
 import edu.cmu.cs.plural.concurrent.syncorswim.SyncOrSwimTransferFunction;
-import edu.cmu.cs.plural.contexts.LinearContext;
 import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.states.IInvocationCase;
 import edu.cmu.cs.plural.states.IInvocationCaseInstance;
@@ -166,17 +166,15 @@ public class HistoryView extends ViewPart implements ISelectionListener {
 	}
 	
 	class ContextTreeContentProvider implements ILazyTreeContentProvider {
-		
-		private Option<MultiCaseHistoryTree> lastCalculatedTree;
 
-		@Override
-		public void dispose() {
-			this.lastCalculatedTree = Option.none();
-		}
+		private Map<PluralAnalyses, ResultingDisplayTree> trees =
+			new HashMap<PluralAnalyses, ResultingDisplayTree>(3);
+		
+		@Override public void dispose() { }
 
 		@Override
 		public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-			this.lastCalculatedTree = Option.none();
+			this.trees.clear();
 		}
 
 		@Override
@@ -187,6 +185,8 @@ public class HistoryView extends ViewPart implements ISelectionListener {
 				return new MethodHolder((IMethod) element);
 			else if( element instanceof PluralAnalyses )
 				return treeViewer.getInput();
+			else if( element instanceof ResultingDisplayTree ) 
+				return ((ResultingDisplayTree)element).getParent().unwrap();
 			else
 				return null;
 		}
@@ -203,8 +203,13 @@ public class HistoryView extends ViewPart implements ISelectionListener {
 					treeViewer.setChildCount(element, num_analyses);
 			}
 			else if( element instanceof PluralAnalyses ) {
-				if( currentChildCount == 0 )
-					treeViewer.setChildCount(element, 0);
+//				if( currentChildCount == 0 )
+//					treeViewer.setHasChildren(element, true);
+			}
+			else if( element instanceof ResultingDisplayTree ) {
+				int children = ((ResultingDisplayTree)element).getChildren().size();
+				if( currentChildCount != children )
+					treeViewer.setChildCount(element, children);
 			}
 		}
 
@@ -224,60 +229,36 @@ public class HistoryView extends ViewPart implements ISelectionListener {
 			else if( parent instanceof PluralAnalyses ) {
 				PluralAnalyses analysis_type = (PluralAnalyses)parent;
 				
-				if( this.lastCalculatedTree.isNone() ) {
+				if( !this.trees.containsKey(parent) ) {
 					// Okay, the user actually wants answers. Let's
 					// go compute them for the given 
 					MethodHolder holder = (MethodHolder)treeViewer.getInput();
 					MultiCaseHistoryTree tree = 
 						runAnalysis(analysis_type, holder.method);
-
-					this.lastCalculatedTree = Option.some(tree);
+					
+					ResultingDisplayTree analysis_tree = 
+						tree.createTreeForDisplay(parent);
+					
+					this.trees.put(analysis_type, analysis_tree);
 				}
 				
-				MultiCaseHistoryTree tree = this.lastCalculatedTree.unwrap();
+				ResultingDisplayTree analysis_tree = this.trees.get(analysis_type);
+				List<ResultingDisplayTree> children = analysis_tree.getChildren();
 				
-				treeViewer.setChildCount(parent, tree.size());
-				HistoryRoot cur_root = tree.getRoot(index);
-				treeViewer.replace(parent, index, cur_root);
+				treeViewer.setChildCount(parent, children.size());
+				ResultingDisplayTree child = children.get(index);
+				treeViewer.replace(parent, index, child);
 				
-				//  A History root has the number of children that its
-				// HistoryNode (root) has elements.
-				int case_children = cur_root.getRoot().numElements();
-				treeViewer.setChildCount(cur_root, case_children);
+				
+				int child_children = child.getChildren().size();
+				treeViewer.setChildCount(child, child_children);
 			}
-			else if( parent instanceof HistoryRoot ) {
-				HistoryRoot parent_root = (HistoryRoot)parent;
-				HistoryNode parent_root_node = parent_root.getRoot(); 
-				LinearContext child = parent_root_node.getContext(index);
-				
-				
-				// Set the # children
-				// There are basically two cases here...  
-				boolean last_of_line = (index == (parent_root_node.numElements() - 1));
-				
-				if( last_of_line ) {
-					// One is that we are on the last element of a HistoryNode,
-					// in which case we have to look up whether or not
-					// we have children.
-					MultiCaseHistoryTree tree =
-						this.lastCalculatedTree.unwrap();
-					int children = tree.getNumberOfChildren(parent_root_node);
-					treeViewer.setChildCount(child, children);
-					treeViewer.replace(parent, index, parent_root_node);
-				}
-				else {
-					// or we could just be somewhere in the middle of a history
-					// node
-					treeViewer.setChildCount(child, 0);
-					treeViewer.replace(parent, index, child);
-				}
-			}
-			else if( parent instanceof HistoryNode ) {
-				// Note that this means we are the LAST element in the node!
-				HistoryNode parent_node = (HistoryNode)parent;
-				MultiCaseHistoryTree tree =
-					this.lastCalculatedTree.unwrap();
-				List<HistoryNode> children = tree.getChildren(parent_node);
+			else if( parent instanceof ResultingDisplayTree ) {
+				ResultingDisplayTree parent_tree = (ResultingDisplayTree)parent;
+				List<ResultingDisplayTree> children = parent_tree.getChildren();
+				ResultingDisplayTree child = children.get(index);
+				treeViewer.replace(parent, index, child);
+				treeViewer.setChildCount(child, child.getChildren().size());
 			}
 			
 			
