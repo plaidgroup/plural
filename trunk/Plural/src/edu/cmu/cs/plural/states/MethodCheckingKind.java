@@ -148,4 +148,28 @@ public enum MethodCheckingKind {
 			return Utilities.nyi("Impossible");
 		}
 	}
+	
+	/**
+	 * Given whether or not we want to check a constructor, and whether or not
+	 * the current frame is equal to the virtual frame, but assuming we want to
+	 * check an implementation, returns the MethodCheckingKind.
+	 * @param isConstructor Are we checking a constructor?
+	 * @param currentFrameEqVirtual Does the current frame = the virtual one?
+	 * @return The MethodCheckingKind, assuming we are checking a body.
+	 */
+	public static MethodCheckingKind methodCheckingKindImpl(boolean isConstructor,
+			boolean currentFrameEqVirtual) {
+		if( isConstructor ) {
+			if( currentFrameEqVirtual )
+				return MethodCheckingKind.CONSTRUCTOR_IMPL_CUR_IS_VIRTUAL;
+			else
+				return MethodCheckingKind.CONSTRUCTOR_IMPL_CUR_NOT_VIRTUAL;
+		}
+		else {
+			if( currentFrameEqVirtual )
+				return MethodCheckingKind.METHOD_IMPL_CUR_IS_VIRTUAL;
+			else
+				return MethodCheckingKind.METHOD_IMPL_CUR_NOT_VIRTUAL;
+		}
+	}
 }

@@ -157,6 +157,17 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		this.op = op;
 	}
 
+	/**
+	 * Returns a copy of the {@link LinearContext} held by this
+	 * context.
+	 */
+	public LinearContext getLinearContext() {
+		if( le == null )
+			return null;
+		else
+			return le.copy();
+	}
+	
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.crystal.flow.LatticeElement#atLeastAsPrecise(edu.cmu.cs.crystal.flow.LatticeElement, org.eclipse.jdt.core.dom.ASTNode)
 	 */

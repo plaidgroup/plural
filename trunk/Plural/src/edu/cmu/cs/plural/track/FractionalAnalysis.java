@@ -158,30 +158,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	}
 	
 	/**
-	 * Given whether or not we want to check a constructor, and whether or not
-	 * the current frame is equal to the virtual frame, but assuming we want to
-	 * check an implementation, returns the MethodCheckingKind.
-	 * @param isConstructor Are we checking a constructor?
-	 * @param currentFrameEqVirtual Does the current frame = the virtual one?
-	 * @return The MethodCheckingKind, assuming we are checking a body.
-	 */
-	private MethodCheckingKind methodCheckingKindImpl(boolean isConstructor,
-			boolean currentFrameEqVirtual) {
-		if( isConstructor ) {
-			if( currentFrameEqVirtual )
-				return MethodCheckingKind.CONSTRUCTOR_IMPL_CUR_IS_VIRTUAL;
-			else
-				return MethodCheckingKind.CONSTRUCTOR_IMPL_CUR_NOT_VIRTUAL;
-		}
-		else {
-			if( currentFrameEqVirtual )
-				return MethodCheckingKind.METHOD_IMPL_CUR_IS_VIRTUAL;
-			else
-				return MethodCheckingKind.METHOD_IMPL_CUR_NOT_VIRTUAL;
-		}
-	}
-	
-	/**
 	 * @param d
 	 * @param sig
 	 * @param c
@@ -192,7 +168,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	private void analyzeCase(MethodDeclaration d, IInvocationSignature sig,
 			IInvocationCase c, Boolean assumeVirtualFrame) {
 		this.assumeVirtualFrame = assumeVirtualFrame != null && assumeVirtualFrame;
-		MethodCheckingKind checkingKind = methodCheckingKindImpl(d.isConstructor(), this.assumeVirtualFrame);
+		MethodCheckingKind checkingKind = 
+			MethodCheckingKind.methodCheckingKindImpl(d.isConstructor(), this.assumeVirtualFrame);
 		
 		analyzedCase = c.createPermissions(checkingKind, true, this.assumeVirtualFrame);
 		tf = createNewFractionalTransfer();

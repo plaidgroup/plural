@@ -40,9 +40,9 @@ package edu.cmu.cs.plural.alias;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.IAnalysisInput;
-import edu.cmu.cs.crystal.ILabel;
 import edu.cmu.cs.crystal.analysis.live.LiveVariableLE;
 import edu.cmu.cs.crystal.analysis.live.LiveVariableTransferFunction;
+import edu.cmu.cs.crystal.flow.ILabel;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.simple.TupleLatticeElement;

@@ -172,5 +172,19 @@
          </sourceAnnotation>
       </customAnnotation>
    </extension>
+   <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="Plural"
+            name="Plural">
+      </category>
+      <view
+            category="Plural"
+            class="edu.cmu.cs.plural.errors.history.HistoryView"
+            id="Plural.historyPrinter"
+            name="Plural History Printer"
+            restorable="true">
+      </view>
+   </extension>
 
 </plugin>
