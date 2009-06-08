@@ -63,6 +63,7 @@ class HistoryNode {
 	
 	public HistoryNode(LinearContext ctx) {
 		this.contexts = new LinkedList<LinearContext>();
+		this.contexts.add(ctx);
 		this.id = ctx.getChoiceID();
 		this.parentID = ctx.getParentChoiceID();
 	}
