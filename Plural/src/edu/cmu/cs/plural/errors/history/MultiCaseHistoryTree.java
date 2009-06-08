@@ -36,59 +36,83 @@
  * release a modified version which carries forward this exception.
  */
 
-package edu.cmu.cs.plural.concurrent.nimby;
+package edu.cmu.cs.plural.errors.history;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-
-import edu.cmu.cs.crystal.IAnalysisInput;
-import edu.cmu.cs.crystal.flow.ILabel;
-import edu.cmu.cs.crystal.flow.IResult;
-import edu.cmu.cs.crystal.flow.LabeledResult;
-import edu.cmu.cs.plural.concurrent.ConcurrentTransferFunction;
-import edu.cmu.cs.plural.contexts.PluralContext;
-import edu.cmu.cs.plural.track.FractionAnalysisContext;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.contexts.LinearContext;
 
 /**
- * This class is the transfer function for my analysis of type-state in the
- * context of an <code>atomic</code> primitive. It overrides the abstract
- * forgetIfNotProtected method of its superclass, forgetting all share, pure
- * permissions that are not inside of an atomic block.
+ * 
  * 
  * @author Nels E. Beckman
- * @since May 5, 2009
+ * @since Jun 3, 2009
+ *
  */
-public class NIMBYTransferFunction extends ConcurrentTransferFunction {
+class MultiCaseHistoryTree {
 
-	private IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
+	private final List<Pair<HistoryRoot, SingleCaseHistoryTree>> trees;
 	
-	public NIMBYTransferFunction(IAnalysisInput input,
-			FractionAnalysisContext context) {
-		super(input, context);
-	}
-
-	@Override
-	protected IResult<PluralContext> forgetIfNotProtected(ASTNode node,
-			List<ILabel> labels, IResult<PluralContext> result) {
-		if( !this.isInAtomicAnalysis.isInAtomicBlock(node) ) {
-			result = this.forgetSharedPermissions(result, labels, node);
-		}
-		return result;
+	MultiCaseHistoryTree() {
+		this.trees = new ArrayList<Pair<HistoryRoot, SingleCaseHistoryTree>>();
 	}
 	
-	private IResult<PluralContext> forgetSharedPermissions(
-			IResult<PluralContext> transfer_result, List<ILabel> labels,
-			ASTNode node) {
-		// TODO: Is there a better default? Could we get the default from the old one?
-		LabeledResult<PluralContext> result = LabeledResult.createResult(labels, null);
-		for( ILabel label : labels ) {
-			result.put(label, this.forgetSharedPermissions(transfer_result.get(label), node));
-		}
-		return result;
+	void addRoot(HistoryRoot root, SingleCaseHistoryTree tree) {
+		this.trees.add(Pair.create(root, tree));
 	}
 
-	private PluralContext forgetSharedPermissions(PluralContext lattice, ASTNode node) {
-		return lattice.forgetShareAndPureStates();
+	/**
+	 * @return
+	 */
+	public int size() {
+		return trees.size();
+	}
+
+	/**
+	 * Return the root at the given index.
+	 */
+	public HistoryRoot getRoot(int index) {
+		return trees.get(index).fst();
+	}
+	
+	/**
+	 * Return the tree at the given index.
+	 */
+	public SingleCaseHistoryTree getTree(int index) {
+		return trees.get(index).snd();
+	}
+
+	/**
+	 * Returns the number of children 
+	 */
+	public int getNumberOfChildren(HistoryNode node) {
+		// Well here's a crappy way to implement this...
+		// Go through each of the cases, and if it has children in one
+		// of them, use that number.
+		for( Pair<HistoryRoot, SingleCaseHistoryTree> single_tree : this.trees ) {
+			SingleCaseHistoryTree tree = single_tree.snd();
+			
+			if( tree.contains(node) ) {
+				return tree.numChildren(node);
+			}
+		}
+		return Utilities.nyi("This shouldn't happen. It should be in one tree.");
+	}
+
+	/**
+	 * Returns the children of this node.
+	 */
+	public List<HistoryNode> getChildren(HistoryNode node) {
+		for( Pair<HistoryRoot, SingleCaseHistoryTree> single_tree : this.trees ) {
+			SingleCaseHistoryTree tree = single_tree.snd();
+			
+			if( tree.contains(node) ) {
+				// return tree.numChildren(node);
+			}
+		}
+		return Utilities.nyi("This shouldn't happen. It should be in one tree.");
 	}
 }

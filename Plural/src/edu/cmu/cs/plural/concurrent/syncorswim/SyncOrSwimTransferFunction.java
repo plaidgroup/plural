@@ -46,7 +46,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import edu.cmu.cs.crystal.IAnalysisInput;
-import edu.cmu.cs.crystal.ILabel;
+import edu.cmu.cs.crystal.flow.ILabel;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledResult;
 import edu.cmu.cs.crystal.tac.MethodCallInstruction;
@@ -63,7 +63,7 @@ import edu.cmu.cs.plural.track.FractionAnalysisContext;
  * @since May 5, 2009
  * @see {@link SyncOrSwim}
  */
-class SyncOrSwimTransferFunction extends ConcurrentTransferFunction {
+public class SyncOrSwimTransferFunction extends ConcurrentTransferFunction {
 
 	private final IsSynchronizedRefAnalysis refAnalysis = new IsSynchronizedRefAnalysis();
 	private final IAnalysisInput analysisInput;
