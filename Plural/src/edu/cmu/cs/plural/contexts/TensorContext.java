@@ -42,7 +42,6 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
@@ -238,5 +237,10 @@ public class TensorContext implements LinearContext {
 	@Override
 	public ChoiceID getParentChoiceID() {
 		return this.parentChoiceID;
+	}
+
+	@Override
+	public String getHumanReadablePerms() {
+		return tuple.toString();
 	}
 }

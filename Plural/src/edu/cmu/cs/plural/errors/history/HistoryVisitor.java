@@ -38,6 +38,8 @@
 
 package edu.cmu.cs.plural.errors.history;
 
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -137,6 +139,8 @@ class HistoryVisitor {
 			TACFlowAnalysis<PluralContext> analysis) {
 		// So we expect there to be one choice only at the beginning node 
 		LinearContext root_context = this.extractSingleContext(analysis, method_decl);
+		
+		
 		HistoryNode root_node = new HistoryNode(root_context);
 		this.rootContext = Option.some(root_node);
 		this.idToNodeMap.put(root_context);
@@ -172,9 +176,7 @@ class HistoryVisitor {
 		extractAllChoicesAfterNode(ASTNode node) {
 			PluralContext ctx = analysis.getResultsAfter(node);
 			LinearContext l_ctx = ctx.getLinearContext();
-			
-			
-			
+						
 			// Dispatch on linear context, adding only singleton contexts, and not
 			// choice contexts, to the result map.
 			final Option<HistoryNode> cur_root_node = HistoryVisitor.this.rootContext;
@@ -232,6 +234,7 @@ class HistoryVisitor {
 		
 		@Override
 		public void endVisit(ConstructorInvocation node) {
+			
 			Pair<IDHistoryNodeMap, Option<HistoryNode>> ctxs = extractAllChoicesAfterNode(node);
 			HistoryVisitor.this.idToNodeMap.merge(ctxs.fst());
 			

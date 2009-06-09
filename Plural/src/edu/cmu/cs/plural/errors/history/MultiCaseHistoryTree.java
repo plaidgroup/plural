@@ -127,7 +127,8 @@ class MultiCaseHistoryTree {
 	ResultingDisplayTree createTreeForDisplay(Object parent) {
 		// Iterating, even though recursion would be much more convenient
 		ResultingDisplayTree root = 
-			new ResultingDisplayTree(Option.<ResultingDisplayTree>none(), parent);
+			new ResultingDisplayTree(Option.<ResultingDisplayTree>none(), 
+					parent);
 		
 		List<ResultingDisplayTree> root_children = 
 			new ArrayList<ResultingDisplayTree>(this.trees.size());
@@ -166,8 +167,7 @@ class MultiCaseHistoryTree {
 			if( (i+1) == parent_node.numElements() ) {
 				//  Last
 				LinearContext ctx = parent_node.getContext(i);
-				ResultingDisplayTree cur = new ResultingDisplayTree(Option.some(parent),
-						"CTX: "+ ctx.getChoiceID() + ", " + ctx.getClass() + ", " + System.identityHashCode(ctx));
+				ResultingDisplayTree cur = new ResultingDisplayTree(Option.some(parent),ctx);
 				List<ResultingDisplayTree> cur_children = new ArrayList<ResultingDisplayTree>();
 				
 				for( HistoryNode choice : cur_tree.getChildren(parent_node) ) {
@@ -186,8 +186,7 @@ class MultiCaseHistoryTree {
 				// Regular Linear Context child
 				// Has no children
 				LinearContext ctx = parent_node.getContext(i);
-				ResultingDisplayTree cur = new ResultingDisplayTree(Option.some(parent),
-						"CTX: "+ ctx.getChoiceID() + ", " + ctx.getClass() + ", " + System.identityHashCode(ctx));
+				ResultingDisplayTree cur = new ResultingDisplayTree(Option.some(parent),ctx);
 				cur.setChildren(Collections.<ResultingDisplayTree>emptyList());
 				children.add(cur);
 			}

@@ -58,8 +58,10 @@ class HistoryNode {
 	
 	private final ChoiceID parentID;
 	
-	/** An ordered list of contexts, each with the same ID. */
+	/** An ordered list of contexts, each with the same ID,
+	 *  and the nodes at which they were found. */
 	private final List<LinearContext> contexts;
+	
 	
 	public HistoryNode(LinearContext ctx) {
 		this.contexts = new LinkedList<LinearContext>();
@@ -146,5 +148,5 @@ class HistoryNode {
 	 */
 	public LinearContext getContext(int index) {
 		return this.contexts.get(index);
-	}	
+	}
 }
