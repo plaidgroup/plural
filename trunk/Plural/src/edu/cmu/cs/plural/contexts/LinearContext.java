@@ -100,4 +100,10 @@ public interface LinearContext extends LatticeElement<LinearContext>, Freezable<
 	 * multiple cases, join of a choice).
 	 */
 	public ChoiceID getParentChoiceID();
+
+	/**
+	 * Returns a human-readable display of the permissions held by this
+	 * linear context.
+	 */
+	public String getHumanReadablePerms();
 }

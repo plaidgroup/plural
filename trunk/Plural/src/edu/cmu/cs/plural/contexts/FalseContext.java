@@ -143,4 +143,9 @@ public class FalseContext implements LinearContext {
 	public ChoiceID getParentChoiceID() {
 		return this.parentChoiceID;
 	}
+
+	@Override
+	public String getHumanReadablePerms() {
+		return this.toString();
+	}
 }

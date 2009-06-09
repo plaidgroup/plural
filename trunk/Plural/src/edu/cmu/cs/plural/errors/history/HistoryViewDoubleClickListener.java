@@ -38,8 +38,18 @@
 
 package edu.cmu.cs.plural.errors.history;
 
+
+import org.eclipse.jdt.core.IMethod;
+import org.eclipse.jdt.core.JavaModelException;
+import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+
+import edu.cmu.cs.plural.contexts.LinearContext;
 
 /**
  * A listener for double-clicks on the history view. When a user
@@ -54,7 +64,33 @@ public class HistoryViewDoubleClickListener implements IDoubleClickListener {
 
 	@Override
 	public void doubleClick(DoubleClickEvent event) {
-		System.err.println("Was double-clicked");
+		ISelection selection = event.getSelection();
+		
+		if( selection instanceof TreeSelection ) {
+			TreeSelection tree_selection = (TreeSelection)selection;
+			Object actual_selection = tree_selection.getFirstElement();
+			
+			if( actual_selection instanceof IMethod ) {
+				IMethod method = (IMethod)actual_selection;
+				try {
+					JavaUI.openInEditor(method, true, true);
+				} catch (PartInitException e) {} 
+				  catch (JavaModelException e) {}
+			}
+			else if( actual_selection instanceof ResultingDisplayTree && 
+					  ((ResultingDisplayTree)actual_selection).getContents() instanceof LinearContext ) {
+				// Just switch to the Context Viewer view so that we can see what
+				// the context looks like.
+				try {
+					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView( "Plural.contextViewer" );
+				} catch (PartInitException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
 	}
 
+	
+	
 }

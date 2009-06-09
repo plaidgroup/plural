@@ -324,4 +324,9 @@ public final class ContextChoiceLE implements LinearContext {
 	public ChoiceID getParentChoiceID() {
 		return CHOICE_PARENT_ID;
 	}
+
+	@Override
+	public String getHumanReadablePerms() {
+		return this.toString();
+	}
 }

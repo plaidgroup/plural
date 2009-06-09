@@ -55,6 +55,8 @@ import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jface.viewers.IContentProvider;
 import org.eclipse.jface.viewers.ILazyTreeContentProvider;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
@@ -94,7 +96,7 @@ import edu.cmu.cs.plural.track.FractionalTransfer;
  * @since Jun 1, 2009
  *
  */
-public class HistoryView extends ViewPart implements ISelectionListener {
+public class HistoryView extends ViewPart implements ISelectionListener, ISelectionProvider {
 
 	private TreeViewer treeViewer;
 	
@@ -105,12 +107,15 @@ public class HistoryView extends ViewPart implements ISelectionListener {
 		
 		IContentProvider content = new ContextTreeContentProvider();
 		this.treeViewer.setContentProvider(content);
-		
+		this.treeViewer.addDoubleClickListener(new HistoryViewDoubleClickListener());
 		
 		this.treeViewer.setInput(new Object());
 		
 		// Register as listener
 		getViewSite().getPage().addPostSelectionListener(this);
+		
+		// We provide tree selection events
+		getSite().setSelectionProvider(this);
 	}
 
 	@Override
@@ -514,5 +519,26 @@ public class HistoryView extends ViewPart implements ISelectionListener {
 				}
 			}
 		}
+	}
+
+	@Override
+	public void addSelectionChangedListener(ISelectionChangedListener listener) {
+		this.treeViewer.addSelectionChangedListener(listener);
+	}
+
+	@Override
+	public ISelection getSelection() {
+		return this.treeViewer.getSelection();
+	}
+
+	@Override
+	public void removeSelectionChangedListener(
+			ISelectionChangedListener listener) {
+		this.treeViewer.removeSelectionChangedListener(listener);
+	}
+
+	@Override
+	public void setSelection(ISelection selection) {
+		this.treeViewer.setSelection(selection);
 	}
 }

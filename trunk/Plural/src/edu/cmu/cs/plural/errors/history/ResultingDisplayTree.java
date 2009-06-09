@@ -90,6 +90,13 @@ public class ResultingDisplayTree {
 		return this.parent;
 	}
 
+	/**
+	 * Returns whatever contents object this is holding.
+	 */
+	public Object getContents() {
+		return this.contents;
+	}
+	
 	@Override
 	public String toString() {
 		return this.contents.toString();

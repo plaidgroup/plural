@@ -185,6 +185,13 @@
             name="Plural History Printer"
             restorable="true">
       </view>
+      <view
+            category="Plural"
+            class="edu.cmu.cs.plural.errors.ContextView"
+            id="Plural.contextViewer"
+            name="Plural Context Viewer"
+            restorable="true">
+      </view>
    </extension>
 
 </plugin>
