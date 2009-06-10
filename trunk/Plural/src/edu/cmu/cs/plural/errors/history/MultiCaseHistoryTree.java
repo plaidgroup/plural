@@ -46,7 +46,6 @@ import java.util.Set;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.plural.contexts.LinearContext;
 
 /**
  * A temporary tree structure that holds all of the method case trees.
@@ -166,7 +165,7 @@ class MultiCaseHistoryTree {
 		for( int i = 0; i < parent_node.numElements(); i++ ) {
 			if( (i+1) == parent_node.numElements() ) {
 				//  Last
-				LinearContext ctx = parent_node.getContext(i);
+				DisplayLinearContext ctx = parent_node.getContext(i);
 				ResultingDisplayTree cur = new ResultingDisplayTree(Option.some(parent),ctx);
 				List<ResultingDisplayTree> cur_children = new ArrayList<ResultingDisplayTree>();
 				
@@ -185,7 +184,7 @@ class MultiCaseHistoryTree {
 			else {
 				// Regular Linear Context child
 				// Has no children
-				LinearContext ctx = parent_node.getContext(i);
+				DisplayLinearContext ctx = parent_node.getContext(i);
 				ResultingDisplayTree cur = new ResultingDisplayTree(Option.some(parent),ctx);
 				cur.setChildren(Collections.<ResultingDisplayTree>emptyList());
 				children.add(cur);

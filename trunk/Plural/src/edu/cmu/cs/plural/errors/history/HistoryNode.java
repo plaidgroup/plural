@@ -60,19 +60,26 @@ class HistoryNode {
 	
 	/** An ordered list of contexts, each with the same ID,
 	 *  and the nodes at which they were found. */
-	private final List<LinearContext> contexts;
+	private final List<DisplayLinearContext> contexts;
 	
-	
-	public HistoryNode(LinearContext ctx) {
-		this.contexts = new LinkedList<LinearContext>();
-		this.contexts.add(ctx);
-		this.id = ctx.getChoiceID();
-		this.parentID = ctx.getParentChoiceID();
+	public HistoryNode(LinearContext ctx, ITACLocation loc) {
+		this(new DisplayLinearContext(ctx, loc));
 	}
 	
-	public void append(LinearContext ctx) {
-		assert(ctx.getChoiceID().equals(id));
-		assert(ctx.getParentChoiceID().equals(parentID));
+	public HistoryNode(DisplayLinearContext ctx) {
+		this.contexts = new LinkedList<DisplayLinearContext>();
+		this.contexts.add(ctx);
+		this.id = ctx.getContext().getChoiceID();
+		this.parentID = ctx.getContext().getParentChoiceID();
+	}
+	
+	public void append(LinearContext ctx, ITACLocation loc) {
+		this.append(new DisplayLinearContext(ctx, loc));
+	}
+	
+	public void append(DisplayLinearContext ctx) {
+		assert(ctx.getContext().getChoiceID().equals(id));
+		assert(ctx.getContext().getParentChoiceID().equals(parentID));
 		contexts.add(ctx);
 	}
 	
@@ -146,7 +153,7 @@ class HistoryNode {
 	 * Return the linear context contained at the
 	 * given index.
 	 */
-	public LinearContext getContext(int index) {
+	public DisplayLinearContext getContext(int index) {
 		return this.contexts.get(index);
 	}
 }

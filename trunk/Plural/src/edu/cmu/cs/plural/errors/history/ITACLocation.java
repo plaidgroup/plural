@@ -38,53 +38,46 @@
 
 package edu.cmu.cs.plural.errors.history;
 
-
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.ui.JavaUI;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.TreeSelection;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
+import edu.cmu.cs.crystal.tac.model.TACInstruction;
 
 /**
- * A listener for double-clicks on the history view. When a user
- * double-clicks on a context, for example, we want to take them
- * to the location where that context was obtained.
+ * A three address code location where something occurred. Its
+ * main method available is the toString method for now.
  * 
  * @author Nels E. Beckman
- * @since Jun 8, 2009
+ * @since Jun 9, 2009
  *
  */
-public class HistoryViewDoubleClickListener implements IDoubleClickListener {
+public interface ITACLocation {
+	
+	/**
+	 * All ITAC locations must override.
+	 */
+	public String toString();
+}
 
+class MethodIncomingLocation implements ITACLocation {
+
+	static MethodIncomingLocation INSTANCE = new MethodIncomingLocation();
+	
 	@Override
-	public void doubleClick(DoubleClickEvent event) {
-		ISelection selection = event.getSelection();
-		
-		if( selection instanceof TreeSelection ) {
-			TreeSelection tree_selection = (TreeSelection)selection;
-			Object actual_selection = tree_selection.getFirstElement();
+	public String toString() {
+		return "At method start";
+	}
+}
+
+class AfterTACInstruction implements ITACLocation {
+	private final TACInstruction instruction;
+	
+	public AfterTACInstruction(TACInstruction instruction) {
+		if( instruction == null )
+			throw new NullPointerException("This class does not accept null instructions.");
 			
-			if( actual_selection instanceof IMethod ) {
-				IMethod method = (IMethod)actual_selection;
-				try {
-					JavaUI.openInEditor(method, true, true);
-				} catch (PartInitException e) {} 
-				  catch (JavaModelException e) {}
-			}
-			else if( actual_selection instanceof ResultingDisplayTree && 
-					  ((ResultingDisplayTree)actual_selection).getContents() instanceof DisplayLinearContext ) {
-				// Just switch to the Context Viewer view so that we can see what
-				// the context looks like.
-				try {
-					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView( "Plural.contextViewer" );
-				} catch (PartInitException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+		this.instruction = instruction;
+	}
+	
+	@Override
+	public String toString() {
+		return "After 3AC instruction: " + instruction.toString();
 	}
 }
