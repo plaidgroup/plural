@@ -222,7 +222,6 @@ public class VirtualFramePermissionSet extends FractionalPermissions implements 
 	 */
 	@Override
 	public FractionalPermissions createReplacement(PermissionSetFromAnnotations initial) {
-		assert isEmpty();
 		FractionConstraints newCs = initial.getConstraints().mutableCopy();
 		List<? extends FractionalPermission> newFramePs = 
 			mergeInPermissions(initial.getPermissions(), 

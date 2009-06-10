@@ -496,13 +496,13 @@ implements LatticeElement<FractionalPermissions>, ObjectPermissionSet {
 	}
 	
 	/**
-	 * Factory method for a brand-new permission set from annotations
+	 * Factory method for a brand-new permission set from annotations,
+	 * mostly useful to get a permission set of the same type as the receiver.
 	 * @param initialPermissions
 	 * @return a brand-new permission set from annotations
 	 */
 	public FractionalPermissions createReplacement(
 			PermissionSetFromAnnotations initialPermissions) {
-		assert isEmpty();
 		return createPermissions(initialPermissions.getPermissions(), 
 				initialPermissions.getFramePermissions(), 
 				initialPermissions.getConstraints());

@@ -44,11 +44,11 @@ import edu.cmu.cs.crystal.analysis.live.LiveVariableLE;
 import edu.cmu.cs.crystal.analysis.live.LiveVariableTransferFunction;
 import edu.cmu.cs.crystal.flow.ILabel;
 import edu.cmu.cs.crystal.flow.IResult;
-import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.simple.TupleLatticeElement;
+import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
-import edu.cmu.cs.crystal.tac.TACInstruction;
-import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.model.TACInstruction;
+import edu.cmu.cs.crystal.tac.model.Variable;
 
 /**
  * @author Kevin Bierhoff

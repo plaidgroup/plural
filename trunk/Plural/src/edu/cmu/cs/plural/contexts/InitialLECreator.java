@@ -48,8 +48,8 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
-import edu.cmu.cs.crystal.tac.SourceVariable;
-import edu.cmu.cs.crystal.tac.ThisVariable;
+import edu.cmu.cs.crystal.tac.model.SourceVariable;
+import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.concrete.Implication;

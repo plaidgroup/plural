@@ -38,8 +38,6 @@
 
 package edu.cmu.cs.plural.errors.history;
 
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.ISourceRange;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;

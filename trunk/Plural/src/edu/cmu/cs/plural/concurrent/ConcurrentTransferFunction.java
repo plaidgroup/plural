@@ -44,24 +44,24 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.flow.ILabel;
 import edu.cmu.cs.crystal.flow.IResult;
-import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
-import edu.cmu.cs.crystal.tac.BinaryOperation;
-import edu.cmu.cs.crystal.tac.CastInstruction;
-import edu.cmu.cs.crystal.tac.ConstructorCallInstruction;
-import edu.cmu.cs.crystal.tac.CopyInstruction;
-import edu.cmu.cs.crystal.tac.DotClassInstruction;
-import edu.cmu.cs.crystal.tac.InstanceofInstruction;
-import edu.cmu.cs.crystal.tac.LoadArrayInstruction;
-import edu.cmu.cs.crystal.tac.LoadFieldInstruction;
-import edu.cmu.cs.crystal.tac.LoadLiteralInstruction;
-import edu.cmu.cs.crystal.tac.MethodCallInstruction;
-import edu.cmu.cs.crystal.tac.NewArrayInstruction;
-import edu.cmu.cs.crystal.tac.NewObjectInstruction;
-import edu.cmu.cs.crystal.tac.SourceVariableDeclaration;
-import edu.cmu.cs.crystal.tac.SourceVariableRead;
-import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
-import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
-import edu.cmu.cs.crystal.tac.UnaryOperation;
+import edu.cmu.cs.crystal.tac.model.ArrayInitInstruction;
+import edu.cmu.cs.crystal.tac.model.BinaryOperation;
+import edu.cmu.cs.crystal.tac.model.CastInstruction;
+import edu.cmu.cs.crystal.tac.model.ConstructorCallInstruction;
+import edu.cmu.cs.crystal.tac.model.CopyInstruction;
+import edu.cmu.cs.crystal.tac.model.DotClassInstruction;
+import edu.cmu.cs.crystal.tac.model.InstanceofInstruction;
+import edu.cmu.cs.crystal.tac.model.LoadArrayInstruction;
+import edu.cmu.cs.crystal.tac.model.LoadFieldInstruction;
+import edu.cmu.cs.crystal.tac.model.LoadLiteralInstruction;
+import edu.cmu.cs.crystal.tac.model.MethodCallInstruction;
+import edu.cmu.cs.crystal.tac.model.NewArrayInstruction;
+import edu.cmu.cs.crystal.tac.model.NewObjectInstruction;
+import edu.cmu.cs.crystal.tac.model.SourceVariableDeclaration;
+import edu.cmu.cs.crystal.tac.model.SourceVariableReadInstruction;
+import edu.cmu.cs.crystal.tac.model.StoreArrayInstruction;
+import edu.cmu.cs.crystal.tac.model.StoreFieldInstruction;
+import edu.cmu.cs.crystal.tac.model.UnaryOperation;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
@@ -227,7 +227,7 @@ public abstract class ConcurrentTransferFunction extends FractionalTransfer {
 	}
 	
 	@Override
-	public IResult<PluralContext> transfer(SourceVariableRead instr,
+	public IResult<PluralContext> transfer(SourceVariableReadInstruction instr,
 			List<ILabel> labels, PluralContext value) {
 		IResult<PluralContext> result = super.transfer(instr, labels, value);
 		

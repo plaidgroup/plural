@@ -63,31 +63,31 @@ import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
 import edu.cmu.cs.crystal.flow.LabeledSingleResult;
 import edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction;
-import edu.cmu.cs.crystal.tac.ArrayInitInstruction;
-import edu.cmu.cs.crystal.tac.AssignmentInstruction;
-import edu.cmu.cs.crystal.tac.BinaryOperation;
-import edu.cmu.cs.crystal.tac.CastInstruction;
-import edu.cmu.cs.crystal.tac.ConstructorCallInstruction;
-import edu.cmu.cs.crystal.tac.CopyInstruction;
-import edu.cmu.cs.crystal.tac.DotClassInstruction;
-import edu.cmu.cs.crystal.tac.EnhancedForConditionInstruction;
 import edu.cmu.cs.crystal.tac.ITACBranchSensitiveTransferFunction;
-import edu.cmu.cs.crystal.tac.InstanceofInstruction;
-import edu.cmu.cs.crystal.tac.InvocationInstruction;
-import edu.cmu.cs.crystal.tac.LoadArrayInstruction;
-import edu.cmu.cs.crystal.tac.LoadFieldInstruction;
-import edu.cmu.cs.crystal.tac.LoadLiteralInstruction;
-import edu.cmu.cs.crystal.tac.MethodCallInstruction;
-import edu.cmu.cs.crystal.tac.NewArrayInstruction;
-import edu.cmu.cs.crystal.tac.NewObjectInstruction;
-import edu.cmu.cs.crystal.tac.SourceVariableDeclaration;
-import edu.cmu.cs.crystal.tac.SourceVariableRead;
-import edu.cmu.cs.crystal.tac.StoreArrayInstruction;
-import edu.cmu.cs.crystal.tac.StoreFieldInstruction;
-import edu.cmu.cs.crystal.tac.TACInstruction;
-import edu.cmu.cs.crystal.tac.ThisVariable;
-import edu.cmu.cs.crystal.tac.UnaryOperation;
-import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.model.ArrayInitInstruction;
+import edu.cmu.cs.crystal.tac.model.AssignmentInstruction;
+import edu.cmu.cs.crystal.tac.model.BinaryOperation;
+import edu.cmu.cs.crystal.tac.model.CastInstruction;
+import edu.cmu.cs.crystal.tac.model.ConstructorCallInstruction;
+import edu.cmu.cs.crystal.tac.model.CopyInstruction;
+import edu.cmu.cs.crystal.tac.model.DotClassInstruction;
+import edu.cmu.cs.crystal.tac.model.EnhancedForConditionInstruction;
+import edu.cmu.cs.crystal.tac.model.InstanceofInstruction;
+import edu.cmu.cs.crystal.tac.model.InvocationInstruction;
+import edu.cmu.cs.crystal.tac.model.LoadArrayInstruction;
+import edu.cmu.cs.crystal.tac.model.LoadFieldInstruction;
+import edu.cmu.cs.crystal.tac.model.LoadLiteralInstruction;
+import edu.cmu.cs.crystal.tac.model.MethodCallInstruction;
+import edu.cmu.cs.crystal.tac.model.NewArrayInstruction;
+import edu.cmu.cs.crystal.tac.model.NewObjectInstruction;
+import edu.cmu.cs.crystal.tac.model.SourceVariableDeclaration;
+import edu.cmu.cs.crystal.tac.model.SourceVariableReadInstruction;
+import edu.cmu.cs.crystal.tac.model.StoreArrayInstruction;
+import edu.cmu.cs.crystal.tac.model.StoreFieldInstruction;
+import edu.cmu.cs.crystal.tac.model.TACInstruction;
+import edu.cmu.cs.crystal.tac.model.ThisVariable;
+import edu.cmu.cs.crystal.tac.model.UnaryOperation;
+import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.plural.track.FieldVariable;
 
 /**
@@ -407,7 +407,7 @@ public class LocalAliasTransfer extends
 			AliasingLE value) {
 		// TODO maybe one could use the type cased to to drop aliases of incompatible types?
 		value = value.mutableCopy();
-		value.put(instr.getTarget(), value.get(instr.getOperand()).copy());
+		value.put(instr.getTarget(), value.get(instr.getOperand()));
 		value = killAllDead(value, instr, instr.getOperand());
 		return LabeledSingleResult.createResult(value, labels);
 	}
@@ -427,7 +427,7 @@ public class LocalAliasTransfer extends
 			AliasingLE value) {
 		//if value does not contain instr, then what? will it do the put automatically?
 		value = value.mutableCopy();
-		value.put(instr.getTarget(), value.get(instr.getOperand()).copy());
+		value.put(instr.getTarget(), value.get(instr.getOperand()));
 		value = killAllDead(value, instr, instr.getOperand());
 		return LabeledSingleResult.createResult(value, labels);
 	}
@@ -477,7 +477,7 @@ public class LocalAliasTransfer extends
 				/*
 				 * Just do a normal copy from field to temp.
 				 */
-				value.put(instr.getTarget(), value.get(field_var).copy());
+				value.put(instr.getTarget(), value.get(field_var));
 				value = killAllDead(value, instr, instr.getAccessedObjectOperand());
 				return LabeledSingleResult.createResult(value, labels);
 			}
@@ -585,7 +585,7 @@ public class LocalAliasTransfer extends
 			Aliasing this_loc = value.get(receiver);
 			if( instr.getDestinationObject().isUnqualifiedSuper() || value.get(instr.getDestinationObject()).equals(this_loc) ) {
 				final Variable field_var = new FieldVariable(instr.resolveFieldBinding());
-				value.put(field_var, value.get(instr.getSourceOperand()).copy());
+				value.put(field_var, value.get(instr.getSourceOperand()));
 			}
 		}
 		// otherwise ignore
@@ -619,7 +619,7 @@ public class LocalAliasTransfer extends
 	 * @see edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction#transfer(edu.cmu.cs.crystal.tac.SourceVariableRead, java.util.List, edu.cmu.cs.crystal.flow.LatticeElement)
 	 */
 	@Override
-	public IResult<AliasingLE> transfer(SourceVariableRead instr,
+	public IResult<AliasingLE> transfer(SourceVariableReadInstruction instr,
 			List<ILabel> labels, AliasingLE value) {
 		// no kills and no new locations
 		return super.transfer(instr, labels, value);
