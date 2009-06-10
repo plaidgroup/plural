@@ -41,17 +41,14 @@ package edu.cmu.cs.plural.errors.history;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
-import org.eclipse.jdt.core.dom.ConstructorInvocation;
-import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.ReturnStatement;
-import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
+import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
+import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
+import edu.cmu.cs.crystal.tac.model.TACInstruction;
 import edu.cmu.cs.crystal.util.Box;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
@@ -81,7 +78,7 @@ class HistoryVisitor {
 	private Option<HistoryNode> rootContext = Option.none();
 	
 	/**
-	 * Restricted access. {@link HistoryVisitor#visitAndBuildTree(MethodDeclaration, TACFlowAnalysis)}
+	 * Restricted access. {@link HistoryVisitor#visitAndBuildTree(MethodDeclaration, TACFlowAnalysis, CompilationUnitTACs)}
 	 */
 	private HistoryVisitor() {
 		this.idToNodeMap = new IDHistoryNodeMap();
@@ -94,14 +91,14 @@ class HistoryVisitor {
 	 */
 	public static Pair<HistoryNode, SingleCaseHistoryTree> visitAndBuildTree(
 			final MethodDeclaration method_decl,
-			final TACFlowAnalysis<PluralContext> analysis) {
+			final TACFlowAnalysis<PluralContext> analysis, CompilationUnitTACs tacCache) {
 		HistoryVisitor visitor = new HistoryVisitor();
-		visitor.visit(method_decl, analysis);
+		visitor.visit(method_decl, analysis, tacCache);
 		return visitor.buildTree();
 	}
 
-	private LinearContext extractSingleContext(TACFlowAnalysis<PluralContext> analysis, ASTNode node) {
-		PluralContext ctx = analysis.getResultsBefore(node);
+	private LinearContext extractSingleContext(TACFlowAnalysis<PluralContext> analysis, MethodDeclaration decl) {
+		PluralContext ctx = analysis.getStartResults(decl);
 		LinearContext l_ctx = ctx.getLinearContext();
 		
 		// For now, to see what kind of contexts we can get, make
@@ -134,16 +131,19 @@ class HistoryVisitor {
 	 * will populate {@link HistoryVisitor#idToNodeMap}.
 	 */
 	private void visit(MethodDeclaration method_decl,
-			TACFlowAnalysis<PluralContext> analysis) {
+			TACFlowAnalysis<PluralContext> analysis, CompilationUnitTACs tacCache) {
 		// So we expect there to be one choice only at the beginning node 
 		LinearContext root_context = this.extractSingleContext(analysis, method_decl);
 		
 		
-		HistoryNode root_node = new HistoryNode(root_context);
+		DisplayLinearContext rooc_context_ = new DisplayLinearContext(root_context, MethodIncomingLocation.INSTANCE);
+		HistoryNode root_node = new HistoryNode(rooc_context_);
 		this.rootContext = Option.some(root_node);
-		this.idToNodeMap.put(root_context);
+		this.idToNodeMap.put(rooc_context_);
 		
-		method_decl.getBody().accept((new HelperVisitor(analysis)));
+		// We need the TAC cache, which is per-method, for the visitor
+		EclipseTAC methodTAC = tacCache.getMethodTAC(method_decl);
+		method_decl.getBody().accept((new HelperVisitor(analysis, methodTAC)));
 	}
 	
 	/** 
@@ -153,8 +153,12 @@ class HistoryVisitor {
 	private class HelperVisitor extends ASTVisitor {
 		private final TACFlowAnalysis<PluralContext> analysis;
 		
-		HelperVisitor(TACFlowAnalysis<PluralContext> analysis) {
+		private final EclipseTAC methodTACInstructions;
+		
+		HelperVisitor(TACFlowAnalysis<PluralContext> analysis,
+				EclipseTAC methodTACInstructions) {
 			this.analysis = analysis;
+			this.methodTACInstructions = methodTACInstructions;
 		}
 
 		// All of the following methods exist so that we will not descend into
@@ -162,7 +166,8 @@ class HistoryVisitor {
 		@Override public boolean visit(AnonymousClassDeclaration node) {return false;}
 		@Override public boolean visit(TypeDeclaration node) {return false;}
 		@Override public boolean visit(TypeDeclarationStatement node) {return false;}
-		
+		//@Override public boolean visit(FieldAccess node) { return false; }
+
 		/** 
 		 * This method pulls out a mapping from Choice IDs to history nodes from
 		 * the linear context BEFORE the given ast node. Additionally, it looks
@@ -170,11 +175,20 @@ class HistoryVisitor {
 		 * {@code HistoryVisitor#rootContext}, and if it finds them, returns
 		 * it.
 		 */
-		private Pair<IDHistoryNodeMap, Option<HistoryNode>> 
+		private void 
 		extractAllChoicesAfterNode(ASTNode node) {
 			PluralContext ctx = analysis.getResultsAfter(node);
 			LinearContext l_ctx = ctx.getLinearContext();
-						
+			
+			TACInstruction tac_instr = this.methodTACInstructions.instruction(node);
+			if( tac_instr == null ) {
+				// no instruction. We only report for 'real' 3AC nodes.
+				return;
+			}
+					
+			
+			final ITACLocation tac_loc = new AfterTACInstruction(tac_instr);		
+			
 			// Dispatch on linear context, adding only singleton contexts, and not
 			// choice contexts, to the result map.
 			final Option<HistoryNode> cur_root_node = HistoryVisitor.this.rootContext;
@@ -190,15 +204,15 @@ class HistoryVisitor {
 						// we encounter nodes that have the same id.
 						if( root_id.isSome() && root_id.unwrap().equals(c.getChoiceID()) ) {
 							if( result_root_node.getValue().isNone() ) {
-								result_root_node.setValue(Option.some(new HistoryNode(c)));
+								result_root_node.setValue(Option.some(new HistoryNode(c, tac_loc)));
 							}
 							else {
 								HistoryNode prev_node = result_root_node.getValue().unwrap();
-								prev_node.append(c);
+								prev_node.append(c, tac_loc);
 							}
 						}
 							
-						return IDHistoryNodeMap.singleton(c);
+						return IDHistoryNodeMap.singleton(c, tac_loc);
 					}
 					
 					@Override
@@ -227,71 +241,58 @@ class HistoryVisitor {
 					}
 				});
 			
-			return Pair.create(result, result_root_node.getValue());
+			// effect-ively merget these results back in.
+			if( result_root_node.getValue().isSome() ) {
+				// If we extended the root
+				HistoryNode additional_root = result_root_node.getValue().unwrap();
+				HistoryVisitor.this.rootContext.unwrap().concat(additional_root);
+			}
+			HistoryVisitor.this.idToNodeMap.merge(result);
 		}
 		
+		
+		
 		@Override
-		public void endVisit(ConstructorInvocation node) {
-			
-			Pair<IDHistoryNodeMap, Option<HistoryNode>> ctxs = extractAllChoicesAfterNode(node);
-			HistoryVisitor.this.idToNodeMap.merge(ctxs.fst());
-			
-			if( ctxs.snd().isSome() ) {
-				HistoryNode additional_root = ctxs.snd().unwrap();
-				HistoryVisitor.this.rootContext.unwrap().concat(additional_root);
-			}
+		public void postVisit(ASTNode node) {
+			extractAllChoicesAfterNode(node);
 		}
-
-		@Override
-		public void endVisit(FieldAccess node) {
-			Pair<IDHistoryNodeMap, Option<HistoryNode>> ctxs = extractAllChoicesAfterNode(node);
-			HistoryVisitor.this.idToNodeMap.merge(ctxs.fst());
-			
-			if( ctxs.snd().isSome() ) {
-				HistoryNode additional_root = ctxs.snd().unwrap();
-				HistoryVisitor.this.rootContext.unwrap().concat(additional_root);
-			}
-		}
-
-		@Override
-		public void endVisit(MethodInvocation node) {
-			Pair<IDHistoryNodeMap, Option<HistoryNode>> ctxs = extractAllChoicesAfterNode(node);
-			HistoryVisitor.this.idToNodeMap.merge(ctxs.fst());
-			
-			if( ctxs.snd().isSome() ) {
-				HistoryNode additional_root = ctxs.snd().unwrap();
-				HistoryVisitor.this.rootContext.unwrap().concat(additional_root);
-			}
-		}
-
-		@Override
-		public void endVisit(ReturnStatement node) {
-			Pair<IDHistoryNodeMap, Option<HistoryNode>> ctxs = extractAllChoicesAfterNode(node);
-			HistoryVisitor.this.idToNodeMap.merge(ctxs.fst());
-			
-			if( ctxs.snd().isSome() ) {
-				HistoryNode additional_root = ctxs.snd().unwrap();
-				HistoryVisitor.this.rootContext.unwrap().concat(additional_root);
-			}
-		}
-
-		@Override
-		public void endVisit(SimpleName node) {
-			// This is just to catch any other field accesses.
-			if( !(node.resolveBinding() instanceof IVariableBinding) )
-				return;
-			
-			IVariableBinding binding = (IVariableBinding)node.resolveBinding();
-			if( !binding.isField() )
-				return;
-			
-			Pair<IDHistoryNodeMap, Option<HistoryNode>> ctxs = extractAllChoicesAfterNode(node);
-			HistoryVisitor.this.idToNodeMap.merge(ctxs.fst());
-			
-			if( ctxs.snd().isSome() ) {
-				HistoryNode additional_root = ctxs.snd().unwrap();
-				HistoryVisitor.this.rootContext.unwrap().concat(additional_root);
-			}
-		}
+//
+//		@Override
+//		public void endVisit(ConstructorInvocation node) {
+//			extractAllChoicesAfterNode(node);
+//		}
+//
+//		@Override
+//		public void endVisit(FieldAccess node) {
+//			extractAllChoicesAfterNode(node);
+//		}
+//
+//		@Override
+//		public void endVisit(MethodInvocation node) {
+//			extractAllChoicesAfterNode(node);
+//		}
+//
+//		@Override
+//		public void endVisit(ReturnStatement node) {
+//			extractAllChoicesAfterNode(node);
+//		}
+//
+//		@Override
+//		public void endVisit(Assignment node) {
+//			extractAllChoicesAfterNode(node);
+//		}
+//
+//		@Override
+//		public void endVisit(SimpleName node) {
+//			// This is just to catch any other field accesses.
+//			if( !(node.resolveBinding() instanceof IVariableBinding) )
+//				return;
+//			
+//			IVariableBinding binding = (IVariableBinding)node.resolveBinding();
+//			if( !binding.isField() )
+//				return;
+//			
+//			extractAllChoicesAfterNode(node);
+//		}
 	}
 }

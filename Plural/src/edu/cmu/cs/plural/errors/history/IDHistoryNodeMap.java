@@ -83,23 +83,28 @@ class IDHistoryNodeMap {
 				new_map.put(entry.getKey(), entry.getValue());
 			}
 		}
+		this.map = new_map;
 	}
 
 	/**
 	 * @param c
 	 * @return
 	 */
-	public static IDHistoryNodeMap singleton(LinearContext c) {
-		return new IDHistoryNodeMap(Collections.singletonMap(c.getChoiceID(), 
+	public static IDHistoryNodeMap singleton(DisplayLinearContext c) {
+		return new IDHistoryNodeMap(Collections.singletonMap(c.getContext().getChoiceID(), 
 				new HistoryNode(c)));
 	}
 
+	public static IDHistoryNodeMap singleton(LinearContext ctx, ITACLocation loc) {
+		return singleton(new DisplayLinearContext(ctx, loc));
+	}
+	
 	/**
 	 * @param fst
 	 * @param ctx
 	 */
-	public void put(LinearContext ctx) {
-		ChoiceID id = ctx.getChoiceID();
+	public void put(DisplayLinearContext ctx) {
+		ChoiceID id = ctx.getContext().getChoiceID();
 		if( this.map.containsKey(id) ) {
 			this.map.get(id).append(ctx);
 		}

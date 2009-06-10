@@ -48,6 +48,7 @@ import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 
 import edu.cmu.cs.plural.contexts.LinearContext;
+import edu.cmu.cs.plural.errors.history.DisplayLinearContext;
 import edu.cmu.cs.plural.errors.history.HistoryView;
 import edu.cmu.cs.plural.errors.history.ResultingDisplayTree;
 
@@ -78,11 +79,18 @@ public class ContextView extends ViewPart implements ISelectionListener {
 
 	}
 
-	private static String createDisplayString(LinearContext ctx) {
+	private static String scrub(String str) {
+		return str;
+		//return str.replace("<", "&lt;").replace(">", "&gt").replace("&", "&amp;");
+	}
+	
+	private static String createDisplayString(DisplayLinearContext dctx) {
+		LinearContext ctx = dctx.getContext();
 		String result = "<b>Context:</b> " + System.identityHashCode(ctx) + "<br>" +
-			"<b>Type:</b> " + ctx.getClass() + "<br>" +
+		    "<b>Location:</b> " + scrub(dctx.getLocation().toString()) + "<br>" +
+			"<b>Type:</b> " + scrub(ctx.getClass().toString()) + "<br>" +
 			"<b>Choice ID: </b>" + ctx.getChoiceID() + "<br>" +
-			"<b>Permissions: </b>" + ctx.getHumanReadablePerms() +"<br>" + 
+			"<b>Permissions: </b>" + scrub(ctx.getHumanReadablePerms()) +"<br>" + 
 			"<b>Concrete State Information: </b> ...<br>";
 		
 		return result;
@@ -100,10 +108,9 @@ public class ContextView extends ViewPart implements ISelectionListener {
 					ResultingDisplayTree display_tree = (ResultingDisplayTree)selected_object;
 					Object tree_contents = display_tree.getContents();
 					
-					if( tree_contents instanceof LinearContext ) {
-						LinearContext ctx = (LinearContext)tree_contents;
-					
-						this.browser.setText(createDisplayString(ctx));
+					if( tree_contents instanceof DisplayLinearContext ) {
+						DisplayLinearContext dctx = (DisplayLinearContext)tree_contents;
+						this.browser.setText(createDisplayString(dctx));
 					}
 				}
 			}

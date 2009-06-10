@@ -38,53 +38,65 @@
 
 package edu.cmu.cs.plural.errors.history;
 
-
-import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.jdt.ui.JavaUI;
-import org.eclipse.jface.viewers.DoubleClickEvent;
-import org.eclipse.jface.viewers.IDoubleClickListener;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.TreeSelection;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
+import edu.cmu.cs.plural.contexts.LinearContext;
 
 /**
- * A listener for double-clicks on the history view. When a user
- * double-clicks on a context, for example, we want to take them
- * to the location where that context was obtained.
+ * A wrapper around a ITACLocation and a LinearContext for display in
+ * the History tree.
  * 
  * @author Nels E. Beckman
- * @since Jun 8, 2009
+ * @since Jun 9, 2009
  *
  */
-public class HistoryViewDoubleClickListener implements IDoubleClickListener {
+public class DisplayLinearContext {
+
+	private final ITACLocation location;
+	
+	private final LinearContext context;
+
+	public DisplayLinearContext(LinearContext context, ITACLocation location) {
+		super();
+		this.location = location;
+		this.context = context;
+	}
+
+	public ITACLocation getLocation() {
+		return location;
+	}
+
+	public LinearContext getContext() {
+		return context;
+	}
+
+	
+	// Hash code and equals only take contex into account.
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((context == null) ? 0 : context.hashCode());
+		return result;
+	}
 
 	@Override
-	public void doubleClick(DoubleClickEvent event) {
-		ISelection selection = event.getSelection();
-		
-		if( selection instanceof TreeSelection ) {
-			TreeSelection tree_selection = (TreeSelection)selection;
-			Object actual_selection = tree_selection.getFirstElement();
-			
-			if( actual_selection instanceof IMethod ) {
-				IMethod method = (IMethod)actual_selection;
-				try {
-					JavaUI.openInEditor(method, true, true);
-				} catch (PartInitException e) {} 
-				  catch (JavaModelException e) {}
-			}
-			else if( actual_selection instanceof ResultingDisplayTree && 
-					  ((ResultingDisplayTree)actual_selection).getContents() instanceof DisplayLinearContext ) {
-				// Just switch to the Context Viewer view so that we can see what
-				// the context looks like.
-				try {
-					PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView( "Plural.contextViewer" );
-				} catch (PartInitException e) {
-					e.printStackTrace();
-				}
-			}
-		}
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		DisplayLinearContext other = (DisplayLinearContext) obj;
+		if (context == null) {
+			if (other.context != null)
+				return false;
+		} else if (!context.equals(other.context))
+			return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return this.context.toString() + " " + this.location.toString();
 	}
 }

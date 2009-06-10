@@ -353,7 +353,7 @@ public class HistoryView extends ViewPart implements ISelectionListener, ISelect
 			// and analysis
 			TACFlowAnalysis<PluralContext> analysis = createFractionalAnalysis(xfer_function, input);
 						
-			return HistoryVisitor.visitAndBuildTree(method_decl, analysis);
+			return HistoryVisitor.visitAndBuildTree(method_decl, analysis, input.getComUnitTACs().unwrap());
 		}
 
 		/**

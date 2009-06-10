@@ -241,6 +241,11 @@ public class TensorContext implements LinearContext {
 
 	@Override
 	public String getHumanReadablePerms() {
-		return tuple.toString();
+		if( tuple.isBottom() ) {
+			return "\u22A5"; // BOTTOM character
+		}
+		else {
+			return tuple.toString();
+		}
 	}
 }
