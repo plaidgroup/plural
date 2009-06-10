@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
-import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.concrete.VariablePredicate;

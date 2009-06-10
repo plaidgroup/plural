@@ -43,8 +43,8 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.bridge.LatticeElement;
-import edu.cmu.cs.crystal.tac.TACInstruction;
-import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.model.TACInstruction;
+import edu.cmu.cs.crystal.tac.model.Variable;
 
 public interface MutableAliasAwareTuple<LE extends LatticeElement<LE>> {
 

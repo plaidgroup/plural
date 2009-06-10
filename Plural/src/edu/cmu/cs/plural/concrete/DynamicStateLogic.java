@@ -52,7 +52,7 @@ import java.util.WeakHashMap;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.ConsList;
 import edu.cmu.cs.crystal.util.Freezable;
 import edu.cmu.cs.crystal.util.Lambda;

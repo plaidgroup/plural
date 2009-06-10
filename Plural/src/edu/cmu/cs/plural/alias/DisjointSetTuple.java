@@ -46,7 +46,9 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.bridge.LatticeElement;
+import edu.cmu.cs.crystal.bridge.LatticeElementOps;
 import edu.cmu.cs.crystal.simple.TupleLatticeElement;
+import edu.cmu.cs.crystal.simple.TupleLatticeOperations;
 
 /**
  * This class stores separate lattice information for disjoint sets of keys.
@@ -62,8 +64,9 @@ import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 public class DisjointSetTuple<K, LE extends LatticeElement<LE>> 
 		implements LatticeElement<DisjointSetTuple<K, LE>> {
 	
-	private Map<K, K> representatives;
-	private TupleLatticeElement<K, LE> tuple;
+	private final Map<K, K> representatives;
+	private final TupleLatticeOperations<K, LE> ops;
+	private final TupleLatticeElement<K, LE> tuple;
 
 	/**
 	 * Creates a new tuple using the given object as bottom for individual sets.
@@ -72,17 +75,23 @@ public class DisjointSetTuple<K, LE extends LatticeElement<LE>>
 	public DisjointSetTuple(LE elementBottom) {
 		super();
 		this.representatives = Collections.emptyMap();
-		this.tuple = new TupleLatticeElement<K, LE>(elementBottom, elementBottom);
+		this.ops = new TupleLatticeOperations<K, LE>(
+				LatticeElementOps.create(elementBottom),
+				elementBottom);
+		this.tuple = ops.getDefault();
 	}
 	
 	/**
 	 * Internal constructor to create a new tuple from the given structures.
 	 * @param representatives
+	 * @param ops The tuple lattice operations 
 	 * @param tuple
 	 */
-	protected DisjointSetTuple(Map<K, K> representatives, TupleLatticeElement<K, LE> tuple) {
+	protected DisjointSetTuple(Map<K, K> representatives, 
+			TupleLatticeOperations<K,LE> ops, TupleLatticeElement<K, LE> tuple) {
 		super();
 		this.representatives = Collections.unmodifiableMap(representatives);
+		this.ops = ops;
 		this.tuple = tuple;
 	}
 
@@ -115,7 +124,7 @@ public class DisjointSetTuple<K, LE extends LatticeElement<LE>>
 		newMap.put(key, key);
 		
 		// new tuple
-		TupleLatticeElement<K, LE> newTuple = tuple.copy();
+		TupleLatticeElement<K, LE> newTuple = ops.copy(tuple);
 		LE oldKeyInfo = newTuple.put(key, initialInformation);
 		if(newRep != null)
 			newTuple.put(newRep, oldKeyInfo);
@@ -141,7 +150,7 @@ public class DisjointSetTuple<K, LE extends LatticeElement<LE>>
 			
 			// new representative map and tuple
 			HashMap<K, K> newMap;
-			TupleLatticeElement<K, LE> newTuple = tuple.copy();
+			TupleLatticeElement<K, LE> newTuple = ops.copy(tuple);
 			if(key.equals(representatives.get(key))) {
 				// big problem: key was previously representative
 				// this can only happen if key and setKey are not equal
@@ -195,7 +204,7 @@ public class DisjointSetTuple<K, LE extends LatticeElement<LE>>
 					}
 				}
 
-				newTuple = tuple.copy();
+				newTuple = ops.copy(tuple);
 				// take old info out
 				LE oldKeyInfo = newTuple.remove(key);
 				if(newRep != null) 
@@ -242,7 +251,7 @@ public class DisjointSetTuple<K, LE extends LatticeElement<LE>>
 				newMap.put(k, rep1);
 		}
 		// new tuple
-		TupleLatticeElement<K, LE> newTuple = tuple.copy();
+		TupleLatticeElement<K, LE> newTuple = ops.copy(tuple);
 		newTuple.put(rep1, newTuple.get(rep1).join(newTuple.remove(rep2), node));
 		// create the new object
 		return createElement(newMap, newTuple);
@@ -256,7 +265,7 @@ public class DisjointSetTuple<K, LE extends LatticeElement<LE>>
 	 */
 	protected DisjointSetTuple<K, LE> createElement(Map<K, K> newRepresentatives, 
 			TupleLatticeElement<K, LE> newTuple) {
-		return new DisjointSetTuple<K, LE>(newRepresentatives, newTuple);
+		return new DisjointSetTuple<K, LE>(newRepresentatives, ops, newTuple);
 	}
 
 	/**
@@ -305,7 +314,7 @@ public class DisjointSetTuple<K, LE extends LatticeElement<LE>>
 		K rep = getRepresentative(key);
 		if(rep == null)
 			return singleton(key, latticeInfo);
-		TupleLatticeElement<K, LE> newTuple = tuple.copy();
+		TupleLatticeElement<K, LE> newTuple = ops.copy(tuple);
 		newTuple.put(rep, latticeInfo);
 		return createElement(representatives, newTuple);
 	}
@@ -382,7 +391,7 @@ public class DisjointSetTuple<K, LE extends LatticeElement<LE>>
 		if(other == this) return this;
 		// 0. copy data structures
 		HashMap<K, K> newMap = new HashMap<K, K>(this.representatives);
-		TupleLatticeElement<K, LE> newTuple = tuple.copy();
+		TupleLatticeElement<K, LE> newTuple = ops.copy(tuple);
 		// 1. union in sets from other
 		for(K key1 : other.representatives.keySet()) {
 			for(K key2 : other.representatives.keySet()) {

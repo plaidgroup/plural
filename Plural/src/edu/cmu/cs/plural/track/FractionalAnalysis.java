@@ -64,10 +64,10 @@ import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
-import edu.cmu.cs.crystal.flow.ITACFlowAnalysis;
+import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
-import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
+import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.states.IConstructorSignature;

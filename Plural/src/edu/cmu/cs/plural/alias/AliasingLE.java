@@ -37,6 +37,8 @@
  */
 package edu.cmu.cs.plural.alias;
 
+import static edu.cmu.cs.crystal.analysis.alias.SingleObjectAliasOps.getAliasOps;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,9 +52,9 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.bridge.LatticeElement;
-import edu.cmu.cs.crystal.tac.KeywordVariable;
-import edu.cmu.cs.crystal.tac.SourceVariable;
-import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.model.KeywordVariable;
+import edu.cmu.cs.crystal.tac.model.SourceVariable;
+import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Freezable;
 
 /**
@@ -255,7 +257,7 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 		
 		for(Map.Entry<Variable, AliasLE> thisE : this.locs.entrySet()) {
 			AliasLE otherInfo = other.get(thisE.getKey());
-			if(! thisE.getValue().atLeastAsPrecise(otherInfo, node))
+			if(! getAliasOps().atLeastAsPrecise(thisE.getValue(), otherInfo, node))
 				return false;
 		}
 		// additional elements in other don't matter : this.get returns bottom for them, which is more precise
@@ -287,7 +289,7 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 		}
 		for(Map.Entry<Variable, AliasLE> otherE : other.locs.entrySet()) {
 			if(! this.locs.containsKey(otherE.getKey()))
-				result.put(otherE.getKey(), otherE.getValue().copy());
+				result.put(otherE.getKey(), otherE.getValue());
 		}
 		
 		return result;
@@ -317,7 +319,7 @@ public final class AliasingLE implements LatticeElement<AliasingLE>, Freezable<A
 			}
 		}
 		// normal join
-		return thisInfo.copy().join(otherInfo.copy(), node);
+		return getAliasOps().join(thisInfo, otherInfo, node);
 	}
 
 	/**

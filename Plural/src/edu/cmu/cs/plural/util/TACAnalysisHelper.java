@@ -39,7 +39,7 @@ package edu.cmu.cs.plural.util;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
-import edu.cmu.cs.crystal.tac.ThisVariable;
+import edu.cmu.cs.crystal.tac.model.ThisVariable;
 
 /**
  * @author Kevin Bierhoff

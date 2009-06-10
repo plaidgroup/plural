@@ -40,8 +40,8 @@ package edu.cmu.cs.plural.alias;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.crystal.tac.IVariableVisitor;
-import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.model.IVariableVisitor;
+import edu.cmu.cs.crystal.tac.model.Variable;
 
 /**
  * @author Kevin Bierhoff

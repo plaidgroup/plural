@@ -53,7 +53,7 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.FractionalPermission;

@@ -40,8 +40,8 @@ package edu.cmu.cs.plural.track;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 
-import edu.cmu.cs.crystal.tac.IVariableVisitor;
-import edu.cmu.cs.crystal.tac.Variable;
+import edu.cmu.cs.crystal.tac.model.IVariableVisitor;
+import edu.cmu.cs.crystal.tac.model.Variable;
 
 /**
  * You probably shouldn't be using this class... 

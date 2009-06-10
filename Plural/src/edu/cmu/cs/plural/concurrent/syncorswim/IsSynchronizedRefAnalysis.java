@@ -58,8 +58,8 @@ import org.eclipse.jdt.core.dom.SynchronizedStatement;
 import org.eclipse.jdt.core.dom.ThisExpression;
 
 import edu.cmu.cs.crystal.IAnalysisInput;
-import edu.cmu.cs.crystal.tac.Variable;
 import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
+import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.Utilities;
