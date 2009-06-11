@@ -292,7 +292,7 @@ public class HistoryView extends ViewPart implements ISelectionListener, ISelect
 			MultiCaseHistoryTree graph = new MultiCaseHistoryTree();
 			for( IInvocationCase case_ : sig.cases() ) {
 				boolean requiresSeparateVirtualCheck = case_.isVirtualFrameSpecial();
-				if( requiresSeparateVirtualCheck ) {
+				if( !requiresSeparateVirtualCheck ) {
 					Pair<HistoryNode, SingleCaseHistoryTree> pair =
 						analyzeCase(method_decl, sig, case_, null, input, analysis_type, stateSpaceRepository);
 					HistoryRoot root = HistoryRoot.noSeparateCaseRoot(pair.fst(), case_.toString());
