@@ -156,4 +156,12 @@ class HistoryNode {
 	public DisplayLinearContext getContext(int index) {
 		return this.contexts.get(index);
 	}
+
+	@Override
+	public String toString() {
+		// toString for this class is meant to merely
+		// indicate why a particular choice was created.
+		// The ChoiceID will contain this information.
+		return id.toString();
+	}	
 }

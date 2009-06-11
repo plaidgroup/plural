@@ -55,12 +55,7 @@ public class FalseContext implements LinearContext {
 
 	private final ChoiceID parentChoiceID;
 	private final ChoiceID choiceID;
-	
-	public FalseContext(ChoiceID parentChoiceID) {
-		this.parentChoiceID = parentChoiceID;
-		this.choiceID = new ChoiceID();
-	}
-	
+		
 	public FalseContext(ChoiceID parentChoiceID, ChoiceID choiceID) {
 		this.parentChoiceID = parentChoiceID;
 		this.choiceID = choiceID;

@@ -66,8 +66,8 @@ public final class ContextChoiceLE implements LinearContext {
 		return new ContextChoiceLE(elements);
 	}
 
-	private static final ChoiceID CHOICE_CHOICE_ID = new ChoiceID();
-	private static final ChoiceID CHOICE_PARENT_ID = new ChoiceID();
+	private static final ChoiceID CHOICE_CHOICE_ID = ChoiceID.choiceID();
+	private static final ChoiceID CHOICE_PARENT_ID = ChoiceID.choiceID();
 	
 	private ContextChoiceLE() {
 		this.elements = new LinkedHashSet<LinearContext>();

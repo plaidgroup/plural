@@ -50,14 +50,27 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Nels E. Beckman
  * @since May 29, 2009
  */
-public final class ChoiceID implements Comparable<ChoiceID> {
+public class ChoiceID implements Comparable<ChoiceID> {
 
 	private static final AtomicLong ID_GENERATOR = new AtomicLong(0L);
 	
 	private final long id;
-	
-	public ChoiceID() {
+		
+	private ChoiceID() {
 		id = ID_GENERATOR.incrementAndGet();
+	}
+	
+	public static ChoiceID choiceID() {
+		return new ChoiceID();
+	}
+	
+	public static ChoiceID choiceID(final String purpose) {
+		return new ChoiceID() {
+			@Override
+			public String toString() {
+				return purpose;
+			}
+		};
 	}
 	
 	@Override
