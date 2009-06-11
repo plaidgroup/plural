@@ -424,13 +424,15 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		// TODO try state combinations for states from different dimensions
 		LinkedHashSet<LinearContext> resultElems = new LinkedHashSet<LinearContext>();
 		for(String n : statesWorthTrying) {
-			TensorPluralTupleLE elem = this.mutableCopy();
+			TensorContext elem_ctx = curContext.mutableCopy();
+			TensorPluralTupleLE elem = elem_ctx.getTuple();
 			elem.storeIdenticalAliasInfo(this);
-			PackingResult pack_result = elem.packReceiver(curContext, rcvrVar, stateRepo, locs, Collections.singleton(n));
+			PackingResult pack_result = elem.packReceiver(elem_ctx, rcvrVar, stateRepo, locs, Collections.singleton(n));
 			if(pack_result.worked()) {
 				// could check for satisfiability here
 				// New choice ID for each packed direction.
-				resultElems.add(TensorContext.tensor(elem, parentID, new ChoiceID()));
+				resultElems.add(TensorContext.tensor(elem, parentID, 
+						ChoiceID.choiceID("Choosing to pack to " + n)));
 			}
 		}
 		return ContextChoiceLE.choice(resultElems);
@@ -465,7 +467,8 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 		LinkedHashSet<LinearContext> resultElems = new LinkedHashSet<LinearContext>();
 		if(includeOriginal) {
 			// Every choice in the tuple starts a new choice path
-			resultElems.add(ContextFactory.tensor(this, choiceID, new ChoiceID()));
+			resultElems.add(ContextFactory.tensor(this, choiceID, 
+					ChoiceID.choiceID("Choosing to not unpack.")));
 		}
 		
 		StateSpace rcvr_space = stateRepo.getStateSpace(rcvrVar.resolveType());
@@ -515,7 +518,8 @@ public class TensorPluralTupleLE extends PluralTupleLatticeElement {
 					if(elem.get(rcvr_loc).getConstraints().seemsConsistent()) {
 						// could check for satisfiability here
 						// A new choice path starts here!
-						resultElems.add(TensorContext.tensor(elem, choiceID, new ChoiceID()));
+						resultElems.add(TensorContext.tensor(elem, choiceID, 
+								ChoiceID.choiceID("Choosing to unpack to root " + try_node)));
 					}
 				}
 			}

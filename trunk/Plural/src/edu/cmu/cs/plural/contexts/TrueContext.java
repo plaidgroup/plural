@@ -56,12 +56,7 @@ public class TrueContext implements LinearContext {
 
 	private final ChoiceID parentChoiceID;
 	private final ChoiceID choiceID;
-	
-	public TrueContext(ChoiceID parentChoiceID) {
-		this.parentChoiceID = parentChoiceID;
-		this.choiceID = new ChoiceID();
-	}
-	
+		
 	public TrueContext(ChoiceID parentChoiceID, ChoiceID choiceID) {
 		this.parentChoiceID = parentChoiceID;
 		this.choiceID = choiceID;

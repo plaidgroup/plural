@@ -122,7 +122,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		if(c.isVoid())
 			// void can prove anything: start with false
 			// New choice ids for both the parent and the new context, when we are creating an LE
-			return Pair.create(ContextFactory.falseContext(new ChoiceID(), new ChoiceID()), vars);
+			return Pair.create(ContextFactory.falseContext(ChoiceID.choiceID(), ChoiceID.choiceID()), vars);
 		
 		if(!Modifier.isStatic(tacContext.getAnalyzedMethod().getModifiers())) {
 			// issue #61: make the receiver non-null
@@ -132,7 +132,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		}
 
 		// New choice ids for both the parent and the new context, when we are creating an LE
-		return Pair.create(ContextFactory.tensor(tuple, new ChoiceID(), new ChoiceID()), vars);
+		return Pair.create(ContextFactory.tensor(tuple, ChoiceID.choiceID(), ChoiceID.choiceID()), vars);
 	}
 	
 	/**
@@ -190,7 +190,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		if(c.isVoid())
 			// void can prove anything: start with false
 			// New choice ids for both the parent and the new context, when we are creating an LE
-			return Pair.create(ContextFactory.falseContext(new ChoiceID(), new ChoiceID()), vars);
+			return Pair.create(ContextFactory.falseContext(ChoiceID.choiceID(), ChoiceID.choiceID()), vars);
 		
 		addUnpackedReceiver(tuple, this_loc,
 				fractContext.getRepository().getStateSpace(receiverVar.resolveType()));
@@ -198,7 +198,7 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		tuple.addNonNullVariable(this_loc);
 		
 		// New choice ids for both the parent and the new context, when we are creating an LE
-		return Pair.create(ContextFactory.tensor(tuple, new ChoiceID(), new ChoiceID()), vars);
+		return Pair.create(ContextFactory.tensor(tuple, ChoiceID.choiceID(), ChoiceID.choiceID()), vars);
 	}
 	
 	private static void addUnpackedReceiver(TensorPluralTupleLE value,

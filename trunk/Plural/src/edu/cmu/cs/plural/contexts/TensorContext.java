@@ -182,7 +182,7 @@ public class TensorContext implements LinearContext {
 				if( other.choiceID.equals(choiceID) )
 					new_choice_id = choiceID;
 				else
-					new_choice_id = new ChoiceID();
+					new_choice_id = ChoiceID.choiceID("New choice as a result of a merge.");
 				
 				// Parent choice ID
 				ChoiceID parent_choice_id;
