@@ -109,8 +109,9 @@ public enum MethodCheckingKind {
 		case CONSTRUCTOR_IMPL_CUR_NOT_VIRTUAL:
 			return isVirtualPermission;
 		case METHOD_IMPL_CUR_IS_VIRTUAL:
-		case CONSTRUCTOR_IMPL_CUR_IS_VIRTUAL:
 			return true;
+		case CONSTRUCTOR_IMPL_CUR_IS_VIRTUAL:
+			return false;
 		default:
 			return Utilities.nyi("Impossible!");
 		}
