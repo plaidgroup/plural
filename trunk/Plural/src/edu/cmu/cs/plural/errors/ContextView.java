@@ -47,7 +47,10 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.part.ViewPart;
 
+import edu.cmu.cs.plural.contexts.FalseContext;
 import edu.cmu.cs.plural.contexts.LinearContext;
+import edu.cmu.cs.plural.contexts.TensorContext;
+import edu.cmu.cs.plural.contexts.TrueContext;
 import edu.cmu.cs.plural.errors.history.DisplayLinearContext;
 import edu.cmu.cs.plural.errors.history.HistoryView;
 import edu.cmu.cs.plural.errors.history.ResultingDisplayTree;
@@ -84,12 +87,35 @@ public class ContextView extends ViewPart implements ISelectionListener {
 		//return str.replace("<", "&lt;").replace(">", "&gt").replace("&", "&amp;");
 	}
 	
+	/** Return an HTML string describing whether or not the given context is
+	 *  satisfiable. */
+	private static String satisfiableString(LinearContext ctx) {
+		if( ctx instanceof TensorContext ) {
+			TensorContext t_ctx = (TensorContext)ctx;
+			if( t_ctx.getTuple().isUnsatisfiable() )
+				return "<div style=\"color:red;\">YES</div>";
+			else 
+				return "No";
+		}
+		else if( ctx instanceof FalseContext ) {
+			return "<div style=\"color:red;\">YES</div>";
+		}
+		else if( ctx instanceof TrueContext ) {
+			return "No";
+		}
+		else {
+			return "Unknown context type";
+		}
+	}
+	
 	private static String createDisplayString(DisplayLinearContext dctx) {
 		LinearContext ctx = dctx.getContext();
+		
 		String result = "<b>Context:</b> " + System.identityHashCode(ctx) + "<br>" +
 		    "<b>Location:</b> " + scrub(dctx.getLocation().toString()) + "<br>" +
 			"<b>Type:</b> " + scrub(ctx.getClass().toString()) + "<br>" +
 			"<b>Choice ID: </b>" + ctx.getChoiceID() + "<br>" +
+			"<b>Unsatisfiable: </b>" + satisfiableString(ctx) + "<br>" +
 			"<b>Permissions: </b>" + scrub(ctx.getHumanReadablePerms()) +"<br>" + 
 			"<b>Concrete State Information: </b> ...<br>";
 		
@@ -98,6 +124,8 @@ public class ContextView extends ViewPart implements ISelectionListener {
 	
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection selection_) {
+		// Lots of ifs just to see if the thing selected was a linear context
+		// to be displayed.
 		if( part instanceof HistoryView ) {
 			if( selection_ instanceof ITreeSelection ) {
 				ITreeSelection selection = (ITreeSelection)selection_;
