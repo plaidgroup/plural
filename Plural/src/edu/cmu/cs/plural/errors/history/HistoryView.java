@@ -190,8 +190,13 @@ public class HistoryView extends ViewPart implements ISelectionListener, ISelect
 				return new MethodHolder((IMethod) element);
 			else if( element instanceof PluralAnalyses )
 				return treeViewer.getInput();
-			else if( element instanceof ResultingDisplayTree ) 
-				return ((ResultingDisplayTree)element).getParent().unwrap();
+			else if( element instanceof ResultingDisplayTree ) {
+				ResultingDisplayTree display_tree = (ResultingDisplayTree)element;
+				if( display_tree.getParent().isNone() ) // same as element instanceof PluralAnalyses
+					return treeViewer.getInput();
+				else
+					return display_tree.getParent().unwrap();
+			}
 			else
 				return null;
 		}
