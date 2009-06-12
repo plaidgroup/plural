@@ -50,8 +50,8 @@ import edu.cmu.cs.plural.annot.PluralAnalysis;
  * @since Jun 10, 2009
  *
  */
-//@PassingTest
-//@UseAnalyses(PluralAnalysis.PLURAL)
+@PassingTest
+@UseAnalyses(PluralAnalysis.PLURAL)
 public class ConstructorVirtualPermsTest {
 	
 	@Full
