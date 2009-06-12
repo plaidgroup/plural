@@ -47,23 +47,23 @@ import edu.cmu.cs.plural.annot.Unique;
 import edu.cmu.cs.plural.annot.Use;
 
 @ClassStates({@State(name="HasInv", inv="full(list)"),
-	          @State(name="NoInv1"),
-	          @State(name="NoInv2")})
+	          @State(name="NoInv1", inv="pure(list)"),
+	          @State(name="NoInv2", inv="pure(list)")})
 public class SimpleMultiChoice {
 
 	List<String> list;
+	
+	@Full(ensures="HasInv", use=Use.FIELDS)
+	void bar(@Pure(returned=false) List<String> someCrappyList) {
+		list = someCrappyList;
+		forcePack();
+	}
 	
 	@Unique(ensures="HasInv", use=Use.FIELDS)
 	void foo(@Pure List<String> someCrappyList) {
 		this.list = someCrappyList;
 		forcePack();
 	}
-	
-	@Full(ensures="HasInv", use=Use.FIELDS)
-	void bar(@Pure List<String> someCrappyList) {
-		list = someCrappyList;
-		forcePack();
-	}
-	
+		
 	static void forcePack() {}
 }
