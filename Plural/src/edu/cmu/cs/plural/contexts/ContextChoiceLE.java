@@ -45,6 +45,7 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.plural.errors.ChoiceID;
+import edu.cmu.cs.plural.errors.JoiningChoices;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
@@ -296,15 +297,23 @@ public final class ContextChoiceLE implements LinearContext {
 	//
 
 	@Override
-	public LinearContext join(LinearContext other, ASTNode node) {
+	public LinearContext join(LinearContext other, ASTNode node, JoiningChoices jc) {
 		this.freeze();
 		if(other == this)
 			return this;
 		other.freeze();
 		
 		LinkedHashSet<LinearContext> newElems = new LinkedHashSet<LinearContext>(getElements().size());
+		
+		// This crazy enum check helps us to figure out if we are joining two
+		// choice contexts over all.
+		JoiningChoices new_jc = jc.equals(JoiningChoices.NOT_JOINING_CHOICES) ?
+				JoiningChoices.MAYBE_JOINING_CHOICES : 
+					(jc.equals(JoiningChoices.MAYBE_JOINING_CHOICES) ? 
+							JoiningChoices.JOINING_CHOICES : JoiningChoices.JOINING_CHOICES);
+		
 		for(LinearContext e : getElements()) {
-			newElems.add(e.join(other, node));
+			newElems.add(e.join(other, node, new_jc));
 		}
 		return create(newElems);
 	}

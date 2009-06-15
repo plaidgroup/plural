@@ -41,6 +41,7 @@ package edu.cmu.cs.plural.contexts;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.plural.errors.ChoiceID;
+import edu.cmu.cs.plural.errors.JoiningChoices;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
@@ -105,7 +106,7 @@ public class FalseContext implements LinearContext {
 	}
 
 	@Override
-	public LinearContext join(LinearContext other, ASTNode node) {
+	public LinearContext join(LinearContext other, ASTNode node, JoiningChoices jc) {
 		this.freeze();
 		if(other == this)
 			return this;
