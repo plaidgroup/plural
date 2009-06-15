@@ -67,6 +67,7 @@ import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
 import edu.cmu.cs.plural.errors.ChoiceID;
+import edu.cmu.cs.plural.errors.JoiningChoices;
 import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionConstraint;
@@ -208,7 +209,8 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		if(this.isBottom())
 			return other;
 		assert this.op == other.op;
-		return new PluralContext(this.le.join(other.le, node).compact(node, true), op);
+		return new PluralContext(this.le.join(other.le, node, 
+				JoiningChoices.NOT_JOINING_CHOICES).compact(node, true), op);
 	}
 
 	/* (non-Javadoc)

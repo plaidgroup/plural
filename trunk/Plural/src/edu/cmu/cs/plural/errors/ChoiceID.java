@@ -120,8 +120,23 @@ public class ChoiceID implements Comparable<ChoiceID> {
 			
 	}
 
+	/**
+	 * Returns the older, or more recent of two given choice IDs or the
+	 * second one if they are both the same.
+	 */
+	public static ChoiceID older(ChoiceID first, ChoiceID second) {
+		int compareTo = first.compareTo(second);
+		if( compareTo < 0 )
+			return second;
+		else if( compareTo == 0 )
+			return second;
+		else
+			return first;
+
+	}	
+	
 	@Override
 	public String toString() {
 		return "Choice ID: " + this.id;
-	}	
+	}
 }

@@ -40,8 +40,10 @@ package edu.cmu.cs.plural.contexts;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.bridge.LatticeElement;
+import edu.cmu.cs.crystal.util.Copyable;
 import edu.cmu.cs.crystal.util.Freezable;
 import edu.cmu.cs.plural.errors.ChoiceID;
+import edu.cmu.cs.plural.errors.JoiningChoices;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
@@ -50,7 +52,7 @@ import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
  * @author Kevin Bierhoff
  * @since 4/16/2008
  */
-public interface LinearContext extends LatticeElement<LinearContext>, Freezable<LinearContext>{
+public interface LinearContext extends /*LatticeElement<LinearContext>,*/ Copyable<LinearContext>, Freezable<LinearContext>{
 	
 	/**
 	 * Double-dispatch on the given visitor.  Concrete implementations
@@ -85,6 +87,18 @@ public interface LinearContext extends LatticeElement<LinearContext>, Freezable<
 	 */
 	public boolean atLeastAsPrecise(TensorPluralTupleLE other, ASTNode node);
 
+	/**
+	 * Joins two lattices.
+	 * @param jc Use to determine whether or not we are joining multiple choices.
+	 */
+	public LinearContext join(LinearContext other, ASTNode node, JoiningChoices jc);
+	
+	/**
+	 * Checks to see if this linear context is at least as precise
+	 * as the other one.
+	 */
+	public boolean atLeastAsPrecise(LinearContext other, ASTNode node);	
+	
 	/**
 	 * What is this choice ID of this object? In other words, assuming that
 	 * this context is one branch of a choice, what is the unique id of that

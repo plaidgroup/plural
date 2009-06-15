@@ -42,6 +42,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.errors.ChoiceID;
+import edu.cmu.cs.plural.errors.JoiningChoices;
 
 /**
  * A context that is the result of a failed attempt to pack!
@@ -92,7 +93,7 @@ public class FailingPackContext extends TrueContext {
 	}
 
 	@Override
-	public LinearContext join(LinearContext other, ASTNode node) {
+	public LinearContext join(LinearContext other, ASTNode node, JoiningChoices jc) {
 		if( other instanceof FailingPackContext ) {
 			if( !this.equals(other) )
 				return Utilities.nyi("I wasn't ready for this.");
@@ -100,7 +101,7 @@ public class FailingPackContext extends TrueContext {
 				return this;
 		}
 		else {
-			return super.join(other, node);
+			return super.join(other, node, jc);
 		}
 	}
 

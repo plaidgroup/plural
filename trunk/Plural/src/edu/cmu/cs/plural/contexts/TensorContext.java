@@ -43,6 +43,7 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.cmu.cs.plural.errors.ChoiceID;
+import edu.cmu.cs.plural.errors.JoiningChoices;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 
 /**
@@ -155,7 +156,8 @@ public class TensorContext implements LinearContext {
 	}
 
 	@Override
-	public LinearContext join(LinearContext other, final ASTNode node) {
+	public LinearContext join(LinearContext other, final ASTNode node, 
+			final JoiningChoices jc) {
 		this.freeze();
 		if(this == other)
 			return this;
@@ -178,13 +180,14 @@ public class TensorContext implements LinearContext {
 				result.freeze();
 				
 				// Choice ID
-				if( other.choiceID.equals(choiceID) ) {
+				if( !jc.equals(JoiningChoices.JOINING_CHOICES) ) {
 					return tensor(result, parentChoiceID, choiceID);
 				}
 				else {
 					String purpose = "New choice as a result of a merge. (" + 
 						choiceID + " and " + other.choiceID + " at node " + node + ".)";
 					ChoiceID new_choice_id = ChoiceID.choiceID(purpose);
+					//ChoiceID new_parent_id = ChoiceID.older( choiceID, other.choiceID );
 					return tensor(result, choiceID, new_choice_id);
 				}
 			}
