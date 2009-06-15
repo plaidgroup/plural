@@ -1,6 +1,8 @@
 package edu.cmu.cs.syncorswim.blockingqueue;
 
 
+import java.util.NoSuchElementException;
+
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.FalseIndicates;
 import edu.cmu.cs.plural.annot.Full;
@@ -115,62 +117,67 @@ public class Blocking_queue
 		enqueue( new_element );
 		reject_enqueue_requests = true;
 	}															//#final.end
-	//
-	//	/*******************************************************************
-	//	 *	Dequeues an element; blocks if the queue is empty
-	//	 *	(until something is enqueued). Be careful of nested-monitor
-	//	 *  lockout if you call this function. You must ensure that
-	//	 *	there's a way to get something into the queue that does
-	//	 *  not involve calling a synchronized method of whatever
-	//	 *  class is blocked, waiting to dequeue something. A timeout is
-	//	 *	not supported because of a potential race condition (see text).
-	//	 *  You can {@link Thread#interrupt interrupt} the dequeueing thread
-	//	 *  to break it out of a blocked dequeue operation, however.
-	//	 *
-	//	 *  @see #enqueue
-	//	 *  @see #drain
-	//	 *  @see #nonblocking_dequeue
-	//	 *	@return the dequeued object or null if the wait timed out and
-	//	 *			nothing was dequeued.
-	//	 */
-	//	@Perm(requires="share(this!fr,STRUCTURE) * pure(this!fr,PROTOCOL) in OPEN",
-	//	      ensures="share(this!fr,STRUCTURE) * pure(this!fr,PROTOCOL)")
-	//	public synchronized final Object dequeue( ) 
-	//									throws InterruptedException, Closed
-	//	{	
-	//		if( closed )
-	//			throw new Closed();
-	//		try
-	//		{	
-	//			// If the queue is empty, wait. I've put the spin lock inside
-	//			// an if so that the waiting_threads count doesn't jitter
-	//			// while inside the spin lock. A thread is not considered to
-	//			// be done waiting until it's actually acquired an element
-	//
-	//			if( elements.size() <= 0 )
-	//			{	++waiting_threads;
-	//				while( elements.size() <= 0 )
-	//				{	wait();						//#wait
-	//					if( closed )
-	//					{	--waiting_threads;
-	//						throw new Closed();
-	//					}
-	//				}
-	//				--waiting_threads;
-	//			}
-	//
-	//			Object head = elements.removeFirst();
-	//
-	//			if( elements.size() == 0 && reject_enqueue_requests )
-	//				close(); // just removed final item, close the queue.
-	//
-	//			return head;
-	//		}
-	//		catch( NoSuchElementException e )	// Shouldn't happen
-	//		{	throw new Error(
-	//					"Internal error (com.holub.asynch.Blocking_queue)");
-	//		}
-	//	}
+
+	/*******************************************************************
+	 *	Dequeues an element; blocks if the queue is empty
+	 *	(until something is enqueued). Be careful of nested-monitor
+	 *  lockout if you call this function. You must ensure that
+	 *	there's a way to get something into the queue that does
+	 *  not involve calling a synchronized method of whatever
+	 *  class is blocked, waiting to dequeue something. A timeout is
+	 *	not supported because of a potential race condition (see text).
+	 *  You can {@link Thread#interrupt interrupt} the dequeueing thread
+	 *  to break it out of a blocked dequeue operation, however.
+	 *
+	 *  @see #enqueue
+	 *  @see #drain
+	 *  @see #nonblocking_dequeue
+	 *	@return the dequeued object or null if the wait timed out and
+	 *			nothing was dequeued.
+	 */
+//	@Perm(requires="share(this!fr,STRUCTURE) * pure(this!fr,PROTOCOL) in OPEN",
+//			ensures="share(this!fr,STRUCTURE) * pure(this!fr,PROTOCOL)")
+			
+	@Share(guarantee="STRUCTURE", use=Use.DISP_FIELDS)
+	@Pure( guarantee="PROTOCOL",  requires="STILLOPEN", use=Use.DISPATCH)
+			public synchronized final Object dequeue( ) 
+	throws InterruptedException, Closed
+	{	
+//		if( closed )
+//			throw new Closed();
+		try
+		{	
+			// If the queue is empty, wait. I've put the spin lock inside
+			// an if so that the waiting_threads count doesn't jitter
+			// while inside the spin lock. A thread is not considered to
+			// be done waiting until it's actually acquired an element
+
+//			if( elements.size() <= 0 )
+//			{	++waiting_threads;
+//			while( elements.size() <= 0 )
+//			{	wait();						//#wait
+//			if( closed )
+//			{	--waiting_threads;
+//			throw new Closed();
+//			}
+//			}
+//			--waiting_threads;
+//			}
+
+			Object head = elements.removeFirst();
+
+			if( /* elements.size()  == 0 &&  */ reject_enqueue_requests ) {
+				this.reject_enqueue_requests = false;
+				close(); // just removed final item, close the queue.
+			}
+
+			return head;
+		}
+		catch( NoSuchElementException e )	// Shouldn't happen
+		{	throw new Error(
+		"Internal error (com.holub.asynch.Blocking_queue)");
+		}
+	}
 
 	/*******************************************************************
 	 *	The is_empty() method is inherently unreliable in a
