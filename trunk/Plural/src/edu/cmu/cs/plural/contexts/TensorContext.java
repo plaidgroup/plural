@@ -178,20 +178,15 @@ public class TensorContext implements LinearContext {
 				result.freeze();
 				
 				// Choice ID
-				ChoiceID new_choice_id;
-				if( other.choiceID.equals(choiceID) )
-					new_choice_id = choiceID;
-				else
-					new_choice_id = ChoiceID.choiceID("New choice as a result of a merge.");
-				
-				// Parent choice ID
-				ChoiceID parent_choice_id;
-				if( other.parentChoiceID.equals(parentChoiceID) )
-					parent_choice_id = parentChoiceID;
-				else
-					parent_choice_id = ChoiceID.younger(choiceID, other.choiceID);
-				
-				return tensor(result, parent_choice_id, new_choice_id);
+				if( other.choiceID.equals(choiceID) ) {
+					return tensor(result, parentChoiceID, choiceID);
+				}
+				else {
+					String purpose = "New choice as a result of a merge. (" + 
+						choiceID + " and " + other.choiceID + " at node " + node + ".)";
+					ChoiceID new_choice_id = ChoiceID.choiceID(purpose);
+					return tensor(result, choiceID, new_choice_id);
+				}
 			}
 			
 			@Override
