@@ -195,7 +195,8 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 			
 			
 			return new IMethodCaseInstance() {
-
+				@Override public String toString() { return MultiMethodCase.this.toString(); }
+				
 				@Override
 				public PredicateMerger getPostconditionMerger() {
 					assert ! forAnalyzingBody : "Did not request case instance for checking call site";

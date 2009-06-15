@@ -623,7 +623,8 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 					return op.handleMethodCall(instr, 
 							le, // need not copy the tuple
 							singleCase, 
-							failFast);
+							failFast, 
+							false);
 				}
 				else {
 					Set<LinearContext> choices = new LinkedHashSet<LinearContext>(caseCount); 
@@ -634,7 +635,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 						choices.add(op.handleMethodCall(instr, 
 								context_copy, 
 								prePost,
-								failFast));
+								failFast, true));
 					}
 					return ContextFactory.choice(choices);
 				}
@@ -669,7 +670,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 					return op.handleNewObject(instr,
 							le, // need not copy the tuple
 							singleCase, 
-							failFast);
+							failFast, false);
 				}
 				else {
 					Set<LinearContext> choices = new LinkedHashSet<LinearContext>(caseCount); 
@@ -680,7 +681,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 						choices.add(op.handleNewObject(instr,
 								context_copy, 
 								prePost, 
-								failFast));
+								failFast, true));
 					}
 					return ContextFactory.choice(choices);
 				}
@@ -712,7 +713,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 					return op.handleConstructorCall(instr,
 							le, // need not copy the tuple
 							singleCase,
-							failFast);
+							failFast, false);
 				}
 				else {
 					Set<LinearContext> choices = new LinkedHashSet<LinearContext>(cases.size()); 
@@ -723,7 +724,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 						choices.add(op.handleConstructorCall(instr,
 								context_copy, 
 								prePost,
-								failFast));
+								failFast, true));
 					}
 					return ContextFactory.choice(choices);
 				}

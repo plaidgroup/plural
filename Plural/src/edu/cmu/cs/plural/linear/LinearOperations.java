@@ -76,6 +76,7 @@ import edu.cmu.cs.plural.contexts.ContextFactory;
 import edu.cmu.cs.plural.contexts.LinearContext;
 import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TensorPluralTupleLE;
+import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.AbstractFractionalPermission;
 import edu.cmu.cs.plural.fractions.Fraction;
@@ -124,11 +125,12 @@ public class LinearOperations extends TACAnalysisHelper {
 	/**
 	 * Applies the given case of the given method call to the given tuple.
 	 * @param instr
-	 * @param value Must be mutable.
 	 * @param sigCase Must be an instance for checking the call.
 	 * @param failFast When <code>true</code>, unsatisfiable predicates are detected
 	 * and lead to {@link ContextFactory#trueContext() false}.  Otherwise, predicates
 	 * are not checked and permissions simply split.
+	 * @param isCaseChoice TODO
+	 * @param value Must be mutable.
 	 * @return The resulting context, possibly containing multiple tuples or
 	 * {@link ContextFactory#trueContext() false}.
 	 */
@@ -136,7 +138,7 @@ public class LinearOperations extends TACAnalysisHelper {
 			final MethodCallInstruction instr,
 			final TensorContext current_context,
 			final IMethodCaseInstance sigCase,
-			boolean failFast) {
+			boolean failFast, final boolean isCaseChoice) {
 		// create parameter map suitable for method call
 		final TensorPluralTupleLE value = current_context.getTuple();
 		final SimpleMap<String, Aliasing> paramMap = createParameterMap(
@@ -161,7 +163,7 @@ public class LinearOperations extends TACAnalysisHelper {
 				@Override
 				public LinearContext context(TensorContext le) {
 					return handleInvocation(instr, le, 
-							sigCase, failFaster, paramMap);
+							sigCase, failFaster, paramMap, isCaseChoice);
 				}
 			});
 		}
@@ -171,17 +173,18 @@ public class LinearOperations extends TACAnalysisHelper {
 			//   will just fail if super-frame permission missing
 			//   super is mapped to alive, so any unpacked node will do
 			//   no need to check like in handleFieldAccess
-			return handleInvocation(instr, current_context, sigCase, failFast, paramMap);
+			return handleInvocation(instr, current_context, sigCase, failFast, paramMap, isCaseChoice);
 	}
 	
 	/**
 	 * Applies the given case of the given <code>new</code> instruction to the given tuple.
 	 * @param instr
-	 * @param value Must be mutable.
 	 * @param sigCase Must be an instance for checking the call.
 	 * @param failFast When <code>true</code>, unsatisfiable predicates are detected
 	 * and lead to {@link ContextFactory#trueContext() false}.  Otherwise, predicates
 	 * are not checked and permissions simply split.
+	 * @param isCaseChoice Is this one branch of a case? Must we create a new choice ID?
+	 * @param value Must be mutable.
 	 * @return The resulting context, possibly containing multiple tuples or
 	 * {@link ContextFactory#trueContext() false}.
 	 */
@@ -189,7 +192,7 @@ public class LinearOperations extends TACAnalysisHelper {
 			NewObjectInstruction instr,
 			TensorContext cur_context,
 			IConstructorCaseInstance sigCase,
-			boolean failFast) {
+			boolean failFast, boolean isCaseChoice) {
 		// create parameter map suitable for "new"
 		TensorPluralTupleLE value = cur_context.getTuple();
 		final Aliasing target_loc = value.getLocationsAfter(instr, instr.getTarget());
@@ -198,17 +201,18 @@ public class LinearOperations extends TACAnalysisHelper {
 				target_loc, // target is receiver
 				target_loc, // target is receiver
 				null);	// no result
-		return handleInvocation(instr, cur_context, sigCase, failFast, paramMap);
+		return handleInvocation(instr, cur_context, sigCase, failFast, paramMap, isCaseChoice);
 	}
 
 	/**
 	 * Applies the given case of the given constructor call to the given tuple.
 	 * @param instr
-	 * @param value Must be mutable.
 	 * @param sigCase Must be an instance for checking the call.
 	 * @param failFast When <code>true</code>, unsatisfiable predicates are detected
 	 * and lead to {@link ContextFactory#trueContext() false}.  Otherwise, predicates
 	 * are not checked and permissions simply split.
+	 * @param isCaseChoice Is this a new case? Must we introduce a new choice ID?
+	 * @param value Must be mutable.
 	 * @return The resulting context, possibly containing multiple tuples or
 	 * {@link ContextFactory#trueContext() false}.
 	 */
@@ -216,28 +220,31 @@ public class LinearOperations extends TACAnalysisHelper {
 			ConstructorCallInstruction instr,
 			TensorContext cur_context,
 			IConstructorCaseInstance sigCase,
-			boolean failFast) {
+			boolean failFast, boolean isCaseChoice) {
 		// create parameter map suitable for constructor invocation
 		final SimpleMap<String, Aliasing> paramMap = createParameterMap(
 				instr, cur_context.getTuple(), 
 				instr.getConstructionObject(),	 
 				null); // no result
-		return handleInvocation(instr, cur_context, sigCase, failFast, paramMap);
+		return handleInvocation(instr, cur_context, sigCase, failFast, paramMap, isCaseChoice);
 	}
 
 	/**
 	 * Applies the given case of the given invocation to the given tuple.
 	 * @param instr
-	 * @param value
 	 * @param sigCase
 	 * @param failFast
 	 * @param paramMap
+	 * @param isCaseChoice Is this on of many case choices? E.g., are we creating
+	 * a new choice?
+	 * @param value
 	 * @return The resulting context, possibly containing multiple tuples or
 	 * {@link ContextFactory#trueContext() false}.
 	 */
 	private LinearContext handleInvocation(final TACInvocation instr,
 			final TensorContext cur_context, final IInvocationCaseInstance sigCase,
-			boolean failFast, final SimpleMap<String, Aliasing> paramMap) {
+			boolean failFast, final SimpleMap<String, Aliasing> paramMap, 
+			final boolean isCaseChoice) {
 		
 		TensorPluralTupleLE value = cur_context.getTuple();
 		
@@ -263,10 +270,13 @@ public class LinearOperations extends TACAnalysisHelper {
 						instr.getNode(), tuple, borrowedPerms);
 				post.mergeInPredicate(paramMap, merger);
 				
+				ChoiceID parent_id = isCaseChoice ? tensor.getChoiceID() : tensor.getParentChoiceID();
+				ChoiceID new_id = isCaseChoice ? ChoiceID.choiceID("Choice for case " + sigCase) : tensor.getChoiceID();
+				
 				if(merger.isVoid())
-					return ContextFactory.falseContext(tensor.getParentChoiceID(), tensor.getChoiceID());
+					return ContextFactory.falseContext(parent_id, new_id);
 				else
-					return ContextFactory.tensor(tuple, tensor.getParentChoiceID(), tensor.getChoiceID());
+					return ContextFactory.tensor(tuple, parent_id, new_id);
 			}
 			
 		};
@@ -295,8 +305,8 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * result variables.
 	 * @see #createNodeArgumentMap(ASTNode, TensorPluralTupleLE, Variable, List)
 	 * creating AST-based maps for checkers
-	 * @see #handleMethodCall(MethodCallInstruction, TensorContext, IMethodCaseInstance, boolean)
-	 * @see #handleConstructorCall(ConstructorCallInstruction, TensorPluralTupleLE, IConstructorCaseInstance, boolean)
+	 * @see #handleMethodCall(MethodCallInstruction, TensorContext, IMethodCaseInstance, boolean, boolean)
+	 * @see #handleConstructorCall(ConstructorCallInstruction, TensorPluralTupleLE, IConstructorCaseInstance, boolean, boolean)
 	 */
 	private SimpleMap<String, Aliasing> createParameterMap(
 			final TACInvocation instr,
@@ -331,7 +341,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @param result May be <code>null</code>.
 	 * @return a aliasing map for a invocation with the given locations for
 	 * the receiver and result.
-	 * @see #handleNewObject(NewObjectInstruction, TensorPluralTupleLE, IConstructorCaseInstance, boolean)
+	 * @see #handleNewObject(NewObjectInstruction, TensorPluralTupleLE, IConstructorCaseInstance, boolean, boolean)
 	 * @see #createParameterMap(TACInvocation, TensorPluralTupleLE, Variable, Variable)
 	 */
 	public static SimpleMap<String, Aliasing> createParameterMap(
@@ -376,7 +386,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @param failFast
 	 * @return A {@link CallPreconditionHandler} instance if <code>failFast</code> is
 	 * <code>true</code>; a {@link LazyPreconditionHandler} otherwise.
-	 * @see #handleInvocation(TACInvocation, TensorPluralTupleLE, IMethodCaseInstance, boolean, SimpleMap)  
+	 * @see #handleInvocation(TACInvocation, TensorPluralTupleLE, IMethodCaseInstance, boolean, SimpleMap, boolean)  
 	 */
 	private CallPreconditionHandler createSplitter(
 			final TACInvocation instr, TensorContext cur_context,
@@ -394,7 +404,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @author Kevin Bierhoff
 	 * @since Sep 29, 2008
 	 * @see CallPreconditionHandler
-	 * @see LinearOperations#handleInvocation(TACInvocation, TensorPluralTupleLE, IInvocationCaseInstance, boolean, SimpleMap)
+	 * @see LinearOperations#handleInvocation(TACInvocation, TensorPluralTupleLE, IInvocationCaseInstance, boolean, SimpleMap, boolean)
 	 */
 	interface CallHandlerContinuation {
 
@@ -432,7 +442,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * @author Kevin Bierhoff
 	 * @since Sep 15, 2008
 	 * @see LazyPreconditionHandler
-	 * @see LinearOperations#handleInvocation(TACInvocation, TensorPluralTupleLE, IInvocationCaseInstance, boolean, SimpleMap)
+	 * @see LinearOperations#handleInvocation(TACInvocation, TensorPluralTupleLE, IInvocationCaseInstance, boolean, SimpleMap, boolean)
 	 */
 	class CallPreconditionHandler extends AbstractPredicateChecker implements SplitOffTuple {
 		
