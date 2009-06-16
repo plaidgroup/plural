@@ -186,6 +186,9 @@ class HistoryVisitor {
 				return;
 			}
 					
+			if( ctx.isBottom() ) {
+				return;
+			}
 			
 			final ITACLocation tac_loc = new AfterTACInstruction(tac_instr);		
 			
