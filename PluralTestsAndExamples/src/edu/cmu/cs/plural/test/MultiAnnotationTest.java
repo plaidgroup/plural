@@ -45,8 +45,8 @@ import edu.cmu.cs.plural.annot.States;
 
 // Here is a Crystal test that should pass but does not.
 @Refine(@States({"Please","Dont","Fail"}))
-//@PassingTest
-//@UseAnalyses(PluralAnalysis.PLURAL)
+@PassingTest
+@UseAnalyses(PluralAnalysis.PLURAL)
 public class MultiAnnotationTest {
 
 }
