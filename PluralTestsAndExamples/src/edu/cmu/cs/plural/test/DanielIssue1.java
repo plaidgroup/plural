@@ -35,39 +35,37 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
+package edu.cmu.cs.plural.test;
 
-package edu.cmu.cs.nimby.test.simple.provider;
-
-import edu.cmu.cs.crystal.annotations.FailingTest;
+import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
-import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
-import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.Use;
 
-@FailingTest(1)
-@UseAnalyses("NIMBYChecker")
-@States({"OPEN", "CLOSED"})
-@ClassStates({@State(name="OPEN", inv="f_1 == true * f_2 == false"), 
-	          @State(name="CLOSED", inv="f_1 == false * f_2 == true")})
-public class TwoAtomicBlocks {
+/**
+ * This issue was pointed out by Daniel. When I added the enum type for
+ * checking cases I inadvertently took out the code that made private 
+ * methods not dynamically dispatch. I want a test to ensure that it
+ * works. This worked in r303.
+ * 
+ * @author nbeckman
+ * @since Jun 17, 2009
+ *
+ */
+@States({"A","B","C"})
+@PassingTest
+@UseAnalyses(PluralAnalysis.PLURAL)
+public class DanielIssue1 {
 
-	@SuppressWarnings("unused")
-	private boolean f_1 = true;
-	@SuppressWarnings("unused")
-	private boolean f_2 = false;
-	
-	// Classic problem. This should fail!
-	@Full(use = Use.FIELDS, requires="OPEN", ensures="CLOSED")
-	void close() {
-		atomic: { 
-			f_1 = false;
-		}
-		// We are still unpacked here... and that unpacked-ness
-		// should not be allowed to transition through the atomic.
-		atomic: {
-			f_2 = true;
-		}
+	@Full(value="A", use=Use.FIELDS)
+	public void publicInterface() {
+		privateInterface();
+		return;
 	}
+
+	@Full(value="A", use=Use.FIELDS)
+	private void privateInterface() {}
+	
 }
