@@ -46,6 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Modifier;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
@@ -603,11 +604,11 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			final MethodCallInstruction instr,
 			final IMethodSignature sig
 			) {
+		boolean isPrivate = Modifier.isPrivate(	sig.getSpecifiedMethodBinding().getModifiers());
 		final List<IMethodCaseInstance> cases = 
-			sig.createPermissionsForCases(instr.isSuperCall() ? 
+			sig.createPermissionsForCases(instr.isSuperCall() || isPrivate ? 
 					MethodCheckingKind.METHOD_CALL_STATIC_DISPATCH : 
 					MethodCheckingKind.METHOD_CALL_DYNAMIC_DISPATCH,
-					
 					false, instr.isSuperCall());
 		
 		assert ! cases.isEmpty();

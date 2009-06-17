@@ -396,8 +396,10 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 //				++argIdx;
 //			}
 
+			boolean isPrivate = Modifier.isPrivate(sig.getSpecifiedMethodBinding().getModifiers());
+			boolean isStatic = Modifier.isStatic(sig.getSpecifiedMethodBinding().getModifiers());
 			checkCasesOfInvocation(node, before, sig, receiver, 
-					variables((List<Expression>) node.arguments()), false /* dynamic dispatch or static method call */);
+					variables((List<Expression>) node.arguments()), isPrivate || isStatic);
 			
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
