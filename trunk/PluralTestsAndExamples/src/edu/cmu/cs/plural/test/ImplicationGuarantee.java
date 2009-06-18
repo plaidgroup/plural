@@ -42,7 +42,6 @@ import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
-import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.Refine;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
@@ -69,12 +68,16 @@ public class ImplicationGuarantee {
 	boolean i_have_full;
 	
 	@Share(guarantee="DUM", use=Use.DISP_FIELDS)
-	@Pure(guarantee="SPEED", use=Use.DISPATCH)
+//	@Pure(guarantee="SPEED", use=Use.DISPATCH)
 	void couldCallFullMethod() {
 		if( this.i_have_full ) {
 			this.i_have_full = false;
 			this.fullMethod();
-			return; // Without the returns here, it doesn't really work...
+			// either need a return here or not have @Pure permission
+			// KB: I believe this is because in the join we lose
+			// the exact fraction for the pure permission from the
+			// pre-condition, preventing us from proving the post-condition.
+			// This could be avoided with Terauchi/Aiken-style join.
 		}
 	}
 	
