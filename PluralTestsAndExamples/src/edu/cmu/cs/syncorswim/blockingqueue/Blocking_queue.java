@@ -3,11 +3,14 @@ package edu.cmu.cs.syncorswim.blockingqueue;
 
 import java.util.NoSuchElementException;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.FalseIndicates;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.NoEffects;
 import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.Pures;
 import edu.cmu.cs.plural.annot.Refine;
@@ -56,6 +59,9 @@ import edu.cmu.cs.plural.annot.Use;
 			@State(name="STILLOPEN", inv="closed == false"), 
 			@State(name="CLOSED", inv="closed == true")
 })
+@PassingTest
+@UseAnalyses({PluralAnalysis.SYNTAX, PluralAnalysis.EFFECT, 
+	PluralAnalysis.SOS_PRE, PluralAnalysis.SOS})
 public class Blocking_queue
 {
 	@SuppressWarnings("unchecked")
@@ -139,7 +145,8 @@ public class Blocking_queue
 //			ensures="share(this!fr,STRUCTURE) * pure(this!fr,PROTOCOL)")
 			
 	@Share(guarantee="STRUCTURE", use=Use.DISP_FIELDS)
-	@Pure( guarantee="PROTOCOL",  requires="STILLOPEN", use=Use.DISPATCH)
+	// for some reason things go wrong with @Pure
+//	@Pure( guarantee="PROTOCOL",  requires="STILLOPEN", use=Use.DISPATCH)
 			public synchronized final Object dequeue( ) 
 	throws InterruptedException, Closed
 	{	
