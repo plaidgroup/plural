@@ -193,8 +193,6 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 						StateMachine machine = StateMachine.getStateMachineFromIType(type);
 						setStateMachine(machine);
 						getGraphicalViewer().setContents(getStateMachine());
-//						getGraphicalViewer().getControl().setBackground(
-//								ColorConstants.listBackground);
 						getViewSite().getPage().addPostSelectionListener(this);
 					}
 				}

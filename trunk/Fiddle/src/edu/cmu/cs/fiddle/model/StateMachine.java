@@ -152,6 +152,7 @@ public class StateMachine implements IHasProperties {
 		// We will need this so we can later find the nodes to
 		// connect them together.
 		Map<String, IConnectable> stringToNode = new HashMap<String, IConnectable>();
+		stringToNode.put("<init>", initialState);
 		
 		// After adding the initial state, add the root
 		// state to the machine.
@@ -159,9 +160,9 @@ public class StateMachine implements IHasProperties {
 		machine.setRootState(new State(space.getRootState(), root_dims));
 		stringToNode.put(space.getRootState(), machine.getRootState());
 		
-		Connection.connectTwoIConnectables(initialState, machine.getRootState());
-		
-		addTransitions(binding, machine, ssr, stringToNode);
+		boolean saw_constructor = addTransitions(binding, machine, ssr, stringToNode);
+		if( !saw_constructor )
+			Connection.connectTwoIConnectables(initialState, machine.getRootState());
 		
 		return machine;
 	}
@@ -216,19 +217,43 @@ public class StateMachine implements IHasProperties {
 		return result;
 	}
 	
-	private static void addTransitions(ITypeBinding binding, StateMachine machine, StateSpaceRepository ssr, Map<String, IConnectable> stringToNode){
+	/**
+	 * 
+	 * @param binding
+	 * @param machine
+	 * @param ssr
+	 * @param stringToNode
+	 * @return True if we saw a constructor and added a transition for it, false otherwise.
+	 */
+	private static boolean addTransitions(ITypeBinding binding, StateMachine machine, StateSpaceRepository ssr, Map<String, IConnectable> stringToNode){
 		List<IMethodBinding> methods = getClassMethods(binding, ssr);
 		StateSpace space = ssr.getStateSpace(binding);
 		
+		boolean result = false;
+		
 		for( IMethodBinding method : methods ) {
-			IInvocationSignature sig = ssr.getSignature(method);
+			boolean is_constructor = false;
+			
 			// Results...
-			for(Set<String> set : sig.getRequiredReceiverStateOptions()){
+			IInvocationSignature sig = ssr.getSignature(method);
+			
+			Set<Set<String>> requiredReceiverStates;
+			if( method.isConstructor() ) {
+				is_constructor = true;
+				requiredReceiverStates = Collections.<Set<String>>singleton(Collections.singleton("<init>")); 
+			}
+			else {
+				requiredReceiverStates = sig.getRequiredReceiverStateOptions();
+			}
+					
+			for(Set<String> set : requiredReceiverStates){
 				for(String start : set){
 					for(Set<String> fset : sig.getEnsuredReceiverStateOptions()){
 						for(String finish : fset){
 							boolean changed = false;
+							
 							IConnectable s1 = stringToNode.get(start);
+							
 							if(null == s1) {
 								IState newState = new State(start, 
 										makeDimensionsInState(start, space, stringToNode));
@@ -249,8 +274,10 @@ public class StateMachine implements IHasProperties {
 								changed = false;
 							}
 
-							if(changed || !space.areOrthogonal(start, finish))
+							if(changed || is_constructor || !space.areOrthogonal(start, finish)) {
 								createTransition(s1, s2, machine, method);
+								result |= is_constructor;
+							}
 						}						
 					}
 
@@ -258,8 +285,9 @@ public class StateMachine implements IHasProperties {
 			}
 
 		}
+		return result;
 	}
-	
+
 	private static void createTransition(IConnectable s1, IConnectable s2, StateMachine machine, IMethodBinding method) {
 		IConnection con = Connection.connectTwoIConnectables(s1, s2);
 		con.setName(method.getName());
