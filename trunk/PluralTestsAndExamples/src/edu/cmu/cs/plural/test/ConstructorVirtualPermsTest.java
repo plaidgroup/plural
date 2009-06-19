@@ -39,20 +39,39 @@ package edu.cmu.cs.plural.test;
 
 import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
+import edu.cmu.cs.plural.annot.State;
 
 /**
  * This is a test case for putting virtual receiver permissions
  * into constructors.
+ * This file should generate no Plural warnings.
  * @author Kevin Bierhoff
  * @since Jun 10, 2009
  *
  */
-@PassingTest
-@UseAnalyses(PluralAnalysis.PLURAL)
+//@PassingTest
+//@UseAnalyses(PluralAnalysis.PLURAL)
 public class ConstructorVirtualPermsTest {
+	
+	// KB: annotation commented out for better (spurious) error msg
+//	@Perm(ensures = "unique(result)")
+	public static ConstructorVirtualPermsTest create() {
+		return new ConstructorVirtualPermsTest();
+	}
+	
+	@Perm(ensures = "unique(result)")
+	public static ConstructorVirtualPermsTest createType2() {
+		return new Subclass();
+	}
+	
+	@Perm(ensures = "unique(result)")
+	public static ConstructorVirtualPermsTest createType3() {
+		return new FinalClass();
+	}
 	
 	@Full
 	@Perm(ensures = "unique(this!fr)")
@@ -67,6 +86,29 @@ public class ConstructorVirtualPermsTest {
 	
 	@Full
 	private void init() {
+		
+	}
+	
+	@ClassStates(@State(name = "ready", inv = "unique(super)"))
+	private static class Subclass 
+			extends ConstructorVirtualPermsTest {
+		
+		@Full
+		@Perm(ensures = "unique(this!fr) in ready")
+		public Subclass() {
+			super();
+		}
+		
+	}
+
+	@ClassStates(@State(name = "ready", inv = "unique(super)"))
+	private static final class FinalClass 
+			extends ConstructorVirtualPermsTest {
+		
+		@Perm(ensures = "unique(this!fr) in ready")
+		public FinalClass() {
+			super();
+		}
 		
 	}
 
