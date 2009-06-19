@@ -141,16 +141,23 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			IInvocationSignature sig = getRepository().getSignature(d.resolveBinding());
 			int classFlags = sig.getSpecifiedMethodBinding().getDeclaringClass().getModifiers();
 			for(IInvocationCase c : sig.cases()) {
-				boolean requiresVirtualFrameCheck = c.isVirtualFrameSpecial();
-				if(!requiresVirtualFrameCheck)
+//				boolean requiresVirtualFrameCheck = c.isVirtualFrameSpecial();
+				final boolean isFinalClass = Modifier.isFinal(classFlags);
+				final boolean isAbstractClass = Modifier.isAbstract(classFlags);
+				final boolean isStaticMethod = Modifier.isStatic(d.getModifiers());
+				if(isStaticMethod || (!isFinalClass && !isAbstractClass && !c.isVirtualFrameSpecial()))
 					// no separate checks for virtual frame needed
+					// static methods are analyzed once b/c they don't have a receiver
+					// !isFinalClass condition prevents spurious warning for current != virtual case
+					// !isAbstractClass condition doesn't seem necessary (since that's the default case)
+					// but will insert "assuming receiver is a subclass" into error msgs.
 					analyzeCase(d, sig, c, null);
 				else {
-					if(!Modifier.isFinal(classFlags))
-						// non-final class: test assuming current != virtual frame
+					if(!isFinalClass) 
+						// can have subclasses: test assuming current != virtual frame
 						analyzeCase(d, sig, c, false);
-					if(!Modifier.isAbstract(classFlags))
-						// non-abstract class: test assuming current == virtual frame
+					if(!isAbstractClass) 
+						// can have instances: test assuming current == virtual frame
 						analyzeCase(d, sig, c, true);
 				}
 			}
