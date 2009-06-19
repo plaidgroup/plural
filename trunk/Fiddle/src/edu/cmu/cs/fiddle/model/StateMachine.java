@@ -60,6 +60,7 @@ import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.plural.states.IInvocationSignature;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
+import edu.cmu.cs.plural.track.IndicatesAnnotation;
 
 /**
  * There is only one state machine in the model. It is the top
@@ -160,7 +161,7 @@ public class StateMachine implements IHasProperties {
 		machine.setRootState(new State(space.getRootState(), root_dims));
 		stringToNode.put(space.getRootState(), machine.getRootState());
 		
-		boolean saw_constructor = addTransitions(binding, machine, ssr, stringToNode);
+		boolean saw_constructor = addTransitions(binding, machine, ssr, stringToNode, annoDB);
 		if( !saw_constructor )
 			Connection.connectTwoIConnectables(initialState, machine.getRootState());
 		
@@ -223,9 +224,15 @@ public class StateMachine implements IHasProperties {
 	 * @param machine
 	 * @param ssr
 	 * @param stringToNode
+	 * @param annoDB 
 	 * @return True if we saw a constructor and added a transition for it, false otherwise.
 	 */
-	private static boolean addTransitions(ITypeBinding binding, StateMachine machine, StateSpaceRepository ssr, Map<String, IConnectable> stringToNode){
+	private static boolean addTransitions(ITypeBinding binding, 
+			StateMachine machine, 
+			StateSpaceRepository ssr, 
+			Map<String, IConnectable> stringToNode, 
+			AnnotationDatabase annoDB) {
+		
 		List<IMethodBinding> methods = getClassMethods(binding, ssr);
 		StateSpace space = ssr.getStateSpace(binding);
 		
@@ -237,6 +244,20 @@ public class StateMachine implements IHasProperties {
 			// Results...
 			IInvocationSignature sig = ssr.getSignature(method);
 			
+			IndicatesAnnotation true_result = 
+				IndicatesAnnotation.getBooleanIndicatorOnReceiverIfAny(
+						annoDB.getSummaryForMethod(method),	true);
+			
+			IndicatesAnnotation false_result = 
+				IndicatesAnnotation.getBooleanIndicatorOnReceiverIfAny(
+						annoDB.getSummaryForMethod(method),	false);
+			
+			if( true_result != null || false_result != null ) {
+				transitionsforDynamicStateTests(true_result, 
+						false_result, sig, machine, space, method, stringToNode);
+				continue; // GO TO NEXT METHOD IN LOOP.
+			}
+			
 			Set<Set<String>> requiredReceiverStates;
 			if( method.isConstructor() ) {
 				is_constructor = true;
@@ -246,36 +267,22 @@ public class StateMachine implements IHasProperties {
 				requiredReceiverStates = sig.getRequiredReceiverStateOptions();
 			}
 					
-			for(Set<String> set : requiredReceiverStates){
-				for(String start : set){
+			for(Set<String> set : requiredReceiverStates) {
+				for(String start : set) {
 					for(Set<String> fset : sig.getEnsuredReceiverStateOptions()){
-						for(String finish : fset){
+						for(String finish : fset) {
 							boolean changed = false;
 							
+							changed |= createStateIfNew(start, space, stringToNode, machine); 
 							IConnectable s1 = stringToNode.get(start);
 							
-							if(null == s1) {
-								IState newState = new State(start, 
-										makeDimensionsInState(start, space, stringToNode));
-								machine.getDefaultDimension().addState(newState);
-								s1 = newState;
-								stringToNode.put(start, s1);
-								changed = true;
-							}
-							
+							// I know it's weird that this one is &=... I am just copying the
+							// original logic.
+							changed &= createStateIfNew(finish, space, stringToNode, machine);
 							IConnectable s2 = stringToNode.get(finish);
-							if(null == s2) {
-								IState newState = new State(finish, 
-										makeDimensionsInState(finish, space, stringToNode));
-								machine.getDefaultDimension().addState(newState);
-								s2 = newState;
-								stringToNode.put(finish, s2);
-							} else {
-								changed = false;
-							}
 
 							if(changed || is_constructor || !space.areOrthogonal(start, finish)) {
-								createTransition(s1, s2, machine, method);
+								createTransition(s1, s2, machine, method, "");
 								result |= is_constructor;
 							}
 						}						
@@ -288,10 +295,94 @@ public class StateMachine implements IHasProperties {
 		return result;
 	}
 
-	private static void createTransition(IConnectable s1, IConnectable s2, StateMachine machine, IMethodBinding method) {
+	/**
+	 * Add transitions for a method that has @TrueResult or @FalseResult, given
+	 * the two annotations.
+	 * @param sig 
+	 * @param method 
+	 * @param stringToNode 
+	 */
+	private static void transitionsforDynamicStateTests(
+			IndicatesAnnotation true_result, IndicatesAnnotation false_result,
+			IInvocationSignature sig, StateMachine machine, StateSpace state_space, 
+			IMethodBinding method, Map<String, IConnectable> stringToNode) {
+		
+		assert( true_result != null || false_result != null );
+		
+		for( Set<String> req_states : sig.getRequiredReceiverStateOptions() ) {
+			for( String req_state : req_states ) {
+				createStateIfNew(req_state, state_space, stringToNode, machine);
+				
+				if( true_result != null && false_result != null ) {
+					// This means we can just ignore any 'regular' ensures
+					// annotation.
+					String true_state = true_result.getIndicatedState();
+					String false_state = false_result.getIndicatedState();
+					
+					createStateIfNew(true_state, state_space, stringToNode, machine);
+					createStateIfNew(false_state, state_space, stringToNode, machine);		
+					
+					createTransition(stringToNode.get(req_state), stringToNode.get(true_state), machine, method, "/ return true");
+					createTransition(stringToNode.get(req_state), stringToNode.get(false_state), machine, method, "/ return false");
+				}
+				else {
+					String message;
+					IConnectable indicates_state;
+					if( true_result != null ) {
+						message = "/ return true";
+						String true_state = true_result.getIndicatedState();
+						createStateIfNew(true_state, state_space, stringToNode, machine);
+						indicates_state = stringToNode.get(true_state);
+					}
+					else {
+						message = "/ return false";
+						String false_state = false_result.getIndicatedState();
+						createStateIfNew(false_state, state_space, stringToNode, machine);
+						indicates_state = stringToNode.get(false_state);
+					}
+					createTransition(stringToNode.get(req_state), stringToNode.get(indicates_state), machine, method, message);
+					
+					// And we still have to do all the normal transitions.
+					for( Set<String> ens_states : sig.getEnsuredReceiverStateOptions() ) {
+						for( String ens_state : ens_states ) {
+							createStateIfNew(ens_state, state_space, stringToNode, machine);
+							
+							if( !state_space.areOrthogonal(req_state, ens_state) ) {
+								createTransition(stringToNode.get(req_state), 
+										stringToNode.get(ens_state), machine, method, "");
+							}
+						}
+					}
+				}
+			}
+		}
+		
+	}
+
+	/**
+	 * See if the given state already exists inside the stringToNode map, and
+	 * if it does not, create one, add it to the map and add it to the
+	 * StateMachine in the default dimension. 
+	 */
+	private static boolean createStateIfNew(String state_name, StateSpace ssr,
+			Map<String, IConnectable> stringToNode, StateMachine machine) {
+		if( !stringToNode.containsKey(state_name) ) {
+			IState newState = new State(state_name, 
+					makeDimensionsInState(state_name, ssr, stringToNode));
+			machine.getDefaultDimension().addState(newState);
+			stringToNode.put(state_name, newState);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	private static void createTransition(IConnectable s1, IConnectable s2, StateMachine machine, IMethodBinding method,
+			String hoverMessage) {
 		IConnection con = Connection.connectTwoIConnectables(s1, s2);
 		con.setName(method.getName());
-		con.setHover(extractSignature(method));
+		con.setHover(extractSignature(method) + " " + hoverMessage);
 	}
 	
 	private static String extractSignature(IMethodBinding method){
