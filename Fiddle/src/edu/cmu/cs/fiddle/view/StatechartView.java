@@ -38,9 +38,6 @@
 package edu.cmu.cs.fiddle.view;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.gef.EditDomain;
 import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
@@ -48,7 +45,6 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IType;
-import org.eclipse.jdt.internal.core.CompilationUnit;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -162,14 +158,6 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 		getGraphicalViewer().getControl().setFocus();
 	}
 	
-	private static <T> List<T> list(T... ts) {
-		ArrayList<T> result = new ArrayList<T>(ts.length);
-		for( T t : ts ) {
-			result.add(t);
-		}
-		return result;
-	}
-
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection selection) {
 		if(!pin && selection != null && selection instanceof IStructuredSelection) {
@@ -180,8 +168,8 @@ public class StatechartView extends ViewPart implements ISelectionListener {
 					IType type = null;
 					IJavaElement ije = (IJavaElement) fe;
 
-					if (ije instanceof CompilationUnit) {
-						ICompilationUnit icu = (CompilationUnit) fe;
+					if (ije instanceof ICompilationUnit) {
+						ICompilationUnit icu = (ICompilationUnit) fe;
 						type = icu.findPrimaryType();
 					} else if (ije instanceof IMethod) {
 						IMethod im = (IMethod) ije;
