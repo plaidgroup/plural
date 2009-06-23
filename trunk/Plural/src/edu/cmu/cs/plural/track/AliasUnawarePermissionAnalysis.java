@@ -171,7 +171,7 @@ public class AliasUnawarePermissionAnalysis extends AbstractCrystalMethodAnalysi
 			this.analyzedMethod = analyzedMethod;
 		}
 
-		public ILatticeOperations<TupleLatticeElement<Variable, Permissions>> createLatticeOperations(MethodDeclaration d) {
+		public ILatticeOperations<TupleLatticeElement<Variable, Permissions>> getLatticeOperations() {
 			return ops;
 		}
 		
