@@ -327,24 +327,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			checkCasesOfInvocation(node, before, sig, null /* no receiver yet */, 
 					variables((List<Expression>) node.arguments()), false /* "new" */);
 			
-			// arguments
-//			int argIndex = 0;
-//			for(Expression e : (List<Expression>) node.arguments()) {
-//				final Variable arg = getFa().getVariable(e);
-//				
-//				if(! after.checkConstraintsSatisfiable(arg))
-//					// TODO better reporting
-//					reporter.reportUserProblem(
-//							"" + e + " yields no suitable permission for surrounding call" + errorCtx, 
-//							e, FractionalAnalysis.this.getName());
-//				
-//				reportIfError(
-//						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIndex)),
-//						e);
-//				
-//				++argIndex;
-//			}
-			
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
 				logger.finest(before.toString());
@@ -374,35 +356,11 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 				else
 					receiver = getFa().getVariable(node.getExpression());
 				
-//				if(! after.checkConstraintsSatisfiable(receiver))
-//					// TODO better reporting
-//					reporter.reportUserProblem(
-//							"" + receiver.getSourceString() + " carries no suitable permission" + errorCtx, 
-//							node, FractionalAnalysis.this.getName());
-//				reportIfError(
-//						before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
-//						node);
 			}
 			else
 				// static method
 				receiver = null;
 			
-			// arguments
-//			int argIdx = 0;
-//			for(Expression e : (List<Expression>) node.arguments()) {
-//				Variable arg = getFa().getVariable(e);
-//				if(! after.checkConstraintsSatisfiable(arg))
-//					// TODO better reporting
-//					reporter.reportUserProblem(
-//							"" + e + " yields no suitable permission for surrounding call" + errorCtx, 
-//							e, FractionalAnalysis.this.getName());
-//				
-//				reportIfError(
-//						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIdx)),
-//						e);
-//				++argIdx;
-//			}
-
 			boolean isPrivate = Modifier.isPrivate(sig.getSpecifiedMethodBinding().getModifiers());
 			boolean isStatic = Modifier.isStatic(sig.getSpecifiedMethodBinding().getModifiers());
 			checkCasesOfInvocation(node, before, sig, receiver, 
@@ -495,31 +453,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			checkCasesOfInvocation(node, before, sig, receiver, 
 					variables((List<Expression>) node.arguments()), true);
 			
-			//			if(! after.checkConstraintsSatisfiable(receiver))
-//				// TODO better reporting
-//				reporter.reportUserProblem(
-//						"this carries no suitable permission for constructor call" + errorCtx, 
-//						node, FractionalAnalysis.this.getName());
-//			
-//			reportIfError(
-//					before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
-//					node);
-			
-			// arguments
-//			int argIdx = 0;
-//			for(Expression e : (List<Expression>) node.arguments()) {
-//				Variable arg = getFa().getVariable(e);
-//				if(! after.checkConstraintsSatisfiable(arg))
-//					// TODO better reporting
-//					reporter.reportUserProblem(
-//							"" + e + " yields no suitable permission for constructor call" + errorCtx, 
-//							e, FractionalAnalysis.this.getName());
-//				
-//				reportIfError(
-//						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIdx)),
-//						e);
-//				++argIdx;
-//			}
 
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
@@ -547,36 +480,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			
 			checkCasesOfInvocation(node, before, sig, null /* lattice fills in super variable */, 
 					variables((List<Expression>) node.arguments()), true /* static dispatch */);
-
-			// receiver
-			// TODO use "super" variable
-//			final Variable receiver = getFa().getSuperVariable();
-			
-//			if(! after.checkConstraintsSatisfiable(receiver))
-//				// TODO better reporting
-//				reporter.reportUserProblem(
-//						"super carries no suitable permission for super-constructor call" + errorCtx, 
-//						node, FractionalAnalysis.this.getName());
-//			
-//			reportIfError(
-//					before.checkStates(receiver, sig.getRequiredReceiverStateOptions()),
-//					node);
-			
-			// arguments
-//			int argIdx = 0;
-//			for(Expression e : (List<Expression>) node.arguments()) {
-//				Variable arg = getFa().getVariable(e);
-//				if(! after.checkConstraintsSatisfiable(arg))
-//					// TODO better reporting
-//					reporter.reportUserProblem(
-//							"" + e + " yields no suitable permission for super-constructor call" + errorCtx, 
-//							e, FractionalAnalysis.this.getName());
-//				
-//				reportIfError(
-//						before.checkStates(arg, sig.getRequiredParameterStateOptions(argIdx)),
-//						e);
-//				++argIdx;
-//			}
 
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {

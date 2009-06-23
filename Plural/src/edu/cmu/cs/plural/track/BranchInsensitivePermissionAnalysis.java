@@ -154,7 +154,7 @@ public class BranchInsensitivePermissionAnalysis extends AbstractCrystalMethodAn
 		/* (non-Javadoc)
 		 * @see edu.cmu.cs.crystal.tac.ITransferFunction#getLattice(com.surelogic.ast.java.operator.IMethodDeclarationNode)
 		 */
-		public ILatticeOperations<TupleLatticeElement<Variable, Permissions>> createLatticeOperations(MethodDeclaration d) {
+		public ILatticeOperations<TupleLatticeElement<Variable, Permissions>> getLatticeOperations() {
 			return ops;
 		}
 		

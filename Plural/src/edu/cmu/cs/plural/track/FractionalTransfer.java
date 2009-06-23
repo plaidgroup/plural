@@ -128,29 +128,10 @@ public class FractionalTransfer extends
 
 	private SimpleMap<String, Aliasing> initialLocations;
 	
-//	private PermissionSetFromAnnotations resultPost;
-	
-//	private ThisVariable thisVar;
-	
 	public FractionalTransfer(IAnalysisInput input, FractionAnalysisContext context) {
 		this.context = context;
 		this.liveness = LivenessProxy.create(input);
 	}
-
-//	public Map<Aliasing, PermissionSetFromAnnotations> getParameterPostConditions() {
-//		if(paramPost == null) throw new IllegalStateException("Must call getLattice() first--query any analysis results before calling this method");
-//		return paramPost;
-//	}
-//	
-//	/**
-//	 * Returns the expected permissions for the method result, if any.
-//	 * @return the expected permissions for the method result or <code>null</code> if there
-//	 * is none (for constructors).
-//	 */
-//	public PermissionSetFromAnnotations getResultPostCondition() {
-//		if(paramPost == null) throw new IllegalStateException("Must call getLattice() first--query any analysis results before calling this method");
-//		return resultPost; 
-//	}
 	
 	//
 	//
@@ -175,7 +156,7 @@ public class FractionalTransfer extends
 	 * For state invariants, I will insert information into the lattice about this object's
 	 * fields based on what the precondition state implies.
 	 */
-	public ILatticeOperations<PluralContext> createLatticeOperations(MethodDeclaration d) {
+	public ILatticeOperations<PluralContext> getLatticeOperations() {
 		return LatticeElementOps.create(PluralContext.bottom());
 	}
 	

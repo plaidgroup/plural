@@ -121,7 +121,7 @@ public class LocalAliasTransfer extends
 	/* (non-Javadoc)
 	 * @see edu.cmu.cs.crystal.flow.IFlowAnalysisDefinition#getLattice(org.eclipse.jdt.core.dom.MethodDeclaration)
 	 */
-	public ILatticeOperations<AliasingLE> createLatticeOperations(MethodDeclaration method) {
+	public ILatticeOperations<AliasingLE> getLatticeOperations() {
 		return LatticeElementOps.create(AliasingLE.createBottom());
 	}
 	

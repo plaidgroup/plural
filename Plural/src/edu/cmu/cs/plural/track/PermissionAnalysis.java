@@ -170,7 +170,7 @@ public class PermissionAnalysis extends AbstractCrystalMethodAnalysis {
 			this.analyzedMethod = analyzedMethod;
 		}
 
-		public ILatticeOperations<DisjointSetTuple<Variable, Permissions>> createLatticeOperations(MethodDeclaration d) {
+		public ILatticeOperations<DisjointSetTuple<Variable, Permissions>> getLatticeOperations() {
 			return LatticeElementOps.create(
 					new DisjointSetTuple<Variable, Permissions>(Permissions.BOTTOM));
 		}
