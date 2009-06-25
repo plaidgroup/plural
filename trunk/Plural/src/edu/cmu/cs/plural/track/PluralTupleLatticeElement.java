@@ -66,6 +66,7 @@ import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.ExtendedIterator;
 import edu.cmu.cs.crystal.util.Freezable;
 import edu.cmu.cs.crystal.util.Lambda;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.AliasAwareTupleLE;
@@ -236,7 +237,7 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		return dynamicStateLogic.solveWithHints(this, vs);
 	}
 	
-	public boolean isKnownImplication(Aliasing v,
+	public Option<Implication> isKnownImplication(Aliasing v,
 			Implication implication) {
 		return dynamicStateLogic.isKnownImplication(v, implication);
 	}

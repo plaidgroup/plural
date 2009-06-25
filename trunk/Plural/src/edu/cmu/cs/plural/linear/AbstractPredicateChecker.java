@@ -47,6 +47,7 @@ import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.util.ConsList;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.contexts.TensorContext;
@@ -130,10 +131,11 @@ public abstract class AbstractPredicateChecker implements SplitOffTuple {
 	@Override
 	public boolean checkImplication(Aliasing var, Implication impl) {
 		TensorPluralTupleLE value = incomingContext.getTuple();
-		if( value.isKnownImplication(var, impl) ) {
+		Option<Implication> known_impl = value.isKnownImplication(var, impl); 
+		if( known_impl.isSome() ) {
 			// TODO: We only have to remove this if the implication is linear!
 			// Need a new subclass of implcation, with isLinear method.
-			value.removeImplication(var, impl);
+			value.removeImplication(var, known_impl.unwrap());
 			return true;
 		}
 		else if( impl.getAntecedant().isUnsatisfiable(value) ) {

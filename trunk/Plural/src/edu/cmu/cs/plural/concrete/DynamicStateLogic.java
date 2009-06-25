@@ -57,6 +57,7 @@ import edu.cmu.cs.crystal.util.ConsList;
 import edu.cmu.cs.crystal.util.Freezable;
 import edu.cmu.cs.crystal.util.Lambda;
 import edu.cmu.cs.crystal.util.Lambda2;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.linear.ReleasePermissionImplication;
@@ -156,7 +157,7 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 			return Collections.emptyList();
 
 		List<ImplicationResult> result = new LinkedList<ImplicationResult>();
-		VariablePredicate pred = knownPredicates.get(v);
+	
 		List<Implication> impls = knownImplications.get(v);
 		
 		for( Implication impl : impls ) {
@@ -631,23 +632,33 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 			knownImplications.put(var, is.removeElementOnce(impl));
 	}
 
-	public boolean isKnownImplication(Aliasing v, Implication impl) {
+	/**
+	 * Does the dynamic state logic contain this implication or another implication
+	 * that implies this implication?
+	 * @param v
+	 * @param impl
+	 * @return Option indicating whether or not DynamicStateLogic knows about this
+	 * implication. If it does, the Implication itself or the implication that implied
+	 * the given implication (whichever is actually in this DynamicStateLogic) will be
+	 * returned.
+	 */
+	public Option<Implication> isKnownImplication(Aliasing v, Implication impl) {
 		List<Implication> v_impls = knownImplications.get(v);
 		if( v_impls == null )
-			return false;
+			return Option.none();
 		
 		if( v_impls.contains(impl) ) {
 			// We know this exact implication
-			return true;
+			return Option.some(impl);
 		}
 		
 		// Maybe it doesn't contain it, but it still could imply it...
 		for( Implication v_impl : v_impls ) {
 			if( impl.isImpliedBy(v_impl) )
-				return true;
+				return Option.some(v_impl);
 		}
 		
-		return false;
+		return Option.none();
 	}
 
 	/**

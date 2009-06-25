@@ -112,7 +112,7 @@ public class NullImplication implements Implication {
 	@Override
 	public boolean isSatisfied(PluralTupleLatticeElement value) {
 		final Aliasing anteVar = antecedantPred.getVariable();
-		if(value.isKnownImplication(anteVar, this))
+		if(value.isKnownImplication(anteVar, this).isSome())
 			return true;
 		
 		if(antecedantPred.isUnsatisfiable(value))

@@ -89,7 +89,7 @@ class ImplicationOfAPermission implements Implication, ImplicationResult {
 	@Override
 	public boolean isSatisfied(PluralTupleLatticeElement value) {
 		final Aliasing anteVar = ant.getVariable();
-		if(value.isKnownImplication(anteVar, this))
+		if(value.isKnownImplication(anteVar, this).isSome())
 			return true;
 		
 		if(ant.isUnsatisfiable(value))
