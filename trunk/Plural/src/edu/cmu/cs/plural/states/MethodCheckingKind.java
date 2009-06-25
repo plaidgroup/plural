@@ -101,8 +101,9 @@ public enum MethodCheckingKind {
 		assert(isFramePermission || isVirtualPermission);
 		switch(checkingKind) {
 		case METHOD_CALL_DYNAMIC_DISPATCH:
-		case CONSTRUCTOR_NEW:
 			return true;
+		case CONSTRUCTOR_NEW:
+			return false;
 		case METHOD_CALL_STATIC_DISPATCH:
 		case CONSTRUCTOR_SUPER_CALL:
 		case METHOD_IMPL_CUR_NOT_VIRTUAL:
