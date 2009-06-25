@@ -98,6 +98,14 @@ public enum MethodCheckingKind {
 	 */
 	public static boolean needVirtual(MethodCheckingKind checkingKind,
 			boolean isVirtualPermission, boolean isFramePermission) {
+		// permission annotation can call for both frame access and
+		// the ability to call virtual methods
+		// depending on ignoreVirtual, we may have to create both permissions
+		// in this case
+		// frameAsVirtual, on the other hand, calls for replacing
+		// frame with virtual permissions, and in this case we don't
+		// want to end up with double the virtual permissions if
+		// ignoreVirtual is false
 		assert(isFramePermission || isVirtualPermission);
 		switch(checkingKind) {
 		case METHOD_CALL_DYNAMIC_DISPATCH:

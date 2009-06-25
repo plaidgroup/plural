@@ -351,30 +351,12 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		PermissionSetFromAnnotations pre = PermissionSetFromAnnotations.createEmpty(space);
 		PermissionSetFromAnnotations post = PermissionSetFromAnnotations.createEmpty(space);
 		for(ParameterPermissionAnnotation a : annos) {
-			// permission annotation can call for both frame access and
-			// the ability to call virtual methods
-			// depending on ignoreVirtual, we may have to create both permissions
-			// in this case
-			// frameAsVirtual, on the other hand, calls for replacing
-			// frame with virtual permissions, and in this case we don't
-			// want to end up with double the virtual permissions if
-			// ignoreVirtual is false
-			
+
 			// Better fix...
 			boolean needVirtual = MethodCheckingKind.needVirtual(
 					checkingKind, a.isVirtualPermission(), a.isFramePermission());
 			boolean needFrame = MethodCheckingKind.needFrame(
 					checkingKind, a.isVirtualPermission(), a.isFramePermission());
-			
-			// My fix...
-//			boolean needVirtual = (a.isVirtualPermission() && !ignoreVirtual)
-//					|| (a.isFramePermission() && frameAsVirtual);
-//			boolean needFrame = (a.isFramePermission() && !frameAsVirtual) 
-//			        || (ignoreVirtual && a.isVirtualPermission());
-			
-//			boolean needVirtual = (a.isVirtualPermission() ) 
-//					|| (a.isFramePermission() && frameAsVirtual);
-//			boolean needFrame = (a.isFramePermission() && !frameAsVirtual);
 			
 			
 			if(needVirtual) {

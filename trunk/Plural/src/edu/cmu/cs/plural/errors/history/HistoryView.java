@@ -295,9 +295,13 @@ public class HistoryView extends ViewPart implements ISelectionListener, ISelect
 			IInvocationSignature sig = stateSpaceRepository.getSignature(binding);
 			
 			MultiCaseHistoryTree graph = new MultiCaseHistoryTree();
+			int classFlags = sig.getSpecifiedMethodBinding().getDeclaringClass().getModifiers();
 			for( IInvocationCase case_ : sig.cases() ) {
-				boolean requiresSeparateVirtualCheck = case_.isVirtualFrameSpecial();
-				if( !requiresSeparateVirtualCheck ) {
+				final boolean isFinalClass = Modifier.isFinal(classFlags);
+				final boolean isAbstractClass = Modifier.isAbstract(classFlags);
+				final boolean isStaticMethod = Modifier.isStatic(method_decl.getModifiers());
+				
+				if( isStaticMethod || (!isFinalClass && !isAbstractClass && !case_.isVirtualFrameSpecial()) ) {
 					Pair<HistoryNode, SingleCaseHistoryTree> pair =
 						analyzeCase(method_decl, sig, case_, null, input, analysis_type, stateSpaceRepository);
 					HistoryRoot root = HistoryRoot.noSeparateCaseRoot(pair.fst(), case_.toString());
