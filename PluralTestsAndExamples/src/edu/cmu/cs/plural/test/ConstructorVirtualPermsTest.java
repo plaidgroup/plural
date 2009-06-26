@@ -53,12 +53,11 @@ import edu.cmu.cs.plural.annot.State;
  * @since Jun 10, 2009
  *
  */
-@PassingTest
-@UseAnalyses(PluralAnalysis.PLURAL)
+//@PassingTest
+//@UseAnalyses(PluralAnalysis.PLURAL)
 public class ConstructorVirtualPermsTest {
 	
-	// KB: annotation commented out for better (spurious) error msg
-//	@Perm(ensures = "unique(result)")
+	@Perm(ensures = "unique(result)")
 	public static ConstructorVirtualPermsTest create() {
 		return new ConstructorVirtualPermsTest();
 	}
@@ -80,8 +79,21 @@ public class ConstructorVirtualPermsTest {
 	}
 	
 	@Full
+	@Perm(ensures = "unique(this!fr)")
 	public ConstructorVirtualPermsTest(boolean option) {
 		init();
+	}
+	
+	/** 
+	 * This constructor makes sure that permissions for
+	 * arguments are not ignored. 
+	 * @param other Argument with (virtual) permission
+	 */
+	@Full
+	public ConstructorVirtualPermsTest(
+			@Full ConstructorVirtualPermsTest other) {
+		init();
+		other.init();
 	}
 	
 	@Full
