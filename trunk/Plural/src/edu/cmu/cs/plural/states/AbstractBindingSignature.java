@@ -162,8 +162,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 						getReceiverAnnotations(), 
 						namedFractions,
 						checkingKind, 
-						frameAsVirtual,
-						noReceiverVirtual);
+						ReceiverOrArg.RECEIVER);
 			
 			assert !frameAsVirtual || rcvr_borrowed.fst().getFramePermissions().isEmpty();
 			
@@ -197,8 +196,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 					CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), 
 					namedFractions,
 					checkingKind,
-					false /* TODO replace frame with virtual permissions to "overlook" spec errors? */, 
-					false /* do not ever ignore virtual permissions for parameters */);
+					ReceiverOrArg.ARGUMENT);
 			pre.put(paramName, param_borrowed.fst());
 			post.put(paramName, param_borrowed.snd());
 		}
@@ -346,17 +344,16 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			StateSpace space, List<ParameterPermissionAnnotation> annos, 
 			FractionCreation namedFractions, 
 			MethodCheckingKind checkingKind,
-			//TODO Get rid of
-			boolean frameAsVirtual, boolean ignoreVirtual) {
+			ReceiverOrArg ref_type) {
 		PermissionSetFromAnnotations pre = PermissionSetFromAnnotations.createEmpty(space);
 		PermissionSetFromAnnotations post = PermissionSetFromAnnotations.createEmpty(space);
 		for(ParameterPermissionAnnotation a : annos) {
 
 			// Better fix...
 			boolean needVirtual = MethodCheckingKind.needVirtual(
-					checkingKind, a.isVirtualPermission(), a.isFramePermission());
+					checkingKind, ref_type, a.isVirtualPermission(), a.isFramePermission());
 			boolean needFrame = MethodCheckingKind.needFrame(
-					checkingKind, a.isVirtualPermission(), a.isFramePermission());
+					checkingKind, ref_type, a.isVirtualPermission(), a.isFramePermission());
 			
 			
 			if(needVirtual) {

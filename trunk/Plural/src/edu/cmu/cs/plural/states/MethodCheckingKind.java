@@ -93,10 +93,13 @@ public enum MethodCheckingKind {
 	 * will be created.
 	 * 
 	 * @param checkingKind The kind of method call/body that is being checked.
+	 * @param isArgument is the permission we are creating for an argument?
+	 * (If <code>false</code> then it is for the receiver).pre
 	 * @param isVirtualPermission Is the permission virtual?
 	 * @param isFramePermission Is the permission a frame?
 	 */
 	public static boolean needVirtual(MethodCheckingKind checkingKind,
+			ReceiverOrArg reference_type,
 			boolean isVirtualPermission, boolean isFramePermission) {
 		// permission annotation can call for both frame access and
 		// the ability to call virtual methods
@@ -107,6 +110,15 @@ public enum MethodCheckingKind {
 		// want to end up with double the virtual permissions if
 		// ignoreVirtual is false
 		assert(isFramePermission || isVirtualPermission);
+		
+		// First, if we are talking about an argument permission, then yes
+		// we always want a virtual.
+		switch(reference_type) {
+		case ARGUMENT:
+			return true;
+		// everything else falls through!
+		}
+		
 		switch(checkingKind) {
 		case METHOD_CALL_DYNAMIC_DISPATCH:
 			return true;
@@ -140,6 +152,7 @@ public enum MethodCheckingKind {
 	 * @param isFramePermission Is the permission a frame?
 	 */
 	public static boolean needFrame(MethodCheckingKind checkingKind,
+			ReceiverOrArg reference_type,
 			boolean isVirtualPermission, boolean isFramePermission) {
 		assert( isFramePermission || isVirtualPermission );
 		switch( checkingKind ) {
