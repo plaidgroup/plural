@@ -53,8 +53,8 @@ import edu.cmu.cs.plural.annot.State;
  * @since Jun 10, 2009
  *
  */
-//@PassingTest
-//@UseAnalyses(PluralAnalysis.PLURAL)
+@PassingTest
+@UseAnalyses(PluralAnalysis.PLURAL)
 public class ConstructorVirtualPermsTest {
 	
 	@Perm(ensures = "unique(result)")
