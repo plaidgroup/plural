@@ -120,9 +120,13 @@ public class Blocking_queue
 
 			Object head = elements.removeFirst();
 
-			if( /* elements.size()  == 0 &&  */ reject_enqueue_requests ) {
-				this.reject_enqueue_requests = false;
-				close(); // just removed final item, close the queue.
+			if( elements.size() == 0 ) { // This used to be in one conditional but the 
+				                         // merging was causing serious problems.
+				if(  reject_enqueue_requests ) {
+					this.reject_enqueue_requests = false;
+					close(); // just removed final item, close the queue.
+					return head;
+				}
 				return head;
 			}
 			return head;
