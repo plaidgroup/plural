@@ -6,7 +6,7 @@
    <feature url="features/edu.cmu.cs.fiddle.feature_1.0.1.jar" id="edu.cmu.cs.fiddle.feature" version="1.0.1">
       <category name="Optional"/>
    </feature>
-   <feature url="features/edu.cmu.cs.plural.feature_1.1.0.jar" id="edu.cmu.cs.plural.feature" version="1.1.0">
+   <feature url="features/edu.cmu.cs.plural.feature_1.1.2.jar" id="edu.cmu.cs.plural.feature" version="1.1.2">
       <category name="Plural (required)"/>
    </feature>
    <category-def name="Plural (required)" label="Plural">

@@ -1,16 +1,16 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?artifactRepository class='org.eclipse.equinox.internal.p2.artifact.repository.simple.SimpleArtifactRepository' version='1.0.0'?>
-<repository name='Plural Object Protocol Checker' type='org.eclipse.equinox.p2.artifact.repository.simpleRepository' version='1'>
+<repository name='file:/C:/Users/nbeckman/workspace/PluralEclipseUpdate/ - artifacts' type='org.eclipse.equinox.p2.artifact.repository.simpleRepository' version='1'>
   <properties size='2'>
     <property name='p2.compressed' value='false'/>
-    <property name='p2.timestamp' value='1238709117011'/>
+    <property name='p2.timestamp' value='1247053228055'/>
   </properties>
   <mappings size='3'>
     <rule filter='(&amp; (classifier=osgi.bundle))' output='${repoUrl}/plugins/${id}_${version}.jar'/>
     <rule filter='(&amp; (classifier=binary))' output='${repoUrl}/binary/${id}_${version}'/>
     <rule filter='(&amp; (classifier=org.eclipse.update.feature))' output='${repoUrl}/features/${id}_${version}.jar'/>
   </mappings>
-  <artifacts size='18'>
+  <artifacts size='20'>
     <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.3'>
       <properties size='2'>
         <property name='artifact.size' value='8481'/>
@@ -34,6 +34,13 @@
       <properties size='2'>
         <property name='artifact.size' value='1424'/>
         <property name='download.size' value='1424'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.1.2'>
+      <properties size='3'>
+        <property name='artifact.size' value='812686'/>
+        <property name='download.size' value='812686'/>
+        <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
     <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.7'>
@@ -73,6 +80,12 @@
       <properties size='2'>
         <property name='artifact.size' value='8516'/>
         <property name='download.size' value='8516'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.1.2'>
+      <properties size='2'>
+        <property name='artifact.size' value='8517'/>
+        <property name='download.size' value='8517'/>
       </properties>
     </artifact>
     <artifact classifier='osgi.bundle' id='Fiddle' version='1.0.0'>
