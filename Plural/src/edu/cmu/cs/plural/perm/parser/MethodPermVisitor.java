@@ -128,4 +128,9 @@ class MethodPermVisitor implements AccessPredVisitor<Boolean> {
 		return null;
 	}
 
+	@Override
+	public Boolean visit(EmptyPredicate emptyPredicate) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

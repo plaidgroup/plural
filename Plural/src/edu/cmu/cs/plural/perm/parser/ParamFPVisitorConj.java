@@ -123,4 +123,9 @@ public class ParamFPVisitorConj implements AccessPredVisitor<ParsedParameterSumm
 			PermissionImplication permissionImplication) {
 		throw new RuntimeException("We don't deal with implications in method annotations.");
 	}
+
+	@Override
+	public ParsedParameterSummary visit(EmptyPredicate emptyPredicate) {
+		return new ParsedParameterSummary();
+	}
 }

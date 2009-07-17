@@ -142,5 +142,11 @@ public class FieldFPVisitorConj implements
 	public List<Pair<String, PermissionFromAnnotation>> visit(
 			PermissionImplication permissionImplication) {
 		return Collections.emptyList();
+	}
+
+	@Override
+	public List<Pair<String, PermissionFromAnnotation>> visit(
+			EmptyPredicate emptyPredicate) {
+		return Collections.emptyList();
 	}	
 }

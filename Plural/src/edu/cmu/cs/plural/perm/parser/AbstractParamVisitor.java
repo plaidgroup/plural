@@ -397,6 +397,11 @@ public abstract class AbstractParamVisitor
 		return null;
 	}
 
+	@Override
+	public Boolean visit(EmptyPredicate emptyPredicate) {
+		return null;
+	}
+
 	/**
 	 * @param ref
 	 * @return {@link Pair} (parameter name, {@link PermissionUse}) for the given ref;

@@ -80,6 +80,7 @@ import edu.cmu.cs.plural.perm.parser.BinaryExprAP;
 import edu.cmu.cs.plural.perm.parser.BoolLiteral;
 import edu.cmu.cs.plural.perm.parser.Conjunction;
 import edu.cmu.cs.plural.perm.parser.Disjunction;
+import edu.cmu.cs.plural.perm.parser.EmptyPredicate;
 import edu.cmu.cs.plural.perm.parser.EqualsExpr;
 import edu.cmu.cs.plural.perm.parser.Identifier;
 import edu.cmu.cs.plural.perm.parser.NotEqualsExpr;
@@ -878,6 +879,10 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			return Option.none();
 		}
 
+		@Override
+		public Option<String> visit(EmptyPredicate emptyPredicate) {
+			return Option.none();
+		}
 	}
 	
 	/**

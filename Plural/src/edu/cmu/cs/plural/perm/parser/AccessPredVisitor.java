@@ -48,4 +48,5 @@ public interface AccessPredVisitor<T> {
 	T visit(NotEqualsExpr notEqualsExpr);
 	T visit(StateOnly stateOnly);
 	T visit(PermissionImplication permissionImplication);
+	T visit(EmptyPredicate emptyPredicate);
 }

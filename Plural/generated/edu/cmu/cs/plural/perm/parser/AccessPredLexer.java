@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g 2009-03-26 15:56:27
+// $ANTLR 3.0.1 D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g 2009-07-17 14:42:48
 
 package edu.cmu.cs.plural.perm.parser;
 
@@ -45,14 +45,14 @@ public class AccessPredLexer extends Lexer {
     public AccessPredLexer(CharStream input) {
         super(input);
     }
-    public String getGrammarFileName() { return "C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g"; }
+    public String getGrammarFileName() { return "D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g"; }
 
     // $ANTLR start T21
     public final void mT21() throws RecognitionException {
         try {
             int _type = T21;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:6:5: ( '(' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:6:7: '('
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:6:5: ( '(' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:6:7: '('
             {
             match('('); 
 
@@ -69,8 +69,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT22() throws RecognitionException {
         try {
             int _type = T22;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:7:5: ( ')' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:7:7: ')'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:7:5: ( ')' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:7:7: ')'
             {
             match(')'); 
 
@@ -87,8 +87,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT23() throws RecognitionException {
         try {
             int _type = T23;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:8:5: ( ',' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:8:7: ','
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:8:5: ( ',' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:8:7: ','
             {
             match(','); 
 
@@ -105,8 +105,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT24() throws RecognitionException {
         try {
             int _type = T24;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:9:5: ( '#' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:9:7: '#'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:9:5: ( '#' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:9:7: '#'
             {
             match('#'); 
 
@@ -123,8 +123,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT25() throws RecognitionException {
         try {
             int _type = T25;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:10:5: ( '!' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:10:7: '!'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:10:5: ( '!' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:10:7: '!'
             {
             match('!'); 
 
@@ -141,8 +141,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT26() throws RecognitionException {
         try {
             int _type = T26;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:11:5: ( '.super' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:11:7: '.super'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:11:5: ( '.super' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:11:7: '.super'
             {
             match(".super"); 
 
@@ -160,8 +160,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT27() throws RecognitionException {
         try {
             int _type = T27;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:12:5: ( '.this' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:12:7: '.this'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:12:5: ( '.this' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:12:7: '.this'
             {
             match(".this"); 
 
@@ -179,8 +179,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT28() throws RecognitionException {
         try {
             int _type = T28;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:13:5: ( 'fr' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:13:7: 'fr'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:13:5: ( 'fr' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:13:7: 'fr'
             {
             match("fr"); 
 
@@ -198,8 +198,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT29() throws RecognitionException {
         try {
             int _type = T29;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:14:5: ( 'fl' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:14:7: 'fl'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:14:5: ( 'fl' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:14:7: 'fl'
             {
             match("fl"); 
 
@@ -217,8 +217,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT30() throws RecognitionException {
         try {
             int _type = T30;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:15:5: ( 'dp' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:15:7: 'dp'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:15:5: ( 'dp' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:15:7: 'dp'
             {
             match("dp"); 
 
@@ -236,8 +236,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT31() throws RecognitionException {
         try {
             int _type = T31;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:16:5: ( 'df' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:16:7: 'df'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:16:5: ( 'df' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:16:7: 'df'
             {
             match("df"); 
 
@@ -255,8 +255,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT32() throws RecognitionException {
         try {
             int _type = T32;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:17:5: ( '=' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:17:7: '='
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:17:5: ( '=' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:17:7: '='
             {
             match('='); 
 
@@ -273,8 +273,8 @@ public class AccessPredLexer extends Lexer {
     public final void mT33() throws RecognitionException {
         try {
             int _type = T33;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:18:5: ( '/' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:18:7: '/'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:18:5: ( '/' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:18:7: '/'
             {
             match('/'); 
 
@@ -291,7 +291,7 @@ public class AccessPredLexer extends Lexer {
     public final void mALT() throws RecognitionException {
         try {
             int _type = ALT;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:5: ( 'alt' | '+' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:251:5: ( 'alt' | '+' )
             int alt1=2;
             int LA1_0 = input.LA(1);
 
@@ -309,7 +309,7 @@ public class AccessPredLexer extends Lexer {
             }
             switch (alt1) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:7: 'alt'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:251:7: 'alt'
                     {
                     match("alt"); 
 
@@ -317,7 +317,7 @@ public class AccessPredLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:251:15: '+'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:251:15: '+'
                     {
                     match('+'); 
 
@@ -336,7 +336,7 @@ public class AccessPredLexer extends Lexer {
     public final void mTENS() throws RecognitionException {
         try {
             int _type = TENS;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:252:6: ( 'tens' | '*' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:252:6: ( 'tens' | '*' )
             int alt2=2;
             int LA2_0 = input.LA(1);
 
@@ -354,7 +354,7 @@ public class AccessPredLexer extends Lexer {
             }
             switch (alt2) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:252:8: 'tens'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:252:8: 'tens'
                     {
                     match("tens"); 
 
@@ -362,7 +362,7 @@ public class AccessPredLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:252:17: '*'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:252:17: '*'
                     {
                     match('*'); 
 
@@ -381,7 +381,7 @@ public class AccessPredLexer extends Lexer {
     public final void mWITH() throws RecognitionException {
         try {
             int _type = WITH;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:253:6: ( 'with' | '&' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:253:6: ( 'with' | '&' )
             int alt3=2;
             int LA3_0 = input.LA(1);
 
@@ -399,7 +399,7 @@ public class AccessPredLexer extends Lexer {
             }
             switch (alt3) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:253:8: 'with'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:253:8: 'with'
                     {
                     match("with"); 
 
@@ -407,7 +407,7 @@ public class AccessPredLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:253:17: '&'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:253:17: '&'
                     {
                     match('&'); 
 
@@ -426,8 +426,8 @@ public class AccessPredLexer extends Lexer {
     public final void mDEQ() throws RecognitionException {
         try {
             int _type = DEQ;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:254:5: ( '==' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:254:7: '=='
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:254:5: ( '==' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:254:7: '=='
             {
             match("=="); 
 
@@ -445,8 +445,8 @@ public class AccessPredLexer extends Lexer {
     public final void mNEQ() throws RecognitionException {
         try {
             int _type = NEQ;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:255:5: ( '!=' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:255:7: '!='
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:255:5: ( '!=' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:255:7: '!='
             {
             match("!="); 
 
@@ -464,8 +464,8 @@ public class AccessPredLexer extends Lexer {
     public final void mIN() throws RecognitionException {
         try {
             int _type = IN;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:256:5: ( 'in' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:256:7: 'in'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:256:5: ( 'in' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:256:7: 'in'
             {
             match("in"); 
 
@@ -483,8 +483,8 @@ public class AccessPredLexer extends Lexer {
     public final void mNULL() throws RecognitionException {
         try {
             int _type = NULL;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:257:6: ( 'null' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:257:8: 'null'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:257:6: ( 'null' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:257:8: 'null'
             {
             match("null"); 
 
@@ -502,7 +502,7 @@ public class AccessPredLexer extends Lexer {
     public final void mIMPLIES() throws RecognitionException {
         try {
             int _type = IMPLIES;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:258:9: ( '=>' | 'implies' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:258:9: ( '=>' | 'implies' )
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -520,7 +520,7 @@ public class AccessPredLexer extends Lexer {
             }
             switch (alt4) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:258:11: '=>'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:258:11: '=>'
                     {
                     match("=>"); 
 
@@ -528,7 +528,7 @@ public class AccessPredLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:258:18: 'implies'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:258:18: 'implies'
                     {
                     match("implies"); 
 
@@ -548,8 +548,8 @@ public class AccessPredLexer extends Lexer {
     public final void mTRUE() throws RecognitionException {
         try {
             int _type = TRUE;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:259:6: ( 'true' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:259:8: 'true'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:259:6: ( 'true' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:259:8: 'true'
             {
             match("true"); 
 
@@ -567,8 +567,8 @@ public class AccessPredLexer extends Lexer {
     public final void mFALSE() throws RecognitionException {
         try {
             int _type = FALSE;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:260:7: ( 'false' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:260:9: 'false'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:260:7: ( 'false' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:260:9: 'false'
             {
             match("false"); 
 
@@ -586,8 +586,8 @@ public class AccessPredLexer extends Lexer {
     public final void mONE() throws RecognitionException {
         try {
             int _type = ONE;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:261:6: ( 'one' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:261:8: 'one'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:261:6: ( 'one' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:261:8: 'one'
             {
             match("one"); 
 
@@ -605,8 +605,8 @@ public class AccessPredLexer extends Lexer {
     public final void mZERO() throws RecognitionException {
         try {
             int _type = ZERO;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:262:6: ( 'zero' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:262:8: 'zero'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:262:6: ( 'zero' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:262:8: 'zero'
             {
             match("zero"); 
 
@@ -624,8 +624,8 @@ public class AccessPredLexer extends Lexer {
     public final void mID() throws RecognitionException {
         try {
             int _type = ID;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:264:5: ( ( LETTER | '_' ) ( LETTER | DIGIT | '_' )* )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:264:7: ( LETTER | '_' ) ( LETTER | DIGIT | '_' )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:264:5: ( ( LETTER | '_' ) ( LETTER | DIGIT | '_' )* )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:264:7: ( LETTER | '_' ) ( LETTER | DIGIT | '_' )*
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -637,7 +637,7 @@ public class AccessPredLexer extends Lexer {
                 recover(mse);    throw mse;
             }
 
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:264:19: ( LETTER | DIGIT | '_' )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:264:19: ( LETTER | DIGIT | '_' )*
             loop5:
             do {
                 int alt5=2;
@@ -650,7 +650,7 @@ public class AccessPredLexer extends Lexer {
 
                 switch (alt5) {
             	case 1 :
-            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:
+            	    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:
             	    {
             	    if ( (input.LA(1)>='0' && input.LA(1)<='9')||(input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
             	        input.consume();
@@ -684,8 +684,8 @@ public class AccessPredLexer extends Lexer {
     // $ANTLR start LETTER
     public final void mLETTER() throws RecognitionException {
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:266:16: ( ( 'a' .. 'z' | 'A' .. 'Z' ) )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:266:18: ( 'a' .. 'z' | 'A' .. 'Z' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:266:16: ( ( 'a' .. 'z' | 'A' .. 'Z' ) )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:266:18: ( 'a' .. 'z' | 'A' .. 'Z' )
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -710,10 +710,10 @@ public class AccessPredLexer extends Lexer {
     public final void mNUMBER() throws RecognitionException {
         try {
             int _type = NUMBER;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:268:8: ( ( DIGIT )+ )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:268:10: ( DIGIT )+
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:268:8: ( ( DIGIT )+ )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:268:10: ( DIGIT )+
             {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:268:10: ( DIGIT )+
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:268:10: ( DIGIT )+
             int cnt6=0;
             loop6:
             do {
@@ -727,7 +727,7 @@ public class AccessPredLexer extends Lexer {
 
                 switch (alt6) {
             	case 1 :
-            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:268:11: DIGIT
+            	    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:268:11: DIGIT
             	    {
             	    mDIGIT(); 
 
@@ -757,10 +757,10 @@ public class AccessPredLexer extends Lexer {
     public final void mWHITESPACE() throws RecognitionException {
         try {
             int _type = WHITESPACE;
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:270:12: ( ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+ )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:270:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:270:12: ( ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+ )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:270:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
             {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:270:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:270:14: ( '\\t' | ' ' | '\\r' | '\\n' | '\\u000C' )+
             int cnt7=0;
             loop7:
             do {
@@ -774,7 +774,7 @@ public class AccessPredLexer extends Lexer {
 
                 switch (alt7) {
             	case 1 :
-            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:
+            	    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:
             	    {
             	    if ( (input.LA(1)>='\t' && input.LA(1)<='\n')||(input.LA(1)>='\f' && input.LA(1)<='\r')||input.LA(1)==' ' ) {
             	        input.consume();
@@ -813,8 +813,8 @@ public class AccessPredLexer extends Lexer {
     // $ANTLR start DIGIT
     public final void mDIGIT() throws RecognitionException {
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:272:16: ( '0' .. '9' )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:272:18: '0' .. '9'
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:272:16: ( '0' .. '9' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:272:18: '0' .. '9'
             {
             matchRange('0','9'); 
 
@@ -827,7 +827,7 @@ public class AccessPredLexer extends Lexer {
     // $ANTLR end DIGIT
 
     public void mTokens() throws RecognitionException {
-        // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:8: ( T21 | T22 | T23 | T24 | T25 | T26 | T27 | T28 | T29 | T30 | T31 | T32 | T33 | ALT | TENS | WITH | DEQ | NEQ | IN | NULL | IMPLIES | TRUE | FALSE | ONE | ZERO | ID | NUMBER | WHITESPACE )
+        // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:8: ( T21 | T22 | T23 | T24 | T25 | T26 | T27 | T28 | T29 | T30 | T31 | T32 | T33 | ALT | TENS | WITH | DEQ | NEQ | IN | NULL | IMPLIES | TRUE | FALSE | ONE | ZERO | ID | NUMBER | WHITESPACE )
         int alt8=28;
         switch ( input.LA(1) ) {
         case '(':
@@ -1333,196 +1333,196 @@ public class AccessPredLexer extends Lexer {
 
         switch (alt8) {
             case 1 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:10: T21
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:10: T21
                 {
                 mT21(); 
 
                 }
                 break;
             case 2 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:14: T22
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:14: T22
                 {
                 mT22(); 
 
                 }
                 break;
             case 3 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:18: T23
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:18: T23
                 {
                 mT23(); 
 
                 }
                 break;
             case 4 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:22: T24
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:22: T24
                 {
                 mT24(); 
 
                 }
                 break;
             case 5 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:26: T25
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:26: T25
                 {
                 mT25(); 
 
                 }
                 break;
             case 6 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:30: T26
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:30: T26
                 {
                 mT26(); 
 
                 }
                 break;
             case 7 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:34: T27
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:34: T27
                 {
                 mT27(); 
 
                 }
                 break;
             case 8 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:38: T28
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:38: T28
                 {
                 mT28(); 
 
                 }
                 break;
             case 9 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:42: T29
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:42: T29
                 {
                 mT29(); 
 
                 }
                 break;
             case 10 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:46: T30
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:46: T30
                 {
                 mT30(); 
 
                 }
                 break;
             case 11 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:50: T31
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:50: T31
                 {
                 mT31(); 
 
                 }
                 break;
             case 12 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:54: T32
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:54: T32
                 {
                 mT32(); 
 
                 }
                 break;
             case 13 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:58: T33
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:58: T33
                 {
                 mT33(); 
 
                 }
                 break;
             case 14 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:62: ALT
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:62: ALT
                 {
                 mALT(); 
 
                 }
                 break;
             case 15 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:66: TENS
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:66: TENS
                 {
                 mTENS(); 
 
                 }
                 break;
             case 16 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:71: WITH
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:71: WITH
                 {
                 mWITH(); 
 
                 }
                 break;
             case 17 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:76: DEQ
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:76: DEQ
                 {
                 mDEQ(); 
 
                 }
                 break;
             case 18 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:80: NEQ
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:80: NEQ
                 {
                 mNEQ(); 
 
                 }
                 break;
             case 19 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:84: IN
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:84: IN
                 {
                 mIN(); 
 
                 }
                 break;
             case 20 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:87: NULL
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:87: NULL
                 {
                 mNULL(); 
 
                 }
                 break;
             case 21 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:92: IMPLIES
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:92: IMPLIES
                 {
                 mIMPLIES(); 
 
                 }
                 break;
             case 22 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:100: TRUE
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:100: TRUE
                 {
                 mTRUE(); 
 
                 }
                 break;
             case 23 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:105: FALSE
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:105: FALSE
                 {
                 mFALSE(); 
 
                 }
                 break;
             case 24 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:111: ONE
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:111: ONE
                 {
                 mONE(); 
 
                 }
                 break;
             case 25 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:115: ZERO
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:115: ZERO
                 {
                 mZERO(); 
 
                 }
                 break;
             case 26 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:120: ID
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:120: ID
                 {
                 mID(); 
 
                 }
                 break;
             case 27 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:123: NUMBER
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:123: NUMBER
                 {
                 mNUMBER(); 
 
                 }
                 break;
             case 28 :
-                // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:1:130: WHITESPACE
+                // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:1:130: WHITESPACE
                 {
                 mWHITESPACE(); 
 

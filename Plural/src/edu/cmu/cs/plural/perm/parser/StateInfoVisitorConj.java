@@ -112,5 +112,10 @@ public class StateInfoVisitorConj implements AccessPredVisitor<List<Pair<String,
 	public List<Pair<String, String>> visit(
 			PermissionImplication permissionImplication) {
 		return Collections.emptyList();
+	}
+
+	@Override
+	public List<Pair<String, String>> visit(EmptyPredicate emptyPredicate) {
+		return Collections.emptyList();
 	}	
 }
