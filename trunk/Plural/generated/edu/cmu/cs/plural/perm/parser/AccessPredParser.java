@@ -1,4 +1,4 @@
-// $ANTLR 3.0.1 C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g 2009-03-26 15:56:26
+// $ANTLR 3.0.1 D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g 2009-07-17 14:42:48
 
 package edu.cmu.cs.plural.perm.parser;
 
@@ -42,7 +42,7 @@ public class AccessPredParser extends Parser {
         
 
     public String[] getTokenNames() { return tokenNames; }
-    public String getGrammarFileName() { return "C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g"; }
+    public String getGrammarFileName() { return "D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g"; }
 
     
         /**
@@ -105,7 +105,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start start
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:116:1: start returns [TopLevelPred result] : (p= perm EOF | TRUE EOF | FALSE EOF | EOF );
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:116:1: start returns [TopLevelPred result] : (p= perm EOF | TRUE EOF | FALSE EOF | EOF );
     public final TopLevelPred start() throws RecognitionException {
         TopLevelPred result = null;
 
@@ -113,7 +113,7 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:117:2: (p= perm EOF | TRUE EOF | FALSE EOF | EOF )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:117:2: (p= perm EOF | TRUE EOF | FALSE EOF | EOF )
             int alt1=4;
             switch ( input.LA(1) ) {
             case ID:
@@ -174,7 +174,7 @@ public class AccessPredParser extends Parser {
 
             switch (alt1) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:117:4: p= perm EOF
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:117:4: p= perm EOF
                     {
                     pushFollow(FOLLOW_perm_in_start43);
                     p=perm();
@@ -186,7 +186,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:118:4: TRUE EOF
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:118:4: TRUE EOF
                     {
                     match(input,TRUE,FOLLOW_TRUE_in_start52); 
                     match(input,EOF,FOLLOW_EOF_in_start54); 
@@ -195,7 +195,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:119:4: FALSE EOF
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:119:4: FALSE EOF
                     {
                     match(input,FALSE,FOLLOW_FALSE_in_start61); 
                     match(input,EOF,FOLLOW_EOF_in_start63); 
@@ -204,10 +204,10 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:120:4: EOF
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:120:4: EOF
                     {
                     match(input,EOF,FOLLOW_EOF_in_start70); 
-                     result = null; 
+                     result = EmptyPredicate.getInstance(); 
 
                     }
                     break;
@@ -226,7 +226,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start access_pred
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:123:1: access_pred returns [AccessPred result] : (i1= ID '(' i2= ref_expr ')' | i1= ID '(' i2= ref_expr ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ')' | i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list );
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:123:1: access_pred returns [AccessPred result] : (i1= ID '(' i2= ref_expr ')' | i1= ID '(' i2= ref_expr ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ')' | i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list );
     public final AccessPred access_pred() throws RecognitionException {
         AccessPred result = null;
 
@@ -240,12 +240,12 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:124:2: (i1= ID '(' i2= ref_expr ')' | i1= ID '(' i2= ref_expr ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ')' | i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:124:2: (i1= ID '(' i2= ref_expr ')' | i1= ID '(' i2= ref_expr ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ')' | i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' | i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list )
             int alt2=6;
             alt2 = dfa2.predict(input);
             switch (alt2) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:124:4: i1= ID '(' i2= ref_expr ')'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:124:4: i1= ID '(' i2= ref_expr ')'
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred89); 
@@ -260,7 +260,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:126:4: i1= ID '(' i2= ref_expr ')' IN sl= state_list
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:126:4: i1= ID '(' i2= ref_expr ')' IN sl= state_list
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred110); 
@@ -280,7 +280,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:128:4: i1= ID '(' i2= ref_expr ',' i3= ID ')'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:128:4: i1= ID '(' i2= ref_expr ',' i3= ID ')'
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred137); 
@@ -298,7 +298,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:130:4: i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:130:4: i1= ID '(' i2= ref_expr ',' i3= ID ')' IN sl= state_list
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred164); 
@@ -321,7 +321,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:132:4: i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:132:4: i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')'
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred196); 
@@ -344,7 +344,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 6 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:134:4: i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:134:4: i1= ID '(' i2= ref_expr ',' i3= ID ',' f= fractions ')' IN sl= state_list
                     {
                     i1=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_access_pred228); 
@@ -386,7 +386,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start implies
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:139:1: implies returns [AccessPred result] : ant= bin_expr IMPLIES cons= lowest ;
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:139:1: implies returns [AccessPred result] : ant= bin_expr IMPLIES cons= lowest ;
     public final AccessPred implies() throws RecognitionException {
         AccessPred result = null;
 
@@ -396,8 +396,8 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:140:2: (ant= bin_expr IMPLIES cons= lowest )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:140:4: ant= bin_expr IMPLIES cons= lowest
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:140:2: (ant= bin_expr IMPLIES cons= lowest )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:140:4: ant= bin_expr IMPLIES cons= lowest
             {
             pushFollow(FOLLOW_bin_expr_in_implies278);
             ant=bin_expr();
@@ -425,7 +425,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start state_only
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:143:1: state_only returns [AccessPred result] : ref= ref_expr IN state= ID ;
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:143:1: state_only returns [AccessPred result] : ref= ref_expr IN state= ID ;
     public final AccessPred state_only() throws RecognitionException {
         AccessPred result = null;
 
@@ -434,8 +434,8 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:144:2: (ref= ref_expr IN state= ID )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:144:4: ref= ref_expr IN state= ID
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:144:2: (ref= ref_expr IN state= ID )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:144:4: ref= ref_expr IN state= ID
             {
             pushFollow(FOLLOW_ref_expr_in_state_only303);
             ref=ref_expr();
@@ -461,7 +461,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start bin_expr_ap
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:148:1: bin_expr_ap returns [AccessPred result] : e= bin_expr ;
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:148:1: bin_expr_ap returns [AccessPred result] : e= bin_expr ;
     public final AccessPred bin_expr_ap() throws RecognitionException {
         AccessPred result = null;
 
@@ -469,8 +469,8 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:149:2: (e= bin_expr )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:149:4: e= bin_expr
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:149:2: (e= bin_expr )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:149:4: e= bin_expr
             {
             pushFollow(FOLLOW_bin_expr_in_bin_expr_ap330);
             e=bin_expr();
@@ -493,7 +493,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start bin_expr
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:152:1: bin_expr returns [BinaryExpr result] : (e1= primary_expr DEQ e2= primary_expr | e1= primary_expr NEQ e2= primary_expr );
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:152:1: bin_expr returns [BinaryExpr result] : (e1= primary_expr DEQ e2= primary_expr | e1= primary_expr NEQ e2= primary_expr );
     public final BinaryExpr bin_expr() throws RecognitionException {
         BinaryExpr result = null;
 
@@ -503,7 +503,7 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:153:2: (e1= primary_expr DEQ e2= primary_expr | e1= primary_expr NEQ e2= primary_expr )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:153:2: (e1= primary_expr DEQ e2= primary_expr | e1= primary_expr NEQ e2= primary_expr )
             int alt3=2;
             switch ( input.LA(1) ) {
             case ID:
@@ -615,7 +615,7 @@ public class AccessPredParser extends Parser {
 
             switch (alt3) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:153:4: e1= primary_expr DEQ e2= primary_expr
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:153:4: e1= primary_expr DEQ e2= primary_expr
                     {
                     pushFollow(FOLLOW_primary_expr_in_bin_expr349);
                     e1=primary_expr();
@@ -631,7 +631,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:154:4: e1= primary_expr NEQ e2= primary_expr
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:154:4: e1= primary_expr NEQ e2= primary_expr
                     {
                     pushFollow(FOLLOW_primary_expr_in_bin_expr364);
                     e1=primary_expr();
@@ -661,7 +661,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start primary_expr
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:157:1: primary_expr returns [PrimaryExpr result] : (i= ID | '#' num= NUMBER | NULL | TRUE | FALSE );
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:157:1: primary_expr returns [PrimaryExpr result] : (i= ID | '#' num= NUMBER | NULL | TRUE | FALSE );
     public final PrimaryExpr primary_expr() throws RecognitionException {
         PrimaryExpr result = null;
 
@@ -669,7 +669,7 @@ public class AccessPredParser extends Parser {
         Token num=null;
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:158:2: (i= ID | '#' num= NUMBER | NULL | TRUE | FALSE )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:158:2: (i= ID | '#' num= NUMBER | NULL | TRUE | FALSE )
             int alt4=5;
             switch ( input.LA(1) ) {
             case ID:
@@ -706,7 +706,7 @@ public class AccessPredParser extends Parser {
 
             switch (alt4) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:158:4: i= ID
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:158:4: i= ID
                     {
                     i=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_primary_expr389); 
@@ -715,7 +715,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:159:4: '#' num= NUMBER
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:159:4: '#' num= NUMBER
                     {
                     match(input,24,FOLLOW_24_in_primary_expr397); 
                     num=(Token)input.LT(1);
@@ -725,7 +725,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:160:4: NULL
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:160:4: NULL
                     {
                     match(input,NULL,FOLLOW_NULL_in_primary_expr408); 
                     result = Null.getInstance();
@@ -733,7 +733,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:161:4: TRUE
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:161:4: TRUE
                     {
                     match(input,TRUE,FOLLOW_TRUE_in_primary_expr416); 
                     result = BoolLiteral.getTrueInstance();
@@ -741,7 +741,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:162:4: FALSE
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:162:4: FALSE
                     {
                     match(input,FALSE,FOLLOW_FALSE_in_primary_expr424); 
                     result = BoolLiteral.getFalseInstance();
@@ -763,7 +763,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start ref_expr
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:165:1: ref_expr returns [RefExpr result] : (i= ID ( | '!' use= use_qualifier | '.super' | '.this' ( | '!' use2= use_qualifier ) ) | '#' num= NUMBER );
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:165:1: ref_expr returns [RefExpr result] : (i= ID ( | '!' use= use_qualifier | '.super' | '.this' ( | '!' use2= use_qualifier ) ) | '#' num= NUMBER );
     public final RefExpr ref_expr() throws RecognitionException {
         RefExpr result = null;
 
@@ -775,7 +775,7 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:166:2: (i= ID ( | '!' use= use_qualifier | '.super' | '.this' ( | '!' use2= use_qualifier ) ) | '#' num= NUMBER )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:166:2: (i= ID ( | '!' use= use_qualifier | '.super' | '.this' ( | '!' use2= use_qualifier ) ) | '#' num= NUMBER )
             int alt7=2;
             int LA7_0 = input.LA(1);
 
@@ -793,11 +793,11 @@ public class AccessPredParser extends Parser {
             }
             switch (alt7) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:166:5: i= ID ( | '!' use= use_qualifier | '.super' | '.this' ( | '!' use2= use_qualifier ) )
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:166:5: i= ID ( | '!' use= use_qualifier | '.super' | '.this' ( | '!' use2= use_qualifier ) )
                     {
                     i=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_ref_expr444); 
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:167:3: ( | '!' use= use_qualifier | '.super' | '.this' ( | '!' use2= use_qualifier ) )
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:167:3: ( | '!' use= use_qualifier | '.super' | '.this' ( | '!' use2= use_qualifier ) )
                     int alt6=4;
                     switch ( input.LA(1) ) {
                     case IN:
@@ -831,14 +831,14 @@ public class AccessPredParser extends Parser {
 
                     switch (alt6) {
                         case 1 :
-                            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:167:5: 
+                            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:167:5: 
                             {
                             result = new Identifier(i.getText());
 
                             }
                             break;
                         case 2 :
-                            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:168:6: '!' use= use_qualifier
+                            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:168:6: '!' use= use_qualifier
                             {
                             match(input,25,FOLLOW_25_in_ref_expr458); 
                             pushFollow(FOLLOW_use_qualifier_in_ref_expr462);
@@ -850,7 +850,7 @@ public class AccessPredParser extends Parser {
                             }
                             break;
                         case 3 :
-                            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:170:5: '.super'
+                            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:170:5: '.super'
                             {
                             match(input,26,FOLLOW_26_in_ref_expr473); 
                             result = Identifier.qualified(i.getText(), "super");
@@ -858,10 +858,10 @@ public class AccessPredParser extends Parser {
                             }
                             break;
                         case 4 :
-                            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:172:5: '.this' ( | '!' use2= use_qualifier )
+                            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:172:5: '.this' ( | '!' use2= use_qualifier )
                             {
                             match(input,27,FOLLOW_27_in_ref_expr485); 
-                            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:173:4: ( | '!' use2= use_qualifier )
+                            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:173:4: ( | '!' use2= use_qualifier )
                             int alt5=2;
                             int LA5_0 = input.LA(1);
 
@@ -879,14 +879,14 @@ public class AccessPredParser extends Parser {
                             }
                             switch (alt5) {
                                 case 1 :
-                                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:173:6: 
+                                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:173:6: 
                                     {
                                     result = Identifier.qualified(i.getText(), "this");
 
                                     }
                                     break;
                                 case 2 :
-                                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:174:6: '!' use2= use_qualifier
+                                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:174:6: '!' use2= use_qualifier
                                     {
                                     match(input,25,FOLLOW_25_in_ref_expr500); 
                                     pushFollow(FOLLOW_use_qualifier_in_ref_expr504);
@@ -910,7 +910,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:178:4: '#' num= NUMBER
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:178:4: '#' num= NUMBER
                     {
                     match(input,24,FOLLOW_24_in_ref_expr524); 
                     num=(Token)input.LT(1);
@@ -934,12 +934,12 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start use_qualifier
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:181:1: use_qualifier returns [PermissionUse result] : ( 'fr' | 'fl' | 'dp' | 'df' );
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:181:1: use_qualifier returns [PermissionUse result] : ( 'fr' | 'fl' | 'dp' | 'df' );
     public final PermissionUse use_qualifier() throws RecognitionException {
         PermissionUse result = null;
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:182:2: ( 'fr' | 'fl' | 'dp' | 'df' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:182:2: ( 'fr' | 'fl' | 'dp' | 'df' )
             int alt8=4;
             switch ( input.LA(1) ) {
             case 28:
@@ -971,7 +971,7 @@ public class AccessPredParser extends Parser {
 
             switch (alt8) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:182:4: 'fr'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:182:4: 'fr'
                     {
                     match(input,28,FOLLOW_28_in_use_qualifier546); 
                     result = PermissionUse.FIELDS;
@@ -979,7 +979,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:183:4: 'fl'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:183:4: 'fl'
                     {
                     match(input,29,FOLLOW_29_in_use_qualifier553); 
                     result = PermissionUse.FIELDS;
@@ -987,7 +987,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:184:4: 'dp'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:184:4: 'dp'
                     {
                     match(input,30,FOLLOW_30_in_use_qualifier560); 
                     result = PermissionUse.DISPATCH;
@@ -995,7 +995,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:185:4: 'df'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:185:4: 'df'
                     {
                     match(input,31,FOLLOW_31_in_use_qualifier567); 
                     result = PermissionUse.DISP_FIELDS;
@@ -1017,7 +1017,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start perm
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:189:1: perm returns [AccessPred result] : (left= wither ) ( ALT right= wither )* ;
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:189:1: perm returns [AccessPred result] : (left= wither ) ( ALT right= wither )* ;
     public final AccessPred perm() throws RecognitionException {
         AccessPred result = null;
 
@@ -1030,11 +1030,11 @@ public class AccessPredParser extends Parser {
         List<AccessPred> temp = new ArrayList<AccessPred>();
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:196:2: ( (left= wither ) ( ALT right= wither )* )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:196:4: (left= wither ) ( ALT right= wither )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:196:2: ( (left= wither ) ( ALT right= wither )* )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:196:4: (left= wither ) ( ALT right= wither )*
             {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:196:4: (left= wither )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:196:5: left= wither
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:196:4: (left= wither )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:196:5: left= wither
             {
             pushFollow(FOLLOW_wither_in_perm599);
             left=wither();
@@ -1044,7 +1044,7 @@ public class AccessPredParser extends Parser {
 
             }
 
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:196:37: ( ALT right= wither )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:196:37: ( ALT right= wither )*
             loop9:
             do {
                 int alt9=2;
@@ -1057,7 +1057,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt9) {
             	case 1 :
-            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:196:38: ALT right= wither
+            	    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:196:38: ALT right= wither
             	    {
             	    match(input,ALT,FOLLOW_ALT_in_perm605); 
             	    pushFollow(FOLLOW_wither_in_perm609);
@@ -1093,7 +1093,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start wither
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:199:1: wither returns [AccessPred result] : (left= conjs ) ( WITH right= conjs )* ;
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:199:1: wither returns [AccessPred result] : (left= conjs ) ( WITH right= conjs )* ;
     public final AccessPred wither() throws RecognitionException {
         AccessPred result = null;
 
@@ -1106,11 +1106,11 @@ public class AccessPredParser extends Parser {
         List<AccessPred> temp = new ArrayList<AccessPred>();
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:206:2: ( (left= conjs ) ( WITH right= conjs )* )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:206:4: (left= conjs ) ( WITH right= conjs )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:206:2: ( (left= conjs ) ( WITH right= conjs )* )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:206:4: (left= conjs ) ( WITH right= conjs )*
             {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:206:4: (left= conjs )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:206:5: left= conjs
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:206:4: (left= conjs )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:206:5: left= conjs
             {
             pushFollow(FOLLOW_conjs_in_wither641);
             left=conjs();
@@ -1120,7 +1120,7 @@ public class AccessPredParser extends Parser {
 
             }
 
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:206:36: ( WITH right= conjs )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:206:36: ( WITH right= conjs )*
             loop10:
             do {
                 int alt10=2;
@@ -1133,7 +1133,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt10) {
             	case 1 :
-            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:206:37: WITH right= conjs
+            	    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:206:37: WITH right= conjs
             	    {
             	    match(input,WITH,FOLLOW_WITH_in_wither647); 
             	    pushFollow(FOLLOW_conjs_in_wither651);
@@ -1169,7 +1169,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start conjs
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:209:1: conjs returns [AccessPred result] : (left= lowest ) ( TENS right= lowest )* ;
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:209:1: conjs returns [AccessPred result] : (left= lowest ) ( TENS right= lowest )* ;
     public final AccessPred conjs() throws RecognitionException {
         AccessPred result = null;
 
@@ -1182,11 +1182,11 @@ public class AccessPredParser extends Parser {
         List<AccessPred> temp = new ArrayList<AccessPred>();
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:216:3: ( (left= lowest ) ( TENS right= lowest )* )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:216:5: (left= lowest ) ( TENS right= lowest )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:216:3: ( (left= lowest ) ( TENS right= lowest )* )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:216:5: (left= lowest ) ( TENS right= lowest )*
             {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:216:5: (left= lowest )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:216:6: left= lowest
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:216:5: (left= lowest )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:216:6: left= lowest
             {
             pushFollow(FOLLOW_lowest_in_conjs685);
             left=lowest();
@@ -1196,7 +1196,7 @@ public class AccessPredParser extends Parser {
 
             }
 
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:216:39: ( TENS right= lowest )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:216:39: ( TENS right= lowest )*
             loop11:
             do {
                 int alt11=2;
@@ -1209,7 +1209,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt11) {
             	case 1 :
-            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:216:40: TENS right= lowest
+            	    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:216:40: TENS right= lowest
             	    {
             	    match(input,TENS,FOLLOW_TENS_in_conjs691); 
             	    pushFollow(FOLLOW_lowest_in_conjs695);
@@ -1245,7 +1245,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start lowest
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:219:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:219:1: lowest returns [AccessPred result] : (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' );
     public final AccessPred lowest() throws RecognitionException {
         AccessPred result = null;
 
@@ -1259,7 +1259,7 @@ public class AccessPredParser extends Parser {
 
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:220:2: (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:220:2: (r= access_pred | e= bin_expr_ap | s= state_only | i= implies | '(' r= perm ')' )
             int alt12=5;
             switch ( input.LA(1) ) {
             case ID:
@@ -2472,7 +2472,7 @@ public class AccessPredParser extends Parser {
 
             switch (alt12) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:220:4: r= access_pred
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:220:4: r= access_pred
                     {
                     pushFollow(FOLLOW_access_pred_in_lowest721);
                     r=access_pred();
@@ -2483,7 +2483,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:221:4: e= bin_expr_ap
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:221:4: e= bin_expr_ap
                     {
                     pushFollow(FOLLOW_bin_expr_ap_in_lowest730);
                     e=bin_expr_ap();
@@ -2494,7 +2494,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:222:10: s= state_only
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:222:10: s= state_only
                     {
                     pushFollow(FOLLOW_state_only_in_lowest745);
                     s=state_only();
@@ -2505,7 +2505,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:223:10: i= implies
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:223:10: i= implies
                     {
                     pushFollow(FOLLOW_implies_in_lowest760);
                     i=implies();
@@ -2516,7 +2516,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 5 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:224:4: '(' r= perm ')'
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:224:4: '(' r= perm ')'
                     {
                     match(input,21,FOLLOW_21_in_lowest767); 
                     pushFollow(FOLLOW_perm_in_lowest771);
@@ -2543,7 +2543,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start fractions
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:228:1: fractions returns [TempFractionMap result] : n= ID '=' f= fract ( ',' m= ID '=' g= fract )* ;
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:228:1: fractions returns [TempFractionMap result] : n= ID '=' f= fract ( ',' m= ID '=' g= fract )* ;
     public final TempFractionMap fractions() throws RecognitionException {
         TempFractionMap result = null;
 
@@ -2558,8 +2558,8 @@ public class AccessPredParser extends Parser {
         result = new TempFractionMap();
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:232:2: (n= ID '=' f= fract ( ',' m= ID '=' g= fract )* )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:232:4: n= ID '=' f= fract ( ',' m= ID '=' g= fract )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:232:2: (n= ID '=' f= fract ( ',' m= ID '=' g= fract )* )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:232:4: n= ID '=' f= fract ( ',' m= ID '=' g= fract )*
             {
             n=(Token)input.LT(1);
             match(input,ID,FOLLOW_ID_in_fractions799); 
@@ -2569,7 +2569,7 @@ public class AccessPredParser extends Parser {
             _fsp--;
 
             result.put(n.getText(), f);
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:232:52: ( ',' m= ID '=' g= fract )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:232:52: ( ',' m= ID '=' g= fract )*
             loop13:
             do {
                 int alt13=2;
@@ -2582,7 +2582,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt13) {
             	case 1 :
-            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:232:53: ',' m= ID '=' g= fract
+            	    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:232:53: ',' m= ID '=' g= fract
             	    {
             	    match(input,23,FOLLOW_23_in_fractions810); 
             	    m=(Token)input.LT(1);
@@ -2618,7 +2618,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start fract
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:235:1: fract returns [Fraction result] : (p= NUMBER | p= NUMBER '/' q= NUMBER | i= ID );
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:235:1: fract returns [Fraction result] : (p= NUMBER | p= NUMBER '/' q= NUMBER | i= ID );
     public final Fraction fract() throws RecognitionException {
         Fraction result = null;
 
@@ -2627,7 +2627,7 @@ public class AccessPredParser extends Parser {
         Token i=null;
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:236:2: (p= NUMBER | p= NUMBER '/' q= NUMBER | i= ID )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:236:2: (p= NUMBER | p= NUMBER '/' q= NUMBER | i= ID )
             int alt14=3;
             int LA14_0 = input.LA(1);
 
@@ -2658,7 +2658,7 @@ public class AccessPredParser extends Parser {
             }
             switch (alt14) {
                 case 1 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:236:4: p= NUMBER
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:236:4: p= NUMBER
                     {
                     p=(Token)input.LT(1);
                     match(input,NUMBER,FOLLOW_NUMBER_in_fract842); 
@@ -2667,7 +2667,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:237:4: p= NUMBER '/' q= NUMBER
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:237:4: p= NUMBER '/' q= NUMBER
                     {
                     p=(Token)input.LT(1);
                     match(input,NUMBER,FOLLOW_NUMBER_in_fract854); 
@@ -2679,7 +2679,7 @@ public class AccessPredParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:238:4: i= ID
+                    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:238:4: i= ID
                     {
                     i=(Token)input.LT(1);
                     match(input,ID,FOLLOW_ID_in_fract869); 
@@ -2702,7 +2702,7 @@ public class AccessPredParser extends Parser {
 
 
     // $ANTLR start state_list
-    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:241:1: state_list returns [List<String> result] : i= ID ( ',' j= ID )* ;
+    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:241:1: state_list returns [List<String> result] : i= ID ( ',' j= ID )* ;
     public final List<String> state_list() throws RecognitionException {
         List<String> result = null;
 
@@ -2713,13 +2713,13 @@ public class AccessPredParser extends Parser {
         result = new LinkedList<String>();
 
         try {
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:245:2: (i= ID ( ',' j= ID )* )
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:245:4: i= ID ( ',' j= ID )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:245:2: (i= ID ( ',' j= ID )* )
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:245:4: i= ID ( ',' j= ID )*
             {
             i=(Token)input.LT(1);
             match(input,ID,FOLLOW_ID_in_state_list898); 
              result.add(i.getText()); 
-            // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:245:39: ( ',' j= ID )*
+            // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:245:39: ( ',' j= ID )*
             loop15:
             do {
                 int alt15=2;
@@ -2732,7 +2732,7 @@ public class AccessPredParser extends Parser {
 
                 switch (alt15) {
             	case 1 :
-            	    // C:\\Documents and Settings\\kbierhof\\My Documents\\workspace\\Plural\\permission-parser\\AccessPred.g:245:40: ',' j= ID
+            	    // D:\\workspace-unimod\\Plural\\permission-parser\\AccessPred.g:245:40: ',' j= ID
             	    {
             	    match(input,23,FOLLOW_23_in_state_list903); 
             	    j=(Token)input.LT(1);

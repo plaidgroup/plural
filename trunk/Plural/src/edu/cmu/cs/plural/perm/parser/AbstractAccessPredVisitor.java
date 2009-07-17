@@ -88,4 +88,9 @@ public class AbstractAccessPredVisitor<T> implements AccessPredVisitor<T> {
 		return null;
 	}
 
+	@Override
+	public T visit(EmptyPredicate emptyPredicate) {
+		return null;
+	}
+
 }

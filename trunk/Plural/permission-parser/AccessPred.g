@@ -117,7 +117,7 @@ start returns [TopLevelPred result]
 	:	p=perm EOF { $result = p; }
 	|	TRUE EOF { $result = null; }
 	|	FALSE EOF { $result = TopLevelPred.Impossible.getInstance(); }
-	|	EOF { $result = null; }
+	|	EOF { $result = EmptyPredicate.getInstance(); }
 	;
 
 access_pred returns [AccessPred result]

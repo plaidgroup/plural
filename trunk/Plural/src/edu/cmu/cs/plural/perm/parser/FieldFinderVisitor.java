@@ -162,4 +162,9 @@ public class FieldFinderVisitor implements AccessPredVisitor<Set<String>> {
 			return Collections.emptySet();
 		}
 	}
+
+	@Override
+	public Set<String> visit(EmptyPredicate emptyPredicate) {
+		return Collections.emptySet();
+	}
 }

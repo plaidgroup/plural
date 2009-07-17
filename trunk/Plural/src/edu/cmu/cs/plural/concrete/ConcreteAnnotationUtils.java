@@ -37,23 +37,16 @@
  */
 package edu.cmu.cs.plural.concrete;
 
-import java.util.HashMap;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.antlr.runtime.RecognitionException;
 import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.IVariableBinding;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
@@ -64,6 +57,7 @@ import edu.cmu.cs.plural.perm.parser.BinaryExprAP;
 import edu.cmu.cs.plural.perm.parser.BoolLiteral;
 import edu.cmu.cs.plural.perm.parser.Conjunction;
 import edu.cmu.cs.plural.perm.parser.Disjunction;
+import edu.cmu.cs.plural.perm.parser.EmptyPredicate;
 import edu.cmu.cs.plural.perm.parser.EqualsExpr;
 import edu.cmu.cs.plural.perm.parser.Identifier;
 import edu.cmu.cs.plural.perm.parser.NotEqualsExpr;
@@ -76,10 +70,8 @@ import edu.cmu.cs.plural.perm.parser.PrimaryExprVisitor;
 import edu.cmu.cs.plural.perm.parser.StateOnly;
 import edu.cmu.cs.plural.perm.parser.TempPermission;
 import edu.cmu.cs.plural.perm.parser.Withing;
-import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
-import edu.cmu.cs.plural.track.FieldVariable;
 import edu.cmu.cs.plural.track.FractionalTransfer;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
@@ -394,6 +386,12 @@ public class ConcreteAnnotationUtils {
 			};
 			if(permissionImplication.cons().accept(consVisitor) == null)
 				log.warning("Ignore consequence: " + permissionImplication);
+			return null;
+		}
+
+		@Override
+		public Boolean visit(EmptyPredicate emptyPredicate) {
+			// not concrete...
 			return null;
 		}
 		
