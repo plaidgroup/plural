@@ -171,6 +171,14 @@
                name="General-purpose indicator">
          </sourceAnnotation>
       </customAnnotation>
+      <customAnnotation
+            name="State Mapping Annotation"
+            parserClass="edu.cmu.cs.plural.states.InStateMappingAnnotation">
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.In"
+               name="In">
+         </sourceAnnotation>
+      </customAnnotation>
    </extension>
    <extension
          point="org.eclipse.ui.views">
