@@ -39,7 +39,6 @@ package edu.cmu.cs.plural.states;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
-import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,6 +49,8 @@ import java.util.WeakHashMap;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
@@ -481,6 +482,57 @@ public class StateSpaceRepository {
 				}
 			}
 		}
+		
+		
+		// <daniel>
+		//checks whether @In annotations have been used correctly
+		for (IVariableBinding aField : type.getDeclaredFields()) {
+			for (ICrystalAnnotation a : getAnnotationDB().getAnnosForField(
+					aField)) {
+				if (a instanceof InStateMappingAnnotation) {
+					if (Modifier.isStatic(aField.getModifiers())) {
+						Set<String> annoProblems = new HashSet<String>();
+						annoProblems.add("Cannot use @In annotation on static field.");
+						problemsOut.put(a, annoProblems);
+					}
+					else if (field_to_node.containsKey(aField.getName())) {
+						Set<String> annoProblems = new HashSet<String>();
+						annoProblems.add("Wrong usage of @In annotation."
+								+ " Field " + aField.getName()
+								+ " can only have an @In annotation,"
+								+ " if it does not appear in any"
+								+ " state invariant.");
+						problemsOut.put(a, annoProblems);
+					}
+				}
+			}
+		}
+		
+		//adds field-to-node mappings defined through @In annotations
+		for (IVariableBinding aField : type.getDeclaredFields()) {
+			if(Modifier.isStatic(aField.getModifiers()))
+				continue;
+			for (ICrystalAnnotation a : getAnnotationDB().getAnnosForField(
+					aField)) {
+				if (a instanceof InStateMappingAnnotation) {
+					InStateMappingAnnotation inMapping = (InStateMappingAnnotation) a;
+					String state = inMapping.getStateName();
+					if (!result.isKnown(state)) {
+						Set<String> annoProblems = new HashSet<String>();
+						annoProblems.add("Undefined state " + state);
+						problemsOut.put(a, annoProblems);
+					}
+					if (field_to_node.containsKey(aField.getName())) {
+						field_to_node.get(aField.getName()).add(state);
+					} else {
+						Set<String> set = new HashSet<String>();
+						set.add(state);
+						field_to_node.put(aField.getName(), set);
+					}
+				}
+			}
+		}
+		//</daniel>
 		
 		// Now find the least common root node for each field... 
 		Map<String, String> fieldMap = new HashMap<String, String>();
