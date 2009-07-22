@@ -62,6 +62,7 @@ import edu.cmu.cs.plural.pred.MethodPrecondition;
 import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.states.StateSpace;
+import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
 /**
  * This code allows you to take a string and get back a list of fractional permissions.

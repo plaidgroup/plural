@@ -366,10 +366,23 @@ public abstract class AbstractParamVisitor
 	// Predicate visitor
 	//
 
+	/**
+	 * Given a string returns the permission kind for this string, or
+	 * if it is not a string returns a default, which is Share.
+	 */
+	private PermissionKind kindFromStringWithDefault(String type) {
+		try {
+			return
+			PermissionKind.valueOf(type.toUpperCase());
+		} catch(IllegalArgumentException iae) {
+			return PermissionKind.SHARE;
+		}
+	}
+	
 	@Override
 	public Boolean visit(TempPermission perm) {
 		RefExpr ref = perm.getRef();
-		PermissionKind p_type = PermissionKind.valueOf(perm.getType().toUpperCase());
+		PermissionKind p_type = kindFromStringWithDefault(perm.getType().toUpperCase());
 		StateSpace space = getStateSpace(ref);
 		if(space != null) {
 			Pair<String, PermissionUse> refPair = getRefPair(ref);

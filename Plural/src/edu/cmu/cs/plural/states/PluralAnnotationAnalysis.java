@@ -95,6 +95,7 @@ import edu.cmu.cs.plural.perm.parser.TempPermission;
 import edu.cmu.cs.plural.perm.parser.Withing;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
+import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
 /**
  * An analysis that examines user annotations to ensure that they have been
@@ -639,7 +640,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		final List<ICrystalAnnotation> annos = 
 			annotationDatabase.getAnnosForType(node.resolveBinding());
 		boolean is_problem = false;
-		String problem_field = "";
+		String error_message = "";
 		
 		outer_loop:
 		for( ICrystalAnnotation anno : annos ) {
@@ -655,7 +656,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 						}
 						else if( problem.isSome() ) {
 							is_problem = true;
-							problem_field = problem.unwrap();
+							error_message = problem.unwrap();
 							break outer_loop;
 						}
 				}
@@ -677,9 +678,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 					// FIXME error message could talk about a state now....
 					// TODO find the right @State annotation and make it work for NormalAnnotation
 					return Collections.singletonList(new Pair<ASTNode, String>((SingleMemberAnnotation)obj,
-					"This annotation refers to field " + problem_field + " of class " +
-					node.getName() + " which cannot be found. Possible misspelling or use of " +
-					"superclass field."));
+							error_message));
 				}
 			}
 		}
@@ -792,6 +791,19 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		protected abstract Option<String> checkPrimary(PrimaryExpr expr);
 		
 		@Override
+		public final Option<String> visit(TempPermission perm) {
+			// Check to see if this permission is a permission at all.
+			try {
+				PermissionKind.valueOf(perm.getType().toUpperCase());
+				return this.visitPerm(perm);
+			} catch(IllegalArgumentException iae) {
+				return Option.some("Unknown permission kind: " + perm.getType());
+			}
+		}
+
+		protected abstract Option<String> visitPerm(TempPermission perm);
+
+		@Override
 		public Option<String> visit(Disjunction disj) {
 			Option<String> c_1 = disj.getP1().accept(this);
 			Option<String> c_2 = disj.getP2().accept(this);
@@ -901,12 +913,13 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		}
 
 		@Override
-		public Option<String> visit(TempPermission perm) {
+		public Option<String> visitPerm(TempPermission perm) {
+			
 			if( perm.getRef() instanceof Identifier ) {
 //				return checkField(perm.getRef(), field_names);
 				String f = ((Identifier) perm.getRef()).getName();
 				if(!field_names.containsKey(f))
-					return Option.some(f);
+					return Option.some("Unknown field name: " + f);
 				ITypeBinding t = field_names.get(f);
 				return PluralAnnotationAnalysis.this.checkPermissionStates(t, perm.getRoot(), perm.getStateInfo());
 			}
@@ -1012,7 +1025,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		
 
 		@Override
-		public Option<String> visit(TempPermission perm) {
+		public Option<String> visitPerm(TempPermission perm) {
 			ITypeBinding t;
 			if( perm.getRef() instanceof Identifier ) {
 				t = identifierType((Identifier) perm.getRef());
