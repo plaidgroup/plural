@@ -37,28 +37,32 @@
  */
 package edu.cmu.cs.plural.test;
 
-import edu.cmu.cs.crystal.annotations.FailingTest;
+import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.State;
 
-@FailingTest(3)
-@UseAnalyses(PluralAnalysis.SYNTAX)
+/**
+ * In this test we just want to make sure that if we don't spell the
+ * permission correctly in the regular Plural analysis it won't
+ * throw an exception, which is what the old checker was doing. We
+ * rely on the permission default and the syntax checker to find
+ * misspellings.
+ * 
+ * @author Nels E. Beckman
+ * @since Jul 22, 2009
+ */
+@UseAnalyses(PluralAnalysis.PLURAL)
 @ClassStates(@State(name="alive", inv="fulll(field)"))
-public class Issue69Test1 {
-
+@PassingTest
+public class Issue69Test2 {
 	private Object field;
 	
 	@Perm(requires="unqie(this)")
 	void foo() {
 		
 	}
-	
-	@Perm(ensures="shre(this)")
-	void bar() {
-		
-	}
-	
+
 }
