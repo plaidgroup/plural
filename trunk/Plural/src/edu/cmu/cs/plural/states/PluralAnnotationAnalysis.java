@@ -37,6 +37,8 @@
  */
 package edu.cmu.cs.plural.states;
 
+import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -912,20 +914,58 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			return checkField(expr, field_names.keySet());
 		}
 
+		// Is this permission pure or share?
+		private boolean kindIsShareOrPure(TempPermission perm) {
+			try { 
+				PermissionKind field_kind =
+					PermissionKind.valueOf(perm.getType().toUpperCase());
+				
+				switch(field_kind) {
+				case SHARE:
+				case PURE:
+					return true;
+				default:
+					return false;
+				}
+			} catch(IllegalArgumentException e) {
+				// Default perm is Share
+				return true;
+			}
+		}
+		
+		// Is the state info for the given permission anything other than the single
+		// string "alive" ?
+		private boolean stateInfoIsNotAlive(String[] stateInfo) {
+			if( stateInfo.length > 1 ) {
+				return true;
+			}
+			else if( !("alive".equals(stateInfo[0])) ) {
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+		
 		@Override
 		public Option<String> visitPerm(TempPermission perm) {
-			
 			if( perm.getRef() instanceof Identifier ) {
-//				return checkField(perm.getRef(), field_names);
 				String f = ((Identifier) perm.getRef()).getName();
+
+				// If permission is pure or share, there should not be a stateInfo  
+				if( kindIsShareOrPure(perm) && stateInfoIsNotAlive(perm.getStateInfo()) )
+					return Option.some("Pure and Share field permissions in an invariant cannot mention a temporary state. (" +
+							"E.g., " + Arrays.toString(perm.getStateInfo()) + ")");
+				
+				// Make sure field exists
 				if(!field_names.containsKey(f))
 					return Option.some("Unknown field name: " + f);
+				
 				ITypeBinding t = field_names.get(f);
 				return PluralAnnotationAnalysis.this.checkPermissionStates(t, perm.getRoot(), perm.getStateInfo());
 			}
 			else if( perm.getRef() instanceof ParamReference )
-				return Option.some(((ParamReference) perm.getRef()).getParamString());
-//				return checkField(perm.getRef(), field_names);
+				return Option.some("Argument name used in invariant: " + ((ParamReference) perm.getRef()).getParamString());
 			else
 				return Utilities.nyi();
 		}
