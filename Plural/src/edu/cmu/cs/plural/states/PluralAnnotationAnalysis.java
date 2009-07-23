@@ -934,11 +934,11 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		
 		// Is the state info for the given permission anything other than the single
 		// string "alive" ?
-		private boolean stateInfoIsNotAlive(String[] stateInfo) {
+		private boolean hasTempStateInfo(String root, String[] stateInfo) {
 			if( stateInfo.length > 1 ) {
 				return true;
 			}
-			else if( !("alive".equals(stateInfo[0])) ) {
+			else if( !(root.equals(stateInfo[0])) ) {
 				return true;
 			}
 			else {
@@ -952,7 +952,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 				String f = ((Identifier) perm.getRef()).getName();
 
 				// If permission is pure or share, there should not be a stateInfo  
-				if( kindIsShareOrPure(perm) && stateInfoIsNotAlive(perm.getStateInfo()) )
+				if( kindIsShareOrPure(perm) && hasTempStateInfo(perm.getRoot(), perm.getStateInfo()) )
 					return Option.some("Pure and Share field permissions in an invariant cannot mention a temporary state. (" +
 							"E.g., " + Arrays.toString(perm.getStateInfo()) + ")");
 				
