@@ -45,13 +45,18 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
+import edu.cmu.cs.crystal.IAnalysisReporter.SEVERITY;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.contexts.PluralContext;
+import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.FractionalAnalysis;
 
 /**
@@ -161,10 +166,6 @@ public class ConcurrentChecker extends FractionalAnalysis {
 			}
 		}
 		
-		/*
-		 * TODO: We should override every important node.
-		 */
-
 		@Override
 		public void endVisit(FieldAccess node) {
 			super.endVisit(node);
