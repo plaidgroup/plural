@@ -39,13 +39,21 @@
 package edu.cmu.cs.plural.concurrent.syncorswim;
 
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.IExtendedModifier;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SynchronizedStatement;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
+import edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis;
+import edu.cmu.cs.crystal.IAnalysisReporter.SEVERITY;
 import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.plural.states.StateSpace;
+import edu.cmu.cs.plural.states.StateSpaceRepository;
 
 /**
  * This analysis is meant to warn users of places where our analysis
@@ -56,7 +64,7 @@ import edu.cmu.cs.crystal.util.Option;
  * @author Nels E. Beckman
  * @since May 1, 2009
  */
-public class SyncChecker extends AbstractCrystalMethodAnalysis {
+public class SyncChecker extends AbstractCompilationUnitAnalysis {
 
 	private static final String ANALYSIS_NAME = "Sync or Swim";
 	
@@ -70,21 +78,65 @@ public class SyncChecker extends AbstractCrystalMethodAnalysis {
 			Modifier.isSynchronized(d.getModifiers());
 	}
 	
+
 	@Override
-	public void analyzeMethod(MethodDeclaration d) {
-		// We don't track syncs on statics, so report a warning
-		if( isStaticSynced(d) ) {
-			final String description = "This analysis does not track" +
-				" synchronization on static methods.";
-			this.reporter.reportUserProblem(description, d, ANALYSIS_NAME);
-		}
-		
+	public void analyzeCompilationUnit(CompilationUnit d) {
 		d.accept(new SyncCheckerVisitor());
 	}
 
 	private class SyncCheckerVisitor extends ASTVisitor {
-		 
 		
+		private StateSpaceRepository getRepository() {
+			return StateSpaceRepository.getInstance(analysisInput.getAnnoDB());
+		}
+		
+		@Override
+		public void endVisit(FieldDeclaration node) {
+			super.endVisit(node);
+			
+			// Feature Request Issue71:
+			// Issue warning if a field is not mapped to any
+			// node, b/c it will not receive race-condition
+			// protection.
+			
+			for( Object mod_ : node.modifiers() ) {
+				// We are not interested in static fields, since we
+				// don't track invariants for state objects anyway.
+				IExtendedModifier mod = (IExtendedModifier)mod_;
+				if( mod.isModifier() && ((Modifier)mod).isStatic() )
+					return;
+			}
+			
+			for( Object frag_ : node.fragments() ) {
+				VariableDeclarationFragment frag = (VariableDeclarationFragment)frag_;
+				IVariableBinding field_binding = frag.resolveBinding();
+				ITypeBinding declaring_class = field_binding.getDeclaringClass();
+				StateSpace class_space = getRepository().getStateSpace(declaring_class);
+				String mapped_node = class_space.getFieldRootNode(field_binding);
+				
+				if( mapped_node == null ) {
+					getReporter().reportUserProblem("Field is not mapped to any node " +
+							"and therefore correct synchronization will not be enforced. " +
+							"(Use the @In annotation if you'd like to map field to a node.)", 
+							frag, 
+							getName(), 
+							SEVERITY.INFO);
+				}
+			}
+			
+		}
+		
+		@Override
+		public void endVisit(MethodDeclaration node) {
+			super.endVisit(node);
+			// We don't track syncs on statics, so report a warning
+			if( isStaticSynced(node) ) {
+				final String description = "This analysis does not track" +
+					" synchronization on static methods.";
+				reporter.reportUserProblem(description, node, ANALYSIS_NAME);
+			}
+		}
+
 		@Override
 		public void endVisit(SynchronizedStatement node) {
 			Option<IVariableBinding> var_ =
