@@ -8,6 +8,7 @@ import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.FalseIndicates;
 import edu.cmu.cs.plural.annot.Full;
+import edu.cmu.cs.plural.annot.In;
 import edu.cmu.cs.plural.annot.NoEffects;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
@@ -68,6 +69,8 @@ public class Blocking_queue
 	private LinkedList elements 				= new LinkedList();
 	private boolean	   closed					= false;
 	private boolean	   reject_enqueue_requests	= false;
+	
+	@In("STRUCTURE")
 	private int		   waiting_threads			= 0;
 	
 	
@@ -240,8 +243,8 @@ public class Blocking_queue
 	 * current queue. See {@link is_empty} for warnings about
 	 * synchronization.
 	 */
-	@Pure("STRUCTURE")
-	public final int waiting_threads()
+	@Pure(guarantee="STRUCTURE", use=Use.FIELDS)
+	public final synchronized int waiting_threads()
 	{	return waiting_threads;
 	}
 
