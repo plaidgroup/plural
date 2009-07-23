@@ -35,48 +35,26 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.syncorswim;
+package edu.cmu.cs.plural.test;
 
-import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
-import edu.cmu.cs.plural.annot.In;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
 
-
 /**
- * This test does everything correctly.
+ * A test that will check to see if there are fields that are not
+ * mapped to any node. If they exist, we should alert the user that
+ * they will receive no race-condition protection for that field.
+ *  
  * @author Nels E. Beckman
- * @since May 4, 2009
+ * @since Jul 23, 2009
  *
  */
-@PassingTest
+@FailingTest(1)
 @UseAnalyses(PluralAnalysis.SOS_PRE)
-public class EverythingCorrectly {
+public class Issue71Test1 {
 
-	@In("alive")
-	private final Object o = new Object();
+	@SuppressWarnings("unused")
+	private int myField;
 	
-	void foo() {
-		final Object b = new Object();
-		
-		synchronized(this) {
-			synchronized(b) {
-				synchronized(o) {
-					
-				}
-			}
-		}
-		
-		synchronized(EverythingCorrectly.this) {
-			
-		}
-		
-		synchronized(o) {
-			
-		}
-		
-		synchronized(b) {
-			
-		}
-	}
 }

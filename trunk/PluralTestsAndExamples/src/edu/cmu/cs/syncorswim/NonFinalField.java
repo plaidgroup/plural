@@ -39,12 +39,15 @@ package edu.cmu.cs.syncorswim;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.plural.annot.In;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 
 
 @FailingTest(1)
-@UseAnalyses("SyncChecker")
+@UseAnalyses(PluralAnalysis.SOS_PRE)
 public class NonFinalField {
 
+	@In("alive")
 	Object o = new Object();
 	
 	void foo() {
