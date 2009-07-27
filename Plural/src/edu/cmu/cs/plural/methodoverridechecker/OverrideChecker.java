@@ -38,6 +38,10 @@
 
 package edu.cmu.cs.plural.methodoverridechecker;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
@@ -70,8 +74,58 @@ public class OverrideChecker extends AbstractCrystalMethodAnalysis {
 
 	@Override
 	public void analyzeMethod(MethodDeclaration d) {
-		// TODO Auto-generated method stub
-
+		// The process is pretty simple here. For every method we
+		// encounter, find all methods that this one could be
+		// overriding, then perform the appropriate pre/post
+		// condition entailment checks.
+		ITypeBinding declaringClass = d.resolveBinding().getDeclaringClass();
+		ITypeBinding superclass = declaringClass.getSuperclass();
+		ITypeBinding[] super_interfaces = declaringClass.getInterfaces();
+		
+		checkMethod(d, arrayAppend(super_interfaces, superclass));
 	}
 
+	/**
+	 * Returns a possibly-new array that is the value of the original array with
+	 * the extra interface appended to its end.
+	 */
+	private ITypeBinding[] arrayAppend(ITypeBinding[] super_interfaces,
+			ITypeBinding superclass) {
+		if( superclass == null )
+			return super_interfaces;
+		
+		ITypeBinding[] result = new ITypeBinding[super_interfaces.length + 1];
+		System.arraycopy(super_interfaces, 0, result, 0, super_interfaces.length);
+		result[super_interfaces.length] = superclass;
+		
+		return result;
+	}
+
+	// Modifies set in place! Adds each element from the array.
+	private void addArrayToSet(ITypeBinding[] types, Set<ITypeBinding> set) {
+		for( ITypeBinding type : types ) {
+			set.add(type);
+		}
+	}
+	
+	// Recursive method that kicks off the chceking, given super types.
+	private void checkMethod(MethodDeclaration d, ITypeBinding[] super_types) {
+		// We create just one set of super types, checking them at the end. This
+		// is because if we reach the same interface through multiple paths
+		// we really only want to report those errors one time.
+		Set<ITypeBinding> next_super_types = new HashSet<ITypeBinding>();
+		for( ITypeBinding super_type : super_types ) {
+			if( super_type == null ) continue; // This corresponds to super of Object, and others.
+			
+			checkSingleSupertype(d, super_type);
+			
+			next_super_types.add(super_type.getSuperclass());
+			addArrayToSet(super_type.getInterfaces(), next_super_types);
+		}
+	}
+
+	private void checkSingleSupertype(MethodDeclaration d,
+			ITypeBinding super_type) {
+		throw new RuntimeException("NYI");
+	}	
 }
