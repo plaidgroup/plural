@@ -38,13 +38,18 @@
 
 package edu.cmu.cs.plural.methodoverridechecker;
 
+import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
+import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.plural.states.IMethodSignature;
+import edu.cmu.cs.plural.states.StateSpaceRepository;
 
 /**
  * In Plural, a method that overrides another method or implements a
@@ -71,9 +76,15 @@ import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
  *
  */
 public class OverrideChecker extends AbstractCrystalMethodAnalysis {
+ 
 
 	@Override
 	public void analyzeMethod(MethodDeclaration d) {
+		// This ONLY matters for instance methods, not constructors, not static methods.
+		if( d.isConstructor() || 
+			Modifier.isStatic(d.resolveBinding().getModifiers()) )
+			return;
+		
 		// The process is pretty simple here. For every method we
 		// encounter, find all methods that this one could be
 		// overriding, then perform the appropriate pre/post
@@ -82,9 +93,18 @@ public class OverrideChecker extends AbstractCrystalMethodAnalysis {
 		ITypeBinding superclass = declaringClass.getSuperclass();
 		ITypeBinding[] super_interfaces = declaringClass.getInterfaces();
 		
-		checkMethod(d, arrayAppend(super_interfaces, superclass));
+		try {
+			checkMethod(d.resolveBinding(), 
+					arrayAppend(super_interfaces, superclass));
+		} catch(MultipleCasesException mce) {
+			this.getReporter().reportUserProblem(mce.getMessage(), d, getName());
+		}
 	}
 
+	private StateSpaceRepository getRepository() {
+		return StateSpaceRepository.getInstance(this.getInput().getAnnoDB());
+	}
+	
 	/**
 	 * Returns a possibly-new array that is the value of the original array with
 	 * the extra interface appended to its end.
@@ -108,24 +128,65 @@ public class OverrideChecker extends AbstractCrystalMethodAnalysis {
 		}
 	}
 	
-	// Recursive method that kicks off the chceking, given super types.
-	private void checkMethod(MethodDeclaration d, ITypeBinding[] super_types) {
+	// Recursive method that kicks off the checking, given super types.
+	private void checkMethod(IMethodBinding d, ITypeBinding[] super_types) throws MultipleCasesException {
 		// We create just one set of super types, checking them at the end. This
 		// is because if we reach the same interface through multiple paths
 		// we really only want to report those errors one time.
 		Set<ITypeBinding> next_super_types = new HashSet<ITypeBinding>();
 		for( ITypeBinding super_type : super_types ) {
-			if( super_type == null ) continue; // This corresponds to super of Object, and others.
+			if( super_type == null ) continue; // This corresponds to super of Object, and interfaces.
 			
-			checkSingleSupertype(d, super_type);
+			Option<IMethodBinding> overridenMethod =
+				findOverridenMethod(d, super_type);
 			
-			next_super_types.add(super_type.getSuperclass());
-			addArrayToSet(super_type.getInterfaces(), next_super_types);
+			if( overridenMethod.isSome() ) {
+				checkSingleMethod(d, overridenMethod.unwrap());
+			}
+			else {
+				// We only continue up the hierarchy if this
+				// type did not define an overriding method.
+				next_super_types.add(super_type.getSuperclass());
+				addArrayToSet(super_type.getInterfaces(), next_super_types);
+			}
 		}
 	}
 
-	private void checkSingleSupertype(MethodDeclaration d,
-			ITypeBinding super_type) {
+	/**
+	 * Perform the overriding check on one method.
+	 */
+	private void checkSingleMethod(IMethodBinding overriding_method, 
+			IMethodBinding overriden_method) throws MultipleCasesException {
+		IMethodSignature overriden_sig = getRepository().getMethodSignature(overriden_method);
+		IMethodSignature overriding_sig = getRepository().getMethodSignature(overriding_method);
+		
+		// I need to think about how to deal with cases, so for now
+		// we only work if both signatures have one case.
+		if( overriden_sig.cases().size() > 1 ) {
+			throw new MultipleCasesException("Overriden method from " + overriden_method.getDeclaringClass() + " " +
+					"uses multiple cases, " +
+					"which is not yet supported by this checker.");
+		}
+		
+		if( overriding_sig.cases().size() > 1 ) {
+			throw new MultipleCasesException("Method uses multiple cases which is not yet supported by this checker.");
+		}
+		
 		throw new RuntimeException("NYI");
+	}
+
+	/**
+	 * Find a method in the given class that overrides the given method or
+	 * return NONE if one does not exist.
+	 */
+	private Option<IMethodBinding> findOverridenMethod(IMethodBinding overriding_method_binding,
+			ITypeBinding super_type) {
+		for( IMethodBinding super_method : super_type.getDeclaredMethods() ) {
+			if( overriding_method_binding.overrides(super_method) ) {
+				return Option.some(super_method);
+			}
+		}
+		
+		return Option.none();
 	}	
 }
