@@ -47,9 +47,13 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
+import edu.cmu.cs.crystal.util.Lambda3;
 import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.plural.states.IMethodCaseInstance;
 import edu.cmu.cs.plural.states.IMethodSignature;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
+import edu.cmu.cs.plural.states.MethodCheckingKind;
+import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 
 /**
  * In Plural, a method that overrides another method or implements a
@@ -172,9 +176,34 @@ public class OverrideChecker extends AbstractCrystalMethodAnalysis {
 			throw new MultipleCasesException("Method uses multiple cases which is not yet supported by this checker.");
 		}
 		
+//		IMethodCaseInstance super_perms =
+//			overriden_sig.cases().get(0).createPermissions(MethodCheckingKind.CONSTRUCTOR_IMPL_CUR_IS_VIRTUAL, true, true).getEnsuredParameterPermissions(1)overriden_method;
+//		IMethodCaseInstance sub_perms = 
+//			overriding_sig.cases().get(0).createPermissions(checkingKind, forAnalyzingBody, isSuperCall)
+//		{
+//			// PRE check
+//			// Each permission in the check needs significantly different permissions. 
+//			checkParameters()
+//
+//		}
+		// POST check
+		
 		throw new RuntimeException("NYI");
 	}
 
+	private void checkEntailmentParameters(Lambda3<MethodCheckingKind, Boolean, Boolean, HasParameterPermissions> makePerm) {
+		HasParameterPermissions assumptions = 
+			makePerm.call(MethodCheckingKind.METHOD_IMPL_CUR_NOT_VIRTUAL, true, false);
+		HasParameterPermissions propositions =
+			makePerm.call(MethodCheckingKind.METHOD_CALL_DYNAMIC_DISPATCH, false, false);
+		
+		for( int i = 0; i < assumptions.numParameters(); i++ ) {
+			PermissionSetFromAnnotations assumption = assumptions.getParameterPerm(i);
+			//assumption.
+		}
+		
+	}
+	
 	/**
 	 * Find a method in the given class that overrides the given method or
 	 * return NONE if one does not exist.
@@ -188,5 +217,14 @@ public class OverrideChecker extends AbstractCrystalMethodAnalysis {
 		}
 		
 		return Option.none();
-	}	
-}
+	}
+	
+	abstract class HasParameterPermissions {
+		abstract PermissionSetFromAnnotations getParameterPerm(int index);
+		abstract int numParameters();
+	}
+	
+	abstract class HasReceiverPermissions {
+		abstract void getPerms();
+	}
+} 
