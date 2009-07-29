@@ -201,5 +201,12 @@
             restorable="true">
       </view>
    </extension>
+   <extension
+         point="edu.cmu.cs.crystal.CrystalAnalysis">
+      <analysis
+            class="edu.cmu.cs.plural.methodoverridechecker.OverrideChecker"
+            name="Specification Override Checker">
+      </analysis>
+   </extension>
 
 </plugin>
