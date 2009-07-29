@@ -52,11 +52,13 @@ import java.util.Set;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.internal.AbstractCrystalPlugin;
 import edu.cmu.cs.crystal.internal.Crystal;
 import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.plural.states.IInvocationSignature;
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
@@ -142,7 +144,9 @@ public class StateMachine implements IHasProperties {
 	public static StateMachine getStateMachineFromIType(IType type) {
 		final AnnotationDatabase annoDB = new AnnotationDatabase();
 		StateSpaceRepository ssr = getSpaceRepo(annoDB);
-		ITypeBinding binding = WorkspaceUtilities.getDeclNodeFromType(type);
+		Option<TypeDeclaration> decl_ = WorkspaceUtilities.getDeclNodeFromType(type);
+		ITypeBinding binding = decl_.unwrap().resolveBinding();
+		
 		StateSpace space = ssr.getStateSpace(binding);
 		
 		StateMachine machine = new StateMachine();
