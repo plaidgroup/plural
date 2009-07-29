@@ -45,11 +45,11 @@ package edu.cmu.cs.plural.methodoverridechecker;
  * @since Jul 28, 2009
  *
  */
-class MultipleCasesException extends Exception {
+class OverridenSpecificationException extends Exception {
 
 	private static final long serialVersionUID = 4192420911542082530L;
 
-	public MultipleCasesException(String reason) {
+	public OverridenSpecificationException(String reason) {
 		super(reason);
 	}
 }

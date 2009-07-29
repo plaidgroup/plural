@@ -38,17 +38,13 @@
 
 package edu.cmu.cs.plural.errors.history;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IMethod;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -73,7 +69,6 @@ import edu.cmu.cs.crystal.internal.Crystal;
 import edu.cmu.cs.crystal.internal.WorkspaceUtilities;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
-import edu.cmu.cs.crystal.util.Box;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.Utilities;
@@ -398,39 +393,7 @@ public class HistoryView extends ViewPart implements ISelectionListener, ISelect
 		 * from the ASTNode class hierarchy.
 		 */
 		private MethodDeclaration methodDeclarationFromMethod(final IMethod method) {
-			// First thing we do is to actually parse this bad-boy.
-			ICompilationUnit compilationUnit = method.getCompilationUnit();
-			List<ICompilationUnit> compUnitList = Collections.singletonList(compilationUnit);
-			Map<ICompilationUnit, ASTNode> map =
-				WorkspaceUtilities.parseCompilationUnits(compUnitList);
-			
-			assert( map.containsKey(compilationUnit) );
-			
-			ASTNode root = map.get(compilationUnit);
-
-			// now we have to recur down into the node until we find this method.
-			final Box<Option<MethodDeclaration>> result_ = 
-				Box.box(Option.<MethodDeclaration>none());
-			
-			root.accept(new ASTVisitor() {
-
-				@Override
-				public boolean visit(MethodDeclaration node) {
-					// How do we know if they are the same?
-					// Name, return type, signature?
-					IJavaElement element = node.resolveBinding().getJavaElement();
-					if( element.equals(method) ) {
-						result_.setValue(Option.some(node));
-						return false;
-					}
-					return super.visit(node);
-				}
-			});
-			
-			if( result_.getValue().isNone() ) 
-				assert(false) : "Should be impossible";
-			
-			return result_.getValue().unwrap();
+			return WorkspaceUtilities.getMethodDeclFromModel(method).unwrap();
 		}
 
 		/**
