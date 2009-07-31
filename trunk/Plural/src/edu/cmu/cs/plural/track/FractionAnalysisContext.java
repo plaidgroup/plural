@@ -37,15 +37,45 @@
  */
 package edu.cmu.cs.plural.track;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+
 import edu.cmu.cs.crystal.IAnalysisInput;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.plural.states.IInvocationCaseInstance;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 
 /**
+ * For some reason, ECLIPSE's class loader really did not like when
+ * this interface extended IAnalysisInput, a Crystal class. I don't
+ * know what to make of that since Plural classes extend Crystal classes
+ * all of the time with no problem, but since I need to get work done, I
+ * have just copied the methods to this interface.
+ * 
  * @author Kevin Bierhoff
  *
  */
-public interface FractionAnalysisContext extends IAnalysisInput {
+public interface FractionAnalysisContext /* extends IAnalysisInput */ { 
+	
+	/**
+	 * @return the AnnotationDatabase that was populated on all the compilation
+	 * units which will be analyzed.
+	 */
+	public AnnotationDatabase getAnnoDB();
+	
+	/**
+	 * @return A cache of the TACs for every method declaration, if it is available.
+	 */
+	public Option<CompilationUnitTACs> getComUnitTACs();
+
+	/**
+	 * @return A progress monitor for canceling the ongoing
+	 * analysis, or {@link Option#none()} if it cannot be canceled.
+	 * An analysis might wish to cancel the analysis if it hits an error
+	 * which will cause all further results to be invalid.
+	 */
+	public Option<IProgressMonitor> getProgressMonitor();
 	
 	public StateSpaceRepository getRepository();
 	

@@ -48,17 +48,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.AliasLE;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.analysis.alias.ObjectLabel;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
 import edu.cmu.cs.crystal.tac.model.SourceVariable;
 import edu.cmu.cs.crystal.tac.model.TACInstruction;
 import edu.cmu.cs.crystal.tac.model.TempVariable;
@@ -142,11 +145,19 @@ Freezable<PluralTupleLatticeElement>, PluralLatticeElement {
 		this(b, context, null, null);
 	}
 	
+	private static IAnalysisInput converter(final FractionAnalysisContext ctx) {
+		return new IAnalysisInput() {
+			@Override public AnnotationDatabase getAnnoDB() { return ctx.getAnnoDB(); }
+			@Override public Option<CompilationUnitTACs> getComUnitTACs() {	return ctx.getComUnitTACs();}
+			@Override public Option<IProgressMonitor> getProgressMonitor() {return ctx.getProgressMonitor();}
+		};
+	}
+	
 	/** Call for an unpacked var, and a new DynamicStateLogic. */
 	protected PluralTupleLatticeElement(FractionalPermissions b, 
 			FractionAnalysisContext context,
 			Variable unpackedVar, ASTNode nodeWhereUnpacked) {
-		this.tupleLatticeElement = AliasAwareTupleLE.create(context, b);
+		this.tupleLatticeElement = AliasAwareTupleLE.create(converter(context), b);
 		this.dynamicStateLogic = new DynamicStateLogic();
 		this.context = context;
 		this.isFrozen = false;
