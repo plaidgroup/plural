@@ -1033,17 +1033,7 @@ public class LinearOperations extends TACAnalysisHelper {
 				boolean isAssignment = assignmentSource != null;
 
 				/*
-				 * 1. Save permission that's assigned to field. 
-				 */
-//				final FractionalPermissions new_field_perms;
-//				if(isAssignment)
-//					new_field_perms = value.get(
-//						value.getLocationsBefore(instr.getNode(), assignmentSource));
-//				else
-//					new_field_perms = null;
-
-				/*
-				 * 2. Unpack receiver if needed.
+				 * Unpack receiver if needed.
 				 * This may generate permissions for the field, and because of aliasing,
 				 * override the permission for the source operand
 				 * TODO Maybe we can avoid affecting the source operand during unpacking?
@@ -1070,28 +1060,31 @@ public class LinearOperations extends TACAnalysisHelper {
 	}
 	
 	private LinearContext internalHandleFieldAccess(
-			TensorContext cur_context,
+			final TensorContext cur_context,
 			final boolean isAssignment, 
 			final TACFieldAccess instr) {
 		final TensorPluralTupleLE value = cur_context.getTuple();
 		/*
-		 * Better see if fields have been unpacked...
+		 * Better see if field access needs unpacking...
 		 */
-		Variable thisVar = instr.getAccessedObjectOperand();
+		final Variable thisVar = instr.getAccessedObjectOperand();
 		StateSpace this_space = getStateSpace(thisVar.resolveType());
-		String unpacking_root = 
+		final String unpacking_root = 
 			this_space.getFieldRootNode(instr.resolveFieldBinding());
 		
+		final SimpleMap<Variable,Aliasing> loc_map = new SimpleMap<Variable,Aliasing>() {
+			@Override
+			public Aliasing get(Variable key) {
+				return value.getLocations(key);
+			}};
+
 		if(unpacking_root != null) {
-			
+			// mapped field -> needs unpacked object
 			if(value.isRcvrPacked()) {
+				// unpack!
 				return value.fancyUnpackReceiver(thisVar, instr.getNode(), 
 					getRepository(),
-					new SimpleMap<Variable,Aliasing>() {
-						@Override
-						public Aliasing get(Variable key) {
-							return value.getLocations(key);
-						}},
+					loc_map,
 					unpacking_root, 
 					isAssignment ? instr.getFieldName() : null,
 					false /* do not keep packed tuple */, 
@@ -1099,40 +1092,57 @@ public class LinearOperations extends TACAnalysisHelper {
 					cur_context.getChoiceID());
 			}
 			else { // already unpacked...
+				// make sure unpacked permission root is good enough for desired field access
 				final Aliasing loc = 
 					value.getLocationsBefore(instr.getNode(), thisVar);
 				FractionalPermissions rcvrPerms = value.get(loc);
-				if(isAssignment) {
+				if((isAssignment && ! this_space.firstBiggerThanSecond(
+						rcvrPerms.getUnpackedPermission().getRootNode(), 
+						unpacking_root)) || 
+						(!isAssignment /* field read */ && this_space.areOrthogonal(
+								rcvrPerms.getUnpackedPermission().getRootNode(), 
+								unpacking_root))) { // unpacked root not appropriate
+					// try packing to any state and then unpack again
+					LinearContext packed = value.fancyPackReceiverToBestGuess(cur_context, getThisVar(),
+							getRepository(), loc_map, cur_context.getChoiceID());
+					return packed.dispatch(new RewritingVisitor() {
+
+						@Override
+						public LinearContext context(TensorContext le) {
+							// unpack!
+							final TensorPluralTupleLE packedValue = le.getTuple();
+							return packedValue.fancyUnpackReceiver(thisVar, instr.getNode(), 
+								getRepository(),
+								loc_map,
+								unpacking_root, 
+								isAssignment ? instr.getFieldName() : null,
+								false /* do not keep packed tuple */,
+								// TODO NELS ::: use le instead of cur_context???
+								cur_context.getParentChoiceID(), 
+								cur_context.getChoiceID());
+						}
+						
+					});
+//					return ContextFactory.trueContext(cur_context.getParentChoiceID(),
+//							cur_context.getChoiceID());
+				}
+				else { // unpacked root is appropriate
 					/*
 					 * need unpacked root to be at least as big as 
 					 * the node the field is mapped to 
 					 */
-					if(!this_space.firstBiggerThanSecond(
-							rcvrPerms.getUnpackedPermission().getRootNode(), 
-							unpacking_root)) {
-						return ContextFactory.trueContext(cur_context.getParentChoiceID(),
-								cur_context.getChoiceID());
+					if(isAssignment) {
+						/*
+						 * Unpacked root sufficient for this assignment
+						 * Force unpacked permission to be modifiable, to allow assignment.
+						 */
+						rcvrPerms = rcvrPerms.makeUnpackedPermissionModifiable();
+						value.put(loc, rcvrPerms);
 					}
-					/*
-					 * Force unpacked permission to be modifiable, to allow assignment.
-					 */
-					rcvrPerms = rcvrPerms.makeUnpackedPermissionModifiable();
-					value.put(loc, rcvrPerms);
+					return ContextFactory.tensor(value, cur_context.getParentChoiceID(), cur_context.getChoiceID());
 				}
-				else /* field read */ {
-					/* 
-					 * unpacked permission must overlap with 
-					 * the node the field is mapped to 
-					 */
-					if(this_space.areOrthogonal(
-							rcvrPerms.getUnpackedPermission().getRootNode(), 
-							unpacking_root)) {
-						return ContextFactory.trueContext(cur_context.getParentChoiceID(),
-								cur_context.getChoiceID());
-					}
-				}
-				return ContextFactory.tensor(value, cur_context.getParentChoiceID(), cur_context.getChoiceID());
 			}
+			
 		}
 		else {
 			// field is not mapped -> no unpack, no modifiable permission for assignment needed
