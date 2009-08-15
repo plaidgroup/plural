@@ -41,6 +41,7 @@ import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
+import edu.cmu.cs.plural.annot.Fulls;
 import edu.cmu.cs.plural.annot.NoEffects;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
@@ -80,6 +81,11 @@ public class FieldAccessControl {
 	private Object a;
 	private int b;
 	
+	@Perm(ensures = "unique(this!fr)")
+	public FieldAccessControl() {
+		this.a = new Object();
+	}
+	
 	@Perm(requires = "#0 != null")
 	@Full(value = "A", use = Use.FIELDS)
 	public void setA(Object a) {
@@ -102,6 +108,82 @@ public class FieldAccessControl {
 	@Pure(value = "B", use = Use.FIELDS)
 	public int getB() {
 		return b;
+	}
+	
+	@Fulls({ 
+		@Full(value = "A", use = Use.FIELDS), 
+		@Full(value = "B", use = Use.FIELDS) 
+	})
+	@Perm(requires = "#0 != null")
+	public void setAandB(Object a, int b) {
+		this.a = a;
+		// Plural infers that it needs to switch from using 
+		// permission for A to permission for B
+		this.b = b;
+	}
+	
+	/**
+	 * This class shows a hypothetical client and how it could
+	 * access the fields of {@link FieldAccessControl} through
+	 * its own separate dimensions.
+	 * Plural does not infer the necessary packing and unpacking
+	 * completely if multiple dimensions of the field are accessed
+	 * through different receiver permissions
+	 * ({@link #setAandBWithSeparatePermissions()}), while
+	 * it works fine when one combined receiver permission is used
+	 * ({@link #setAandBThroughCombinedPermission()}).
+	 * {@link FieldAccessControl#setAandB(Object, int) shows that
+	 * Plural can also infer direct field accesses through multiple
+	 * permissions; problems only arise with <b>calls</b> on fields
+	 * made through different permissions.
+	 * @author Kevin Bierhoff
+	 * @since Aug 15, 2009
+	 */
+	@Refine({
+		@States(dim = "cA", value = { "hasA", "calledA" }),
+		@States(dim = "cB", value = { "hasB", "calledB" })
+	})
+	@ClassStates({
+		@State(name = "hasA", inv = "full(control, A)"),
+		@State(name = "hasB", inv = "full(control, B)")
+	})
+	public static class FieldAccessClient {
+		
+		private FieldAccessControl control;
+		
+		@Perm(ensures = "unique(this!fr)")
+		FieldAccessClient() {
+			control = new FieldAccessControl();
+		}
+		
+		@Full(requires = {"hasA", "hasB"}, ensures = {"hasA", "hasB"}, use = Use.FIELDS) 
+		public void setAandBThroughCombinedPermission() {
+			control.setA(new Object());
+			control.setB(5);
+		}
+		
+		@Fulls({ 
+			@Full(value = "cA", requires = "hasA", ensures = "hasA", use = Use.FIELDS), 
+			@Full(value = "cB", requires = "hasB", ensures = "hasB", use = Use.FIELDS) 
+		})
+		public void setAandBWithSeparatePermissions() {
+			Object a = new Object();
+			int b = 5;
+			control.setA(a);
+			// object is in calledA, and separately we have full(control, A)
+			// calling forcePack, which requires hasA, forces Plural to unpack
+			// to cA again and put the field permission back in, packing to hasA
+			// ideally, we would like Plural to recognize this automatically
+			forcePack();
+			control.setB(b);
+			// object is in calledB, and separately we have full(control, B)
+			// because of the post-condition, Plural unpacks automatically
+			// and re-establishes hasB, so we don't need the forcePack trick here
+		}
+		
+		@Pure(value = "cA", requires = "hasA", ensures = "hasA", use = Use.FIELDS)
+		private void forcePack() {}
+		
 	}
 	
 }
