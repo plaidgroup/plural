@@ -49,6 +49,8 @@ import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.Refine;
 import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
+import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Uniques;
 import edu.cmu.cs.plural.annot.Use;
 
 /**
@@ -184,6 +186,59 @@ public class FieldAccessControl {
 		@Pure(value = "cA", requires = "hasA", ensures = "hasA", use = Use.FIELDS)
 		private void forcePack() {}
 		
+	}
+	
+	/**
+	 * Second hypothetical client similar to {@link FieldAccessClient}
+	 * this time using unique permissions, which avoids the need for 
+	 * the <i>hasA</i> and <i>calledA</i> state distinction because
+	 * Plural will not pack the receiver before method calls.
+	 * @author Kevin Bierhoff
+	 * @since Aug 15, 2009
+	 *
+	 */
+	@Refine({
+		@States(dim = "cA", value = { }),
+		@States(dim = "cB", value = { })
+	})
+	@ClassStates({
+		@State(name = "cA", inv = "full(control, A)"),
+		@State(name = "cB", inv = "full(control, B)")
+	})
+	public static class UniqueFieldAccessClient {
+		
+		private FieldAccessControl control;
+		
+		@Perm(ensures = "unique(this!fr)")
+		UniqueFieldAccessClient() {
+			control = new FieldAccessControl();
+		}
+		
+		@Unique(use = Use.FIELDS) 
+		public void setAandBThroughCombinedPermission() {
+			control.setA(new Object());
+			control.setB(5);
+		}
+		
+		@Uniques({ 
+			@Unique(value = "cA", use = Use.FIELDS), 
+			@Unique(value = "cB", use = Use.FIELDS) 
+		})
+		public void setAandBWithSeparatePermissions() {
+			Object a = new Object();
+			int b = 5;
+			control.setA(a);
+			// object is unpacked, and we have full(control, A)
+			// Plural doesn't properly infer that it needs to pack here
+			// so we force it to pack using forcePack()
+			forcePack();
+			control.setB(b);
+			// Plural automatically packs at the end of the method
+			// so we don't need to do anything here
+		}
+		
+		@Pure(value = "cA", use = Use.FIELDS)
+		private void forcePack() {}
 	}
 	
 }
