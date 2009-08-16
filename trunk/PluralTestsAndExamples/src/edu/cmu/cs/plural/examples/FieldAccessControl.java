@@ -42,6 +42,7 @@ import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Fulls;
+import edu.cmu.cs.plural.annot.In;
 import edu.cmu.cs.plural.annot.NoEffects;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
@@ -68,20 +69,18 @@ import edu.cmu.cs.plural.annot.Use;
  */
 @Refine({
 	@States(dim = "A", value = {}),  // dimension A, do not care about states within A
-	@States(dim = "B", value = {"B1", "B2"}),  // dimension B, do not care about states within B
+	@States(dim = "B", value = {}),  // dimension B, do not care about states within B
 	
 })
 @ClassStates({
-	@State(name = "A", inv = "a != null"),  // force a to be mapped into A
-	@State(name = "B1", inv = "b == null"),  
-	@State(name = "B2", inv = "b != null")   // force b to be mapped into B
+	@State(name = "A", inv = "a != null")  // force a to be mapped into A
 })
 @PassingTest
 @UseAnalyses({PluralAnalysis.SYNTAX, PluralAnalysis.EFFECT, PluralAnalysis.PLURAL})
 public class FieldAccessControl {
 
 	private Object a;
-	private int b;
+	@In("B") private int b;
 	
 	@Perm(ensures = "unique(this!fr)")
 	public FieldAccessControl() {
@@ -154,7 +153,7 @@ public class FieldAccessControl {
 		private FieldAccessControl control;
 		
 		@Perm(ensures = "unique(this!fr)")
-		FieldAccessClient() {
+		public FieldAccessClient() {
 			control = new FieldAccessControl();
 		}
 		
@@ -210,7 +209,7 @@ public class FieldAccessControl {
 		private FieldAccessControl control;
 		
 		@Perm(ensures = "unique(this!fr)")
-		UniqueFieldAccessClient() {
+		public UniqueFieldAccessClient() {
 			control = new FieldAccessControl();
 		}
 		
