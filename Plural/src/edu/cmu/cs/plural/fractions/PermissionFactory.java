@@ -103,66 +103,6 @@ public class PermissionFactory {
 		}
 	}
 
-	/**
-	 * Creates a virtual or frame permission with the given parameters and adds any needed
-	 * constraints to the given constraint set.
-	 * @param stateSpace
-	 * @param rootNode
-	 * @param kind
-	 * @param isFramePermission
-	 * @param stateInfo
-	 * @param namedFractions
-	 * @param constraints
-	 * @return
-	 *
-	public PermissionFromAnnotation create(StateSpace stateSpace, String rootNode, PermissionKind kind, 
-			boolean isFramePermission, String stateInfo, boolean namedFractions, FractionConstraints constraints) {
-		switch(kind) {
-		case UNIQUE:
-			return createUnique(stateSpace, rootNode, isFramePermission, stateInfo, constraints);
-		case FULL:
-			return createFull(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions, constraints);
-		case SHARE:
-			return createShare(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions, constraints);
-		case IMMUTABLE:
-			return createImmutable(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions, constraints);
-		case PURE:
-			return createPure(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions, constraints);
-		default:
-			throw new IllegalArgumentException("Unknown permission kind: " + kind);
-		}
-	}
-
-	public PermissionFromAnnotation createUnique(StateSpace stateSpace, String rootNode, boolean isFramePermission, String stateInfo, 
-			FractionConstraints constraints) {
-		FractionFunction f = FractionFunction.fixAll(stateSpace, rootNode, Fraction.one());
-		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, Collections.singleton(stateInfo), constraints);
-	}
-
-	public PermissionFromAnnotation createFull(StateSpace stateSpace, String rootNode, boolean isFramePermission, String stateInfo, 
-			boolean namedFractions, FractionConstraints constraints) {
-		FractionFunction f = FractionFunction.fixedBelow(stateSpace, rootNode, namedFractions, Fraction.one());
-		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, Collections.singleton(stateInfo), constraints);
-	}
-
-	public PermissionFromAnnotation createShare(StateSpace stateSpace, String rootNode, boolean isFramePermission, String stateInfo, 
-			boolean namedFractions, FractionConstraints constraints) {
-		FractionFunction f = FractionFunction.variableAll(stateSpace, rootNode, namedFractions);
-		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, Collections.singleton(stateInfo), constraints);
-	}
-
-	public PermissionFromAnnotation createImmutable(StateSpace stateSpace, String rootNode, boolean isFramePermission, String stateInfo, 
-			boolean namedFractions, FractionConstraints constraints) {
-		FractionFunction f = FractionFunction.variableAll(stateSpace, rootNode, namedFractions);
-		return new PermissionFromAnnotation(stateSpace, rootNode, f, false, isFramePermission, Collections.singleton(stateInfo), constraints);
-	}
-
-	public PermissionFromAnnotation createPure(StateSpace stateSpace, String rootNode, boolean isFramePermission, String stateInfo, 
-			boolean namedFractions, FractionConstraints constraints) {
-		FractionFunction f = FractionFunction.fixedBelow(stateSpace, rootNode, namedFractions, Fraction.zero());
-		return new PermissionFromAnnotation(stateSpace, rootNode, f, false, isFramePermission, Collections.singleton(stateInfo), constraints);
-	}*/
-
 	public PermissionFromAnnotation createUniqueOrphan(StateSpace stateSpace, String rootNode, boolean isFramePermission, String... stateInfo) {
 		FractionFunction f = FractionFunction.fixAll(stateSpace, rootNode, Fraction.one());
 		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, stateInfo);
