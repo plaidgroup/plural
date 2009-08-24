@@ -357,55 +357,6 @@ public class Permission extends Object implements IPermission<Permission> {
 		return getKind().name() + "(" + getRootNode() + ") in " + getStateInfo(); 
 	}
 
-	/**
-	 * @param rootNode
-	 * @return
-	 */
-	@Deprecated
-	public static Permission createUnique(String rootNode) {
-		return createDefault(rootNode, PermissionKind.UNIQUE);
-	}
-
-	/**
-	 * @param rootNode
-	 * @return
-	 */
-	@Deprecated
-	public static Permission createImmutable(String rootNode) {
-		return createDefault(rootNode, PermissionKind.IMMUTABLE);
-	}
-
-	/**
-	 * @param rootNode
-	 * @return
-	 */
-	@Deprecated
-	public static Permission createPure(String rootNode) {
-		return createDefault(rootNode, PermissionKind.PURE);
-	}
-
-	/**
-	 * @param rootNode
-	 * @return
-	 */
-	@Deprecated
-	public static Permission createShare(String rootNode) {
-		return createDefault(rootNode, PermissionKind.SHARE);
-	}
-
-	/**
-	 * Create permission with given rootNode and kind.
-	 * @param rootNode
-	 * @param kind
-	 * @return
-	 */
-	@Deprecated
-	protected static Permission createDefault(String rootNode, PermissionKind kind) {
-		if(! rootNode.equals(StateSpace.STATE_ALIVE))
-			throw new IllegalArgumentException("Permission for default state space can only root in " + StateSpace.STATE_ALIVE);
-		return new Permission(StateSpace.SPACE_TOP, rootNode, kind);
-	}
-
 	public enum PermissionKind {
 		UNIQUE {
 			public boolean isStrongerThan(PermissionKind other) {
