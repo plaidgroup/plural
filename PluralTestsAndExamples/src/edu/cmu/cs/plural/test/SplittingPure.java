@@ -41,7 +41,6 @@ package edu.cmu.cs.plural.test;
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Full;
-import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 
@@ -54,7 +53,7 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
  * @author Kevin Bierhoff
  * @since 4/14/2008
  */
-@FailingTest(2)
+@FailingTest(1)
 @UseAnalyses("FractionalAnalysis")
 public abstract class SplittingPure {
 	
@@ -89,9 +88,4 @@ public abstract class SplittingPure {
 		close(); // illegal: need full permission for bigger root
 	}
 	
-	@Perm(requires = "unique(this, open)", ensures = "unique(this, closed)")
-	public void safe() {
-		close(); // legal: can always move up root of unique permission
-	}
-
 }
