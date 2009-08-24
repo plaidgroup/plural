@@ -187,33 +187,6 @@ public class Permissions implements LatticeElement<Permissions> {
 	}
 
 	/**
-	 * @param p
-	 * @param a
-	 * @return
-	 */
-	public static Permissions filterPermissions(Permissions p, SimplePermissionAnnotation a) {
-		if(a == null)
-			return p;
-		Permissions result;
-		if(a.isReturned())
-			result = Permissions.borrowPermission(p, a.getRequires(), a.getEnsures().getStateInfo());
-		else
-			result = Permissions.capturePermission(p, a.getRequires());
-		return result;
-	}
-
-	/**
-	 * @param p
-	 * @param a
-	 * @return
-	 */
-	public static Permissions subtractPermissions(Permissions p, SimplePermissionAnnotation a) {
-		if(a == null)
-			return p;
-		return Permissions.capturePermission(p, a.getRequires());
-	}
-
-	/**
 	 * @param perms
 	 * @param needed
 	 * @return
@@ -227,15 +200,6 @@ public class Permissions implements LatticeElement<Permissions> {
 				return true;
 		}
 		return false;
-	}
-
-	/**
-	 * @param perms
-	 * @param anno
-	 * @return
-	 */
-	public static boolean checkPermissions(Permissions perms, SimplePermissionAnnotation anno) {
-		return anno == null ? true : checkPermissions(perms, anno.getRequires());
 	}
 
 	/**
