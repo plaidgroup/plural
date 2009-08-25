@@ -133,7 +133,7 @@ public class PermissionFromAnnotation extends FractionalPermission
 	}
 
 	public boolean isUnique() {
-		return fractions.get(stateSpace.getRootState()).isOne();
+		return fractions.get(getRootNode()).isOne();
 	}
 
 	/**

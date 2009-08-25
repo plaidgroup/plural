@@ -220,7 +220,7 @@ public class VariableElimination {
 					if(t instanceof NamedFraction) {
 						NamedFraction c = (NamedFraction) t;
 						if(lastConst != null) {
-							assumptions.add(createRelation(lastConst, fract.getRelop(), c));
+//							assumptions.add(createRelation(lastConst, fract.getRelop(), c));
 							upperBounds.put(lastConst, c);
 						}
 						lastConst = c;
@@ -228,14 +228,24 @@ public class VariableElimination {
 					else if(fract.getRelop().equals(Relop.LEQ) && t instanceof VariableFraction) {
 						variableTiers.put((VariableFraction) t, tier++);
 					}
-					// TODO no constraints for relations between two constants
 					if(last != null) {
-						NormalizedFractionConstraint c = createRelation(normalizeTerm(last), fract.getRelop(), normalizeTerm(t));
+						NormalizedFractionConstraint c = 
+							createRelation(normalizeTerm(last), fract.getRelop(), normalizeTerm(t));
 						if(c.isTriviallyTrue() == false) {
 							if(c.isPrimitive())
 								groundRelations.add(c);
-							else if(c.isGround())
-								assumptions.add(c);
+							else if(c.isGround()) {
+								// FIXME Comment this in to fix constraint solving bug
+								// (avoid treating constraints on constants as assumptions)
+								// TODO really, we should keep track of assumptions separately 
+//								if(! Relop.EQ.equals(fract.getRelop()) && 
+//										last instanceof Fraction && t instanceof Fraction)
+									// assumption (need not be proven)
+									assumptions.add(c);
+//								else
+//									// constant-only term that's not an assumption (proven later)
+//									groundRelations.add(c);
+							}
 							else
 								result.add(c);
 						}

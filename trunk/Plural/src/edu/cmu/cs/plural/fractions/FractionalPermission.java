@@ -633,17 +633,18 @@ public class FractionalPermission extends AbstractFractionalPermission {
 							foundBelow = true;
 						else {
 							// create permission for every dimension other than the one newRootNode is in
-							FractionFunction otherF = FractionFunction.fixedBelow(stateSpace, dim, false, Fraction.one());
+							FractionFunction otherF = FractionFunction.variableRemaining(stateSpace, dim, false, 
+									Collections.singletonMap(dim, Fraction.one()), Fraction.one());
 							Set<String> dimInfo = filterStateInfo(dim);
 							otherPs.add(createPermission(stateSpace, dim, otherF, true, dimInfo, constraints));
-							fs.add(otherF.get(dim));
+//							fs.add(otherF.get(dim));
 						}
 					}
 					if(! foundBelow)
 						// sanity check
 						throw new IllegalStateException(below + " wasn't a dimension in " + n);
 				}
-				// new constraint: sum of fractions on below's "level" (below node and peer dimensions) must be 1
+				// new constraint: sum of fractions for below must be 1
 				constraints.addConstraint(FractionConstraint.createEquality(
 						Fraction.one(),
 						FractionTerm.createSum(fs)));
@@ -963,13 +964,13 @@ public class FractionalPermission extends AbstractFractionalPermission {
 	 */
 	public PermissionKind getKind(FractionConstraints constraints) {
 		FractionAssignment a = constraints.simplify();
-		if(a.isZero(getFractions().get(getRootNode())))
+		Fraction rootF = getFractions().get(getRootNode());
+		if(a.isZero(rootF))
 			// root is zero -> not a real permission
 			return null;
 		
 		Fraction belowF = getFractions().getBelowFraction();
-		if(a.isOne(getFractions().get(getStateSpace().getRootState())) &&
-				a.isOne(belowF))
+		if(a.isOne(rootF) && a.isOne(belowF))
 			// readonly flag can be true or false for UNIQUE
 			return PermissionKind.UNIQUE;
 		if(a.isOne(belowF))

@@ -37,6 +37,8 @@
  */
 package edu.cmu.cs.plural.fractions;
 
+import java.util.Collections;
+
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
@@ -61,7 +63,7 @@ public class PermissionFactory {
 			String[] stateInfo, boolean namedFractions) {
 		switch(kind) {
 		case UNIQUE:
-			return createUniqueOrphan(stateSpace, rootNode, false, stateInfo);
+			return createUniqueOrphan(stateSpace, rootNode, false, stateInfo, namedFractions);
 		case FULL:
 			return createFullOrphan(stateSpace, rootNode, false, stateInfo, namedFractions);
 		case SHARE:
@@ -89,7 +91,7 @@ public class PermissionFactory {
 			boolean isFramePermission, String[] stateInfo, boolean namedFractions) {
 		switch(kind) {
 		case UNIQUE:
-			return createUniqueOrphan(stateSpace, rootNode, isFramePermission, stateInfo);
+			return createUniqueOrphan(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions);
 		case FULL:
 			return createFullOrphan(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions);
 		case SHARE:
@@ -103,33 +105,34 @@ public class PermissionFactory {
 		}
 	}
 
-	public PermissionFromAnnotation createUniqueOrphan(StateSpace stateSpace, String rootNode, boolean isFramePermission, String... stateInfo) {
-		FractionFunction f = FractionFunction.fixAll(stateSpace, rootNode, Fraction.one());
+	public PermissionFromAnnotation createUniqueOrphan(StateSpace stateSpace, String rootNode, 
+			boolean isFramePermission, String[] stateInfo, boolean namedFractions) {
+		FractionFunction f = FractionFunction.variableRemaining(stateSpace, rootNode, namedFractions, 
+				Collections.singletonMap(rootNode, Fraction.one()), Fraction.one());
 		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, stateInfo);
 	}
 
-	private PermissionFromAnnotation createFullOrphan(StateSpace stateSpace, String rootNode, boolean isFramePermission, String stateInfo[], 
-			boolean namedFractions) {
+	private PermissionFromAnnotation createFullOrphan(StateSpace stateSpace, String rootNode, 
+			boolean isFramePermission, String stateInfo[], boolean namedFractions) {
 		FractionFunction f = FractionFunction.fixedBelow(stateSpace, rootNode, namedFractions, Fraction.one());
 		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, stateInfo);
 	}
 
-	private PermissionFromAnnotation createShareOrphan(StateSpace stateSpace, String rootNode, boolean isFramePermission, String stateInfo[], 
-			boolean namedFractions) {
+	private PermissionFromAnnotation createShareOrphan(StateSpace stateSpace, String rootNode, 
+			boolean isFramePermission, String stateInfo[], boolean namedFractions) {
 		FractionFunction f = FractionFunction.variableAll(stateSpace, rootNode, namedFractions);
 		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, stateInfo);
 	}
 
-	public PermissionFromAnnotation createImmutableOrphan(StateSpace stateSpace, String rootNode, boolean isFramePermission, String stateInfo[], 
-			boolean namedFractions) {
+	public PermissionFromAnnotation createImmutableOrphan(StateSpace stateSpace, String rootNode, 
+			boolean isFramePermission, String stateInfo[], boolean namedFractions) {
 		FractionFunction f = FractionFunction.variableAll(stateSpace, rootNode, namedFractions);
 		return new PermissionFromAnnotation(stateSpace, rootNode, f, false, isFramePermission, stateInfo);
 	}
 
-	private PermissionFromAnnotation createPureOrphan(StateSpace stateSpace, String rootNode, boolean isFramePermission, String stateInfo[], 
-			boolean namedFractions) {
+	private PermissionFromAnnotation createPureOrphan(StateSpace stateSpace, String rootNode, 
+			boolean isFramePermission, String stateInfo[], boolean namedFractions) {
 		FractionFunction f = FractionFunction.fixedBelow(stateSpace, rootNode, namedFractions, Fraction.zero());
 		return new PermissionFromAnnotation(stateSpace, rootNode, f, false, isFramePermission, stateInfo);
 	}
-
 }
