@@ -46,6 +46,11 @@ import java.util.Set;
 import edu.cmu.cs.plural.states.StateSpace;
 
 /**
+ * A fraction function represents the actual mapping from nodes in
+ * the state hierarchy to fractional values. This is a pretty literal
+ * encoding of the fraction function from the OOPSLA paper. There are
+ * a number of methods for creating commonly used configurations.
+ * 
  * @author Kevin Bierhoff
  *
  */
@@ -56,10 +61,22 @@ public class FractionFunction {
 	private Map<String, Fraction> values;
 	private Fraction belowFraction;
 	
+	/**
+	 * Creates a fraction function with the given root node with all fractional
+	 * values set to the given fill value.
+	 * @param stateSpace
+	 * @param rootNode
+	 * @param fill Fraction that all node mappings should be set to.  
+	 * @return A new fraction function object.
+	 */
 	public static FractionFunction fixAll(StateSpace stateSpace, String rootNode, Fraction fill) {
 		return new FractionFunction(stateSpace, rootNode, fill);
 	}
 
+	/**
+	 * Creates a fraction function with a fixed (given) below fraction and either constant
+	 * or variable fractions for every other node (determined by <code>namedFractions</code>). 
+	 */
 	public static FractionFunction fixedBelow(StateSpace stateSpace, String rootNode, boolean namedFractions, Fraction belowFraction) {
 		return new FractionFunction(stateSpace, rootNode, namedFractions, belowFraction);
 	}
@@ -68,6 +85,18 @@ public class FractionFunction {
 		return new FractionFunction(stateSpace, rootNode, namedFractions);
 	}
 
+	/**
+	 * This method returns a fraction function where the fraction values for the
+	 * nodes in the map <code>values</code> are used as-is and the remaining 
+	 * nodes are assigned to variable values.
+	 * @param stateSpace
+	 * @param rootNode
+	 * @param namedFractions
+	 * @param values The given mappings. The key/value pairs in this map
+	 * will be used, but all others will be variable.
+	 * @param belowFraction
+	 * @return
+	 */
 	public static FractionFunction variableRemaining(StateSpace stateSpace, String rootNode, boolean namedFractions,
 			Map<String, Fraction> values, Fraction belowFraction) {
 		return new FractionFunction(stateSpace, rootNode, namedFractions, values, belowFraction);

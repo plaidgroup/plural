@@ -559,6 +559,8 @@ public class FractionalPermission extends AbstractFractionalPermission {
 	}
 
 	/**
+	 * Takes this permission and returns the result of moving down the root to
+	 * the given root node.
 	 * First permission in returned list has desired root, additional permissions
 	 * may follow.
 	 * @param newRootNode
@@ -611,47 +613,66 @@ public class FractionalPermission extends AbstractFractionalPermission {
 		}
 		
 		// fraction function for desired permission
-		FractionFunction newF = FractionFunction.fixedBelow(stateSpace, newRootNode, false, Fraction.one());
+		FractionFunction newF = 
+			FractionFunction.variableRemaining(stateSpace, newRootNode, false, 
+					Collections.singletonMap(newRootNode, Fraction.one()), Fraction.one());
 		// permissions for other dimensions split off along the way
 		List<FractionalPermission> otherPs = new LinkedList<FractionalPermission>();
-		String below = null;
+		String immediateChildNode = null;
 		for(Iterator<String> it = stateSpace.stateIterator(newRootNode); it.hasNext(); ) {
 			String n = it.next(); 
-			// n is current node, below its immediate child or null if first iteration (n is newRootNode in that case)
-			if(below != null) {
-				List<Fraction> fs = new ArrayList<Fraction>(otherPs.size() + 1);
-				fs.add(newF.get(below));
+			// n is current node, immediateChildNode is its 
+			// immediate child or null if first iteration (n is newRootNode in that case)
+			if(immediateChildNode != null) {
+				List<Fraction> fractionsToImmChild = new ArrayList<Fraction>(otherPs.size() + 1);
+				fractionsToImmChild.add(newF.get(immediateChildNode));
 				for(FractionalPermission otherP : otherPs) {
-					fs.add(otherP.fractions.get(below));
+					fractionsToImmChild.add(otherP.fractions.get(immediateChildNode));
 				}
-				if(stateSpace.isDimension(below)) {
+				if(stateSpace.isDimension(immediateChildNode)) {
 					// may need permissions for additional dimensions
 					Set<String> dims = stateSpace.getDimensions(n);
-					boolean foundBelow = false;
+					boolean foundImmediateChild = false;
 					for(String dim : dims) {
-						if(dim.equals(below))
-							foundBelow = true;
+						if(dim.equals(immediateChildNode))
+							foundImmediateChild = true;
+						else if( immediateChildNode.equals(newRootNode) ) {
+							// For the actual new root node, we can give EVERY
+							// dimension 1 fraction. See the new version of the
+							// F-Split-\tens rule. This is sound and allow
+							// 'unique permissions to dimensions' to work.
+							// 
+							FractionFunction otherF = FractionFunction.variableRemaining(stateSpace, 
+									dim, false, Collections.singletonMap(dim, Fraction.one()), Fraction.one());
+							Set<String> dimInfo = filterStateInfo(dim);
+							otherPs.add(createPermission(stateSpace, dim, otherF, true, dimInfo, constraints));
+						}
 						else {
 							// create permission for every dimension other than the one newRootNode is in
 							FractionFunction otherF = FractionFunction.variableRemaining(stateSpace, dim, false, 
 									Collections.singletonMap(dim, Fraction.one()), Fraction.one());
 							Set<String> dimInfo = filterStateInfo(dim);
 							otherPs.add(createPermission(stateSpace, dim, otherF, true, dimInfo, constraints));
-//							fs.add(otherF.get(dim));
+
+							fractionsToImmChild.add(otherF.get(dim));
 						}
 					}
-					if(! foundBelow)
+					if(! foundImmediateChild)
 						// sanity check
-						throw new IllegalStateException(below + " wasn't a dimension in " + n);
+						throw new IllegalStateException(immediateChildNode + " wasn't a dimension in " + n);
 				}
-				// new constraint: sum of fractions for below must be 1
-				constraints.addConstraint(FractionConstraint.createEquality(
-						Fraction.one(),
-						FractionTerm.createSum(fs)));
+
+				if( !immediateChildNode.equals(newRootNode) ) {
+					// new constraint: sum of fractions on below's "level" (below node and peer dimensions) must be 1
+					// But only for the non-root-level nodes.
+					constraints.addConstraint(FractionConstraint.createEquality(
+							Fraction.one(),
+							FractionTerm.createSum(fractionsToImmChild)));
+				}
 			}
 			if(n.equals(rootNode))
 				break;
-			below = n;
+			immediateChildNode = n;
 		}
 		
 		// sum of fractions for nodes from rootNode to alive (inclusive) must be 1
