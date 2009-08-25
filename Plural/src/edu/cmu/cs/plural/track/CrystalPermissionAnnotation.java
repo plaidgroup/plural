@@ -159,7 +159,22 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 	}
 	
 	public PermissionKind getKind() {
-		return deriveKindFromName(getName());
+		PermissionKind deriveKindFromName = deriveKindFromName(getName());
+		
+		if( deriveKindFromName.equals(PermissionKind.UNIQUE) ) {
+			// In this case we must check the justToRoot flag.
+			// If it's false, then it's a normal Unique, otherwise
+			// it's a UNIQUE_DIM.
+			Boolean result = (Boolean) getObject("justToRoot");
+
+			if( result != null ) {
+				// Don't default values work? Seems like no...
+				if( result )
+					return PermissionKind.UNIQUE_DIM;
+			}
+		}
+		
+		return deriveKindFromName;
 	}
 	
 	public String getRootNode() {

@@ -38,6 +38,11 @@
 package edu.cmu.cs.plural.fractions;
 
 import java.util.Collections;
+import java.util.Map;
+
+import edu.cmu.cs.plural.states.StateSpace;
+import edu.cmu.cs.plural.track.Permission.PermissionKind;
+import java.util.Collections;
 
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
@@ -64,6 +69,8 @@ public class PermissionFactory {
 		switch(kind) {
 		case UNIQUE:
 			return createUniqueOrphan(stateSpace, rootNode, false, stateInfo, namedFractions);
+		case UNIQUE_DIM:
+			return createUniqueDimOrphan(stateSpace, rootNode, false, stateInfo, namedFractions);
 		case FULL:
 			return createFullOrphan(stateSpace, rootNode, false, stateInfo, namedFractions);
 		case SHARE:
@@ -92,6 +99,8 @@ public class PermissionFactory {
 		switch(kind) {
 		case UNIQUE:
 			return createUniqueOrphan(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions);
+		case UNIQUE_DIM:
+			return createUniqueDimOrphan(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions);
 		case FULL:
 			return createFullOrphan(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions);
 		case SHARE:
@@ -105,6 +114,29 @@ public class PermissionFactory {
 		}
 	}
 
+	/**
+	 * Creates a new orphan permission that is a "unique" permission to a root.
+	 * What this really means is a permission with a fraction 1 to the root and
+	 * below, but a variable fraction to anything above the root. This last part
+	 * is the main difference between this and and actual unique permission, where
+	 * every single node above & including the root is mapped to one.
+	 * @param stateSpace
+	 * @param rootNode
+	 * @param isFramePermission
+	 * @param stateInfo
+	 * @return
+	 */
+	public PermissionFromAnnotation createUniqueDimOrphan(StateSpace stateSpace, String rootNode, boolean isFramePermission, String[] stateInfo,
+			boolean namedFractions) {
+		Map<String,Fraction> nodeMapping = Collections.singletonMap(rootNode, Fraction.one());
+		FractionFunction f = FractionFunction.variableRemaining(stateSpace, 
+				rootNode, 
+				namedFractions, 
+				nodeMapping, 
+				Fraction.one());
+		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, stateInfo);
+	}
+	
 	public PermissionFromAnnotation createUniqueOrphan(StateSpace stateSpace, String rootNode, 
 			boolean isFramePermission, String[] stateInfo, boolean namedFractions) {
 		FractionFunction f = FractionFunction.variableRemaining(stateSpace, rootNode, namedFractions, 
@@ -114,6 +146,7 @@ public class PermissionFactory {
 
 	private PermissionFromAnnotation createFullOrphan(StateSpace stateSpace, String rootNode, 
 			boolean isFramePermission, String stateInfo[], boolean namedFractions) {
+
 		FractionFunction f = FractionFunction.fixedBelow(stateSpace, rootNode, namedFractions, Fraction.one());
 		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, stateInfo);
 	}
@@ -123,7 +156,6 @@ public class PermissionFactory {
 		FractionFunction f = FractionFunction.variableAll(stateSpace, rootNode, namedFractions);
 		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, stateInfo);
 	}
-
 	public PermissionFromAnnotation createImmutableOrphan(StateSpace stateSpace, String rootNode, 
 			boolean isFramePermission, String stateInfo[], boolean namedFractions) {
 		FractionFunction f = FractionFunction.variableAll(stateSpace, rootNode, namedFractions);
