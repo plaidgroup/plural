@@ -206,7 +206,8 @@ public abstract class InitialLECreator implements MergeIntoTuple {
 		// add an unpacked unique frame permission for alive
 		PermissionSetFromAnnotations thisFrame = PermissionSetFromAnnotations.createSingleton( 
 				PermissionFactory.INSTANCE.createUniqueOrphan(receiverSpace, receiverSpace.getRootState(), 
-						true /* frame permission */, receiverSpace.getRootState()),
+						true /* frame permission */, new String[] { receiverSpace.getRootState() },
+						true /* named fractions (won't matter since this is for root node) */),
 				true /* universals are named */);
 		
 		FractionalPermissions ps = value.get(receiverVar);

@@ -646,7 +646,8 @@ public class FractionalTransfer extends
 		StateSpace arraySpace = getStateSpace(instr.getArrayType().resolveBinding());
 		value.put(instr, instr.getTarget(), PermissionSetFromAnnotations.createSingleton(
 				pf.createUniqueOrphan(arraySpace, arraySpace.getRootState(), 
-						false /* not a frame perm */, arraySpace.getRootState()), 
+						false /* not a frame perm */, new String[] { arraySpace.getRootState() },
+						true /* named fractions (won't matter since this is for root node) */ ), 
 				false /* named is existential */).toLatticeElement());
 		// TODO consider arrays as frames?  may affect array assignment and checking
 		
