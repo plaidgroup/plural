@@ -45,18 +45,13 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.FieldAccess;
-import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import edu.cmu.cs.crystal.IAnalysisReporter.SEVERITY;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.contexts.PluralContext;
-import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.FractionalAnalysis;
 
 /**
@@ -122,8 +117,9 @@ public class ConcurrentChecker extends FractionalAnalysis {
 					this.getMutexWalker().inWhichMutexBlockIsThisProtected(other_node, analysisInput);
 
 				// False if any other node is not inside an mutex block
-				if( other_node_m_block.isNone() ) 
+				if( other_node_m_block.isNone() ) {
 					return false;
+				}
 
 				// False if this node and that node are inside different mutex blocks
 				if( !node_a_block.unwrap().equals(other_node_m_block.unwrap()) )
