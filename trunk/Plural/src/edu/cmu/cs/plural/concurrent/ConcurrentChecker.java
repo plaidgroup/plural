@@ -146,7 +146,7 @@ public class ConcurrentChecker extends FractionalAnalysis {
 				List<ASTNode> nodes_where_unpacked = lattice.whereWasRcvrUnpacked();
 
 				// We require that this node be in the same atomic block as the
-				// one where it was packed. inSameAtomic also asserts that nodes
+				// one where it was packed. isProtectedBySameBlock also asserts that nodes
 				// are in any atomic block at all.
 				if( !isProtectedBySameBlock(node, nodes_where_unpacked) &&
 					!previouslyReportedErrorNodes.containsAll(nodes_where_unpacked) ) {

@@ -491,6 +491,8 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 				
 				if( !unpacked_perm.isReadOnly() ) {
 					// Test for unique-ity
+					// NEB: Actually, this doesn't test for @Unique, it
+					// tests for Unique in the sense of the OOPSLA07 paper.
 					FractionConstraint test = FractionConstraint.createEquality(root_fraction, Fraction.one()); 
 					if( frac_perms.getConstraints().testConstraint(test) ) {
 						// definitely unique! So we're done.
