@@ -37,8 +37,11 @@
  */
 package edu.cmu.cs.plural.test;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.State;
@@ -46,6 +49,8 @@ import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.TrueIndicates;
 import edu.cmu.cs.plural.annot.Use;
 
+@PassingTest
+@UseAnalyses(PluralAnalysis.PLURAL)
 @States({"HasInv"})
 @ClassStates(@State(name="HasInv", inv="share(myFile)"))
 public class SolverBug1 {
