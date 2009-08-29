@@ -220,7 +220,7 @@ public class VariableElimination {
 					if(t instanceof NamedFraction) {
 						NamedFraction c = (NamedFraction) t;
 						if(lastConst != null) {
-//							assumptions.add(createRelation(lastConst, fract.getRelop(), c));
+							assumptions.add(createRelation(lastConst, fract.getRelop(), c));
 							upperBounds.put(lastConst, c);
 						}
 						lastConst = c;
@@ -238,8 +238,7 @@ public class VariableElimination {
 								// FIXME Comment this in to fix constraint solving bug
 								// (avoid treating constraints on constants as assumptions)
 								// TODO really, we should keep track of assumptions separately 
-//								if(! Relop.EQ.equals(fract.getRelop()) && 
-//										last instanceof Fraction && t instanceof Fraction)
+//								if(! Relop.EQ.equals(fract.getRelop()))
 									// assumption (need not be proven)
 									assumptions.add(c);
 //								else
