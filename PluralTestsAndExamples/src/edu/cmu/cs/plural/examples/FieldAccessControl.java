@@ -171,12 +171,20 @@ public class FieldAccessControl {
 			Object a = new Object();
 			int b = 5;
 			control.setA(a);
-			// Plural infers switching from unpacking cA to cB
+			// object is in calledA, and separately we have full(control, A)
+			// calling forcePack, which requires hasA, forces Plural to unpack
+			// to cA again and put the field permission back in, packing to hasA
+			// ideally, we would like Plural to recognize this automatically
+			forcePack();
 			control.setB(b);
 			// object is in calledB, and separately we have full(control, B)
 			// because of the post-condition, Plural unpacks automatically
 			// and re-establishes hasB, so we don't need the forcePack trick here
 		}
+		
+		@Pure(value = "cA", requires = "hasA", ensures = "hasA", use = Use.FIELDS)
+		private void forcePack() {}
+		
 	}
 	
 	/**
@@ -219,11 +227,17 @@ public class FieldAccessControl {
 			Object a = new Object();
 			int b = 5;
 			control.setA(a);
-			// Plural infers switching from unpacking cA to cB
+			// object is unpacked, and we have full(control, A)
+			// Plural doesn't properly infer that it needs to pack here
+			// so we force it to pack using forcePack()
+			forcePack();
 			control.setB(b);
 			// Plural automatically packs at the end of the method
 			// so we don't need to do anything here
 		}
+		
+		@Pure(value = "cA", use = Use.FIELDS)
+		private void forcePack() {}
 	}
 	
 }
