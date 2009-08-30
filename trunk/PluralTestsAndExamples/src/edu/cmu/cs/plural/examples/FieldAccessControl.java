@@ -68,8 +68,8 @@ import edu.cmu.cs.plural.annot.Use;
  * @since Feb 18, 2009
  */
 @Refine({
-	@States(dim = "A", value = {}),  // dimension A, do not care about states within A
-	@States(dim = "B", value = {}),  // dimension B, do not care about states within B
+	@States(dim = "A"),  // dimension A, do not care about states within A
+	@States(dim = "B"),  // dimension B, do not care about states within B
 	
 })
 @ClassStates({
@@ -197,8 +197,8 @@ public class FieldAccessControl {
 	 *
 	 */
 	@Refine({
-		@States(dim = "cA", value = { }),
-		@States(dim = "cB", value = { })
+		@States(dim = "cA"),
+		@States(dim = "cB")
 	})
 	@ClassStates({
 		@State(name = "cA", inv = "full(control, A)"),
