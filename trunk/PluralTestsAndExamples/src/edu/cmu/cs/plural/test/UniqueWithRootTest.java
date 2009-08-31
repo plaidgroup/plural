@@ -48,7 +48,7 @@ import edu.cmu.cs.plural.annot.States;
  * @author Kevin Bierhoff
  * @since Aug 23, 2009
  */
-@FailingTest(1)
+@FailingTest(2)
 @UseAnalyses(PluralAnalysis.PLURAL)
 @Refine({
 	@States(dim = "A", value = {}),
@@ -64,7 +64,6 @@ public class UniqueWithRootTest {
 	
 	/** 
 	 * This method's post-condition should be unsat
-	 * FIXME Plural should generate an error here 
 	 */
 	@Perm(requires = "unique(this, A) * unique(this, B)", 
 			ensures = "unique(this)")

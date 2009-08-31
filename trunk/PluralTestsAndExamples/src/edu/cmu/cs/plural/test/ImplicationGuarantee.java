@@ -68,7 +68,7 @@ public class ImplicationGuarantee {
 
 	boolean i_have_full;
 	
-	@Share(guarantee="DUM", use=Use.DISP_FIELDS)
+	@Share(guarantee="DUM", use=Use.FIELDS)
 	@Pure(guarantee="SPEED", use=Use.DISPATCH)
 	void couldCallFullMethod() {
 		if( this.i_have_full ) {
