@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.util.Box;
 import edu.cmu.cs.plural.concrete.Implication;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
 import edu.cmu.cs.plural.concrete.VariablePredicate;
@@ -29,8 +30,22 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
  */
 class ImplicationOfAPermission implements Implication, ImplicationResult {
 	
-	private InfoHolderPredicate ant;
-	private List<InfoHolderPredicate> cons;
+	private final InfoHolderPredicate ant;
+	private final List<InfoHolderPredicate> cons;
+	
+	/**
+	 * Has this implication been eliminated? 
+	 * This object is NOT OWNED and may potentially be modified by
+	 * other objects.
+	 * 
+	 * This is important because
+	 * of the linear nature of ImplicationOfAPermission. All of the
+	 * implications that are created by calling 
+	 * createLinkedCopyWithXXXAntecedant() will share a pointer to
+	 * a boxed boolean. When one of them is eliminated they must all
+	 * be considered to be eliminated.
+	 */
+	private final Box<Boolean> hasBeenEliminated;
 
 	/**
 	 * Creates an implication with the given antecedent and consequence.
@@ -42,8 +57,20 @@ class ImplicationOfAPermission implements Implication, ImplicationResult {
 		super();
 		this.ant = ant;
 		this.cons = Collections.unmodifiableList(cons);
+		this.hasBeenEliminated = new Box<Boolean>(false);
 	}
 
+	/** Constructor allows multiple implications to share whether
+	 * or not they have been eliminated. */
+	private ImplicationOfAPermission(InfoHolderPredicate ant,
+			List<InfoHolderPredicate> cons,
+			Box<Boolean> hasBeenEliminated) {
+		super();
+		this.ant = ant;
+		this.cons = Collections.unmodifiableList(cons);
+		this.hasBeenEliminated = hasBeenEliminated;
+	}
+	
 	@Override
 	public ImplicationOfAPermission createCopyWithNewAntecedant(Aliasing other) {
 		return new ImplicationOfAPermission(ant.createIdenticalPred(other), cons);
@@ -106,11 +133,20 @@ class ImplicationOfAPermission implements Implication, ImplicationResult {
 	@Override
 	public PluralTupleLatticeElement putResultIntoLattice(
 			PluralTupleLatticeElement value) {
+		// Don't eliminate this implication twice!
+		if( this.hasBeenEliminated.getValue() )
+			return value;
+		
 		ant.removeFromLattice(value);
 		value.removeImplication(ant.getVariable(), this);
 		for(InfoHolderPredicate p : cons) {
 			p.putIntoLattice(value);
 		}
+		
+		// Now we say that this implication has been eliminated.
+		// No other linked implications will work afterwards.
+		this.hasBeenEliminated.setValue(true);
+		
 		return value;
 	}
 	
@@ -151,7 +187,7 @@ class ImplicationOfAPermission implements Implication, ImplicationResult {
 	}
 
 	@Override
-	public Set<Aliasing> getConsequenceVariables() {
+	public Set<Aliasing> getConsequentVariables() {
 		HashSet<Aliasing> result = new HashSet<Aliasing>();
 		for(InfoHolderPredicate p : cons) {
 			result.add(p.getVariable());
@@ -207,5 +243,17 @@ class ImplicationOfAPermission implements Implication, ImplicationResult {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public Implication createLinkedCopyWithNewAntecedant(Aliasing other) {
+		return	new ImplicationOfAPermission(ant.createIdenticalPred(other), 
+				cons, hasBeenEliminated);
+	}
+
+	@Override
+	public Implication createLinkedCopyWithOppositeAntecedent(Aliasing other) {
+		return new ImplicationOfAPermission(ant.createOppositePred(other), 
+				cons, hasBeenEliminated);
 	}	
 }

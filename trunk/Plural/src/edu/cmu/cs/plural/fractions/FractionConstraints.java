@@ -532,35 +532,7 @@ public final class FractionConstraints implements Freezable<FractionConstraints>
 		final FractionAssignment assignment = simplify();
 		if(assignment.isConsistent() == false)
 			return false;
-		
-//		FractionConstraintVisitor<Boolean> v = new FractionConstraintVisitor<Boolean>() {
-//			@Override public Boolean impossible(ImpossibleConstraint fract) {
-//				return false;
-//			}
-//			@Override public Boolean relation(FractionRelation fract) {
-//				switch(fract.getRelop()) {
-//				// TODO check consistency of LEQ constraints?
-//				// TODO Can we check whether X = Y + Z is satisfiable?
-//				// e.g. not satisfiable if Z = 0 and Y < X
-//				case LE:
-//					boolean mustBeNonZero = false;
-//					for(FractionTerm t : fract.getTerms()) {
-//						if(assignment.isZero(t)) {
-//							if(mustBeNonZero) 
-//								return false;
-//							mustBeNonZero = true;
-//						}
-//					}
-//					break;
-//				}
-//				return true;
-//			}
-//		};
-//		
-//		for(FractionConstraint c : constraints) {
-//			if(c.dispatch(v) == false)
-//				return false;
-//		}
+	
 		// simple algorithm thinks constraints are consistent
 		
 		VariableElimination elim = new VariableElimination();

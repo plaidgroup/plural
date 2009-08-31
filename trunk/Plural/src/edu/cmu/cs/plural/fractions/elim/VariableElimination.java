@@ -238,12 +238,12 @@ public class VariableElimination {
 								// FIXME Comment this in to fix constraint solving bug
 								// (avoid treating constraints on constants as assumptions)
 								// TODO really, we should keep track of assumptions separately 
-//								if(! Relop.EQ.equals(fract.getRelop()))
+								if(! Relop.EQ.equals(fract.getRelop()))
 									// assumption (need not be proven)
 									assumptions.add(c);
-//								else
-//									// constant-only term that's not an assumption (proven later)
-//									groundRelations.add(c);
+								else
+									// constant-only term that's not an assumption (proven later)
+									groundRelations.add(c);
 							}
 							else
 								result.add(c);

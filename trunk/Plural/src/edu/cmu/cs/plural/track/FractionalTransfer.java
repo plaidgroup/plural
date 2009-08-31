@@ -293,7 +293,6 @@ public class FractionalTransfer extends
 			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(binop.getNode());
 		
-		// this code is highly suspicious for going wrong if one of the operands is the target
 		Variable op1_loc = binop.getOperand1();
 		Variable op2_loc = binop.getOperand2();
 		Variable target_loc = binop.getTarget();
@@ -324,7 +323,7 @@ public class FractionalTransfer extends
 				}
 			}
 			
-			true_value = addNewlyDeducedFacts(binop, true_value,
+			true_value = addNewlyDeducedFacts(true_value,
 					op1_loc, op2_loc, target_loc);
 
 			// killing dead variables is the last thing we do
@@ -359,7 +358,7 @@ public class FractionalTransfer extends
 				}
 			}
 			
-			false_value = addNewlyDeducedFacts(binop, false_value,
+			false_value = addNewlyDeducedFacts(false_value,
 					op1_loc, op2_loc, target_loc);
 
 			// killing dead variables is the last thing we do
@@ -391,19 +390,9 @@ public class FractionalTransfer extends
 	 * @param vs
 	 * @return
 	 */
-	private static PluralContext addNewlyDeducedFacts(
-			// TODO not needed parameter
-			TACInstruction instr, 
-			PluralContext value,
+	private static PluralContext addNewlyDeducedFacts(PluralContext value,
 			Variable... vs) {
 		value.addNewlyDeducedFacts(vs);
-		
-		// moved into lattice
-//		List<ImplicationResult> new_facts = value.solveWithHints(vs);
-//		for( ImplicationResult f : new_facts ) {
-//			value = f.putResultIntoLattice(value); 					
-//		}
-				
 		return value;
 	}
 	
@@ -770,7 +759,7 @@ public class FractionalTransfer extends
 			final Variable target = unop.getTarget();
 			final Variable op = unop.getOperand();
 			value.addInequality(target, op);
-			value = addNewlyDeducedFacts(unop, value,
+			value = addNewlyDeducedFacts(value,
 					op, target);
 		}
 		
@@ -831,7 +820,7 @@ public class FractionalTransfer extends
 			true_value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 			true_value.addTrueVarPredicate(testedVar);
 
-			true_value = addNewlyDeducedFacts(instr, true_value, testedVar);
+			true_value = addNewlyDeducedFacts(true_value, testedVar);
 
 			// killing dead variables is the last thing we do
 			true_value.killDeadVariables(instr, 
@@ -847,7 +836,7 @@ public class FractionalTransfer extends
 			false_value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 			false_value.addFalseVarPredicate(testedVar);
 			
-			false_value = addNewlyDeducedFacts(instr, false_value, testedVar);
+			false_value = addNewlyDeducedFacts(false_value, testedVar);
 			
 			// killing dead variables is the last thing we do
 			false_value.killDeadVariables(instr, 

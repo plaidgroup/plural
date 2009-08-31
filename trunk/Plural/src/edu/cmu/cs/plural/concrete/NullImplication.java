@@ -44,6 +44,12 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
+/**
+ * An implication where the right-hand side (the consequent)
+ * is some fact about a variable that must or must not be null.
+ * 
+ * @author Nels E. Beckman
+ */
 public class NullImplication implements Implication {
 
 
@@ -178,12 +184,27 @@ public class NullImplication implements Implication {
 	}
 
 	@Override
-	public Set<Aliasing> getConsequenceVariables() {
+	public Set<Aliasing> getConsequentVariables() {
 		return Collections.singleton(consequencePred.getVariable());
 	}
 
 	@Override
 	public boolean isImpliedBy(Implication impl) {
 		return this.equals(impl);
+	}
+
+	@Override
+	public Implication createLinkedCopyWithNewAntecedant(Aliasing other) {
+		/*
+		 * Since a NullImplication can be freely duplicated, a linked copy
+		 * is really just a copy.
+		 */
+		return this.createCopyWithNewAntecedant(other);
+	}
+
+	@Override
+	public Implication createLinkedCopyWithOppositeAntecedent(Aliasing other) {
+		// Same logic as previous method.
+		return this.createCopyWithOppositeAntecedant(other);
 	}
 }

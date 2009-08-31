@@ -352,6 +352,52 @@ public class FractionAssignment {
 	}
 
 	/**
+	 * Returns true if we can easily figure out that the sum of
+	 * this FractionSum should intuitively be a constant. This
+	 * includes all NamedFractions, all 1/0. 
+	 */
+	private static boolean sumsToConstant(FractionSum sum) {
+		boolean all_named_fractions = true;
+		boolean all_literals = true;
+		
+		for( Fraction fract : sum.getSummands() ) {
+			all_named_fractions &= fract instanceof NamedFraction;
+			all_literals &= ( fract instanceof OneFraction ||
+					          fract instanceof ZeroFraction);
+		}
+		
+		return all_named_fractions | 
+		        all_literals;
+	}
+	
+	/**
+	 * Do the two given Fraction terms have the same literal values? This method is
+	 * very simple. It just checks to see if both terms are 1 or 0 or sums of 1 and 0.
+	 * If so, then we make sure they have the same value! If not, we return false.
+	 */
+	private static boolean equivalentLiteralValues(FractionTerm t1, FractionTerm t2) {
+		if( t1 instanceof NamedFraction ) return false;
+		if( t2 instanceof NamedFraction ) return false;
+		
+		int t1_value = (t1 instanceof OneFraction ? 1 : 0);
+		int t2_value = (t2 instanceof OneFraction ? 1 : 0);
+		
+		if( t1 instanceof FractionSum ) {
+			for( Fraction frac : ((FractionSum)t1).getSummands() ) {
+				if( frac instanceof OneFraction ) t1_value++;
+			}
+		}
+		
+		if( t2 instanceof FractionSum ) {
+			for( Fraction frac : ((FractionSum)t2).getSummands() ) {
+				if( frac instanceof OneFraction ) t2_value++;
+			}
+		}
+		
+		return t1_value == t2_value;
+	}
+	
+	/**
 	 * Checks if there is no more than one constant in every equivalence class.
 	 * Constants are {@link ZeroFraction}, {@link OneFraction}, and {@link NamedFraction}.
 	 * @return <code>true</code> if this fraction assignment is consistent; 
@@ -361,11 +407,18 @@ public class FractionAssignment {
 		for(Set<FractionTerm> eq  : equivalenceClasses.values()) {
 			FractionTerm literal = null;
 			for(FractionTerm t : eq) {
-				if((t instanceof Fraction) == false) continue;
-				if((t instanceof VariableFraction) == false) {
-					if(literal != null)
-						return false;
-					literal = t; 
+				//if((t instanceof Fraction) == false) continue;
+				if( t instanceof FractionSum ) {
+					if( sumsToConstant((FractionSum)t) ) {
+						if( literal != null &&
+							!equivalentLiteralValues(literal, t)) return false;
+						else literal = t;
+					}
+				}
+				else if((t instanceof VariableFraction) == false) {
+					if( literal != null &&
+							!equivalentLiteralValues(literal, t)) return false;
+					else literal = t; 
 				}
 			}
 		}
