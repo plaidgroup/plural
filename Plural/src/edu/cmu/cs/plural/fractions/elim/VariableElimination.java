@@ -235,8 +235,6 @@ public class VariableElimination {
 							if(c.isPrimitive())
 								groundRelations.add(c);
 							else if(c.isGround()) {
-								// FIXME Comment this in to fix constraint solving bug
-								// (avoid treating constraints on constants as assumptions)
 								// TODO really, we should keep track of assumptions separately 
 								if(! Relop.EQ.equals(fract.getRelop()))
 									// assumption (need not be proven)
