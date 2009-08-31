@@ -384,10 +384,10 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 	}
 
 	/**
-	 * This convenience method calls solve, learnTempStateInfo, and then returns
-	 * the resulting lattice.
+	 * This convenience method calls solve, learnTempStateInfo, and modifies
+	 * the lattice in place to include those new facts.
 	 * 
-	 * @param vs
+	 * @param vs Variables for which we should try to solve.
 	 */
 	public void addNewlyDeducedFacts(
 			final Variable... vs) {

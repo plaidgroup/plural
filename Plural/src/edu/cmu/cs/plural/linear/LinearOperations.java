@@ -49,7 +49,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -63,7 +62,6 @@ import edu.cmu.cs.crystal.tac.model.MethodCallInstruction;
 import edu.cmu.cs.crystal.tac.model.NewObjectInstruction;
 import edu.cmu.cs.crystal.tac.model.SuperVariable;
 import edu.cmu.cs.crystal.tac.model.TACFieldAccess;
-import edu.cmu.cs.crystal.tac.model.TACInstruction;
 import edu.cmu.cs.crystal.tac.model.TACInvocation;
 import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.Variable;
@@ -71,7 +69,6 @@ import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.alias.FrameLabel;
-import edu.cmu.cs.plural.concrete.StateImplication;
 import edu.cmu.cs.plural.contexts.ContextFactory;
 import edu.cmu.cs.plural.contexts.LinearContext;
 import edu.cmu.cs.plural.contexts.TensorContext;
@@ -84,7 +81,6 @@ import edu.cmu.cs.plural.fractions.FractionAssignment;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.perm.parser.ReleaseHolder;
 import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
@@ -775,16 +771,6 @@ public class LinearOperations extends TACAnalysisHelper {
 		return fractContext.getRepository().getStateSpace(type);
 	}
 
-	private boolean mayBeAnalyzedMethodReceiver(TensorPluralTupleLE value, 
-			TACInstruction instr,
-			Variable x) {
-		if(inStaticMethod())
-			return false;
-		Aliasing receiver_loc = value.getLocationsAfter(instr.getNode(), getThisVar());
-		Aliasing x_loc = value.getLocationsAfter(instr.getNode(), x);
-		return receiver_loc.hasAnyLabels(x_loc.getLabels());
-	}
-
 	/**
 	 * At certain points, we should no longer be able to think about permissions to
 	 * fields because they may have been reassigned. If a method or constructor call
@@ -908,44 +894,10 @@ public class LinearOperations extends TACAnalysisHelper {
 		return dont_forget;
 	}
 
-	private static boolean isEffectFree(IMethodBinding method, 
-			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> thisPrePost, 
-			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost) {
-		for(int i = 0; i < method.getParameterTypes().length; i++) {
-			if(argPrePost[i] != null && argPrePost[i].fst().isReadOnly() == false)
-				return false;
-		}
-		if(method.isConstructor())
-			// for constructors, receiver is a "result", so we don't check receiver pre-condition
-			return true;
-		return thisPrePost != null && thisPrePost.fst().isReadOnly();
-	}
-
 	private static TensorPluralTupleLE forgetStateInfo(
 			TensorPluralTupleLE value) {
 		value.forgetTemporaryStateInformation();
 		return value;
-	}
-
-	private static TensorPluralTupleLE addVariable(
-			TACInstruction instr,
-			TensorPluralTupleLE value,
-			Variable x, PermissionSetFromAnnotations newPerms,
-			List<Pair<Aliasing, ReleaseHolder>> paramInfo) {
-		if(x == null) throw new NullPointerException("Null variable provided");
-		Aliasing var = value.getLocationsAfter(instr, x);
-		value.put(var, newPerms.toLatticeElement());
-		if(paramInfo != null && ! paramInfo.isEmpty())
-			value.addImplication(var, new ReleasePermissionImplication(new PermissionPredicate(var, newPerms), paramInfo));
-		return value;
-	}
-
-	private static TensorPluralTupleLE mergeIn(
-			TACInstruction instr,
-			TensorPluralTupleLE value,
-			Variable x, PermissionSetFromAnnotations toMerge) {
-		if(x == null) throw new NullPointerException("Null variable provided");
-		return mergeIn(value.getLocationsAfter(instr.getNode(), x), value, toMerge);
 	}
 	
 	static TensorPluralTupleLE mergeIn(
@@ -960,20 +912,6 @@ public class LinearOperations extends TACAnalysisHelper {
 		FractionalPermissions permissions = value.get(a);
 		permissions = permissions.mergeIn(toMerge);
 		value.put(a, permissions);
-		return value;
-	}
-	
-	private static TensorPluralTupleLE splitOff(
-			TACInstruction instr,
-			TensorPluralTupleLE value,
-			Variable x, PermissionSetFromAnnotations toSplit) {
-		if(x == null) throw new NullPointerException("Null variable provided");
-		if(toSplit == null || toSplit.isEmpty()) 
-			return value;
-
-		FractionalPermissions permissions = value.get(instr, x);
-		permissions = permissions.splitOff(toSplit);
-		value.put(instr, x, permissions);
 		return value;
 	}
 	
@@ -1664,99 +1602,6 @@ public class LinearOperations extends TACAnalysisHelper {
 		}
 
 	}
-
-	/**
-	 * @param node
-	 * @param curLattice
-	 * @param paramPost
-	 * @param resultLoc
-	 * @param resultPost
-	 * @param indicatedStates
-	 * @return
-	 */
-	private String checkPostConditionOption(final ASTNode node,
-			final TensorContext cur_context,
-			final Map<Aliasing, PermissionSetFromAnnotations> paramPost,
-			final Aliasing resultLoc,
-			final PermissionSetFromAnnotations resultPost,
-			final Map<Aliasing, StateImplication> indicatedStates) {
-		TensorPluralTupleLE curLattice = cur_context.getTuple();
-		
-		curLattice = curLattice.mutableCopy();
-		
-		if(indicatedStates.isEmpty() == false) {
-			// add antecedents for state implications
-			Set<Aliasing> vars = new HashSet<Aliasing>();
-			for(StateImplication test : indicatedStates.values()) {
-				assert ! test.getAntecedant().isUnsatisfiable(curLattice) :
-					"Unsatisfiable state indicator: " + test;
-				test.getAntecedant().putIntoLattice(curLattice);
-				vars.add(test.getAntecedant().getVariable());
-			}
-			// solve to make sure we derive any available facts
-			curLattice.solveWithHints(vars.toArray(new Aliasing[0]));
-		}
-		
-		final LinearContext packed_lattice;
-		if(getThisVar() != null) {
-			final Aliasing this_loc = curLattice.getLocationsAfter(node, getThisVar());
-			final PermissionSetFromAnnotations this_post_perm = paramPost.get(this_loc);
-			
-			final Set<String> needed_rcvr_states;
-			if(this_post_perm == null)
-				needed_rcvr_states = Collections.emptySet();
-			else {
-				// fail early if receiver is packed and unsat
-				if(curLattice.isRcvrPacked() && curLattice.get(this_loc).isUnsatisfiable())
-					return this_loc + " returns no suitable permissions for post-condition";
-
-				if(indicatedStates.containsKey(this_loc)) {
-					StateImplication test = indicatedStates.get(this_loc);
-					
-					// enrich post-condition states with indicated state
-					Set<String> state_union = new LinkedHashSet<String>(this_post_perm.getStateInfo(true));
-					state_union.add(test.getVarState());
-					needed_rcvr_states = AbstractFractionalPermission.cleanStateInfo(
-							this_post_perm.getStateSpace(), 
-							state_union, 
-							true /* expect problems with tested states overlapping with others */);
-				}
-				else {
-					needed_rcvr_states = this_post_perm.getStateInfo(true);
-				}
-				
-			}
-			
-			// pack receiver, if necessary
-			packed_lattice =
-				this.prepareAnalyzedMethodReceiverForReturn(node, cur_context, needed_rcvr_states);
-			
-			// fail right away if wrangling was unsuccessful
-			if( ContextFactory.isImpossible(packed_lattice) ) {
-				if(needed_rcvr_states.isEmpty())
-					return "Could not pack receiver to any state " +
-							"due to insufficient field permissions";					
-				else
-					return "Could not bring receiver into post-condition states " +
-							needed_rcvr_states + " due to insufficient field permissions";	
-			}
-
-			// check post-condition for each possible outcome
-			DisjunctiveVisitor<String> testTuples = new ErrorReportingVisitor() {
-				@Override
-				public String checkTuple(TensorPluralTupleLE tuple) {
-					return checkPostConditionAfterPacking(node, tuple, 
-							paramPost, resultLoc, resultPost, indicatedStates);
-				}
-			};
-			return packed_lattice.dispatch(testTuples);
-		}
-		else
-			return checkPostConditionAfterPacking(node, curLattice, 
-					paramPost, resultLoc, resultPost, indicatedStates);
-		
-	}
-
 	
 	/**
 	 * Attempts to pack the current method receiver for a return from the method being analyzed.
@@ -1971,107 +1816,4 @@ public class LinearOperations extends TACAnalysisHelper {
 		}
 		return result;
 	}
-
-	/**
-	 * Tests the post-condition for a set of parameters (including
-	 * the receiver) and the method result.
-	 * More abstractly, this checks whether the permissions for a given set of objects
-	 * as well as a given variable are satisfiable.  If a permission for
-	 * an unpacked object is to be satisfied it helps to pack before
-	 * this method is called.	 
-	 * @param paramPost
-	 * @param resultLoc
-	 * @param resultPost
-	 * @param tuple
-	 * @param indicatedStates (possibly empty) map from locations to additional states
-	 * these locations should be in (for dynamic state test implementations).
-	 * @return
-	 */
-	private String checkPostConditionAfterPacking(
-			final ASTNode node,
-			TensorPluralTupleLE tuple,
-			final Map<Aliasing, PermissionSetFromAnnotations> paramPost,
-			final Aliasing resultLoc,
-			final PermissionSetFromAnnotations resultPost, 
-			Map<Aliasing, StateImplication> indicatedStates) {
-		// 1. check parameter post-conditions (incl. receiver)
-		for(Aliasing x : paramPost.keySet()) {
-			
-			FractionalPermissions paramPerms = tuple.get(x);
-
-			for(String needed : paramPost.get(x).getStateInfo(false)) {
-				if(paramPerms.isInState(needed, false) == false)
-					return x + " must return in state " + needed + " but is in " + paramPerms.getStateInfo(false);
-			}
-			
-			for(String needed : paramPost.get(x).getStateInfo(true)) {
-				if(paramPerms.isInState(needed, true) == false)
-					return x + "'s frame must return in state " + needed + " but is in " + paramPerms.getStateInfo(true);
-			}
-			
-			if(indicatedStates.containsKey(x)) {
-				// could use StateImplication.isSatisfied, 
-				// but seems pointless because we previously assert the antecedent
-				String additional = indicatedStates.get(x).getVarState();
-				if(paramPerms.isInState(additional) == false)
-					return "Return value indicates " + x + " to be in state " + additional + " but it is in " + paramPerms.getStateInfo();
-			}
-
-			FractionalPermissions paramRemainder = paramPerms.splitOff(paramPost.get(x));
-
-			if(paramRemainder.isUnsatisfiable())
-				return x + " returns no suitable permissions for post-condition";
-			
-			/*
-			 * Either way, the rest goes back into the lattice.
-			 */
-			tuple.put(x, paramRemainder);
-		}
-		
-		// 2. check result post-condition
-		return checkResultPermissionIfNotNull(node, tuple, resultLoc, resultPost);
-	}
-
-	/**
-	 * Tests a given permission, if the variable is non-<code>null</code>.
-	 * @param node
-	 * @param value
-	 * @param resultLoc Must be non-<code>null</code> if <code>permissionSet</code> is.
-	 * The variable is assumed to represent a result (for error messages).
-	 * @param permissionSet
-	 * @return An error message or <code>null</code> if no errors were found.
-	 */
-	private String checkResultPermissionIfNotNull(
-			final ASTNode node,
-			final TensorPluralTupleLE value,
-			final Aliasing resultLoc, 
-			final PermissionSetFromAnnotations permissionSet) {
-		if(permissionSet == null || permissionSet.isEmpty())
-			return null;
-		if(resultLoc == null)
-			throw new NullPointerException();
-		
-		// If the return value is not the value null, then it must fulfill its spec.
-		if( !value.isNull(resultLoc) ) {
-			FractionalPermissions resultPerms = value.get(resultLoc);
-			
-			for(String needed : permissionSet.getStateInfo(false)) {
-				if(resultPerms.isInState(needed, false) == false)
-					return "Return value must be in state " + 
-							needed + " but is in " + resultPerms.getStateInfo(false);
-			}
-			
-			for(String needed : permissionSet.getStateInfo(true)) {
-				if(resultPerms.isInState(needed, true) == false)
-					return "Return value frame must be in state " + 
-							needed + " but is in " + resultPerms.getStateInfo(true);
-			}
-			
-			FractionalPermissions resultRemainder = resultPerms.splitOff(permissionSet);
-			if(resultRemainder.isUnsatisfiable())
-				return "Return value carries no suitable permission";
-		}
-		return null; // no error
-	}
-
 }

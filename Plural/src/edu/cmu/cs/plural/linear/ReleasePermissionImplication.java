@@ -52,6 +52,10 @@ import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
+ * NEB: This class was not really documented. My understanding is that
+ * it is used as part of the capturing infrastructure. (@Capture, 
+ * @Release, etc.)
+ * 
  * @author Kevin Bierhoff
  * @since 8/04/2008
  */
@@ -169,7 +173,7 @@ public class ReleasePermissionImplication implements Implication {
 	}
 
 	@Override
-	public Set<Aliasing> getConsequenceVariables() {
+	public Set<Aliasing> getConsequentVariables() {
 		HashSet<Aliasing> result = new HashSet<Aliasing>();
 		for(Pair<Aliasing, ReleaseHolder> c : cons) {
 			result.add(c.fst());
@@ -180,5 +184,24 @@ public class ReleasePermissionImplication implements Implication {
 	@Override
 	public boolean isImpliedBy(Implication impl) {
 		return this.equals(impl);
+	}
+
+	@Override
+	public Implication createLinkedCopyWithNewAntecedant(Aliasing other) {
+		/*
+		 * For this type of implication, while it is important that it
+		 * not be eliminated twice, I believe they are never duplicated
+		 * and therefore we do not have to worry about accidentally 
+		 * eliminating the same one twice. Or at least the code in the
+		 * result() method should be enough to ensure that we don't
+		 * eliminate twice.
+		 */
+		return this.createCopyWithNewAntecedant(other);
+	}
+
+	@Override
+	public Implication createLinkedCopyWithOppositeAntecedent(Aliasing other) {
+		// Same logic as previous method...
+		return this.createCopyWithOppositeAntecedant(other);
 	}
 }

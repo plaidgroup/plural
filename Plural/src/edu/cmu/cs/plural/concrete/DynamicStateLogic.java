@@ -297,7 +297,8 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		
 		List<Implication> impls = knownImplications.get(known);
 		for( Implication impl : impls ) {
-			Implication new_impl = impl.createCopyWithNewAntecedant(other);
+			Implication new_impl = impl.createLinkedCopyWithNewAntecedant(other);
+			
 			if(new_impl != null)
 				this.addImplication(other, new_impl);
 		}
@@ -771,7 +772,7 @@ final public class DynamicStateLogic implements Freezable<DynamicStateLogic> {
 		for(Map.Entry<Aliasing, ConsList<Implication>> impls : knownImplications.entrySet()) {
 			Aliasing ant = impls.getKey();
 			for(Implication impl : impls.getValue()) {
-				Set<Aliasing> implied = impl.getConsequenceVariables();
+				Set<Aliasing> implied = impl.getConsequentVariables();
 				for(Aliasing a : implied) {
 					if(a.equals(ant))
 						continue;

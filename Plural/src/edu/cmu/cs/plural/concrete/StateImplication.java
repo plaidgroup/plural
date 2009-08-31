@@ -252,12 +252,27 @@ public final class StateImplication implements Implication {
 	}
 
 	@Override
-	public Set<Aliasing> getConsequenceVariables() {
+	public Set<Aliasing> getConsequentVariables() {
 		return Collections.singleton(describedVar);
 	}
 
 	@Override
 	public boolean isImpliedBy(Implication impl) {
 		return this.equals(impl);
+	}
+
+	@Override
+	public Implication createLinkedCopyWithNewAntecedant(Aliasing other) {
+		/*
+		 * I believe that a state implication can be freely duplicated, so
+		 * creating a linked implication in this case merely returns a copy.
+		 */
+		return this.createLinkedCopyWithNewAntecedant(other);
+	}
+
+	@Override
+	public Implication createLinkedCopyWithOppositeAntecedent(Aliasing other) {
+		// Same logic as previous method.
+		return this.createCopyWithOppositeAntecedant(other);
 	}	
 }

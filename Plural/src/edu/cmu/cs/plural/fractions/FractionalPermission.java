@@ -68,6 +68,10 @@ public class FractionalPermission extends AbstractFractionalPermission {
 
 	/**
 	 * Combines the given set of permissions to one permission with the given root.
+	 * If this is no possible because we don't actually have a unique permission,
+	 * a fractional permission will still be returned it will just have unsatisfiable
+	 * constraints.
+	 * 
 	 * @param permissions Set of permissions with roots that are smaller than <code>neededRoot</code>.
 	 * @param stateSpace State space for the new permission.
 	 * @param neededRoot Root for the resulting permission.

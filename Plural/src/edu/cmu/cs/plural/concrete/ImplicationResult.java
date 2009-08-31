@@ -37,7 +37,6 @@
  */
 package edu.cmu.cs.plural.concrete;
 
-import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.pred.PredicateChecker.SplitOffTuple;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
@@ -58,6 +57,8 @@ public interface ImplicationResult {
 	/**
 	 * After you have eliminated an implication, this method, given a MUTABLE lattice,
 	 * will MUTATE that lattice by adding in the result of the implication and return it.
+	 * As currently used, this is the method that eliminates the implication.
+	 * splitOffResult is only used for proving that a implication is true.
 	 * @param value
 	 * @return
 	 */
@@ -65,7 +66,8 @@ public interface ImplicationResult {
 	
 	/**
 	 * This will call the given call-back to remove the result of this implication
-	 * from the lattice.
+	 * from the lattice. Note that this method SHOULD NOT be used for eliminating
+	 * the implication. Use putResultIntoLattice instead.
 	 */
 	boolean splitOffResult(SplitOffTuple tuple);
 }

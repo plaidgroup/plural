@@ -40,7 +40,6 @@ package edu.cmu.cs.plural.concrete;
 import java.util.Set;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
-import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
  * Interface for implications in the dynamic state logic system.
@@ -53,12 +52,44 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
  */
 public interface Implication extends Predicate {
 		
+	/**
+	 * Returns the antecedent.
+	 */
 	VariablePredicate getAntecedant();
 	
-	Set<Aliasing> getConsequenceVariables();
+	/**
+	 * Return the variables mentioned in the consequence predicate.
+	 */
+	Set<Aliasing> getConsequentVariables();
 
+	/**
+	 * Returns the result of this implication.
+	 */
 	ImplicationResult result();
 
+	/**
+	 * Creates a linked copy of this implication with a different
+	 * antecedent. The main purpose of this method is to allow 
+	 * copies of implications to be created where of all the implications, 
+	 * at most one can ever be eliminated. If the consequent is
+	 * a permission, this is important so that permissions are not
+	 * duplicated.
+	 */
+	Implication createLinkedCopyWithNewAntecedant(Aliasing other);
+	
+	/**
+	 * Creates a linked copy of this implication with a new
+	 * antecedent opposite to this one. The main purpose of this method
+	 * is to allow 
+	 * copies of implications to be created where of all the implications, 
+	 * at most one can ever be eliminated. If the consequent is
+	 * a permission, this is important so that permissions are not
+	 * duplicated.
+	 * @param other
+	 * @return
+	 */
+	Implication createLinkedCopyWithOppositeAntecedent(Aliasing other);
+	
 	/**
 	 * Creates a new implication based on this one but with the
 	 * antecedent negated and written in terms of the given
