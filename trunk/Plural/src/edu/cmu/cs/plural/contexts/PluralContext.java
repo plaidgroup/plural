@@ -523,14 +523,21 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 
 	public boolean packReceiver(final ThisVariable rcvrVar,
 			final StateSpaceRepository stateRepo,
-			final SimpleMap<Variable, Aliasing> locs,
+			final ASTNode node, 
 			final Set<String> neededStates) {
 		final ChoiceID choiceID = le.getChoiceID();
 		final ChoiceID parentChoiceID = le.getParentChoiceID();
 		
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public LinearContext context(TensorContext le) {
+			public LinearContext context(final TensorContext le) {
+				// Create mapping from variables to aliasing locations.
+				SimpleMap<Variable, Aliasing> locs = new SimpleMap<Variable, Aliasing>() {
+					@Override public Aliasing get(Variable key) {
+						return le.getTuple().getLocationsAfter(node, key);
+					}
+				};
+				
 				if(! le.getTuple().isRcvrPacked()) {
 					PackingResult pack_result = le.getTuple().packReceiver(le, rcvrVar, stateRepo, locs, neededStates);
 

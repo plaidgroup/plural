@@ -92,20 +92,14 @@ import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
-import edu.cmu.cs.crystal.util.VOID;
 import edu.cmu.cs.plural.alias.LivenessProxy;
-import edu.cmu.cs.plural.contexts.ContextChoiceLE;
-import edu.cmu.cs.plural.contexts.FalseContext;
 import edu.cmu.cs.plural.contexts.InitialLECreator;
 import edu.cmu.cs.plural.contexts.LinearContext;
 import edu.cmu.cs.plural.contexts.PluralContext;
-import edu.cmu.cs.plural.contexts.TensorContext;
-import edu.cmu.cs.plural.contexts.TrueContext;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
-import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.states.IConstructorSignature;
@@ -717,37 +711,10 @@ public class FractionalTransfer extends
 
 			final ThisVariable rcvrVar = this.getAnalysisContext().getThisVariable();
 			final StateSpaceRepository stateRepo = this.context.getRepository();
-			final PluralContext value_ = value;
 			
 			// Dispatch and PACK
-			value_.getLinearContext().mutableCopy().dispatch(new DisjunctiveVisitor<VOID>(){
-				@Override
-				public VOID context(final TensorContext le) {
-					SimpleMap<Variable,Aliasing> locs = new SimpleMap<Variable,Aliasing>() {
-						@Override
-						public Aliasing get(Variable key) {
-							return le.getTuple().getLocationsAfter(instr, key);
-						}
-					};
-					
-					if( states_to_pack_to.isEmpty() )
-						le.getTuple().fancyPackReceiverToBestGuess(le, rcvrVar, stateRepo, locs, le.getChoiceID(), new String[] {});
-					else
-						le.getTuple().packReceiver(le, rcvrVar, stateRepo, locs, states_to_pack_to);
-					
-					return VOID.V();
-				}
-				@Override public VOID choice(ContextChoiceLE choice) {
-					for( LinearContext ctx : choice.getElements() )
-						ctx.dispatch(this);
-					return VOID.V();
-				}
-				@Override public VOID falseContext(FalseContext falseContext) { return VOID.V(); }
-				@Override public VOID trueContext(TrueContext trueContext) { return VOID.V(); }
-			});
-			value = value_.mutableCopy().storeCurrentAliasingInfo(instr.getNode()); // necessary, since earlier operations were working on this copy.
+			value.packReceiver(rcvrVar, stateRepo, instr.getNode(), states_to_pack_to);
 		}
-		
 		
 		// killing dead variables is the last thing we do
 		value.killDeadVariables(instr, createVariableLivenessAfter(instr, NormalLabel.getNormalLabel()));
