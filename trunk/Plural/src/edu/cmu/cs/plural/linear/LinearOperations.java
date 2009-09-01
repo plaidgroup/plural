@@ -1614,7 +1614,7 @@ public class LinearOperations extends TACAnalysisHelper {
 	 * if packing was unsuccessful, but the resulting permissions need not be in the right state.
 	 * {@link #wrangleIntoPackedStates(ASTNode, TensorPluralTupleLE, Set, boolean)} 
 	 */
-	private LinearContext prepareAnalyzedMethodReceiverForReturn(
+	final public LinearContext prepareAnalyzedMethodReceiverForReturn(
 			final ASTNode node, 
 			final TensorContext cur_context,
 			final Set<String> neededStates) {

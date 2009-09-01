@@ -85,7 +85,6 @@ import edu.cmu.cs.crystal.tac.model.SourceVariableReadInstruction;
 import edu.cmu.cs.crystal.tac.model.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.model.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.model.TACInstruction;
-import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.UnaryOperation;
 import edu.cmu.cs.crystal.tac.model.UnaryOperator;
 import edu.cmu.cs.crystal.tac.model.Variable;
@@ -105,7 +104,6 @@ import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IMethodSignature;
 import edu.cmu.cs.plural.states.StateSpace;
-import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.states.annowrappers.ForcePackAnnotation;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
 
@@ -708,12 +706,9 @@ public class FractionalTransfer extends
 		if( fp_anno_.isSome() ) {
 			ForcePackAnnotation fp_anno = fp_anno_.unwrap();
 			final Set<String> states_to_pack_to = fp_anno.getNodes();
-
-			final ThisVariable rcvrVar = this.getAnalysisContext().getThisVariable();
-			final StateSpaceRepository stateRepo = this.context.getRepository();
 			
-			// Dispatch and PACK
-			value.packReceiver(rcvrVar, stateRepo, instr.getNode(), states_to_pack_to);
+			// PACK
+			value.wrangleReceiverIntoStates(instr.getNode(), states_to_pack_to);
 		}
 		
 		// killing dead variables is the last thing we do

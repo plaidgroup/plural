@@ -59,7 +59,6 @@ import edu.cmu.cs.crystal.tac.model.NewObjectInstruction;
 import edu.cmu.cs.crystal.tac.model.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.model.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.model.TACInstruction;
-import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Box;
 import edu.cmu.cs.crystal.util.Freezable;
@@ -67,9 +66,7 @@ import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concrete.ImplicationResult;
-import edu.cmu.cs.plural.errors.ChoiceID;
 import edu.cmu.cs.plural.errors.JoiningChoices;
-import edu.cmu.cs.plural.errors.PackingResult;
 import edu.cmu.cs.plural.fractions.Fraction;
 import edu.cmu.cs.plural.fractions.FractionConstraint;
 import edu.cmu.cs.plural.fractions.FractionalPermission;
@@ -86,7 +83,6 @@ import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IMethodCaseInstance;
 import edu.cmu.cs.plural.states.IMethodSignature;
 import edu.cmu.cs.plural.states.MethodCheckingKind;
-import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.track.FractionAnalysisContext;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
 
@@ -389,8 +385,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 	 * 
 	 * @param vs Variables for which we should try to solve.
 	 */
-	public void addNewlyDeducedFacts(
-			final Variable... vs) {
+	public void addNewlyDeducedFacts(final Variable... vs) {
 		// TODO can we keep dynamic state logic in PluralDisjunctiveLE
 		// and just call f.putResultIntoLattice on every tuple?
 		le.dispatch(new DescendingVisitor() {
@@ -521,61 +516,22 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		return result.getValue().booleanValue();
 	}
 
-	public boolean packReceiver(final ThisVariable rcvrVar,
-			final StateSpaceRepository stateRepo,
+	/**
+	 * Try to pack the receiver in all contexts to the given states. If
+	 * they are packed to a different state, unpack them and re-pack them.
+	 */
+	final public void wrangleReceiverIntoStates(
 			final ASTNode node, 
 			final Set<String> neededStates) {
-		final ChoiceID choiceID = le.getChoiceID();
-		final ChoiceID parentChoiceID = le.getParentChoiceID();
+		final LinearOperations lo = this.op;
 		
 		le = le.dispatch(new RewritingVisitor() {
 			@Override
-			public LinearContext context(final TensorContext le) {
-				// Create mapping from variables to aliasing locations.
-				SimpleMap<Variable, Aliasing> locs = new SimpleMap<Variable, Aliasing>() {
-					@Override public Aliasing get(Variable key) {
-						return le.getTuple().getLocationsAfter(node, key);
-					}
-				};
-				
-				if(! le.getTuple().isRcvrPacked()) {
-					PackingResult pack_result = le.getTuple().packReceiver(le, rcvrVar, stateRepo, locs, neededStates);
-
-					if( pack_result.worked() )
-						return le;
-					else {
-						String failed_state = pack_result.failedState().unwrap();
-						String failed_inv = pack_result.failedInvariant().unwrap();
-						return ContextFactory.failedPack(failed_state, failed_inv, le.getParentChoiceID(), le.getChoiceID());
-					}
-				}
-				else {
-					if(le.getTuple().get(locs.get(rcvrVar)).isInStates(neededStates, true))
-						return le;
-					else
-						return ContextFactory.trueContext(parentChoiceID, choiceID);
-				}
-			}
-		});
-		return ! isImpossible();
-	}
-
-	public boolean packReceiverToBestGuess(final ThisVariable rcvrVar,
-			final StateSpaceRepository stateRepo,
-			final SimpleMap<Variable, Aliasing> locs, final String[] statesToTry) {
-		le = le.dispatch(new RewritingVisitor() {
-			@Override
 			public LinearContext context(TensorContext le) {
-				if(! le.getTuple().isRcvrPacked()) {
-					return le.getTuple().fancyPackReceiverToBestGuess(le, rcvrVar, stateRepo, locs, 
-							le.getChoiceID(),
-							statesToTry);
-				}
-				// else ?
-				return le;
+				return lo.prepareAnalyzedMethodReceiverForReturn(node, 
+						le, neededStates);
 			}
 		});
-		return ! isImpossible();
 	}
 	
 	public void handleMethodCall(			
@@ -631,8 +587,6 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 	public void handleNewObject(			
 			final NewObjectInstruction instr,
 			final IConstructorSignature sig
-//			final PermissionSetFromAnnotations rcvrPost,
-//			final Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations>[] argPrePost
 			) {
 		final List<IConstructorCaseInstance> cases = 
 			sig.createPermissionsForCases(MethodCheckingKind.CONSTRUCTOR_NEW, false, false);
@@ -754,32 +708,6 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			}
 		});
 	}
-	/*
-	public void forgetTemporaryStateInfo() {
-		le.dispatch(new DescendingVisitor() {
-			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
-				for(ExtendedIterator<FractionalPermissions> it = tuple.tupleInfoIterator(); it.hasNext(); ) {
-					FractionalPermissions permissions = it.next();
-					permissions = permissions.forgetTemporaryStateInfo();
-					it.replace(permissions);
-				}
-				return true;
-			}
-		});
-	}
-
-	public void releaseParameter(final MethodCallInstruction instr,
-			final Variable x, final String paramName) {
-		le.dispatch(new DescendingVisitor() {
-			@Override
-			public boolean tupleModification(TensorPluralTupleLE tuple) {
-				tuple.releaseParameter(instr, x, paramName);
-				return true;
-			}
-		});
-	}
-	*/
 
 	public void prepareForArrayWrite(final StoreArrayInstruction instr) {
 		le.dispatch(new DescendingVisitor() {
