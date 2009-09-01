@@ -58,9 +58,9 @@ import edu.cmu.cs.plural.annot.Use;
  * @since Aug 31, 2009
  *
  */
-//@PassingTest
-//@UseAnalyses({PluralAnalysis.PLURAL, PluralAnalysis.EFFECT,
-//		PluralAnalysis.SYNTAX})
+@PassingTest
+@UseAnalyses({PluralAnalysis.PLURAL, PluralAnalysis.EFFECT,
+		PluralAnalysis.SYNTAX})
 @States({"A"})
 @ClassStates(@State(name="A", inv="full(myFile)"))
 public class TestForcePack1 {
@@ -77,10 +77,21 @@ public class TestForcePack1 {
 		
 		this.myFile.doIt();
 	}
+	
+	@Full(requires="A", ensures="A", use=Use.FIELDS)
+	void foo2() {
+		this.myFile = new File();
+		
+		@SuppressWarnings("unused")
+		@ForcePack
+		int IGNOREME;
+		
+		this.myFile.doIt();
+	}
 }
 
 class File{
-	@Perm(ensures="unqiue(this!fr)")
+	@Perm(ensures="unique(this!fr)")
 	File() {}
 	
 	@Full
