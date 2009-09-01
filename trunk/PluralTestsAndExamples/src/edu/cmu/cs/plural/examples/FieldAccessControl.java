@@ -220,8 +220,8 @@ public class FieldAccessControl {
 		}
 		
 		@Uniques({ 
-			@Unique(value = "cA", use = Use.FIELDS), 
-			@Unique(value = "cB", use = Use.FIELDS) 
+			@Unique(value = "cA", justToRoot = true, use = Use.FIELDS), 
+			@Unique(value = "cB", justToRoot = true, use = Use.FIELDS) 
 		})
 		public void setAandBWithSeparatePermissions() {
 			Object a = new Object();
