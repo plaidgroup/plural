@@ -315,7 +315,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		@Override
 		public void endVisit(ClassInstanceCreation node) {
 			final PluralContext before = getFa().getResultsBefore(node);
-//			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
 			
@@ -323,15 +322,16 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 				super.endVisit(node);
 				return;
 			}
-			
+		
+			@SuppressWarnings("unchecked")
+			List<Expression> arguments = (List<Expression>) node.arguments();
 			checkCasesOfInvocation(node, before, sig, null /* no receiver yet */, 
-					variables((List<Expression>) node.arguments()), false /* "new" */);
+					variables(arguments), false /* "new" */);
 			
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
 				logger.finest(before.toString());
 				logger.finest("  " + node);
-//				logger.finest(after.toString());
 			}
 			super.endVisit(node);
 		}
@@ -339,7 +339,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		@Override
 		public void endVisit(MethodInvocation node) {
 			final PluralContext before = getFa().getResultsBefore(node);
-//			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding methodBinding = node.resolveMethodBinding();
 			final IMethodSignature sig = getRepository().getMethodSignature(methodBinding);
 			
@@ -363,14 +362,16 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			
 			boolean isPrivate = Modifier.isPrivate(sig.getSpecifiedMethodBinding().getModifiers());
 			boolean isStatic = Modifier.isStatic(sig.getSpecifiedMethodBinding().getModifiers());
+			
+			@SuppressWarnings("unchecked")
+			List<Expression> arguments = (List<Expression>) node.arguments();
 			checkCasesOfInvocation(node, before, sig, receiver, 
-					variables((List<Expression>) node.arguments()), isPrivate || isStatic);
+					variables(arguments), isPrivate || isStatic);
 			
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
 				logger.finest(before.toString());
 				logger.finest("  " + node);
-//				logger.finest(after.toString());
 			}
 			super.endVisit(node);
 		}
@@ -386,8 +387,10 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 				return;
 			}
 			
+			@SuppressWarnings("unchecked")
+			List<Expression> arguments = (List<Expression>) node.arguments();
 			checkCasesOfInvocation(node, before, sig, null /* lattice fills in super */, 
-					variables((List<Expression>) node.arguments()), true /* static dispatch */);
+					variables(arguments), true /* static dispatch */);
 			
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
@@ -396,7 +399,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			}
 			super.endVisit(node);
 		}
-
+		
 		@Override
 		public void endVisit(ArrayAccess node) {
 			// check stores into arrays: was array modifiable?
@@ -410,8 +413,10 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 						super.endVisit(node);
 						return;
 					}
-					
-					if(! after.checkConstraintsSatisfiable(getFa().getVariable(node.getArray())))
+
+					@SuppressWarnings("deprecation")
+					boolean checkConstraintsSatisfiable = after.checkConstraintsSatisfiable(getFa().getVariable(node.getArray()));
+					if(! checkConstraintsSatisfiable)
 						// TODO better reporting
 						reporter.reportUserProblem(
 								"no suitable permission for assignment to " + node + errorCtx, 
@@ -450,15 +455,16 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			// receiver is always "this"  (super constructor call is different node type)
 			final Variable receiver = getFa().getImplicitThisVariable(constructorBinding);
 			
+			@SuppressWarnings("unchecked")
+			List<Expression> arguments = (List<Expression>) node.arguments();
 			checkCasesOfInvocation(node, before, sig, receiver, 
-					variables((List<Expression>) node.arguments()), true);
+					variables(arguments), true);
 			
 
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
 				logger.finest(before.toString());
 				logger.finest("  " + node);
-//				logger.finest(after.toString());
 			}
 			super.endVisit(node);
 		}
@@ -469,7 +475,6 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		@Override
 		public void endVisit(SuperConstructorInvocation node) {
 			final PluralContext before = getFa().getResultsBefore(node);
-//			final PluralDisjunctiveLE after = getFa().getResultsAfter(node);
 			final IMethodBinding constructorBinding = node.resolveConstructorBinding();
 			final IConstructorSignature sig = getRepository().getConstructorSignature(constructorBinding);
 			
@@ -478,14 +483,15 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 				return;
 			}
 			
+			@SuppressWarnings("unchecked")
+			List<Expression> arguments = (List<Expression>) node.arguments();
 			checkCasesOfInvocation(node, before, sig, null /* lattice fills in super variable */, 
-					variables((List<Expression>) node.arguments()), true /* static dispatch */);
+					variables(arguments), true /* static dispatch */);
 
 			// debug
 			if(logger.isLoggable(Level.FINEST)) {
 				logger.finest(before.toString());
 				logger.finest("  " + node);
-//				logger.finest(after.toString());
 			}
 			super.endVisit(node);
 		}
