@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
+ * Copyright (C) 2007-2009 Carnegie Mellon University and others.
  *
  * This file is part of Plural.
  *
@@ -35,67 +35,54 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package fancytestarea;
+package edu.cmu.cs.plural.test.forcepack;
 
 import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.ForcePack;
+import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
-import edu.cmu.cs.plural.annot.Refine;
+import edu.cmu.cs.plural.annot.State;
 import edu.cmu.cs.plural.annot.States;
-import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
 /**
- * 1st test of what I am currently calling 'unique dimensions.'
- * This shows that we can go from one @Unique permission, from
- * a constructor, to two @Unique permissions for dimensions.
- *  
+ * It's kind of hard to test that force pack is
+ * actually doing what we want. This first test will
+ * just make sure no exceptions or anything are thrown
+ * when it is encountered.
+ * 
  * @author Nels E. Beckman
- * @since Aug 25, 2009
+ * @since Aug 31, 2009
  *
  */
-@Refine({
-	@States(dim="SWEET", refined="alive", value={"SweetState"}),
-	@States(dim="SOUR", refined="alive", value={"SourState"})
-})
-@UseAnalyses(PluralAnalysis.PLURAL)
-@PassingTest
-public class UniqueDim1 {
+//@PassingTest
+//@UseAnalyses({PluralAnalysis.PLURAL, PluralAnalysis.EFFECT,
+//		PluralAnalysis.SYNTAX})
+@States({"A"})
+@ClassStates(@State(name="A", inv="full(myFile)"))
+public class TestForcePack1 {
 
-	/*
-	 * Now something a little more tricky.
-	 * Can we divide a perfectly good Unique permission into
-	 * two unique dims?
-	 */
-	static void createAndSplit() {
-		UniqueDim1 new_object = new UniqueDim1();
-		consumeSweet(new_object);
-		consumeSour(new_object);
-	}
+	private File myFile;
 	
-	/*
-	 * A very weak first test...
-	 */
-	static void foo(@Unique(guarantee="SWEET") 
-			UniqueDim1 ud1 ) {
-		bar(ud1);
-	}
-	
-	static void bar(@Unique(guarantee="SWEET") 
-			UniqueDim1 ud1) {}
-	
-	
-	
-	@Perm(ensures="unique(this!fr)")
-	public UniqueDim1() {
+	@Full(requires="A", ensures="A", use=Use.FIELDS)
+	void foo() {
+		this.myFile = new File();
 		
+		@SuppressWarnings("unused")
+		@ForcePack("A")
+		int IGNOREME;
+		
+		this.myFile.doIt();
 	}
+}
+
+class File{
+	@Perm(ensures="unqiue(this!fr)")
+	File() {}
 	
-	static void consumeSweet(
-			@Unique(guarantee="SWEET", returned=false)
-			UniqueDim1 arg1) {}
-	
-	static void consumeSour(
-			@Unique(guarantee="SOUR", returned=false)
-			UniqueDim1 arg1) {}	
+	@Full
+	void doIt() {}
 }

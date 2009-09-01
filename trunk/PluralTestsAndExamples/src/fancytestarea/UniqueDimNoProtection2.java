@@ -77,7 +77,7 @@ public class UniqueDimNoProtection2 {
 	
 	private File mySharedFile;
 	
-	@Unique(guarantee="TLOCAL", justToRoot=true, use=Use.FIELDS)
+	@Unique(guarantee="TLOCAL", use=Use.FIELDS)
 	@Share(guarantee="TSHARED", use=Use.FIELDS)
 	void run() {
 		/*
@@ -122,6 +122,6 @@ public class UniqueDimNoProtection2 {
 			UniqueDimNoProtection2 thread) {}
 	
 	
-	@Unique(guarantee="TLOCAL", justToRoot=true, use=Use.FIELDS)
+	@Unique(guarantee="TLOCAL", use=Use.FIELDS)
 	private void forcePack() {}
 }

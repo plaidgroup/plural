@@ -98,7 +98,7 @@ public class UniqueDimNoProtection {
 	static void consumeShareDim(@Share(guarantee="TSHARED", returned=false)
 			UniqueDimNoProtection thread) {}
 	
-	@Unique(guarantee="TLOCAL", justToRoot=true, use=Use.FIELDS)
+	@Unique(guarantee="TLOCAL", use=Use.FIELDS)
 	@Share(guarantee="TSHARED", use=Use.FIELDS)
 	void run() {
 		/*
@@ -123,7 +123,7 @@ public class UniqueDimNoProtection {
 		}
 	}
 	
-	@Unique(guarantee="TLOCAL", justToRoot=true, use=Use.FIELDS)
+	@Unique(guarantee="TLOCAL", use=Use.FIELDS)
 	private void forcePack() {}
 }
 
