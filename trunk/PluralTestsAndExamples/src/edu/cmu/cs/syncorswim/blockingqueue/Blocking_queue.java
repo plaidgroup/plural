@@ -7,6 +7,7 @@ import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.FalseIndicates;
+import edu.cmu.cs.plural.annot.ForcePack;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.In;
 import edu.cmu.cs.plural.annot.NoEffects;
@@ -273,11 +274,8 @@ public class Blocking_queue
 	@Share(use = Use.FIELDS, guarantee="STRUCTURE")
 	public synchronized void close()
 	{	closed 	 = true;
-		forcePack(); // NEB: Added by me
+		@ForcePack int IGNOREME; // NEB: Added by me
 		elements = null;
 		notifyAll();
-	}
-	
-	@NoEffects
-	static void forcePack() {} 
+	} 
 }

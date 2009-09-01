@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.examples;
 import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.ForcePack;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Fulls;
 import edu.cmu.cs.plural.annot.In;
@@ -175,15 +176,14 @@ public class FieldAccessControl {
 			// calling forcePack, which requires hasA, forces Plural to unpack
 			// to cA again and put the field permission back in, packing to hasA
 			// ideally, we would like Plural to recognize this automatically
-			forcePack();
+			
+			@ForcePack("hasA") int IGNORE_ME;
+						
 			control.setB(b);
 			// object is in calledB, and separately we have full(control, B)
 			// because of the post-condition, Plural unpacks automatically
 			// and re-establishes hasB, so we don't need the forcePack trick here
 		}
-		
-		@Pure(value = "cA", requires = "hasA", ensures = "hasA", use = Use.FIELDS)
-		private void forcePack() {}
 		
 	}
 	
@@ -220,8 +220,8 @@ public class FieldAccessControl {
 		}
 		
 		@Uniques({ 
-			@Unique(value = "cA", justToRoot = true, use = Use.FIELDS), 
-			@Unique(value = "cB", justToRoot = true, use = Use.FIELDS) 
+			@Unique(value = "cA", use = Use.FIELDS), 
+			@Unique(value = "cB", use = Use.FIELDS) 
 		})
 		public void setAandBWithSeparatePermissions() {
 			Object a = new Object();
@@ -230,14 +230,13 @@ public class FieldAccessControl {
 			// object is unpacked, and we have full(control, A)
 			// Plural doesn't properly infer that it needs to pack here
 			// so we force it to pack using forcePack()
-			forcePack();
+			
+			@ForcePack("cA") int IGNORE_ME;
+			
 			control.setB(b);
 			// Plural automatically packs at the end of the method
 			// so we don't need to do anything here
 		}
-		
-		@Pure(value = "cA", use = Use.FIELDS)
-		private void forcePack() {}
 	}
 	
 }

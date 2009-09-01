@@ -41,6 +41,7 @@ package fancytestarea;
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.ForcePack;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.Refine;
@@ -93,7 +94,7 @@ public class UniqueDimNoProtection2 {
 		// one. This makes perfect sense in my opinion, and it
 		// makes writing methods like this a bit more complicated
 		// but still do-able.
-		this.forcePack();
+		@ForcePack("TLOCAL") int IGNOREME;
 		
 		this.mySharedFile.doSomething(); // ERROR HERE
 		this.mySharedFile = new File();
@@ -120,8 +121,4 @@ public class UniqueDimNoProtection2 {
 	
 	static void consumeShareDim(@Share(guarantee="TSHARED", returned=false)
 			UniqueDimNoProtection2 thread) {}
-	
-	
-	@Unique(guarantee="TLOCAL", use=Use.FIELDS)
-	private void forcePack() {}
 }

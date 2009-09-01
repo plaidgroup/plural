@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.history;
 import java.util.List;
 
 import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.ForcePack;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.State;
@@ -56,14 +57,14 @@ public class SimpleMultiChoice {
 	@Full(ensures="HasInv", use=Use.FIELDS)
 	void bar(@Pure(returned=false) List<String> someCrappyList) {
 		list = someCrappyList;
-		forcePack();
+		
+		@ForcePack int INGORE_ME;
 	}
 	
 	@Unique(ensures="HasInv", use=Use.FIELDS)
 	void foo(@Pure List<String> someCrappyList) {
 		this.list = someCrappyList;
-		forcePack();
-	}
 		
-	static void forcePack() {}
+		@ForcePack int INGORE_ME;
+	}
 }
