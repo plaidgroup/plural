@@ -1,6 +1,7 @@
 package fancytestarea;
 
 import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.ForcePack;
 import edu.cmu.cs.plural.annot.Full;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.Share;
@@ -34,7 +35,7 @@ public class NotContinuousUnpacked {
 			// First unpack.
 			this.myObject = new StupidObject();
 			// Force pack.
-			forcePack();
+			@ForcePack int IGNORE_ME;
 		}
 		
 		synchronized(this) {
@@ -43,9 +44,6 @@ public class NotContinuousUnpacked {
 		}
 		
 	}
-	
-	static void forcePack() {};
-	
 }
 
 class StupidObject {
