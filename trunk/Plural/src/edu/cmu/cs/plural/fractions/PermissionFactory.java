@@ -38,11 +38,6 @@
 package edu.cmu.cs.plural.fractions;
 
 import java.util.Collections;
-import java.util.Map;
-
-import edu.cmu.cs.plural.states.StateSpace;
-import edu.cmu.cs.plural.track.Permission.PermissionKind;
-import java.util.Collections;
 
 import edu.cmu.cs.plural.states.StateSpace;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
@@ -69,8 +64,6 @@ public class PermissionFactory {
 		switch(kind) {
 		case UNIQUE:
 			return createUniqueOrphan(stateSpace, rootNode, false, stateInfo, namedFractions);
-		case UNIQUE_DIM:
-			return createUniqueDimOrphan(stateSpace, rootNode, false, stateInfo, namedFractions);
 		case FULL:
 			return createFullOrphan(stateSpace, rootNode, false, stateInfo, namedFractions);
 		case SHARE:
@@ -99,8 +92,6 @@ public class PermissionFactory {
 		switch(kind) {
 		case UNIQUE:
 			return createUniqueOrphan(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions);
-		case UNIQUE_DIM:
-			return createUniqueDimOrphan(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions);
 		case FULL:
 			return createFullOrphan(stateSpace, rootNode, isFramePermission, stateInfo, namedFractions);
 		case SHARE:
@@ -126,17 +117,6 @@ public class PermissionFactory {
 	 * @param stateInfo
 	 * @return
 	 */
-	public PermissionFromAnnotation createUniqueDimOrphan(StateSpace stateSpace, String rootNode, boolean isFramePermission, String[] stateInfo,
-			boolean namedFractions) {
-		Map<String,Fraction> nodeMapping = Collections.singletonMap(rootNode, Fraction.one());
-		FractionFunction f = FractionFunction.variableRemaining(stateSpace, 
-				rootNode, 
-				namedFractions, 
-				nodeMapping, 
-				Fraction.one());
-		return new PermissionFromAnnotation(stateSpace, rootNode, f, true, isFramePermission, stateInfo);
-	}
-	
 	public PermissionFromAnnotation createUniqueOrphan(StateSpace stateSpace, String rootNode, 
 			boolean isFramePermission, String[] stateInfo, boolean namedFractions) {
 		FractionFunction f = FractionFunction.variableRemaining(stateSpace, rootNode, namedFractions, 

@@ -131,7 +131,7 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 	 */
 	public static List<ParameterPermissionAnnotation> fieldAnnotations(
 			AnnotationDatabase db, IVariableBinding field) {
-		List<ICrystalAnnotation> allAnnos = db.getAnnosForField(field);
+		List<ICrystalAnnotation> allAnnos = db.getAnnosForVariable(field);
 		if(allAnnos == null || allAnnos.isEmpty())
 			return Collections.emptyList();
 		return Collections.unmodifiableList(AnnotationDatabase.filter(allAnnos, ParameterPermissionAnnotation.class));
@@ -159,22 +159,7 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 	}
 	
 	public PermissionKind getKind() {
-		PermissionKind deriveKindFromName = deriveKindFromName(getName());
-		
-		if( deriveKindFromName.equals(PermissionKind.UNIQUE) ) {
-			// In this case we must check the justToRoot flag.
-			// If it's false, then it's a normal Unique, otherwise
-			// it's a UNIQUE_DIM.
-			Boolean result = (Boolean) getObject("justToRoot");
-
-			if( result != null ) {
-				// Don't default values work? Seems like no...
-				if( result )
-					return PermissionKind.UNIQUE_DIM;
-			}
-		}
-		
-		return deriveKindFromName;
+		return deriveKindFromName(getName());
 	}
 	
 	public String getRootNode() {

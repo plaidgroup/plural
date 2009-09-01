@@ -275,34 +275,6 @@ public class Permission extends Object implements IPermission<Permission> {
 				return IMMUTABLE;
 			}
 		},
-		/**
-		 * UNIQUE_DIM is really a full permission with a guaranteed
-		 * 1 to the root node. While it's not a new permission kind,
-		 * unfortunately there does not  seem to be a more elegant way
-		 * to get the fact that the user has specified a unique permission
-		 * into the permission factory that actually creates them.
-		 */
-		UNIQUE_DIM {
-			@Override
-			public boolean isReadOnly() {
-				return FULL.isReadOnly();
-			}
-
-			@Override
-			public boolean isStrongerThan(PermissionKind other) {
-				return FULL.isStrongerThan(other);
-			}
-
-			@Override
-			public PermissionKind purify() {
-				return FULL.purify();
-			}
-
-			@Override
-			public PermissionKind remainderWhenSplit(PermissionKind splitOff) {
-				return FULL.remainderWhenSplit(splitOff);
-			}
-		},
 		FULL {
 			public boolean isStrongerThan(PermissionKind other) {
 				if(other.equals(UNIQUE))

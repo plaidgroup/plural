@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.track;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,10 +51,12 @@ import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
+import org.eclipse.jdt.core.dom.VariableDeclaration;
 
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.bridge.LatticeElementOps;
 import edu.cmu.cs.crystal.flow.BooleanLabel;
 import edu.cmu.cs.crystal.flow.ILabel;
@@ -82,24 +85,34 @@ import edu.cmu.cs.crystal.tac.model.SourceVariableReadInstruction;
 import edu.cmu.cs.crystal.tac.model.StoreArrayInstruction;
 import edu.cmu.cs.crystal.tac.model.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.model.TACInstruction;
+import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.UnaryOperation;
 import edu.cmu.cs.crystal.tac.model.UnaryOperator;
 import edu.cmu.cs.crystal.tac.model.Variable;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
+import edu.cmu.cs.crystal.util.VOID;
 import edu.cmu.cs.plural.alias.LivenessProxy;
+import edu.cmu.cs.plural.contexts.ContextChoiceLE;
+import edu.cmu.cs.plural.contexts.FalseContext;
 import edu.cmu.cs.plural.contexts.InitialLECreator;
 import edu.cmu.cs.plural.contexts.LinearContext;
 import edu.cmu.cs.plural.contexts.PluralContext;
+import edu.cmu.cs.plural.contexts.TensorContext;
+import edu.cmu.cs.plural.contexts.TrueContext;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
 import edu.cmu.cs.plural.fractions.PermissionFromAnnotation;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
+import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.pred.PredicateMerger;
 import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IMethodSignature;
 import edu.cmu.cs.plural.states.StateSpace;
+import edu.cmu.cs.plural.states.StateSpaceRepository;
+import edu.cmu.cs.plural.states.annowrappers.ForcePackAnnotation;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement.VariableLiveness;
 
 /**
@@ -666,9 +679,22 @@ public class FractionalTransfer extends
 		return context.getRepository().getConstructorSignature(binding);
 	}
 
+	private Option<ForcePackAnnotation> findForcePackAnno(SourceVariableDeclaration decl_) {
+		VariableDeclaration decl = decl_.getNode();
+		List<ICrystalAnnotation> annos = this.getAnnoDB().getAnnosForVariable(decl.resolveBinding());
+		
+		for( ICrystalAnnotation anno : annos ) {
+			if( anno instanceof ForcePackAnnotation )
+				return Option.some(((ForcePackAnnotation)anno));
+		}
+		
+		return Option.none();
+	}
+	
 	@Override
 	public IResult<PluralContext> transfer(
-			SourceVariableDeclaration instr, List<ILabel> labels,
+			final SourceVariableDeclaration instr, 
+			List<ILabel> labels,
 			PluralContext value) {
 		value = value.mutableCopy().storeCurrentAliasingInfo(instr.getNode());
 		
@@ -681,6 +707,47 @@ public class FractionalTransfer extends
 			// TODO caught exceptions always non-null?
 			value.addNonNullVariable(instr.getDeclaredVariable());
 		}
+		
+		// If this variable is annotated with the @ForcePack annotation,
+		// we should attempt to pack.
+		Option<ForcePackAnnotation> fp_anno_ = findForcePackAnno(instr);
+		if( fp_anno_.isSome() ) {
+			ForcePackAnnotation fp_anno = fp_anno_.unwrap();
+			final Set<String> states_to_pack_to = fp_anno.getNodes();
+
+			final ThisVariable rcvrVar = this.getAnalysisContext().getThisVariable();
+			final StateSpaceRepository stateRepo = this.context.getRepository();
+			final PluralContext value_ = value;
+			
+			// Dispatch and PACK
+			value_.getLinearContext().mutableCopy().dispatch(new DisjunctiveVisitor<VOID>(){
+				@Override
+				public VOID context(final TensorContext le) {
+					SimpleMap<Variable,Aliasing> locs = new SimpleMap<Variable,Aliasing>() {
+						@Override
+						public Aliasing get(Variable key) {
+							return le.getTuple().getLocationsAfter(instr, key);
+						}
+					};
+					
+					if( states_to_pack_to.isEmpty() )
+						le.getTuple().fancyPackReceiverToBestGuess(le, rcvrVar, stateRepo, locs, le.getChoiceID(), new String[] {});
+					else
+						le.getTuple().packReceiver(le, rcvrVar, stateRepo, locs, states_to_pack_to);
+					
+					return VOID.V();
+				}
+				@Override public VOID choice(ContextChoiceLE choice) {
+					for( LinearContext ctx : choice.getElements() )
+						ctx.dispatch(this);
+					return VOID.V();
+				}
+				@Override public VOID falseContext(FalseContext falseContext) { return VOID.V(); }
+				@Override public VOID trueContext(TrueContext trueContext) { return VOID.V(); }
+			});
+			value = value_.mutableCopy().storeCurrentAliasingInfo(instr.getNode()); // necessary, since earlier operations were working on this copy.
+		}
+		
 		
 		// killing dead variables is the last thing we do
 		value.killDeadVariables(instr, createVariableLivenessAfter(instr, NormalLabel.getNormalLabel()));
