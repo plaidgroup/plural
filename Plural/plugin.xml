@@ -179,6 +179,15 @@
                name="In">
          </sourceAnnotation>
       </customAnnotation>
+      <customAnnotation
+            name="Force pack annotation"
+            parserClass="edu.cmu.cs.plural.states.annowrappers.ForcePackAnnotation">
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.ForcePack"
+               name="ForcePack"
+               parseFromMeta="false">
+         </sourceAnnotation>
+      </customAnnotation>
    </extension>
    <extension
          point="org.eclipse.ui.views">

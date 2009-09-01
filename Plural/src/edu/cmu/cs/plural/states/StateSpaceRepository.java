@@ -487,7 +487,7 @@ public class StateSpaceRepository {
 		// <daniel>
 		//checks whether @In annotations have been used correctly
 		for (IVariableBinding aField : type.getDeclaredFields()) {
-			for (ICrystalAnnotation a : getAnnotationDB().getAnnosForField(
+			for (ICrystalAnnotation a : getAnnotationDB().getAnnosForVariable(
 					aField)) {
 				if (a instanceof InStateMappingAnnotation) {
 					if (Modifier.isStatic(aField.getModifiers())) {
@@ -512,7 +512,7 @@ public class StateSpaceRepository {
 		for (IVariableBinding aField : type.getDeclaredFields()) {
 			if(Modifier.isStatic(aField.getModifiers()))
 				continue;
-			for (ICrystalAnnotation a : getAnnotationDB().getAnnosForField(
+			for (ICrystalAnnotation a : getAnnotationDB().getAnnosForVariable(
 					aField)) {
 				if (a instanceof InStateMappingAnnotation) {
 					InStateMappingAnnotation inMapping = (InStateMappingAnnotation) a;

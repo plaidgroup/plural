@@ -520,37 +520,6 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		
 		return result.getValue().booleanValue();
 	}
-	
-	/**
-	 * TODO figure out if contexts can differ in receiver packed / unpacked
-	 * @param rcvrVar
-	 * @param nodeWhereUnpacked TODO
-	 * @param stateRepo
-	 * @param locs
-	 * @param desiredRoot
-	 * @param assignedField
-	 */
-	public void unpackReceiver(final ThisVariable rcvrVar,
-			final ASTNode nodeWhereUnpacked,
-			final StateSpaceRepository stateRepo, final SimpleMap<Variable, Aliasing> locs,
-			final String desiredRoot, final String assignedField) {
-		final ChoiceID parentChoiceID = le.getParentChoiceID();
-		final ChoiceID choiceID = le.getChoiceID();
-		
-		le = le.dispatch(new RewritingVisitor() {
-			@Override
-			public LinearContext context(TensorContext le) {
-				if(le.getTuple().isRcvrPacked()) {
-					return le.getTuple().fancyUnpackReceiver(
-							rcvrVar, nodeWhereUnpacked, stateRepo, locs, 
-							desiredRoot, assignedField, false, 
-							parentChoiceID,	choiceID);
-				}
-				// else ?
-				return le;
-			}
-		});
-	}
 
 	public boolean packReceiver(final ThisVariable rcvrVar,
 			final StateSpaceRepository stateRepo,
