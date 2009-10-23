@@ -1,20 +1,20 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?artifactRepository class='org.eclipse.equinox.internal.p2.artifact.repository.simple.SimpleArtifactRepository' version='1.0.0'?>
-<repository name='Plural Update Site' type='org.eclipse.equinox.p2.artifact.repository.simpleRepository' version='1'>
+<repository name='Plural - artifacts' type='org.eclipse.equinox.p2.artifact.repository.simpleRepository' version='1'>
   <properties size='2'>
     <property name='p2.compressed' value='false'/>
-    <property name='p2.timestamp' value='1249482631451'/>
+    <property name='p2.timestamp' value='1256307548693'/>
   </properties>
   <mappings size='3'>
     <rule filter='(&amp; (classifier=osgi.bundle))' output='${repoUrl}/plugins/${id}_${version}.jar'/>
     <rule filter='(&amp; (classifier=binary))' output='${repoUrl}/binary/${id}_${version}'/>
     <rule filter='(&amp; (classifier=org.eclipse.update.feature))' output='${repoUrl}/features/${id}_${version}.jar'/>
   </mappings>
-  <artifacts size='22'>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.3'>
+  <artifacts size='25'>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.1.4'>
       <properties size='2'>
-        <property name='artifact.size' value='8481'/>
-        <property name='download.size' value='8481'/>
+        <property name='artifact.size' value='8520'/>
+        <property name='download.size' value='8520'/>
       </properties>
     </artifact>
     <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.5'>
@@ -24,17 +24,10 @@
         <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.fiddle.feature' version='1.0.0'>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.7'>
       <properties size='2'>
-        <property name='artifact.size' value='1455'/>
-        <property name='download.size' value='1455'/>
-      </properties>
-    </artifact>
-    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.1.2'>
-      <properties size='3'>
-        <property name='artifact.size' value='812686'/>
-        <property name='download.size' value='812686'/>
-        <property name='download.contentType' value='application/zip'/>
+        <property name='artifact.size' value='8521'/>
+        <property name='download.size' value='8521'/>
       </properties>
     </artifact>
     <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.2'>
@@ -44,16 +37,10 @@
         <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.7'>
-      <properties size='2'>
-        <property name='artifact.size' value='8521'/>
-        <property name='download.size' value='8521'/>
-      </properties>
-    </artifact>
-    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.1.0'>
+    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.1.2'>
       <properties size='3'>
-        <property name='artifact.size' value='789398'/>
-        <property name='download.size' value='789398'/>
+        <property name='artifact.size' value='812686'/>
+        <property name='download.size' value='812686'/>
         <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
@@ -64,34 +51,18 @@
         <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.fiddle.feature' version='1.0.1'>
-      <properties size='2'>
-        <property name='artifact.size' value='1421'/>
-        <property name='download.size' value='1421'/>
+    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.1.0'>
+      <properties size='3'>
+        <property name='artifact.size' value='789398'/>
+        <property name='download.size' value='789398'/>
+        <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.2'>
-      <properties size='2'>
-        <property name='artifact.size' value='8455'/>
-        <property name='download.size' value='8455'/>
-      </properties>
-    </artifact>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.6'>
-      <properties size='2'>
-        <property name='artifact.size' value='8516'/>
-        <property name='download.size' value='8516'/>
-      </properties>
-    </artifact>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.1.2'>
-      <properties size='2'>
-        <property name='artifact.size' value='8517'/>
-        <property name='download.size' value='8517'/>
-      </properties>
-    </artifact>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.4'>
-      <properties size='2'>
-        <property name='artifact.size' value='8481'/>
-        <property name='download.size' value='8481'/>
+    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.1.3'>
+      <properties size='3'>
+        <property name='artifact.size' value='784060'/>
+        <property name='download.size' value='784060'/>
+        <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
     <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.1.0'>
@@ -100,17 +71,79 @@
         <property name='download.size' value='8515'/>
       </properties>
     </artifact>
-    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.4'>
-      <properties size='3'>
-        <property name='artifact.size' value='753435'/>
-        <property name='download.size' value='753435'/>
-        <property name='download.contentType' value='application/zip'/>
-      </properties>
-    </artifact>
     <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.1'>
       <properties size='3'>
         <property name='artifact.size' value='700551'/>
         <property name='download.size' value='700551'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='Fiddle' version='1.0.0'>
+      <properties size='3'>
+        <property name='artifact.size' value='58349'/>
+        <property name='download.size' value='58349'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.1.3'>
+      <properties size='2'>
+        <property name='artifact.size' value='8517'/>
+        <property name='download.size' value='8517'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.3'>
+      <properties size='3'>
+        <property name='artifact.size' value='753445'/>
+        <property name='download.size' value='753445'/>
+        <property name='download.contentType' value='application/zip'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.3'>
+      <properties size='2'>
+        <property name='artifact.size' value='8481'/>
+        <property name='download.size' value='8481'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.fiddle.feature' version='1.0.0'>
+      <properties size='2'>
+        <property name='artifact.size' value='1455'/>
+        <property name='download.size' value='1455'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.1.2'>
+      <properties size='2'>
+        <property name='artifact.size' value='8517'/>
+        <property name='download.size' value='8517'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.6'>
+      <properties size='2'>
+        <property name='artifact.size' value='8516'/>
+        <property name='download.size' value='8516'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.2'>
+      <properties size='2'>
+        <property name='artifact.size' value='8455'/>
+        <property name='download.size' value='8455'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.fiddle.feature' version='1.0.1'>
+      <properties size='2'>
+        <property name='artifact.size' value='1421'/>
+        <property name='download.size' value='1421'/>
+      </properties>
+    </artifact>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.0.4'>
+      <properties size='2'>
+        <property name='artifact.size' value='8481'/>
+        <property name='download.size' value='8481'/>
+      </properties>
+    </artifact>
+    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.4'>
+      <properties size='3'>
+        <property name='artifact.size' value='753435'/>
+        <property name='download.size' value='753435'/>
         <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
@@ -126,30 +159,16 @@
         <property name='download.size' value='8519'/>
       </properties>
     </artifact>
-    <artifact classifier='osgi.bundle' id='Fiddle' version='1.0.0'>
-      <properties size='3'>
-        <property name='artifact.size' value='58349'/>
-        <property name='download.size' value='58349'/>
-        <property name='download.contentType' value='application/zip'/>
-      </properties>
-    </artifact>
-    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.0.3'>
-      <properties size='3'>
-        <property name='artifact.size' value='753445'/>
-        <property name='download.size' value='753445'/>
-        <property name='download.contentType' value='application/zip'/>
-      </properties>
-    </artifact>
-    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.1.3'>
+    <artifact classifier='org.eclipse.update.feature' id='edu.cmu.cs.plural.feature' version='1.1.5'>
       <properties size='2'>
-        <property name='artifact.size' value='8517'/>
-        <property name='download.size' value='8517'/>
+        <property name='artifact.size' value='8519'/>
+        <property name='download.size' value='8519'/>
       </properties>
     </artifact>
-    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.1.3'>
+    <artifact classifier='osgi.bundle' id='edu.cmu.cs.plural' version='1.1.4'>
       <properties size='3'>
-        <property name='artifact.size' value='817789'/>
-        <property name='download.size' value='817789'/>
+        <property name='artifact.size' value='784027'/>
+        <property name='download.size' value='784027'/>
         <property name='download.contentType' value='application/zip'/>
       </properties>
     </artifact>
