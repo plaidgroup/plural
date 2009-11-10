@@ -188,6 +188,43 @@
                parseFromMeta="false">
          </sourceAnnotation>
       </customAnnotation>
+      <customAnnotation
+            name="Declare polymorphic permission"
+            parserClass="edu.cmu.cs.plural.polymorphic.internal.PolyVarDeclAnnotation">
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.Exact"
+               name="Exact"
+               parseFromMeta="false">
+         </sourceAnnotation>
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.Similar"
+               name="Similar"
+               parseFromMeta="false">
+         </sourceAnnotation>
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.Symmetric"
+               name="Symmetric"
+               parseFromMeta="false">
+         </sourceAnnotation>
+      </customAnnotation>
+      <customAnnotation
+            name="Polymorphic Variable Use"
+            parserClass="edu.cmu.cs.plural.polymorphic.internal.PolyVarUseAnnotation">
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.PolyVar"
+               name="PolyVar"
+               parseFromMeta="false">
+         </sourceAnnotation>
+      </customAnnotation>
+      <customAnnotation
+            name="Polymorphic Permission returned from method"
+            parserClass="edu.cmu.cs.plural.polymorphic.internal.PolyVarReturnedAnnotation">
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.ResultPolyVar"
+               name="ResultPolyVar"
+               parseFromMeta="false">
+         </sourceAnnotation>
+      </customAnnotation>
    </extension>
    <extension
          point="org.eclipse.ui.views">
