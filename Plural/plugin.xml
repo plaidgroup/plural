@@ -264,6 +264,15 @@
                parseFromMeta="false">
          </sourceAnnotation>
       </customAnnotation>
+      <customAnnotation
+            name="Application to polymorphic return type"
+            parserClass="edu.cmu.cs.plural.polymorphic.instantiation.ResultApplyAnnotationWrapper">
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.ResultApply"
+               name="ResultApply"
+               parseFromMeta="false">
+         </sourceAnnotation>
+      </customAnnotation>
    </extension>
 
 </plugin>
