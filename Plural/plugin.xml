@@ -74,6 +74,27 @@
       		name="Sync or Swim"/>
    </extension>
    <extension
+         point="org.eclipse.ui.views">
+      <category
+            id="Plural"
+            name="Plural">
+      </category>
+      <view
+            category="Plural"
+            class="edu.cmu.cs.plural.errors.history.HistoryView"
+            id="Plural.historyPrinter"
+            name="Plural History Printer"
+            restorable="true">
+      </view>
+      <view
+            category="Plural"
+            class="edu.cmu.cs.plural.errors.ContextView"
+            id="Plural.contextViewer"
+            name="Plural Context Viewer"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
          point="edu.cmu.cs.crystal.CrystalAnnotation">
       <customAnnotation
             name="User-provided permission annotations"
@@ -124,12 +145,12 @@
          </sourceAnnotation>
       </customAnnotation>
       <customAnnotation
-      		name="Parsed Method Permission Annotation"
-      		parserClass="edu.cmu.cs.plural.perm.parser.PermAnnotation">
-      		<sourceAnnotation
-      			annotationClass="edu.cmu.cs.plural.annot.Perm"
-      			name="Perm">
-      		</sourceAnnotation>
+            name="Parsed Method Permission Annotation"
+            parserClass="edu.cmu.cs.plural.perm.parser.PermAnnotation">
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.Perm"
+               name="Perm">
+         </sourceAnnotation>
       </customAnnotation>
       <customAnnotation
             name="Method result annotations"
@@ -225,27 +246,24 @@
                parseFromMeta="false">
          </sourceAnnotation>
       </customAnnotation>
-   </extension>
-   <extension
-         point="org.eclipse.ui.views">
-      <category
-            id="Plural"
-            name="Plural">
-      </category>
-      <view
-            category="Plural"
-            class="edu.cmu.cs.plural.errors.history.HistoryView"
-            id="Plural.historyPrinter"
-            name="Plural History Printer"
-            restorable="true">
-      </view>
-      <view
-            category="Plural"
-            class="edu.cmu.cs.plural.errors.ContextView"
-            id="Plural.contextViewer"
-            name="Plural Context Viewer"
-            restorable="true">
-      </view>
+      <customAnnotation
+            name="Application to polymorphic reference"
+            parserClass="edu.cmu.cs.plural.polymorphic.instantiation.ApplyAnnotationWrapper">
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.Apply"
+               name="Apply"
+               parseFromMeta="false">
+         </sourceAnnotation>
+      </customAnnotation>
+      <customAnnotation
+            name="Application to polymorphic supertype"
+            parserClass="edu.cmu.cs.plural.polymorphic.instantiation.ApplySuperAnnotationWrapper">
+         <sourceAnnotation
+               annotationClass="edu.cmu.cs.plural.annot.ApplyToSuper"
+               name="ApplyToSuper"
+               parseFromMeta="false">
+         </sourceAnnotation>
+      </customAnnotation>
    </extension>
 
 </plugin>
