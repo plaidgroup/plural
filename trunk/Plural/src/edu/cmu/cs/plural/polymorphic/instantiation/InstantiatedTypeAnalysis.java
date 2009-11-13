@@ -38,42 +38,73 @@
 
 package edu.cmu.cs.plural.polymorphic.instantiation;
 
-import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.BooleanLiteral;
+import org.eclipse.jdt.core.dom.CastExpression;
+import org.eclipse.jdt.core.dom.CatchClause;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.ConditionalExpression;
+import org.eclipse.jdt.core.dom.DoStatement;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.FieldAccess;
+import org.eclipse.jdt.core.dom.ForStatement;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.IfStatement;
+import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.NumberLiteral;
+import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.PostfixExpression;
+import org.eclipse.jdt.core.dom.PrefixExpression;
+import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.StringLiteral;
+import org.eclipse.jdt.core.dom.SuperFieldAccess;
+import org.eclipse.jdt.core.dom.SuperMethodInvocation;
+import org.eclipse.jdt.core.dom.SwitchCase;
+import org.eclipse.jdt.core.dom.SwitchStatement;
+import org.eclipse.jdt.core.dom.ThisExpression;
+import org.eclipse.jdt.core.dom.ThrowStatement;
+import org.eclipse.jdt.core.dom.TryStatement;
+import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
+import org.eclipse.jdt.core.dom.TypeLiteral;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
+import org.eclipse.jdt.core.dom.WhileStatement;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.flow.ILatticeOperations;
-import edu.cmu.cs.crystal.simple.AbstractingTransferFunction;
-import edu.cmu.cs.crystal.simple.TupleLatticeElement;
-import edu.cmu.cs.crystal.simple.TupleLatticeOperations;
 import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
 import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
-import edu.cmu.cs.crystal.tac.model.CastInstruction;
-import edu.cmu.cs.crystal.tac.model.CopyInstruction;
-import edu.cmu.cs.crystal.tac.model.LoadFieldInstruction;
-import edu.cmu.cs.crystal.tac.model.MethodCallInstruction;
-import edu.cmu.cs.crystal.tac.model.NewObjectInstruction;
-import edu.cmu.cs.crystal.tac.model.ReturnInstruction;
-import edu.cmu.cs.crystal.tac.model.SourceVariableDeclaration;
-import edu.cmu.cs.crystal.tac.model.SourceVariableReadInstruction;
-import edu.cmu.cs.crystal.tac.model.StoreFieldInstruction;
 import edu.cmu.cs.crystal.tac.model.Variable;
-import edu.cmu.cs.crystal.util.Box;
 import edu.cmu.cs.crystal.util.Option;
-import edu.cmu.cs.plural.annot.Apply;
+import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.annot.ResultApply;
+import edu.cmu.cs.plural.polymorphic.internal.PolyVarDeclAnnotation;
 
 /**
  * The instantiated type analysis will tell you the instantiated
  * type of any field or local variable. In the case of local variable,
- * it may end up performing an analysis (a very weak inference) to 
+ * it may end up performing an analysis (typechecking) to 
  * accomplish this goal, since we can only annotate variable declarations
  * and yet the method calls and constructor instances are what really matter.
  * 
@@ -82,256 +113,534 @@ import edu.cmu.cs.plural.annot.Apply;
  */
 public final class InstantiatedTypeAnalysis {
 	final private CompilationUnitTACs compilationUnit;
+	final private AnnotationDatabase annoDB;
 	
-	public InstantiatedTypeAnalysis(CompilationUnitTACs compilationUnit) {
+	private MethodDeclaration lastAnalyzed = null;
+	private Map<Variable,List<String>> types = null;
+	
+	public InstantiatedTypeAnalysis(CompilationUnitTACs compilationUnit,
+			AnnotationDatabase annoDB) {
 		this.compilationUnit = compilationUnit;
-	}
-}
-
-final class InstantiatedTypeTransferFun extends 
-AbstractingTransferFunction<TupleLatticeElement<Variable,InstTypeLE>> {
-
-	private final TupleLatticeOperations<Variable,InstTypeLE> ops = 
-		new TupleLatticeOperations<Variable,InstTypeLE>(new InstantiatedTypeLEOps(), InstTypeLE.TOP);
-	
-	private final EclipseTAC methodTAC; 
-	private final AnnotationDatabase annoDB;
-	
-	public InstantiatedTypeTransferFun(EclipseTAC methodTAC, AnnotationDatabase annoDB) {
-		this.methodTAC = methodTAC;
 		this.annoDB = annoDB;
 	}
-
-	@Override
-	public TupleLatticeElement<Variable,InstTypeLE> createEntryValue(MethodDeclaration method) {
-		// Incoming lattice will have types for parameters. Types for 
-		// fields will be loaded on demand, when a field is loaded. 
-		TupleLatticeElement<Variable,InstTypeLE> result = ops.getDefault();
-		AnnotationSummary summary = annoDB.getSummaryForMethod(method.resolveBinding());
+	
+	public static class TypeError extends RuntimeException {
+		private static final long serialVersionUID = 2922005566056611578L;
+		final public String errorMsg;
+		final public ASTNode errorNode;
 		
-		int param_num = 0;
-		for( Object param_ : method.parameters() ) {
-			SingleVariableDeclaration param = (SingleVariableDeclaration)param_;
-			ApplyAnnotationWrapper anno = (ApplyAnnotationWrapper)summary.getParameter(param_num, Apply.class.getName());
-			Variable param_var = this.methodTAC.sourceVariable(param.resolveBinding());
-
-			InstTypeLE new_le = anno == null ? InstTypeLE.NONE : new InstTypeLE(anno.getValue());
-			result.put(param_var, new_le);
-			param_num++;
+		public TypeError(String errorMsg, ASTNode errorNode) {
+			this.errorMsg = errorMsg;
+			this.errorNode = errorNode;
 		}
-		
-		return result;
 	}
-
-	@Override
-	public ILatticeOperations<TupleLatticeElement<Variable,InstTypeLE>> getLatticeOperations() {
-		return ops;
-	}
-
-	@Override
-	public TupleLatticeElement<Variable, InstTypeLE> transfer(
-			CastInstruction instr,
-			TupleLatticeElement<Variable, InstTypeLE> value) {
-		value.put(instr.getTarget(), value.get(instr.getOperand()));
-		return super.transfer(instr, value);
-	}
-
-	@Override
-	public TupleLatticeElement<Variable, InstTypeLE> transfer(
-			CopyInstruction instr,
-			TupleLatticeElement<Variable, InstTypeLE> value) {
-		value.put(instr.getTarget(), value.get(instr.getOperand()));
-		return super.transfer(instr, value);
-	}
-
-	/** For a field look up the annotations and return the APPLY annotation if there
-	 *  is one. */
-	private Option<ApplyAnnotationWrapper> toApplyAnnotation(IVariableBinding binding) {
-		for( ICrystalAnnotation anno : annoDB.getAnnosForVariable(binding) ) {
-			if( anno instanceof ApplyAnnotationWrapper ) {
-				ApplyAnnotationWrapper anno_ = (ApplyAnnotationWrapper)anno;
-				return Option.some(anno_);
+	
+	/** Perform static argument subsitution on original of the application arguments. The type information
+	 *  tells us which elements of original are actually applicable for substitution. Error if the
+	 *  length of applications is not the same as the number of params on type.  */
+	public static List<String> substitute(List<String> applications, ITypeBinding type, List<String> original,
+			AnnotationDatabase annoDB, ASTNode errorNode) {
+		List<String> type_args = new LinkedList<String>();
+		for( ICrystalAnnotation anno : annoDB.getAnnosForType(type) ) {
+			if( anno instanceof PolyVarDeclAnnotation ) {
+				type_args.add(((PolyVarDeclAnnotation)anno).getVariableName());
 			}
 		}
-		return Option.none();
-	}
-	
-	@Override
-	public TupleLatticeElement<Variable, InstTypeLE> transfer(
-			LoadFieldInstruction instr,
-			TupleLatticeElement<Variable, InstTypeLE> value) {
-		// Look up type of field, from annotation...
-		Option<ApplyAnnotationWrapper> anno_ = toApplyAnnotation(instr.resolveFieldBinding());
-		if( anno_.isSome() ) {
-			ApplyAnnotationWrapper anno = anno_.unwrap();
-			InstTypeLE new_target_le = new InstTypeLE(anno.getValue());
-			InstTypeLE new_source_le = new_target_le;
-			value.put(instr.getSourceObject(), new_source_le);
-			value.put(instr.getTarget(), new_target_le);
+		if( applications.size() != type_args.size() ) {
+			String error_msg = "Different number of static args.";
+			throw new TypeError(error_msg, errorNode);
 		}
-		else {
-			value.put(instr.getSourceObject(), InstTypeLE.NONE);
-			value.put(instr.getTarget(), InstTypeLE.NONE);
+		
+		List<String> result = new LinkedList<String>();
+		for( String arg : original ) {
+			int index = type_args.lastIndexOf(arg);
+			if( index != -1 ) {
+				String new_arg = applications.get(index);
+				result.add(new_arg);
+			}
+			else {
+				result.add(arg);
+			}
 		}
-		return super.transfer(instr, value);
-	}
-
-	@Override
-	public TupleLatticeElement<Variable, InstTypeLE> transfer(
-			NewObjectInstruction instr,
-			TupleLatticeElement<Variable, InstTypeLE> value) {
-		// Put in an empty list. We expect it to be modified when this
-		// is assigned to a local variable.
-		value.put(instr.getTarget(), new InstTypeLE(Collections.<String>emptyList()));
-		return super.transfer(instr, value);
-	}
-	
-	@Override
-	public TupleLatticeElement<Variable, InstTypeLE> transfer(
-			SourceVariableDeclaration instr,
-			TupleLatticeElement<Variable, InstTypeLE> value) {
-		Option<ApplyAnnotationWrapper> anno_ = toApplyAnnotation(instr.resolveBinding());
-		if( anno_.isSome() ) {
-			ApplyAnnotationWrapper anno = anno_.unwrap();
-			value.put(instr.getDeclaredVariable(), new InstTypeLE(anno.getValue()));
-		}
-		else {
-			value.put(instr.getDeclaredVariable(), InstTypeLE.NONE);
-		}
-		return super.transfer(instr, value);
-	}
-	
-	@Override
-	public TupleLatticeElement<Variable, InstTypeLE> transfer(
-			MethodCallInstruction instr,
-			TupleLatticeElement<Variable, InstTypeLE> value) {
-		// TODO Auto-generated method stub
-		return super.transfer(instr, value);
-	}
-
-	@Override
-	public TupleLatticeElement<Variable, InstTypeLE> transfer(
-			ReturnInstruction instr,
-			TupleLatticeElement<Variable, InstTypeLE> value) {
-		// TODO Auto-generated method stub
-		return super.transfer(instr, value);
-	}
-
-	@Override
-	public TupleLatticeElement<Variable, InstTypeLE> transfer(
-			SourceVariableReadInstruction instr,
-			TupleLatticeElement<Variable, InstTypeLE> value) {
-		// TODO Auto-generated method stub
-		return super.transfer(instr, value);
-	}
-
-	@Override
-	public TupleLatticeElement<Variable, InstTypeLE> transfer(
-			StoreFieldInstruction instr,
-			TupleLatticeElement<Variable, InstTypeLE> value) {
-		// TODO Auto-generated method stub
-		return super.transfer(instr, value);
-	}
-	
-	
-}
-
-final class InstTypeLE {
-	// TODO: This will almost certainly change from String when we have 
-	// non polyVar types that we can instantiate.
-	private final Box<List<String>> instantiated;
-
-	public static final InstTypeLE TOP = new InstTypeLE(Collections.<String>emptyList());
-	public static final InstTypeLE BOTTOM = new InstTypeLE(Collections.<String>emptyList());
-	public static final InstTypeLE NONE = new InstTypeLE(Collections.<String>emptyList());
-	
-	public InstTypeLE(List<String> instantiated) {
-		this.instantiated = Box.<List<String>>box(new ArrayList<String>(instantiated));
-	}
-
-	public InstTypeLE(InstTypeLE original) {
-		this.instantiated = original.instantiated;
-	}
-
-	/** Used to change the value of the instantiated permissions. This will have the
-	 *  EFFECT of modifying all the istantiated types for variables that are equal
-	 *  to this one. */
-	public void changeValue(List<String> instantiated) {
-		this.instantiated.setValue(new ArrayList<String>(instantiated));
-	}
-	
-	/*
-	 * I am pretty sure that it's okay if the equals and hashCode  methods have
-	 * value semantics even though the object inside the box will be changed.
-	 */
-	
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result
-				+ ((instantiated == null) ? 0 : instantiated.hashCode());
 		return result;
 	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		InstTypeLE other = (InstTypeLE) obj;
-		if (instantiated == null) {
-			if (other.instantiated != null)
-				return false;
-		} else if (!instantiated.equals(other.instantiated))
-			return false;
-		return true;
-	}
-}
-
-final class InstantiatedTypeLEOps implements ILatticeOperations<InstTypeLE> {
-
-	@Override
-	public boolean atLeastAsPrecise(InstTypeLE info, InstTypeLE reference,
-			ASTNode node) {
-		if( info == InstTypeLE.BOTTOM )
-			return true;
-		else if( reference == InstTypeLE.TOP )
-			return true;
-		else if( info.equals(reference) )
-			return true;
-		else
-			return false;
-	}
-
-	@Override public InstTypeLE bottom() {return InstTypeLE.BOTTOM;}
-
-	@Override
-	public InstTypeLE copy(InstTypeLE original) {
-		if( original == InstTypeLE.BOTTOM || 
-		    original == InstTypeLE.TOP || 
-		    original == InstTypeLE.NONE ) {
-			return original;
+	
+	/** Performs no type analysis, just directly looks up the type of the
+	 *  variable given from its annotations. */
+	public List<String> findType(IVariableBinding binding) {
+		for( ICrystalAnnotation anno_ : this.annoDB.getAnnosForVariable(binding) ) {
+			if( anno_ instanceof ApplyAnnotationWrapper ) {
+				return ((ApplyAnnotationWrapper)anno_).getValue();
+			}
 		}
-		else
-			return new InstTypeLE(original);
+		return Collections.emptyList();
+	}
+	
+	/**
+	 * Find the 'type' of this variable, where a type is really a list of
+	 * instantiated permission arguments. The MethodDeclaration that must
+	 * be given is the context where this variable arose. If the variable
+	 * is actually a field, the method where the field was used should be
+	 * given, ideally.
+	 */
+	public List<String> findType(Variable var, MethodDeclaration decl) {
+		if( decl.equals(lastAnalyzed) ) {
+			assert(this.types.containsKey(var));
+			return this.types.get(var);
+		}
+		
+		// Need to do some analysis...
+		this.lastAnalyzed = decl;
+		this.types = new HashMap<Variable,List<String>>();
+		
+		buildTypesForMethod(decl);
+		assert(this.types.containsKey(var));
+		return this.types.get(var);
 	}
 
-	@Override
-	public InstTypeLE join(InstTypeLE someInfo, InstTypeLE otherInfo,
-			ASTNode node) {
-		if( someInfo.equals(otherInfo) )
-			return someInfo;
-		else if( someInfo == InstTypeLE.TOP || otherInfo == InstTypeLE.TOP )
-			return InstTypeLE.TOP;
-		else if( someInfo == InstTypeLE.BOTTOM )
-			return otherInfo;
-		else if( otherInfo == InstTypeLE.BOTTOM )
-			return someInfo;
-		else
-			return InstTypeLE.TOP;
+	/**
+	 * Does type-checking for the given method, 
+	 */
+	private void buildTypesForMethod(MethodDeclaration decl) {
+		EclipseTAC tac = this.compilationUnit.getMethodTAC(decl);
+		// First, build up types for all of the parameters.
+		for( Object param_ : decl.parameters() ) {
+			SingleVariableDeclaration param = (SingleVariableDeclaration)param_;
+			IVariableBinding binding = param.resolveBinding();
+			Variable tac_var = tac.sourceVariable(binding);
+			List<String> type = this.findType(binding);
+			this.types.put(tac_var, type);
+		}
+		
+		decl.getBody().accept(new StmtVisitor(tac));
 	}
+	
+	/** What is the return type for the most recently analyzed method? */
+	private List<String> returnTypeForCurMethod() {
+		AnnotationSummary summary = this.annoDB.getSummaryForMethod(this.lastAnalyzed.resolveBinding());
+		ICrystalAnnotation anno = summary.getReturn(ResultApply.class.getName());
+		if( anno == null )
+			return Collections.emptyList();
+		else
+			return ((ResultApplyAnnotationWrapper)anno).getValue();
+	}
+	
+	// Stmt visitor traverses the tree of statements, 
+	// and for the most part, just passes off its work to the ExprVisitor which
+	// actually has a type, but for local variable declaration statements, it will
+	// put the variable into the map.
+	private class StmtVisitor extends ASTVisitor {
+		private final EclipseTAC tac;
+		
+		public StmtVisitor(EclipseTAC tac) {
+			this.tac = tac;
+		}
+		
+		@Override
+		public boolean visit(DoStatement node) {
+			node.getBody().accept(this);
+			node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
+			return false;
+		}
+
+		@Override
+		public boolean visit(ExpressionStatement node) {
+			node.getExpression().accept(new ExprVisitor());
+			return false;
+		}
+
+		@Override
+		public boolean visit(ForStatement node) {
+			for( Object init_ : node.initializers() ) {
+				Expression init = (Expression)init_;
+				init.accept(new ExprVisitor());
+			}
+			node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
+			for(Object updater_ : node.updaters() ) {
+				Expression updater = (Expression)updater_;
+				updater.accept(new ExprVisitor());
+			}
+			return false;
+		}
+
+		@Override
+		public boolean visit(IfStatement node) {
+			node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
+			node.getThenStatement().accept(this);
+			node.getElseStatement().accept(this);
+			return false;
+		}
+
+		@Override
+		public boolean visit(ReturnStatement node) {
+			// We DO have a downward type. It's the type of the
+			// return value.
+			List<String> return_type = returnTypeForCurMethod();
+			node.getExpression().accept(new ExprVisitor(return_type));
+			return false;
+		}
+
+		@Override
+		public boolean visit(SwitchCase node) {
+			if( node.getExpression() != null ) {
+				node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
+			}
+			return false;
+		}
+
+		@Override
+		public boolean visit(SwitchStatement node) {
+			node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
+			for( Object stmt_ : node.statements() ) {
+				Statement stmt = (Statement)stmt_;
+				stmt.accept(this);
+			}
+			return false;
+		}
+
+		@Override
+		public boolean visit(ThrowStatement node) {
+			node.getExpression().accept(new ExprVisitor());
+			return false;
+		}
+
+		@Override
+		public boolean visit(TryStatement node) {
+			node.getBody().accept(this);
+			// Catch variable declarations.
+			for( Object ketch_ : node.catchClauses() ) {
+				CatchClause ketch = (CatchClause)ketch_;
+				SingleVariableDeclaration decl = ketch.getException();
+				Variable var = tac.sourceVariable(decl.resolveBinding());
+				List<String> type = findType(decl.resolveBinding());
+				types.put(var, type);
+				ketch.getBody().accept(this);
+			}
+			node.getFinally().accept(this);
+			return false;
+		}
+
+		@Override
+		public boolean visit(TypeDeclarationStatement node) {
+			// We just don't support these nested types, at least
+			// not here.
+			return false;
+		}
+
+		@Override
+		public boolean visit(VariableDeclarationStatement node) {
+			// Probably the most interesting of all of the stmt
+			// nodes, this one takes the type for the declaration
+			// and jams it into the initializing expression, if
+			// there is one.
+			for( Object decl_ : node.fragments() ) {
+				VariableDeclarationFragment decl = (VariableDeclarationFragment)decl_;
+				IVariableBinding binding = decl.resolveBinding();
+				Variable var = tac.sourceVariable(binding);
+				List<String> type = findType(binding);
+				types.put(var, type);
+				
+				if( decl.getInitializer() != null )
+					decl.getInitializer().accept(new ExprVisitor(type));
+			}
+			return false;
+		}
+
+		@Override
+		public boolean visit(WhileStatement node) {
+			node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
+			node.getBody().accept(this);
+			return false;
+		}
+		
+		// WHOA doubly-nested class!
+		// Don't forget, some expressions can declare variables, namely the
+		// VariableDeclarationExpression.
+		private class ExprVisitor extends ASTVisitor {
+			// The type of this expression, as given by
+			// a super-expression or statement context.
+			// NONE means unconstrained while SOME means
+			// has constraints... even if those constraints
+			// are an empty list, which means we KNOW the
+			// type has no application of arguments.
+			private final Option<List<String>> downwardType;
+			private List<String> resultType;
+			
+			public ExprVisitor(List<String> downwardType) {
+				// Just try to save on allocation I guess.
+				this.downwardType = 
+					downwardType.isEmpty() ? NOTHING : Option.some(downwardType);
+			}
+			
+			public ExprVisitor() {
+				this.downwardType = Option.none();
+			}
+			
+			private ExprVisitor(Option<List<String>> type) {
+				this.downwardType = type;
+			}
+			
+			private List<String> check(Expression expr) {
+				expr.accept(this);
+				return resultType;
+			}
+			
+			private void assertEqualIfNecessary(Option<List<String>> expected, List<String> actual, ASTNode en) {
+				if( expected.isSome() )
+					assertEqual(expected.unwrap(), actual, en);
+			}
+			
+			private void assertEqual(List<String> expected, List<String> actual, ASTNode errorNode) {
+				assert(expected != null && actual != null);
+				if( !expected.equals(actual) ) {
+					String error_msg = "Polymorphic parameter mismatch: Expected " + argString(expected) + 
+					  " but is actually " + argString(actual);
+					throw new TypeError(error_msg, errorNode);
+				}
+			}
+			
+			/** Arguments to string. */
+			private String argString(List<String> strings) {
+				StringBuilder result_ = new StringBuilder('<');
+				for( String arg : strings ) {
+					result_.append(arg);
+					result_.append(',');
+				}
+				result_.deleteCharAt(result_.length()-1);
+				result_.append('>');
+				return result_.toString();
+			}
+
+			/** Store the given type in the types map for the variable corresponding
+			 *  to this Expression. */
+			private void storeTypeForExpr(List<String> type, Expression expr) {
+				Variable var = tac.variable(expr);
+				assert(var != null);
+				types.put(var, type);
+			}
+
+			/** Should only be called if variable is already known to
+			 *  be in the types map. */
+			private List<String> getTypeForExpr(Expression expr) {
+				Variable var = tac.variable(expr);
+				assert(  var != null );
+				assert( types.containsKey(var) );
+				return types.get(tac.variable(expr));
+			}
+			
+			@Override
+			public boolean visit(Assignment node) {
+				List<String> lhs_type = (new ExprVisitor(this.downwardType)).check(node.getLeftHandSide());
+				List<String> rhs_typ = (new ExprVisitor(this.downwardType)).check(node.getRightHandSide());
+				assertEqual(lhs_type, rhs_typ, node);
+				storeTypeForExpr(lhs_type, node);
+				this.resultType = lhs_type;
+				return false;
+			}
+
+			@Override
+			public boolean visit(BooleanLiteral node) {
+				this.resultType = Collections.emptyList();
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(CastExpression node) {
+				// Type on the right becomes the type on the left.
+				// No parameter casting is allowed.
+				List<String> e_type = (new ExprVisitor(this.downwardType)).check(node.getExpression());
+				this.resultType = e_type;
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(CharacterLiteral node) {
+				this.resultType = Collections.emptyList();
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(ClassInstanceCreation node) {
+				// This is the new expression. We can safely ignore
+				// the expression on the left-hand side, for now.
+				// Type needs to come from the downwards direction!
+				this.resultType = downwardType.unwrap();
+				storeTypeForExpr(resultType, node);
+				
+				// BUT, we should also check the argument expressions have
+				// the right type too. Need to substitute application arguments
+				// given by downward type for applicable parameter arguments.
+				// FIXME TODO XXX
+				
+				return false;
+			}
+
+			@Override
+			public boolean visit(ConditionalExpression node) {
+				node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
+				List<String> then_type = (new ExprVisitor(this.downwardType)).check(node.getThenExpression());
+				List<String> else_type = (new ExprVisitor(this.downwardType)).check(node.getElseExpression());
+				assertEqual(then_type, else_type, node);
+				this.resultType = then_type;
+				storeTypeForExpr(then_type, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(FieldAccess node) {
+				List<String> rcvr_type = (new ExprVisitor()).check(node.getExpression());
+				ITypeBinding rcvr_type_binding = node.getExpression().resolveTypeBinding();
+				List<String> field_type = findType(node.resolveFieldBinding());
+				List<String> new_field_type = substitute(rcvr_type, rcvr_type_binding, field_type, annoDB, node);
+				
+				this.resultType = new_field_type;
+				assertEqualIfNecessary(this.downwardType, new_field_type, node);
+				storeTypeForExpr(new_field_type, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(InfixExpression node) {
+				// Can only be ints, bools, etc
+				this.resultType = Collections.emptyList();
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(InstanceofExpression node) {
+				this.resultType = Collections.emptyList();
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(MethodInvocation node) {
+				// TODO Auto-generated method stub
+				return super.visit(node);
+			}
+
+			@Override
+			public boolean visit(NumberLiteral node) {
+				this.resultType = Collections.emptyList();
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(ParenthesizedExpression node) {
+				List<String> expr_type = (new ExprVisitor(this.downwardType)).check(node.getExpression());
+				this.resultType = expr_type;
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(PostfixExpression node) {
+				this.resultType = Collections.emptyList();
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(PrefixExpression node) {
+				this.resultType = Collections.emptyList();
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(SimpleName node) {
+				IBinding binding_ = node.resolveBinding();
+				if( binding_ instanceof IVariableBinding ) {
+					IVariableBinding binding = (IVariableBinding)binding_;
+					List<String> type = findType(binding);
+					this.resultType = type;
+					assertEqualIfNecessary(downwardType, resultType, node);
+					storeTypeForExpr(resultType, node);
+				}
+				else {
+					Utilities.nyi("Is this possible if we have an expression?");
+				}
+				return false;
+			}
+
+			@Override
+			public boolean visit(StringLiteral node) {
+				this.resultType = Collections.emptyList();
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(SuperFieldAccess node) {
+				return Utilities.nyi("Totally not ready for this.");
+			}
+
+			@Override
+			public boolean visit(SuperMethodInvocation node) {
+				return Utilities.nyi("Totally not ready for this.");
+			}
+
+			@Override
+			public boolean visit(ThisExpression node) {
+				// AS in Java Generics, the type of the this node is
+				// implicitly instantiated with the parameters that are
+				// in scope.
+				IMethodBinding m_binding = lastAnalyzed.resolveBinding();
+				ITypeBinding this_type_binding = m_binding.getDeclaringClass();
+				for( ICrystalAnnotation anno_ : annoDB.getAnnosForType(this_type_binding) ) {
+					if( anno_ instanceof PolyVarDeclAnnotation ) {
+						PolyVarDeclAnnotation anno = (PolyVarDeclAnnotation)anno_;
+						// TODO Right now, only one parameter can be declared at a time.
+						this.resultType = Collections.singletonList(anno.getVariableName());
+					}
+				}
+
+				storeTypeForExpr(resultType, node);
+				assertEqualIfNecessary(downwardType, resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(TypeLiteral node) {
+				this.resultType = Collections.emptyList();
+				storeTypeForExpr(resultType, node);
+				assertEqualIfNecessary(downwardType, resultType, node);
+				return false;
+			}
+
+			@Override
+			public boolean visit(VariableDeclarationExpression node) {
+				for( Object decl_ : node.fragments() ) {
+					VariableDeclarationFragment decl = (VariableDeclarationFragment)decl_;
+					IVariableBinding binding = decl.resolveBinding();
+					List<String> type = findType(binding);
+					Variable var = tac.sourceVariable(binding);
+					types.put(var, type);
+					
+					decl.getInitializer().accept(new ExprVisitor(type));
+				}
+				
+				this.resultType = Collections.emptyList();
+				storeTypeForExpr(resultType, node);
+				assertEqualIfNecessary(downwardType, resultType, node);
+				return false;
+			}
+		}
+	}
+	
+	private final static Option<List<String>> NOTHING = Option.some(Collections.<String>emptyList());	
 }
