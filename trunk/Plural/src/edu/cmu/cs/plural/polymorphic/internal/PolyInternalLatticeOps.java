@@ -38,36 +38,59 @@
 
 package edu.cmu.cs.plural.polymorphic.internal;
 
-import edu.cmu.cs.crystal.util.Lambda2;
+import org.eclipse.jdt.core.dom.ASTNode;
+
+import edu.cmu.cs.crystal.flow.ILatticeOperations;
 
 /**
- * A polymorphic variable. Has a unique name and a type, 
- * and as based on where it is located in the program,
- * it has a scope as well. Scoping information, however,
- * must be retrieved from elsewhere.
+ * Lattice operations for the polymorphic checker.
  * 
  * @author Nels E. Beckman
- * @since Nov 10, 2009
+ * @since Nov 11, 2009
  *
  */
-public interface PolyVar {
+public class PolyInternalLatticeOps implements
+		ILatticeOperations<PolyVarLE> {
 
-	public String getName();
-	
-	/**
-	 * What kind of polymorphic variable is this? Is is an exact, similar
-	 * or symmetrical?
-	 */
-	public PolyVarKind getKind();
-	
-	/** Factory for creating polyvars. */
-	public static final Lambda2<String,PolyVarKind,PolyVar> POLYVAR_FACTORY =
-		new Lambda2<String,PolyVarKind,PolyVar>(){
-			@Override
-			public PolyVar call(final String i1, final PolyVarKind i2) {
-				return new PolyVar(){
-					@Override public PolyVarKind getKind() {return i2;}
-					@Override public String getName() {return i1;}
-				};
-			}};
+	@Override
+	public boolean atLeastAsPrecise(PolyVarLE info, PolyVarLE reference,
+			ASTNode node) {
+		if( info.isBottom() )
+			return true;
+		else if( reference.isTop() )
+			return true;
+		else if( info.name().isSome() && reference.name().isSome() )
+			return true;
+		else if( info.name().isNone() && reference.name().isNone() )
+			return true;
+		else
+			return false;
+	}
+
+	@Override
+	public PolyVarLE copy(PolyVarLE original) {
+		if( original.isBottom() || original.isTop() || original.name().isNone() )
+			return original;
+		else
+			return PolyVarLE.HAVE_FACTORY.call(original.name().unwrap());
+	}
+
+	@Override
+	public PolyVarLE join(PolyVarLE someInfo, PolyVarLE otherInfo, ASTNode node) {
+		if( someInfo.isTop() && otherInfo.isTop() )
+			return PolyVarLE.TOP;
+		else if( someInfo.isBottom() && otherInfo.isBottom() )
+			return PolyVarLE.BOTTOM;
+		else if( someInfo.name().isNone() && otherInfo.name().isNone() )
+			return PolyVarLE.NONE;
+		else if( someInfo.equals(otherInfo) )
+			return someInfo;
+		else
+			return PolyVarLE.TOP;
+	}
+
+	@Override
+	public PolyVarLE bottom() {
+		return PolyVarLE.BOTTOM;
+	}
 }

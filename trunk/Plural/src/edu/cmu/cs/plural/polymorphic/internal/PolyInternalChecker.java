@@ -38,11 +38,30 @@
 
 package edu.cmu.cs.plural.polymorphic.internal;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis;
+import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.annotations.AnnotationSummary;
+import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
+import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
+import edu.cmu.cs.crystal.tac.model.Variable;
+import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.plural.alias.AliasingLE;
+import edu.cmu.cs.plural.alias.LocalAliasTransfer;
 
 /**
  * One half of Polymorphic Plural, checks that polymorphic variables are
@@ -70,7 +89,138 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 	}
 	
 	private void analyzeClassDeclaration(TypeDeclaration clazz) {
+		List<ICrystalAnnotation> annotations = this.getInput().getAnnoDB().getAnnosForType(clazz.resolveBinding());
+		final Map<String, PolyVar> vars_in_scope = 
+			Collections.unmodifiableMap(getPolyVarsInScope(annotations));
 		
+		clazz.accept(new ASTVisitor(){
+			@Override
+			public void endVisit(MethodDeclaration node) {
+				analyzeMethodDeclaration(node, vars_in_scope);
+			}});
+	}
+
+	/**
+	 * From the crystal annotations, find the polymorphic variable declarations and put them
+	 * into a map where their name is the key.
+	 */
+	private Map<String, PolyVar> getPolyVarsInScope(List<ICrystalAnnotation> annotations) {
+		Map<String,PolyVar> result = new HashMap<String,PolyVar>();
+		for( ICrystalAnnotation anno : annotations ) {
+			if( anno instanceof PolyVarDeclAnnotation ) {
+				PolyVar var = polyVarFromAnnotation((PolyVarDeclAnnotation)anno);
+				result.put(var.getName(), var);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Take a PolyVarDeclAnnotation and uses it to create a new polyvar.
+	 */
+	private PolyVar polyVarFromAnnotation(final PolyVarDeclAnnotation anno) {
+		return new PolyVar(){
+			private String name = anno.getVariableName();
+			private PolyVarKind kind = anno.getKind();
+			@Override public PolyVarKind getKind() { return kind; }
+			@Override public String getName() { return name;	}
+		};
 	}
 	
+	/**
+	 * Performs the main analysis, which must be done on a method by method
+	 * basis, after gathering the polymorphic variables that are in scope.
+	 */
+	private void analyzeMethodDeclaration(MethodDeclaration node, Map<String,PolyVar> class_scoped_vars) {
+		AnnotationDatabase annodb = this.getInput().getAnnoDB();
+		AnnotationSummary summary = annodb.getSummaryForMethod(node.resolveBinding());
+		List<ICrystalAnnotation> annos = summary.getReturn();
+		Map<String,PolyVar> method_vars = Collections.unmodifiableMap(getPolyVarsInScope(annos));
+		ITACFlowAnalysis<AliasingLE> alias_analysis = createAliasAnalysis();
+		// Get permission to check at the end of the method
+		List<Pair<Aliasing,String>> params_to_check = AnnotationUtilities.findParamsToCheck(node, summary, alias_analysis);
+		Option<String> return_to_check = AnnotationUtilities.findReturnValueToCheck(summary);
+		Option<String> rcvr_to_check = AnnotationUtilities.findRcvrToCheck(summary);
+		// Get permission to insert at the beginning of the method	
+		List<Pair<Aliasing,String>> param_entry = AnnotationUtilities.findParamsForEntry(node, summary, alias_analysis);
+		Option<String> rcvr_entry = AnnotationUtilities.findRcvrForEntry(summary);
+		
+		try {
+		  ErrorCheckingVisitor e_visitor = new ErrorCheckingVisitor(class_scoped_vars,
+				  method_vars, params_to_check, return_to_check, rcvr_to_check,
+				  param_entry, rcvr_entry, alias_analysis);
+		  node.accept(e_visitor);
+		} catch(VarScope e) {
+			String error = "Unknown variable " + e.varName + " mentioned in specification.";
+			this.getReporter().reportUserProblem(error, e.node, this.getName());
+		}
+	}
+
+	/**
+	 * Create an alias analysis, using the fields of this analysis as input.
+	 */
+	private ITACFlowAnalysis<AliasingLE> createAliasAnalysis() {
+		return new TACFlowAnalysis<AliasingLE>(
+				new LocalAliasTransfer(this.getInput().getAnnoDB(),
+		                               new HashMap<IVariableBinding,Variable>()),
+		        this.getInput().getComUnitTACs().unwrap());
+	}
+	
+	static class VarScope extends RuntimeException {
+		private static final long serialVersionUID = 2139857766082038184L;
+		final String varName;
+		final ASTNode node;
+		
+		public VarScope(String varName, ASTNode node) {
+			this.varName = varName;
+			this.node = node;
+		}
+	}
+	
+	/**
+	 * This visitor corresponds to the visitor that exists in almost every
+	 * Crystal analysis. It walks the tree, calling the dataflow analysis on-demand,
+	 * and reports errors when it finds them. The main process is that we check if
+	 * remaining symbolic permission is available at the places where it must be.
+	 * Places where checking must occur: 
+	 * 1 - End of the method OR explicit returns.
+	 * 2 - Method calls AND constructor calls.
+	 * 3 - Possible packing spots.
+	 */
+	private static class ErrorCheckingVisitor extends ASTVisitor {
+		final private Map<String,PolyVar> classVars;
+		final private Map<String,PolyVar> methodVars;
+		final private List<Pair<Aliasing,String>> paramsToCheck; 
+		final private Option<String> returnToCheck;
+		final private Option<String> rcvrToCheck;
+		// Permission available upon entry.
+		final private List<Pair<Aliasing,String>> paramsForEntry;
+		final private Option<String> rcvrForEntry;
+		// Alias analysis
+		final private ITACFlowAnalysis<AliasingLE> aliasAnalysis;
+		
+		ErrorCheckingVisitor(Map<String,PolyVar> class_vars, 
+				Map<String,PolyVar> method_vars, List<Pair<Aliasing,String>> paramsToCheck,
+				Option<String> returnToCheck, Option<String> rcvrToCheck, 
+				List<Pair<Aliasing, String>> param_entry, Option<String> rcvr_entry,
+				ITACFlowAnalysis<AliasingLE> aliasAnalysis) {
+			this.classVars = class_vars;
+			this.methodVars = method_vars;
+			this.paramsToCheck = paramsToCheck;
+			this.returnToCheck = returnToCheck;
+			this.rcvrToCheck = rcvrToCheck;
+			this.paramsForEntry = param_entry;
+			this.rcvrForEntry = rcvr_entry;
+			this.aliasAnalysis = aliasAnalysis;
+		}
+		
+		private Option<PolyVar> lookup(String name) {
+			if( methodVars.containsKey(name) )
+				return Option.some(methodVars.get(name));
+			else if( classVars.containsKey(name) )
+				return Option.some(classVars.get(name));
+			else
+				return Option.none();
+		}
+	}
 }
