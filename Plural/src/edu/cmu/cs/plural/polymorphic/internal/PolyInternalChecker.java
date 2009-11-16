@@ -48,6 +48,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis;
@@ -55,13 +56,17 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
+import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
+import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.AliasingLE;
 import edu.cmu.cs.plural.alias.LocalAliasTransfer;
+import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
 
 /**
  * One half of Polymorphic Plural, checks that polymorphic variables are
@@ -147,7 +152,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		
 		try {
 		  ErrorCheckingVisitor e_visitor = new ErrorCheckingVisitor(class_scoped_vars,
-				  method_vars, params_to_check, return_to_check, rcvr_to_check,
+				  method_vars, node, params_to_check, return_to_check, rcvr_to_check,
 				  param_entry, rcvr_entry, alias_analysis);
 		  node.accept(e_visitor);
 		} catch(VarScope e) {
@@ -187,31 +192,46 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 	 * 2 - Method calls AND constructor calls.
 	 * 3 - Possible packing spots.
 	 */
-	private static class ErrorCheckingVisitor extends ASTVisitor {
+	private class ErrorCheckingVisitor extends ASTVisitor {
 		final private Map<String,PolyVar> classVars;
 		final private Map<String,PolyVar> methodVars;
-		final private List<Pair<Aliasing,String>> paramsToCheck; 
+		
+		final private MethodDeclaration method;
+		
 		final private Option<String> returnToCheck;
-		final private Option<String> rcvrToCheck;
-		// Permission available upon entry.
-		final private List<Pair<Aliasing,String>> paramsForEntry;
-		final private Option<String> rcvrForEntry;
-		// Alias analysis
+		final private List<Pair<Aliasing,String>> paramsToCheck;
+		
 		final private ITACFlowAnalysis<AliasingLE> aliasAnalysis;
+		final private ITACFlowAnalysis<TupleLatticeElement<Aliasing, PolyVarLE>> polyAnalysis;
 		
 		ErrorCheckingVisitor(Map<String,PolyVar> class_vars, 
-				Map<String,PolyVar> method_vars, List<Pair<Aliasing,String>> paramsToCheck,
+				Map<String,PolyVar> method_vars, MethodDeclaration node, 
+				List<Pair<Aliasing,String>> paramsToCheck,
 				Option<String> returnToCheck, Option<String> rcvrToCheck, 
 				List<Pair<Aliasing, String>> param_entry, Option<String> rcvr_entry,
 				ITACFlowAnalysis<AliasingLE> aliasAnalysis) {
 			this.classVars = class_vars;
 			this.methodVars = method_vars;
-			this.paramsToCheck = paramsToCheck;
+			this.method = node;
 			this.returnToCheck = returnToCheck;
-			this.rcvrToCheck = rcvrToCheck;
-			this.paramsForEntry = param_entry;
-			this.rcvrForEntry = rcvr_entry;
+			this.paramsToCheck = paramsToCheck;
+			
 			this.aliasAnalysis = aliasAnalysis;
+			InstantiatedTypeAnalysis typeAnalysis = 
+				new InstantiatedTypeAnalysis(getInput().getComUnitTACs().unwrap(), getInput().getAnnoDB());
+			
+			PolyInternalTransfer transferFunction = 
+				new PolyInternalTransfer(aliasAnalysis, simpleLookupMap(), 
+						param_entry, rcvr_entry, getInput().getAnnoDB(), typeAnalysis);
+			this.polyAnalysis = new TACFlowAnalysis<TupleLatticeElement<Aliasing,PolyVarLE>>(
+					transferFunction, getInput().getComUnitTACs().unwrap());
+		}
+		
+		private SimpleMap<String,Option<PolyVar>> simpleLookupMap() {
+			return new SimpleMap<String,Option<PolyVar>>(){
+				@Override public Option<PolyVar> get(String key) {
+					return lookup(key);
+				}};
 		}
 		
 		private Option<PolyVar> lookup(String name) {
@@ -221,6 +241,29 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 				return Option.some(classVars.get(name));
 			else
 				return Option.none();
+		}
+
+		@Override
+		public void endVisit(ReturnStatement node) {
+			// Return statement: Make sure any permissions that were
+			// borrowed are available, and same for result permissions.
+			TupleLatticeElement<Aliasing,PolyVarLE> lattice = this.polyAnalysis.getResultsAfter(node.getExpression());
+			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
+			
+			if( this.returnToCheck.isSome() ) {
+				// Check result
+				Variable return_var = tac.variable(node.getExpression());
+				Aliasing return_loc = aliasAnalysis.getResultsBefore(node.getExpression()).get(return_var);
+				PolyVarLE le = lattice.get(return_loc);
+				
+				if( le.isBottom() || le.isTop() || 
+				    le.name().isNone() || !le.name().unwrap().equals(returnToCheck.unwrap()) ) {
+					// ERROR!
+					String error_msg = "Return value must have permission " + returnToCheck.unwrap() +
+					                   " but instead has " + le + ".";
+					getReporter().reportUserProblem(error_msg, node, getName());
+				}
+			}
 		}
 	}
 }

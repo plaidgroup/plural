@@ -38,13 +38,15 @@
 
 package edu.cmu.cs.plural.polymorphic.internal;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.flow.ILabel;
 import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
@@ -63,8 +65,8 @@ import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
-import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.alias.AliasingLE;
+import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
 
 /**
  * Transfer function for the internal polymorphism checker.
@@ -84,14 +86,21 @@ public final class PolyInternalTransfer extends
 	private final SimpleMap<String,Option<PolyVar>> varLookup;
 	private final List<Pair<Aliasing,String>> paramsEntryPerm;
 	private final Option<String> rcvrEntryPerm;
+	private final AnnotationDatabase annoDB;
+	
+	/** Shows us which parameters have been applied to the types of each variable. */
+	private final InstantiatedTypeAnalysis typeAnalysis;
 	
 	public PolyInternalTransfer(ITACFlowAnalysis<AliasingLE> aliasAnalysis,
 			SimpleMap<String,Option<PolyVar>> varLookup,
-			List<Pair<Aliasing,String>> paramsForEntry, Option<String> rcvrEntryPerm) {
+			List<Pair<Aliasing,String>> paramsForEntry, Option<String> rcvrEntryPerm,
+			AnnotationDatabase annoDB, InstantiatedTypeAnalysis typeAnalysis) {
 		this.aliasAnalysis = aliasAnalysis;
 		this.varLookup = varLookup;
 		this.paramsEntryPerm = paramsForEntry;
 		this.rcvrEntryPerm = rcvrEntryPerm;
+		this.annoDB = annoDB;
+		this.typeAnalysis = typeAnalysis;
 	}
 	
 	@Override
@@ -112,71 +121,94 @@ public final class PolyInternalTransfer extends
 		return ops;
 	}
 
-	@Override
-	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
-			MethodCallInstruction instr, List<ILabel> labels,
-			TupleLatticeElement<Aliasing, PolyVarLE> value) {
-		// Start with the method call. Based on the specification and
-		// the current value of each parameter, modify the parameters.
-		// Subtract spec permission from current available permission.
-		IMethodBinding binding = instr.resolveBinding();
-		
-		int p_num = 0; // Which parameter are we analyzing?
-		for( Variable param : instr.getArgOperands() ) {
-			Aliasing ploc = this.aliasAnalysis.getResultsBefore(instr).get(param);
-			PolyVarLE p_le = value.get(ploc);
-			Option<PolyVarUseAnnotation> anno = AnnotationUtilities.ithParamToAnnotation(binding, p_num, null);
-			PolyVarLE new_p_le = splitAndMerge(p_le, anno, instr.getNode()); 
-			value.put(ploc, new_p_le);
-			
-			p_num++;
-		}
-		
-		return super.transfer(instr, labels, value);
-	}
-	
-	/**
-	 * Given a lattice element for a location, and given the annotation of the
-	 * parameter that is splitting off permission, return the resulting permission
-	 * that would occur from splitting and then merging the specified permission. 
-	 */
-	private PolyVarLE splitAndMerge(PolyVarLE p_le,
-			Option<PolyVarUseAnnotation> anno_, ASTNode error_node) {
-		// If there's no annotation, we can just pretend nothing happens.
+	// The permission you have STAYS CONSTANT. Do no substitute it.
+	// For arguments, All we need to do is substitute the applied(1) for the
+	// static params(2) that come from the receiver, to the @PolyVar(3) permission.
+	private PolyVarLE substituteSplitAndMerge(List<String> rcvr_app, ITypeBinding rcvr_type,
+			PolyVarLE incoming, Option<PolyVarUseAnnotation> anno_, ASTNode error_node) {
+		// If no permission is needed, we can just pretend nothing happens.
 		if( anno_.isNone() )
-			return p_le;
-		
-		// If we have top, then the result must be top as well.
-		if( p_le.isTop() )
-			return p_le;
+			return incoming;
 		
 		PolyVarUseAnnotation anno = anno_.unwrap();
+		
+		// If permission is needed, we need to substitute based on the given params.
+		List<String> needed_perms_pre_sub = Collections.singletonList(anno.getVariableName());
+		List<String> needed_perms = InstantiatedTypeAnalysis.substitute(rcvr_app, rcvr_type, needed_perms_pre_sub, annoDB, error_node);
+		assert(needed_perms.size() == 1);
+		
+		String needed_perm = needed_perms.get(0); 
+		
+		// The needed perm might be share, pure, unique, etc. in which case we ignore it.
+		if( isPermLitteral(needed_perm) )
+			return incoming;
+		
 		// If the permission is not the same, we produce bottom, just because
 		// the checker will be signaling an error here. We don't want to make
 		// even more errors. Same if we have no permission.
-		if( p_le.name().isNone() || !p_le.name().unwrap().equals(anno.getVariableName()) )
+		if( incoming.name().isNone() || !incoming.name().unwrap().equals(needed_perm) )
 			return PolyVarLE.BOTTOM;
 		
 		// So at THIS point, we know that the perm we need is the same
 		// as the one we have.
-		assert(p_le.name().unwrap().equals(anno.getVariableName()));
+		assert(incoming.name().unwrap().equals(needed_perm));
 		
 		// If returned is true, we always get the same perm back.
 		if( anno.isReturned() )
-			return p_le;
+			return incoming;
 		
 		// All we really need to do now is to look up the type of the poly.
-		// If its EXACT or SIMILAR, we are left with nothing, but if its
-		// SYMMETRIC, we are left with the same thing.
-		Option<PolyVar> var_ = this.varLookup.get(anno.getVariableName());
+		Option<PolyVar> var_ = this.varLookup.get(needed_perm);
 		if( var_.isNone() ) {
 			// Use of variable that is not in scope
-			throw new PolyInternalChecker.VarScope(anno.getVariableName(), error_node);
+			throw new PolyInternalChecker.VarScope(needed_perm, error_node);
 		}
-			
-		// TODO Working here when you get instantiation figured out
-		// if( this.varLookup.get(p_le.name().unwrap()) )
-		return Utilities.nyi();
+		// If its EXACT or SIMILAR, we are left with nothing, but if its
+		// SYMMETRIC, we are left with the same thing.
+		switch( var_.unwrap().getKind() ) {
+		case EXACT:
+		case SIMILAR:
+			return PolyVarLE.NONE;
+		case SYMMETRIC:
+			return incoming;
+		default:
+			throw new RuntimeException("Impossible");
+		}
+	}
+	
+	/**
+	 * Is the given perm share, pure, unique, full or immutable?
+	 */
+	private boolean isPermLitteral(String perm) {
+		String lc_perm = perm.toLowerCase();
+		return lc_perm.equals("pure") ||
+			lc_perm.equals("share") ||
+			lc_perm.equals("full") ||
+			lc_perm.equals("unique") ||
+			lc_perm.equals("immutable");
+	}
+
+	@Override
+	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
+			MethodCallInstruction instr, List<ILabel> labels,
+			TupleLatticeElement<Aliasing, PolyVarLE> value) {
+		// First get the application type for the receiver.
+		MethodDeclaration method = this.getAnalysisContext().getAnalyzedMethod();
+		List<String> rcvr_type = typeAnalysis.findType(instr.getReceiverOperand(), method);
+		ITypeBinding rcvr_jtype = instr.getReceiverOperand().resolveType();
+		
+		// Now we can iterate through the arguments.
+		int arg_num = 0;
+		for( Variable arg : instr.getArgOperands() ) {
+			Aliasing arg_loc = aliasAnalysis.getResultsBefore(instr).get(arg);
+			PolyVarLE cur_le = value.get(arg_loc);
+			Option<PolyVarUseAnnotation> anno_ = AnnotationUtilities.ithParamToAnnotation(instr.resolveBinding(), arg_num, annoDB);
+			PolyVarLE new_le = this.substituteSplitAndMerge(rcvr_type, rcvr_jtype, cur_le, anno_, instr.getNode());
+			value.put(arg_loc, new_le);
+			arg_num++;
+		}
+		
+		return super.transfer(instr, labels, value);
 	}
 
 	@Override

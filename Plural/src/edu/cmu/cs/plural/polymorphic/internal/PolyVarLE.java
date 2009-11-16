@@ -61,6 +61,7 @@ public interface PolyVarLE {
 			throw new UnsupportedOperationException("Invalid for TOP.");
 		}
 		@Override public boolean isBottom() {return false;}
+		@Override public String toString() {return "TOP";}
 	};
 	
 	/** The static BOTTOM lattice element. */
@@ -71,6 +72,7 @@ public interface PolyVarLE {
 		public Option<String> name() {
 			throw new UnsupportedOperationException("Invalid for BOTTOM.");
 		}
+		@Override public String toString() {return "BOTTOM";}
 	};
 		
 	/** The static NONE lattice element. */
@@ -78,6 +80,7 @@ public interface PolyVarLE {
 		@Override public boolean isBottom() {return false;}
 		@Override public boolean isTop() {return false;}
 		@Override public Option<String> name() {return Option.none();}
+		@Override public String toString() {return "NONE";}
 	};
 	
 	/** Factory for making the HAVE element; given a name of a polymorphic
@@ -110,6 +113,7 @@ public interface PolyVarLE {
 						return false;
 					return other.name().unwrap().equals(i);
 				}
+				@Override public String toString() {return i;}
 			};
 		}};
 	
