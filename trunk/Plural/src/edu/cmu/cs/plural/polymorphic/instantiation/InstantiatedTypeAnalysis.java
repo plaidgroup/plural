@@ -98,6 +98,7 @@ import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.plural.annot.Apply;
 import edu.cmu.cs.plural.annot.ResultApply;
 import edu.cmu.cs.plural.polymorphic.internal.PolyVarDeclAnnotation;
 
@@ -419,14 +420,14 @@ public final class InstantiatedTypeAnalysis {
 				types.put(var, type);
 			}
 
-			/** Should only be called if variable is already known to
-			 *  be in the types map. */
-			private List<String> getTypeForExpr(Expression expr) {
-				Variable var = tac.variable(expr);
-				assert(  var != null );
-				assert( types.containsKey(var) );
-				return types.get(tac.variable(expr));
-			}
+//			/** Should only be called if variable is already known to
+//			 *  be in the types map. */
+//			private List<String> getTypeForExpr(Expression expr) {
+//				Variable var = tac.variable(expr);
+//				assert(  var != null );
+//				assert( types.containsKey(var) );
+//				return types.get(tac.variable(expr));
+//			}
 			
 			@Override
 			public boolean visit(Assignment node) {
@@ -476,8 +477,26 @@ public final class InstantiatedTypeAnalysis {
 				// BUT, we should also check the argument expressions have
 				// the right type too. Need to substitute application arguments
 				// given by downward type for applicable parameter arguments.
-				// FIXME TODO XXX
+				// We need the return type, so we need to check the receiver type, 
+				// check the arguments match the substituted type of the formal params,
+				// and then return the substituted return type.
 				
+				// Receiver:
+				List<String> xtor_type = this.resultType;
+				ITypeBinding xtor_jtype = node.resolveTypeBinding();
+				
+				// Check arguments based on substitution of rcvr_type
+				int arg_num = 0;
+				for( Object arg_ : node.arguments() ) {
+					Expression arg = (Expression)arg_;
+					// Find out the type from annotations
+					List<String> pre_sub_arg_type = ithArgApplyType(arg_num, node.resolveConstructorBinding(), annoDB);
+					List<String> post_sub_arg_type = substitute(xtor_type, xtor_jtype, pre_sub_arg_type, annoDB, node);
+					// Now check the argument
+					(new ExprVisitor(post_sub_arg_type)).check(arg);
+					arg_num++;
+				}
+
 				return false;
 			}
 
@@ -522,10 +541,64 @@ public final class InstantiatedTypeAnalysis {
 				return false;
 			}
 
+			/** Returns the specified Apply type for the ith parameter of this method, without
+			 *  taking into account the type of the receiver. */
+			private List<String> ithArgApplyType(int i, IMethodBinding meth, AnnotationDatabase annoDB) {
+				AnnotationSummary summary = annoDB.getSummaryForMethod(meth);
+				ICrystalAnnotation anno = summary.getParameter(i, Apply.class.getName());
+				
+				if( anno == null )
+					return Collections.emptyList();
+				else
+					return ((ApplyAnnotationWrapper)anno).getValue();
+			}
+			
+			/**  Returns the specified Apply type for the return value of this method,
+			 *   without taking into account the type of the receiver (ie substitutions) */
+			private List<String> resultApplyType(IMethodBinding meth, AnnotationDatabase annoDB) {
+				AnnotationSummary summary = annoDB.getSummaryForMethod(meth);
+				List<ICrystalAnnotation> annos = summary.getReturn();
+				
+				for( ICrystalAnnotation anno_ : annos ) {
+					if( anno_ instanceof ResultApplyAnnotationWrapper ) {
+						return ((ResultApplyAnnotationWrapper)anno_).getValue();
+					}
+				}
+				return Collections.emptyList();
+			}
+			
 			@Override
 			public boolean visit(MethodInvocation node) {
-				// TODO Auto-generated method stub
-				return super.visit(node);
+				// We need the return type, so we need to check the receiver type, 
+				// check the arguments match the substituted type of the formal params,
+				// and then return the substituted return type.
+				
+				// Receiver:
+				List<String> rcvr_type = (new ExprVisitor()).check(node.getExpression());
+				ITypeBinding rcvr_jtype = node.getExpression().resolveTypeBinding();
+				
+				// Check arguments based on substitution of rcvr_type
+				int arg_num = 0;
+				for( Object arg_ : node.arguments() ) {
+					Expression arg = (Expression)arg_;
+					// Find out the type from annotations
+					List<String> pre_sub_arg_type = ithArgApplyType(arg_num, node.resolveMethodBinding(), annoDB);
+					List<String> post_sub_arg_type = substitute(rcvr_type, rcvr_jtype, pre_sub_arg_type, annoDB, node);
+					// Now check the argument
+					(new ExprVisitor(post_sub_arg_type)).check(arg);
+					arg_num++;
+				}
+				
+				// Now substitute return type.
+				List<String> pre_sub_result_type = resultApplyType(node.resolveMethodBinding(), annoDB);
+				List<String> post_sub_result_type = substitute(rcvr_type, rcvr_jtype, pre_sub_result_type, annoDB, node);
+				
+				// Set the type for this expression
+				this.resultType = post_sub_result_type;
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				
+				return false;
 			}
 
 			@Override

@@ -72,6 +72,10 @@
       <analysis
       		class="edu.cmu.cs.plural.concurrent.syncorswim.SyncOrSwim"
       		name="Sync or Swim"/>
+      <analysis
+            class="edu.cmu.cs.plural.polymorphic.internal.PolyInternalChecker"
+            name="Polymorphism Internal Checker">
+      </analysis>
    </extension>
    <extension
          point="org.eclipse.ui.views">
