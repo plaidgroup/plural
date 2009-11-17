@@ -43,23 +43,19 @@ import edu.cmu.cs.plural.annot.Exact;
 import edu.cmu.cs.plural.annot.PolyVar;
 import edu.cmu.cs.plural.annot.ResultPolyVar;
 
-
-@FailingTest(1)
+/**
+ * The point of this test is to show that the permissions for parameters
+ * and return values cannot be counted multiple times.
+ *
+ */
+@FailingTest
 @UseAnalyses("PolyInternalChecker")
 @Exact("perm")
-public final class ExactIsTaken1 {
+public class OnlyOnePerm {
 
 	@ResultPolyVar("perm")
-	Foo bar(@PolyVar(value="perm",returned=false) Foo f) {
-		quux(f);
-		return f; // Should fail here, since there is not enough return permission for 'f'
+	Foo bar(@PolyVar(value="perm") Foo f) {
+		return f; // Should fail here, either because of the return val or param does not
+		           // have 'perm,' since the other one took it.
 	}
-	
-	void quux(@PolyVar(value="perm",returned=false) Foo f) {
-		
-	}
-	
-	
 }
-
-class Foo {}
