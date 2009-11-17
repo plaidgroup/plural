@@ -243,6 +243,28 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 				return Option.none();
 		}
 
+		/** Split off the given permission (in string form, from the 
+		 *  annotation) from the given lattice element. Return what
+		 *  would be the remaining permission. */
+		private PolyVarLE split(PolyVarLE has, String to_split_off, ASTNode error_node) {
+			Option<PolyVar> split_off_ = lookup(to_split_off);
+			if( split_off_.isNone() ) {
+				throw new VarScope("Variable " + to_split_off + " not in scope.", error_node);
+			}
+			else {
+				PolyVar split_off = split_off_.unwrap();
+				switch( split_off.getKind() ) {
+				case EXACT:
+				case SIMILAR:
+					return PolyVarLE.NONE;
+				case SYMMETRIC:
+					return has;
+				default:
+					throw new RuntimeException("Impossible"); 
+				}
+			}
+		}
+		
 		@Override
 		public void endVisit(ReturnStatement node) {
 			// Return statement: Make sure any permissions that were
@@ -264,9 +286,37 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 					                   " but instead has " + le + ".";
 					getReporter().reportUserProblem(error_msg, node, getName());
 				}
+				else {
+					// Split off returned permission
+					PolyVarLE new_le = split(le, returnToCheck.unwrap(), node);
+					lattice.put(return_loc, new_le);
+				}
 			}
 			
-			
+			checkParameterReturns(lattice, tac, node);
+		}
+		
+		private void checkParameterReturns(TupleLatticeElement<Aliasing,PolyVarLE> lattice,
+				EclipseTAC tac, ASTNode error_node) {
+			for( Pair<Aliasing,String> param_to_check : this.paramsToCheck ) {
+				Aliasing param_loc = param_to_check.fst();
+				String perm_needed = param_to_check.snd();
+				PolyVarLE param_le = lattice.get(param_loc);
+
+				if( param_le.isBottom() || param_le.isTop() || 
+						param_le.name().isNone() || !param_le.name().unwrap().equals(perm_needed) ) {
+					// ERROR!
+					String error_msg = "On return, parameter " + param_loc +
+					" must have permission " + perm_needed +
+					" but instead has " + param_le + ".";
+					getReporter().reportUserProblem(error_msg, error_node, getName());
+				}
+				else {
+					// Split off returned permission
+					PolyVarLE new_le = split(param_le, returnToCheck.unwrap(), error_node);
+					lattice.put(param_loc, new_le);
+				}
+			}
 		}
 	}
 }
