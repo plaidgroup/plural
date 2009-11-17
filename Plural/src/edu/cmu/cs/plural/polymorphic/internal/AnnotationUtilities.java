@@ -76,19 +76,26 @@ public final class AnnotationUtilities {
 	 */
 	public static List<Pair<Aliasing, String>> findParamsToCheck(MethodDeclaration method, 
 			AnnotationSummary summary, ITACFlowAnalysis<AliasingLE> alias_analysis) {
-		return findParams(method, summary, alias_analysis, true);
+		List<Pair<Aliasing, Option<String>>> params = findParams(method, summary, alias_analysis, true);
+		List<Pair<Aliasing, String>> result = new LinkedList<Pair<Aliasing, String>>();
+		for( Pair<Aliasing, Option<String>> param : params ) {
+			if( param.snd().isSome() ) {
+				result.add(Pair.create(param.fst(), param.snd().unwrap()));
+			}
+		}
+		return result;
 	}
 
 	/** Find the parameters that are available at method entry. */
-	public static List<Pair<Aliasing,String>> findParamsForEntry(MethodDeclaration method,
+	public static List<Pair<Aliasing,Option<String>>> findParamsForEntry(MethodDeclaration method,
 			AnnotationSummary summary, ITACFlowAnalysis<AliasingLE> alias_analysis) {
 		return findParams(method, summary, alias_analysis, false);
 	}
 	
-	private static List<Pair<Aliasing, String>> findParams(MethodDeclaration method, 
+	private static List<Pair<Aliasing, Option<String>>> findParams(MethodDeclaration method, 
 			AnnotationSummary summary, ITACFlowAnalysis<AliasingLE> alias_analysis,
 			boolean ignore_not_returned) {
-		List<Pair<Aliasing,String>> result = new LinkedList<Pair<Aliasing,String>>();
+		List<Pair<Aliasing,Option<String>>> result = new LinkedList<Pair<Aliasing,Option<String>>>();
 		
 		// For every parameter of this method, see if its specification uses a polyvar,
 		// and if so, store the location of that parameter and the name of is polyvar.
@@ -99,9 +106,12 @@ public final class AnnotationUtilities {
 			String anno_name = edu.cmu.cs.plural.annot.PolyVar.class.getName();
 			PolyVarUseAnnotation use = (PolyVarUseAnnotation)summary.getParameter(param_name, 
 					anno_name);
-			// We only need to check borrowed permissions!
+			// Whether or not permissions that are not returned matter is given by
+			// ignore_not_returned.
 			if( use != null && (use.isReturned() || ignore_not_returned == false) )
-				result.add(Pair.create(loc, use.getVariableName()));
+				result.add(Pair.create(loc, Option.some(use.getVariableName())));
+			else
+				result.add(Pair.create(loc, Option.<String>none()));
 		}
 		return result;
 	}

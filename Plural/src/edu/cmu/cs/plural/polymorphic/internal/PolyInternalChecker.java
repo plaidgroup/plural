@@ -184,7 +184,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		Option<String> return_to_check = AnnotationUtilities.findReturnValueToCheck(summary);
 		Option<String> rcvr_to_check = AnnotationUtilities.findRcvrToCheck(summary);
 		// Get permission to insert at the beginning of the method	
-		List<Pair<Aliasing,String>> param_entry = AnnotationUtilities.findParamsForEntry(node, summary, alias_analysis);
+		List<Pair<Aliasing,Option<String>>> param_entry = AnnotationUtilities.findParamsForEntry(node, summary, alias_analysis);
 		Option<String> rcvr_entry = AnnotationUtilities.findRcvrForEntry(summary);
 		
 		try {
@@ -323,7 +323,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 				Map<String,PolyVar> method_vars, MethodDeclaration node, 
 				List<Pair<Aliasing,String>> paramsToCheck,
 				Option<String> returnToCheck, Option<String> rcvrToCheck, 
-				List<Pair<Aliasing, String>> param_entry, Option<String> rcvr_entry,
+				List<Pair<Aliasing, Option<String>>> param_entry, Option<String> rcvr_entry,
 				ITACFlowAnalysis<AliasingLE> aliasAnalysis) {
 			this.classVars = class_vars;
 			this.methodVars = method_vars;
