@@ -146,7 +146,7 @@ public final class PolyInternalTransfer extends
 		// If the permission is not the same, we produce bottom, just because
 		// the checker will be signaling an error here. We don't want to make
 		// even more errors. Same if we have no permission.
-		if( incoming.name().isNone() || !incoming.name().unwrap().equals(needed_perm) )
+		if( incoming == PolyVarLE.TOP || incoming.name().isNone() || !incoming.name().unwrap().equals(needed_perm) )
 			return PolyVarLE.BOTTOM;
 		
 		// So at THIS point, we know that the perm we need is the same
