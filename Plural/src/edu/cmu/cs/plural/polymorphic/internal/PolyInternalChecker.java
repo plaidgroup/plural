@@ -70,7 +70,7 @@ import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
 
 /**
  * One half of Polymorphic Plural, checks that polymorphic variables are
- * use correct internally. 
+ * used correctly internally (ie before instantiation). 
  * 
  * The internal checker tracks which polymorphic variables are in scope.
  * When those variables are used, this checker will ensure (symbolically,
@@ -247,7 +247,8 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		public void endVisit(ReturnStatement node) {
 			// Return statement: Make sure any permissions that were
 			// borrowed are available, and same for result permissions.
-			TupleLatticeElement<Aliasing,PolyVarLE> lattice = this.polyAnalysis.getResultsAfter(node.getExpression());
+			ASTNode node_of_interest = node.getExpression() == null ? node : node.getExpression();
+			TupleLatticeElement<Aliasing,PolyVarLE> lattice = this.polyAnalysis.getResultsAfter(node_of_interest);
 			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
 			
 			if( this.returnToCheck.isSome() ) {
@@ -264,6 +265,8 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 					getReporter().reportUserProblem(error_msg, node, getName());
 				}
 			}
+			
+			
 		}
 	}
 }

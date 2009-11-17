@@ -67,6 +67,7 @@ import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
 import org.eclipse.jdt.core.dom.PostfixExpression;
@@ -95,6 +96,7 @@ import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
 import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
+import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Utilities;
@@ -199,6 +201,18 @@ public final class InstantiatedTypeAnalysis {
 		return this.types.get(var);
 	}
 
+	private List<String> thisType(IMethodBinding binding) {
+		ITypeBinding this_type_binding = binding.getDeclaringClass();
+		for( ICrystalAnnotation anno_ : annoDB.getAnnosForType(this_type_binding) ) {
+			if( anno_ instanceof PolyVarDeclAnnotation ) {
+				PolyVarDeclAnnotation anno = (PolyVarDeclAnnotation)anno_;
+				// TODO Right now, only one parameter can be declared at a time.
+				return Collections.singletonList(anno.getVariableName());
+			}
+		}
+		return Collections.emptyList();
+	}
+	
 	/**
 	 * Does type-checking for the given method, 
 	 */
@@ -212,7 +226,11 @@ public final class InstantiatedTypeAnalysis {
 			List<String> type = this.findType(binding);
 			this.types.put(tac_var, type);
 		}
-		
+		// Then, add 'this' variable
+		ThisVariable this_var = tac.thisVariable();
+		List<String> type_type = thisType(decl.resolveBinding());
+		this.types.put(this_var, type_type);
+		// Then visit the body
 		decl.getBody().accept(new StmtVisitor(tac));
 	}
 	
@@ -567,6 +585,43 @@ public final class InstantiatedTypeAnalysis {
 				return Collections.emptyList();
 			}
 			
+			/** Gets the type for the receiver of the given method invocation. This
+			 *  method is necessary because in the AST the receiver could be
+			 *  implicit, in which case the expression node of the method invocation
+			 *  will be null. If the method is static, this will return an empty
+			 *  list. */
+			private List<String> findTypeForMethodReceiver(MethodInvocation node) {
+				if( node.getExpression() != null )
+					return (new ExprVisitor()).check(node.getExpression());
+				
+				IMethodBinding binding = node.resolveMethodBinding();
+				boolean is_static = Modifier.isStatic(binding.getModifiers());
+				
+				if( is_static )
+					return Collections.emptyList();
+				else {
+					// Assume that is must be THIS, and return this class' type
+					// parameters.
+					return thisType(binding);
+				}
+			}
+			
+			private Option<ITypeBinding> findJTypeForMethodReceiver(MethodInvocation node) {
+				if( node.getExpression() != null )
+					return Option.some(node.getExpression().resolveTypeBinding());
+				
+				IMethodBinding binding = node.resolveMethodBinding();
+				boolean is_static = Modifier.isStatic(binding.getModifiers());
+				
+				if( is_static )
+					return Option.none();
+				else {
+					// Assume that is must be THIS, and return this class' type
+					// parameters.
+					return Option.some(binding.getDeclaringClass());
+				}	
+			}
+			
 			@Override
 			public boolean visit(MethodInvocation node) {
 				// We need the return type, so we need to check the receiver type, 
@@ -574,8 +629,9 @@ public final class InstantiatedTypeAnalysis {
 				// and then return the substituted return type.
 				
 				// Receiver:
-				List<String> rcvr_type = (new ExprVisitor()).check(node.getExpression());
-				ITypeBinding rcvr_jtype = node.getExpression().resolveTypeBinding();
+				Expression rcvr_expr = node.getExpression();
+				List<String> rcvr_type = findTypeForMethodReceiver(node);
+				Option<ITypeBinding> rcvr_jtype =  findJTypeForMethodReceiver(node);
 				
 				// Check arguments based on substitution of rcvr_type
 				int arg_num = 0;
@@ -583,7 +639,8 @@ public final class InstantiatedTypeAnalysis {
 					Expression arg = (Expression)arg_;
 					// Find out the type from annotations
 					List<String> pre_sub_arg_type = ithArgApplyType(arg_num, node.resolveMethodBinding(), annoDB);
-					List<String> post_sub_arg_type = substitute(rcvr_type, rcvr_jtype, pre_sub_arg_type, annoDB, node);
+					List<String> post_sub_arg_type = rcvr_jtype.isNone() ? pre_sub_arg_type :
+						substitute(rcvr_type, rcvr_jtype.unwrap(), pre_sub_arg_type, annoDB, node);
 					// Now check the argument
 					(new ExprVisitor(post_sub_arg_type)).check(arg);
 					arg_num++;
@@ -591,7 +648,8 @@ public final class InstantiatedTypeAnalysis {
 				
 				// Now substitute return type.
 				List<String> pre_sub_result_type = resultApplyType(node.resolveMethodBinding(), annoDB);
-				List<String> post_sub_result_type = substitute(rcvr_type, rcvr_jtype, pre_sub_result_type, annoDB, node);
+				List<String> post_sub_result_type = rcvr_jtype.isNone() ? pre_sub_result_type :
+					substitute(rcvr_type, rcvr_jtype.unwrap(), pre_sub_result_type, annoDB, node);
 				
 				// Set the type for this expression
 				this.resultType = post_sub_result_type;
@@ -666,21 +724,13 @@ public final class InstantiatedTypeAnalysis {
 			public boolean visit(SuperMethodInvocation node) {
 				return Utilities.nyi("Totally not ready for this.");
 			}
-
+			
 			@Override
 			public boolean visit(ThisExpression node) {
 				// AS in Java Generics, the type of the this node is
 				// implicitly instantiated with the parameters that are
 				// in scope.
-				IMethodBinding m_binding = lastAnalyzed.resolveBinding();
-				ITypeBinding this_type_binding = m_binding.getDeclaringClass();
-				for( ICrystalAnnotation anno_ : annoDB.getAnnosForType(this_type_binding) ) {
-					if( anno_ instanceof PolyVarDeclAnnotation ) {
-						PolyVarDeclAnnotation anno = (PolyVarDeclAnnotation)anno_;
-						// TODO Right now, only one parameter can be declared at a time.
-						this.resultType = Collections.singletonList(anno.getVariableName());
-					}
-				}
+				this.resultType = thisType(lastAnalyzed.resolveBinding());
 
 				storeTypeForExpr(resultType, node);
 				assertEqualIfNecessary(downwardType, resultType, node);

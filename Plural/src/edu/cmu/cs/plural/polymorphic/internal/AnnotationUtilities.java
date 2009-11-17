@@ -88,14 +88,13 @@ public final class AnnotationUtilities {
 	private static List<Pair<Aliasing, String>> findParams(MethodDeclaration method, 
 			AnnotationSummary summary, ITACFlowAnalysis<AliasingLE> alias_analysis,
 			boolean ignore_not_returned) {
-		AliasingLE start_locs = alias_analysis.getStartResults(method);
 		List<Pair<Aliasing,String>> result = new LinkedList<Pair<Aliasing,String>>();
 		
 		// For every parameter of this method, see if its specification uses a polyvar,
 		// and if so, store the location of that parameter and the name of is polyvar.
 		for( Object param_ : method.parameters() ) {
 			SingleVariableDeclaration param = (SingleVariableDeclaration)param_;
-			Aliasing loc = start_locs.get(alias_analysis.getSourceVariable(param.resolveBinding()));
+			Aliasing loc = alias_analysis.getResultsAfter(param).get(alias_analysis.getSourceVariable(param.resolveBinding()));
 			String param_name = param.getName().getFullyQualifiedName();
 			String anno_name = edu.cmu.cs.plural.annot.PolyVar.class.getName();
 			PolyVarUseAnnotation use = (PolyVarUseAnnotation)summary.getParameter(param_name, 
