@@ -39,23 +39,20 @@ package edu.cmu.cs.plural.polymorphism;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
-import edu.cmu.cs.plural.annot.Exact;
 import edu.cmu.cs.plural.annot.PolyVar;
-import edu.cmu.cs.plural.annot.ResultPolyVar;
 
 /**
- * The point of this test is to show that the permissions for parameters
- * and return values cannot be counted multiple times.
+ * Can we detect variables that are out of scope?
+ * @author nbeckman
+ * @since Nov 17, 2009
  *
  */
-@FailingTest(1)
+@FailingTest
 @UseAnalyses("PolyInternalChecker")
-@Exact("perm")
-public class OnlyOnePerm {
+public final class OutOfScope1 {
 
-	@ResultPolyVar("perm")
-	Foo bar(@PolyVar(value="perm") Foo f) {
-		return f; // Should fail here, either because of the return val or param does not
-		           // have 'perm,' since the other one took it.
+	void foo(@PolyVar(value="p") Foo f) {
+		f.toString();
+		return;
 	}
 }

@@ -39,23 +39,21 @@ package edu.cmu.cs.plural.polymorphism;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
-import edu.cmu.cs.plural.annot.Exact;
 import edu.cmu.cs.plural.annot.PolyVar;
-import edu.cmu.cs.plural.annot.ResultPolyVar;
+import edu.cmu.cs.plural.annot.Similar;
 
-/**
- * The point of this test is to show that the permissions for parameters
- * and return values cannot be counted multiple times.
- *
- */
 @FailingTest(1)
 @UseAnalyses("PolyInternalChecker")
-@Exact("perm")
-public class OnlyOnePerm {
+@Similar("perm")
+public final class SimilarIsTaken1 {
 
-	@ResultPolyVar("perm")
-	Foo bar(@PolyVar(value="perm") Foo f) {
-		return f; // Should fail here, either because of the return val or param does not
-		           // have 'perm,' since the other one took it.
+	void foo(@PolyVar("perm") Foo f) {
+		quux(f);
+		return;
 	}
+	
+	void quux(@PolyVar(value="perm",returned=false) Foo f) {
+		
+	}
+	
 }

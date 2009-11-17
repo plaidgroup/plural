@@ -39,23 +39,9 @@ package edu.cmu.cs.plural.polymorphism;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
-import edu.cmu.cs.plural.annot.Exact;
-import edu.cmu.cs.plural.annot.PolyVar;
-import edu.cmu.cs.plural.annot.ResultPolyVar;
+import edu.cmu.cs.plural.annot.Symmetric;
 
-/**
- * The point of this test is to show that the permissions for parameters
- * and return values cannot be counted multiple times.
- *
- */
-@FailingTest(1)
+@FailingTest
 @UseAnalyses("PolyInternalChecker")
-@Exact("perm")
-public class OnlyOnePerm {
-
-	@ResultPolyVar("perm")
-	Foo bar(@PolyVar(value="perm") Foo f) {
-		return f; // Should fail here, either because of the return val or param does not
-		           // have 'perm,' since the other one took it.
-	}
-}
+@Symmetric("share") // There should be an error here; polymorphic permissions cannot be called, pure share full, etc.
+public final class IllegalPermissionName {}

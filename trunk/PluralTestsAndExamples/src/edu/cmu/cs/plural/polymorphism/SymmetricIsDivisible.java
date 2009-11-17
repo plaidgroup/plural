@@ -37,25 +37,36 @@
  */
 package edu.cmu.cs.plural.polymorphism;
 
-import edu.cmu.cs.crystal.annotations.FailingTest;
+import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
-import edu.cmu.cs.plural.annot.Exact;
 import edu.cmu.cs.plural.annot.PolyVar;
-import edu.cmu.cs.plural.annot.ResultPolyVar;
+import edu.cmu.cs.plural.annot.Symmetric;
 
 /**
- * The point of this test is to show that the permissions for parameters
- * and return values cannot be counted multiple times.
+ * This test shows that we can split off a symmetric permission as
+ * many times as we desire.
+ * @author nbeckman
+ * @since Nov 17, 2009
  *
  */
-@FailingTest(1)
+@PassingTest
 @UseAnalyses("PolyInternalChecker")
-@Exact("perm")
-public class OnlyOnePerm {
-
-	@ResultPolyVar("perm")
-	Foo bar(@PolyVar(value="perm") Foo f) {
-		return f; // Should fail here, either because of the return val or param does not
-		           // have 'perm,' since the other one took it.
+@Symmetric("P")
+public final class SymmetricIsDivisible {
+	
+	void foo(@PolyVar("P") Foo f) {
+		takeSome(f);
+		takeSome(f);
+		takeSome(f);
+		takeSome(f);
+		takeSome(f);
+		takeSome(f);
+		takeSome(f);
+		takeSome(f);
+		takeSome(f);
+	}
+	
+	void takeSome(@PolyVar(value="P",returned=false) Foo f) {
+		
 	}
 }
