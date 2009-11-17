@@ -46,9 +46,13 @@ import java.util.Map;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis;
@@ -56,6 +60,7 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
@@ -66,7 +71,9 @@ import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.AliasingLE;
 import edu.cmu.cs.plural.alias.LocalAliasTransfer;
+import edu.cmu.cs.plural.polymorphic.instantiation.ApplyAnnotationWrapper;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
+import edu.cmu.cs.plural.polymorphic.instantiation.ResultApplyAnnotationWrapper;
 
 /**
  * One half of Polymorphic Plural, checks that polymorphic variables are
@@ -93,16 +100,46 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		});
 	}
 	
+	private static Option<PolyVar> lookup(String name, Map<String,PolyVar> classVars,
+			Map<String,PolyVar> methodVars) {
+		if( methodVars.containsKey(name) )
+			return Option.some(methodVars.get(name));
+		else if( classVars.containsKey(name) )
+			return Option.some(classVars.get(name));
+		else
+			return Option.none();
+	}
+	
 	private void analyzeClassDeclaration(TypeDeclaration clazz) {
 		List<ICrystalAnnotation> annotations = this.getInput().getAnnoDB().getAnnosForType(clazz.resolveBinding());
 		final Map<String, PolyVar> vars_in_scope = 
 			Collections.unmodifiableMap(getPolyVarsInScope(annotations));
+	
+		checkPolyVarDeclAnnotations(clazz);
 		
 		clazz.accept(new ASTVisitor(){
 			@Override
 			public void endVisit(MethodDeclaration node) {
 				analyzeMethodDeclaration(node, vars_in_scope);
 			}});
+	}
+
+	/**
+	 * Check to make sure that any polymorphic variables that this class
+	 * declares are reasonable, and not share, pure, etc.
+	 */
+	private void checkPolyVarDeclAnnotations(TypeDeclaration clazz) {
+		AnnotationDatabase annoDB = this.getInput().getAnnoDB();
+		for( ICrystalAnnotation anno_ : annoDB.getAnnosForType(clazz.resolveBinding()) ) {
+			if( anno_ instanceof PolyVarDeclAnnotation ) {
+				PolyVarDeclAnnotation anno = (PolyVarDeclAnnotation)anno_;
+				if( isPermLitteral(anno.getVariableName()) ) {
+					String error_msg = "This class declares a polymoprhic permission " +
+					 "with a reserved name; " + anno.getVariableName() + ".";
+					this.getReporter().reportUserProblem(error_msg, clazz, getName());
+				}
+			}
+		}
 	}
 
 	/**
@@ -151,13 +188,79 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		Option<String> rcvr_entry = AnnotationUtilities.findRcvrForEntry(summary);
 		
 		try {
-		  ErrorCheckingVisitor e_visitor = new ErrorCheckingVisitor(class_scoped_vars,
-				  method_vars, node, params_to_check, return_to_check, rcvr_to_check,
-				  param_entry, rcvr_entry, alias_analysis);
-		  node.accept(e_visitor);
+			checkMethodSpecification(node, class_scoped_vars, method_vars, annodb);
+			ErrorCheckingVisitor e_visitor = new ErrorCheckingVisitor(class_scoped_vars,
+					method_vars, node, params_to_check, return_to_check, rcvr_to_check,
+					param_entry, rcvr_entry, alias_analysis);
+			node.accept(e_visitor);
 		} catch(VarScope e) {
 			String error = "Unknown variable " + e.varName + " mentioned in specification.";
 			this.getReporter().reportUserProblem(error, e.node, this.getName());
+		}
+	}
+
+	/**
+	 * Check that each of the polymorphic variables mentioned in the specification
+	 * of this method are actually 
+	 */
+	private static void checkMethodSpecification(MethodDeclaration node,
+			Map<String, PolyVar> class_scoped_vars,
+			Map<String, PolyVar> method_vars, AnnotationDatabase annoDB) {
+		AnnotationSummary summary = annoDB.getSummaryForMethod(node.resolveBinding());
+		// Parameters
+		int param_num = 0;
+		for( Object param_ : node.parameters() ) {
+			SingleVariableDeclaration param = (SingleVariableDeclaration)param_;
+			for( ICrystalAnnotation anno_ : summary.getParameter(param_num) ) {
+				if( anno_ instanceof PolyVarUseAnnotation ) {
+					PolyVarUseAnnotation anno = (PolyVarUseAnnotation)anno_;
+					Option<?> var = lookup(anno.getVariableName(), class_scoped_vars, method_vars);
+					if( var.isNone() )
+						throw new VarScope(anno.getVariableName(), param);
+				}
+				else if( anno_ instanceof ApplyAnnotationWrapper ) {
+					ApplyAnnotationWrapper anno = (ApplyAnnotationWrapper)anno_;
+					for( String app_name : anno.getValue() ) {
+						Option<?> var = lookup(app_name, class_scoped_vars, method_vars);
+						if( var.isNone() && !isPermLitteral(app_name) )
+							throw new VarScope(app_name, param);
+					}
+				}
+			}
+			param_num++;
+		}
+		// Returning & receiver annotations
+		for( ICrystalAnnotation anno_ : summary.getReturn() ) {
+			// Returning
+			if( anno_ instanceof PolyVarReturnedAnnotation ) {
+				PolyVarReturnedAnnotation anno = (PolyVarReturnedAnnotation)anno_;
+				Option<?> var = lookup(anno.getVariableName(), class_scoped_vars, method_vars);
+				if( var.isNone() )
+					throw new VarScope(anno.getVariableName(), node);
+			}
+			else if( anno_ instanceof ResultApplyAnnotationWrapper ) {
+				ResultApplyAnnotationWrapper anno = (ResultApplyAnnotationWrapper)anno_;
+				for( String app_name : anno.getValue() ) {
+					Option<?> var = lookup(app_name, class_scoped_vars, method_vars);
+					if( var.isNone() && !isPermLitteral(app_name) )
+						throw new VarScope(app_name, node);
+				}
+			}
+			// Receiver
+			else if( anno_ instanceof PolyVarUseAnnotation ) {
+				PolyVarUseAnnotation anno = (PolyVarUseAnnotation)anno_;
+				Option<?> var = lookup(anno.getVariableName(), class_scoped_vars, method_vars);
+				if( var.isNone() )
+					throw new VarScope(anno.getVariableName(), node);
+			}
+			else if( anno_ instanceof ApplyAnnotationWrapper ) {
+				ApplyAnnotationWrapper anno = (ApplyAnnotationWrapper)anno_;
+				for( String app_name : anno.getValue() ) {
+					Option<?> var = lookup(app_name, class_scoped_vars, method_vars);
+					if( var.isNone() && !isPermLitteral(app_name) )
+						throw new VarScope(app_name, node);
+				}
+			}
 		}
 	}
 
@@ -171,6 +274,18 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		        this.getInput().getComUnitTACs().unwrap());
 	}
 	
+	/**
+	 * Is the given perm share, pure, unique, full or immutable?
+	 */
+	public static boolean isPermLitteral(String perm) {
+		String lc_perm = perm.toLowerCase();
+		return lc_perm.equals("pure") ||
+			lc_perm.equals("share") ||
+			lc_perm.equals("full") ||
+			lc_perm.equals("unique") ||
+			lc_perm.equals("immutable");
+	}
+
 	static class VarScope extends RuntimeException {
 		private static final long serialVersionUID = 2139857766082038184L;
 		final String varName;
@@ -235,12 +350,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		}
 		
 		private Option<PolyVar> lookup(String name) {
-			if( methodVars.containsKey(name) )
-				return Option.some(methodVars.get(name));
-			else if( classVars.containsKey(name) )
-				return Option.some(classVars.get(name));
-			else
-				return Option.none();
+			return PolyInternalChecker.lookup(name,classVars,methodVars);
 		}
 
 		/** Split off the given permission (in string form, from the 
@@ -265,6 +375,16 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			}
 		}
 		
+		@Override
+		public void endVisit(MethodDeclaration node) {
+			// Here's where we do the check for an implicit
+			// return...
+			TupleLatticeElement<Aliasing,PolyVarLE> lattice = this.polyAnalysis.getResultsBefore(node.getBody());
+			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
+			
+			checkParameterReturns(lattice, tac, node);
+		}
+
 		@Override
 		public void endVisit(ReturnStatement node) {
 			// Return statement: Make sure any permissions that were
@@ -296,6 +416,41 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			checkParameterReturns(lattice, tac, node);
 		}
 		
+		@Override
+		public void endVisit(MethodInvocation node) {
+			// We have to check that there is enough permission to each
+			// parameter, otherwise we signal an error.
+			TupleLatticeElement<Aliasing, PolyVarLE> lattice = this.polyAnalysis.getResultsBefore(node);
+			AliasingLE locs = this.aliasAnalysis.getResultsBefore(node);
+			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
+			IMethodBinding binding = node.resolveMethodBinding();
+			// Check arguments
+			int arg_num = 0;
+			for( Object arg_ : node.arguments() ) {
+				Expression arg = (Expression)arg_;
+				Variable arg_var = tac.variable(arg);
+				Aliasing arg_loc = locs.get(arg_var);
+				Option<PolyVarUseAnnotation> anno_ = AnnotationUtilities.ithParamToAnnotation(binding, arg_num, getInput().getAnnoDB());
+				
+				if( anno_.isNone() ) continue; // Nothing required...
+				String needed_perm = anno_.unwrap().getVariableName();
+				PolyVarLE cur_perm = lattice.get(arg_loc);
+				if( cur_perm.isTop() || cur_perm.name().isNone() || !needed_perm.equals(cur_perm.name().unwrap()) ) {
+					// ERROR
+					String error_msg = "Argument needs permission " + needed_perm + " but " +
+						"has only " + cur_perm + ".";
+					getReporter().reportUserProblem(error_msg, arg, getName());
+				}
+				else {
+					// SPLIT
+					PolyVarLE remainder = split(cur_perm, needed_perm, node);
+					lattice.put(arg_loc, remainder);
+				}
+				
+				arg_num++;
+			}
+		}
+
 		private void checkParameterReturns(TupleLatticeElement<Aliasing,PolyVarLE> lattice,
 				EclipseTAC tac, ASTNode error_node) {
 			for( Pair<Aliasing,String> param_to_check : this.paramsToCheck ) {
@@ -303,8 +458,14 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 				String perm_needed = param_to_check.snd();
 				PolyVarLE param_le = lattice.get(param_loc);
 
-				if( param_le.isBottom() || param_le.isTop() || 
-						param_le.name().isNone() || !param_le.name().unwrap().equals(perm_needed) ) {
+				if( param_le.isBottom()  ) {
+					// We HOPE this indicates this point is not reachable, and
+					// the results are being checked at an actual return.
+					assert(error_node instanceof MethodDeclaration);
+					continue;
+				}
+				else if( param_le.isTop() || param_le.name().isNone() || 
+						  !param_le.name().unwrap().equals(perm_needed) ) {
 					// ERROR!
 					String error_msg = "On return, parameter " + param_loc +
 					" must have permission " + perm_needed +
@@ -313,7 +474,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 				}
 				else {
 					// Split off returned permission
-					PolyVarLE new_le = split(param_le, returnToCheck.unwrap(), error_node);
+					PolyVarLE new_le = split(param_le, perm_needed, error_node);
 					lattice.put(param_loc, new_le);
 				}
 			}

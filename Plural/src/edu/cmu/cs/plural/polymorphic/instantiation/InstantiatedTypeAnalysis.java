@@ -292,10 +292,12 @@ public final class InstantiatedTypeAnalysis {
 
 		@Override
 		public boolean visit(ReturnStatement node) {
-			// We DO have a downward type. It's the type of the
-			// return value.
-			List<String> return_type = returnTypeForCurMethod();
-			node.getExpression().accept(new ExprVisitor(return_type));
+			if( node.getExpression() != null ) {
+				// We DO have a downward type. It's the type of the
+				// return value.
+				List<String> return_type = returnTypeForCurMethod();
+				node.getExpression().accept(new ExprVisitor(return_type));
+			}
 			return false;
 		}
 
