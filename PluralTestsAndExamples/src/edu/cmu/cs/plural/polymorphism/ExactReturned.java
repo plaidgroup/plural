@@ -37,29 +37,25 @@
  */
 package edu.cmu.cs.plural.polymorphism;
 
-import edu.cmu.cs.crystal.annotations.FailingTest;
+import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Exact;
 import edu.cmu.cs.plural.annot.PolyVar;
 import edu.cmu.cs.plural.annot.ResultPolyVar;
 
-
-@FailingTest(1)
+@PassingTest
 @UseAnalyses("PolyInternalChecker")
 @Exact("perm")
-public final class ExactIsTaken1 {
+public final class ExactReturned {
 
 	@ResultPolyVar("perm")
 	Foo bar(@PolyVar(value="perm",returned=false) Foo f) {
 		quux(f);
-		return f; // Should fail here, since there is not enough return permission for 'f'
+		return f; // Should work...
 	}
 	
-	void quux(@PolyVar(value="perm",returned=false) Foo f) {
+	void quux(@PolyVar(value="perm") Foo f) {
 		
 	}
 	
-	
 }
-
-class Foo {}
