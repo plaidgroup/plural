@@ -84,7 +84,7 @@ public final class PolyInternalTransfer extends
 	
 	private final ITACFlowAnalysis<AliasingLE> aliasAnalysis;
 	private final SimpleMap<String,Option<PolyVar>> varLookup;
-	private final List<Pair<Aliasing,String>> paramsEntryPerm;
+	private final List<Pair<Aliasing,Option<String>>> paramsEntryPerm;
 	private final Option<String> rcvrEntryPerm;
 	private final AnnotationDatabase annoDB;
 	
@@ -93,7 +93,7 @@ public final class PolyInternalTransfer extends
 	
 	public PolyInternalTransfer(ITACFlowAnalysis<AliasingLE> aliasAnalysis,
 			SimpleMap<String,Option<PolyVar>> varLookup,
-			List<Pair<Aliasing,String>> paramsForEntry, Option<String> rcvrEntryPerm,
+			List<Pair<Aliasing,Option<String>>> paramsForEntry, Option<String> rcvrEntryPerm,
 			AnnotationDatabase annoDB, InstantiatedTypeAnalysis typeAnalysis) {
 		this.aliasAnalysis = aliasAnalysis;
 		this.varLookup = varLookup;
@@ -109,8 +109,12 @@ public final class PolyInternalTransfer extends
 		TupleLatticeElement<Aliasing, PolyVarLE> result = ops.getDefault();
 		// Put in initial values for parameters and receiver as indicated
 		// by the annotations.
-		for( Pair<Aliasing,String> param : paramsEntryPerm ) {
-			PolyVarLE le = PolyVarLE.HAVE_FACTORY.call(param.snd());
+		for( Pair<Aliasing,Option<String>> param : paramsEntryPerm ) {
+			PolyVarLE le;
+			if( param.snd().isSome() )
+				le = PolyVarLE.HAVE_FACTORY.call(param.snd().unwrap());
+			else
+				le = PolyVarLE.NONE;
 			result.put(param.fst(), le);
 		}
 		return result;
