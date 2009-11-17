@@ -140,14 +140,14 @@ public final class PolyInternalTransfer extends
 		String needed_perm = needed_perms.get(0); 
 		
 		// The needed perm might be share, pure, unique, etc. in which case we ignore it.
-		if( isPermLitteral(needed_perm) )
+		if( PolyInternalChecker.isPermLitteral(needed_perm) )
 			return incoming;
 		
-		// If the permission is not the same, we produce bottom, just because
-		// the checker will be signaling an error here. We don't want to make
-		// even more errors. Same if we have no permission.
+		// If the permission is not the same, we'll just pretend we have the permission we are
+		// supposed to have, since the checker SHOULD find this error. We'd like to only report
+		// one error.
 		if( incoming == PolyVarLE.TOP || incoming.name().isNone() || !incoming.name().unwrap().equals(needed_perm) )
-			return PolyVarLE.BOTTOM;
+			incoming = PolyVarLE.HAVE_FACTORY.call(needed_perm);
 		
 		// So at THIS point, we know that the perm we need is the same
 		// as the one we have.
@@ -176,18 +176,6 @@ public final class PolyInternalTransfer extends
 		}
 	}
 	
-	/**
-	 * Is the given perm share, pure, unique, full or immutable?
-	 */
-	private boolean isPermLitteral(String perm) {
-		String lc_perm = perm.toLowerCase();
-		return lc_perm.equals("pure") ||
-			lc_perm.equals("share") ||
-			lc_perm.equals("full") ||
-			lc_perm.equals("unique") ||
-			lc_perm.equals("immutable");
-	}
-
 	@Override
 	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
 			MethodCallInstruction instr, List<ILabel> labels,
