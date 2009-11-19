@@ -60,7 +60,6 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
@@ -72,6 +71,7 @@ import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.AliasingLE;
 import edu.cmu.cs.plural.alias.LocalAliasTransfer;
 import edu.cmu.cs.plural.polymorphic.instantiation.ApplyAnnotationWrapper;
+import edu.cmu.cs.plural.polymorphic.instantiation.GroundParser;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
 import edu.cmu.cs.plural.polymorphic.instantiation.ResultApplyAnnotationWrapper;
 
@@ -278,12 +278,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 	 * Is the given perm share, pure, unique, full or immutable?
 	 */
 	public static boolean isPermLitteral(String perm) {
-		String lc_perm = perm.toLowerCase();
-		return lc_perm.equals("pure") ||
-			lc_perm.equals("share") ||
-			lc_perm.equals("full") ||
-			lc_perm.equals("unique") ||
-			lc_perm.equals("immutable");
+		return GroundParser.parse(perm).isSome();
 	}
 
 	static class VarScope extends RuntimeException {
