@@ -38,9 +38,11 @@
 package edu.cmu.cs.plural.states;
 
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
+
+import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 
 
 /**
@@ -101,47 +103,17 @@ public abstract interface IInvocationSignature {
 	 */
 	IMethodSignature getMethodSignature();
 	
-	/** 
-	 * Returns the required states for the given parameter
-	 * for each method case.
-	 * @return
-	 * @see IMethodCase#getRequiredParameterStates(int)
-	 */
-	Set<Set<String>> getRequiredParameterStateOptions(int paramIndex);
-
-	/** 
-	 * Returns the ensured states for the given parameter
-	 * for each method case.
-	 * @return
-	 * @see IMethodCase#getEnsuredParameterStates(int)
-	 */
-	Set<Set<String>> getEnsuredParameterStateOptions(int paramIndex);
-
-	/** 
-	 * Returns the required states for the receiver
-	 * for each method case.
-	 * @return
-	 * @see IMethodCase#getRequiredReceiverStates()
-	 */
-	Set<Set<String>> getRequiredReceiverStateOptions();
-	
-	/** 
-	 * Returns the ensured states for the receiver
-	 * for each method case.
-	 * @return
-	 * @see IMethodCase#getEnsuredReceiverStates()
-	 */
-	Set<Set<String>> getEnsuredReceiverStateOptions();
-	
 	/**
 	 * Calls {@link IInvocationCase#createPermissions(boolean, boolean)} for each {@link #cases() case}.
 	 * @param forAnalyzingBody
 	 * @param isSuperCall ignored if <code>forAnalyzingBody</code> is <code>true</code>.
+	 * @param methodRcvrVar If this is being called for a method call site and
+	 *         that method has a receiver, we can pass it here.
 	 * @return
 	 */
 	List<? extends IInvocationCaseInstance> createPermissionsForCases(
 			MethodCheckingKind checkingKind,
-			
-			boolean forAnalyzingBody, boolean isSuperCall);
+			boolean forAnalyzingBody, boolean isSuperCall,
+			Option<RcvrInstantiationPackage> ip);
 	
 }

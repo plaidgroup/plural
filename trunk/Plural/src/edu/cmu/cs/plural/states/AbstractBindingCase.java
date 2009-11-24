@@ -85,45 +85,6 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 		preAndPostString = Pair.create(perm.getRequires(), perm.getEnsures());
 	}
 
-	@Override
-	public Set<String> getEnsuredParameterStates(int paramIndex) {
-		assert paramIndex >= 0 && paramIndex < binding.getParameterTypes().length;
-		Set<String> result = new LinkedHashSet<String>();
-		
-		// required states from @Unique, @Full, etc. annotations
-		for(ParameterPermissionAnnotation anno : 
-			CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex)) {
-			if(anno.isReturned())
-				for(String s : anno.getEnsures())
-					result.add(s);
-		}
-		
-		// required states from @Perm annotations
-		Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(
-				preAndPostString.fst(), preAndPostString.snd(), paramIndex);
-		result.addAll(prePost.snd());
-		return result;
-	}
-
-	@Override
-	public Set<String> getRequiredParameterStates(int paramIndex) {
-		assert paramIndex >= 0 && paramIndex < binding.getParameterTypes().length;
-		Set<String> result = new LinkedHashSet<String>();
-		
-		// required states from @Unique, @Full, etc. annotations
-		for(ParameterPermissionAnnotation anno : 
-			CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex)) {
-			for(String s : anno.getRequires())
-				result.add(s);
-		}
-		
-		// required states from @Perm annotations
-		Pair<Set<String>, Set<String>> prePost = PermParser.getParameterStateInfo(
-				preAndPostString.fst(), preAndPostString.snd(), paramIndex);
-		result.addAll(prePost.fst());
-		return result;
-	}
-	
 	/**
 	 * This method only makes sense for methods; <b>do not call
 	 * this method for constructors</b>.  We put it
@@ -142,24 +103,6 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 		
 		// required states from @Perm annotations
 		result.addAll(PermParser.getResultStateInfo(preAndPostString.snd()));
-		return result;
-	}
-
-	@Override
-	public Set<String> getEnsuredReceiverStates() {
-		Set<String> result = new LinkedHashSet<String>();
-		
-		// required states from @Unique, @Full, etc. annotations
-		for(ParameterPermissionAnnotation anno : 
-			CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding)) {
-			if(anno.isReturned())
-				for(String s : anno.getEnsures())
-					result.add(s);
-		}
-		
-		// required states from @Perm annotations
-		result.addAll(PermParser.getReceiverStateInfo(
-				preAndPostString.fst(), preAndPostString.snd()).snd());
 		return result;
 	}
 

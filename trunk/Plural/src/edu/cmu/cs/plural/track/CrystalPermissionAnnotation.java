@@ -37,21 +37,30 @@
  */
 package edu.cmu.cs.plural.track;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.CrystalAnnotation;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.PermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermissionUse;
+import edu.cmu.cs.plural.polymorphic.instantiation.GroundInstantiation;
+import edu.cmu.cs.plural.polymorphic.instantiation.GroundParser;
+import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedParameterPermissionAnnotation;
+import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
+import edu.cmu.cs.plural.polymorphic.internal.PolyVarUseAnnotation;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
 /**
@@ -113,17 +122,86 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 	 * @return a (possibly empty) list of permission annotations for the given formal parameter 
 	 * of the given method.
 	 */
-	public static List<ParameterPermissionAnnotation> parameterAnnotations(
-			AnnotationDatabase db, IMethodBinding method, int paramIndex) {
+	public static List<ParameterPermissionAnnotation> parameterAnnotations(AnnotationDatabase db,
+			Option<RcvrInstantiationPackage> ip, IMethodBinding method, int paramIndex) {
 		AnnotationSummary s = db.getSummaryForMethod(method);
 		if(s == null)
 			return Collections.emptyList();
 		List<ICrystalAnnotation> allAnnos = s.getParameter(paramIndex);
 		if(allAnnos == null || allAnnos.isEmpty())
 			return Collections.emptyList();
-		return Collections.unmodifiableList(AnnotationDatabase.filter(allAnnos, ParameterPermissionAnnotation.class));
+		List<ParameterPermissionAnnotation> result = new LinkedList<ParameterPermissionAnnotation>();
+		result.addAll(AnnotationDatabase.filter(allAnnos, ParameterPermissionAnnotation.class));
+
+		Collection<InstantiatedParameterPermissionAnnotation> wrappers =
+			instantiatePolyVar(AnnotationDatabase.filter(allAnnos, PolyVarUseAnnotation.class), ip, db);
+		result.addAll(wrappers);
+
+		return Collections.unmodifiableList(result);
 	}
 
+	/**
+	 * Takes the PolyVarUseAnnotations that are passed to it and returns 
+	 * InstantiatedParameterPermissionAnnotation wrappers for the ones where its appropriate.
+	 * Unfortunately, a lot of data is needed to create these wrapper annotations,
+	 * hence the large number of parameters.
+	 */
+	private static Collection<InstantiatedParameterPermissionAnnotation> instantiatePolyVar(
+			List<PolyVarUseAnnotation> filter, Option<RcvrInstantiationPackage> ip,
+			AnnotationDatabase annoDB) {
+		if( ip.isNone() )
+			return Collections.emptyList();
+		
+		List<InstantiatedParameterPermissionAnnotation> result = new LinkedList<InstantiatedParameterPermissionAnnotation>();
+		
+		List<String> rcvr_type = ip.unwrap().getVarType();
+		ITypeBinding rcvr_jtype = ip.unwrap().getVarJType();
+		
+		for( PolyVarUseAnnotation anno : filter ) {
+			List<String> originals = Collections.singletonList(anno.getVariableName());
+			List<String> subst_type = InstantiatedTypeAnalysis.substitute(rcvr_type, rcvr_jtype, originals, annoDB);
+			assert(subst_type.size() == 1);
+			// Now we need to parse the result and figure out what it is!
+			String perm = subst_type.get(0);
+			// This annotation should only be CONSTRUCTED if we know its an instantiation.
+			Option<GroundInstantiation> ground_perm_ = GroundParser.parse(perm);
+			if( ground_perm_.isSome() ) {
+				// YES an instantiation
+				InstantiatedParameterPermissionAnnotation anno_wrapper = 
+					new InstantiatedParameterPermissionAnnotation(anno, ground_perm_.unwrap());
+				result.add(anno_wrapper);
+			}
+			
+		}
+		
+		return result;
+	}
+
+
+	/**
+	 * Parse the instantiation of this permission, so that we will be ready when the pre & post-condition methods
+	 * are called.
+	 */
+//	private GroundInstantiation parseInstantiation() {
+//		List<String> rcvr_application = this.typeAnalysis.findType(rcvrVar);
+//		List<String> poly_vars = Collections.singletonList(paramPermAnnotation.getVariableName());
+//		// TODO Method decl is totally inappropriate to pass as an error node, maybe we should remove
+//		// this parameter from the substitute method and just cover it with the spec checker. 
+//		List<String> perms = InstantiatedTypeAnalysis.substitute(rcvr_application, rcvrVar.resolveType(), poly_vars, annoDB);
+//		assert(perms.size() == 1);
+//		// Now we need to parse the result and figure out what it is!
+//		String perm = perms.get(0);
+//		// This annotation should only be CONSTRUCTED if we know its an instantiation.
+//		assert(PolyInternalChecker.isPermLitteral(perm));
+//		GroundInstantiation result = GroundParser.parse(perm).unwrap();
+//		return result;
+//		
+//	}
+
+
+
+
+	
 	/**
 	 * @param db
 	 * @param field
@@ -152,10 +230,6 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 	
 	public boolean isReturned() {
 		return (Boolean) getObject("returned");
-	}
-	
-	public String getParameter() {
-		return (String) getObject("param");
 	}
 	
 	public PermissionKind getKind() {
@@ -269,7 +343,7 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 
 	public static boolean isParameterNotBorrowed(AnnotationDatabase annoDB, 
 			IMethodBinding binding, int paramIndex) {		
-		for(ParameterPermissionAnnotation a : parameterAnnotations(annoDB, binding, paramIndex)) {
+		for(ParameterPermissionAnnotation a : parameterAnnotations(annoDB, Option.<RcvrInstantiationPackage>none(), binding, paramIndex)) {
 			if(! a.isReturned())
 				return true;
 		}

@@ -50,6 +50,8 @@ import org.eclipse.jdt.core.dom.Modifier;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.tac.model.Variable;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
@@ -59,6 +61,7 @@ import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermParser;
 import edu.cmu.cs.plural.perm.parser.AbstractParamVisitor.FractionCreation;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.pred.MethodPrecondition;
 import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
@@ -138,7 +141,8 @@ abstract class AbstractBindingSignature extends AbstractBinding
 	protected Pair<MethodPrecondition, MethodPostcondition> preAndPost(
 			boolean forAnalyzingBody, Pair<String, String> preAndPostString,
 			MethodCheckingKind checkingKind,
-			boolean frameAsVirtual, boolean noReceiverPre, boolean noReceiverVirtual) {
+			boolean frameAsVirtual, boolean noReceiverPre, boolean noReceiverVirtual,
+			Option<RcvrInstantiationPackage> ip) {
 		final Map<String, StateSpace> spaces = new HashMap<String, StateSpace>();
 		Map<String, PermissionSetFromAnnotations> pre = 
 			new HashMap<String, PermissionSetFromAnnotations>();
@@ -193,7 +197,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			
 			Pair<PermissionSetFromAnnotations, PermissionSetFromAnnotations> param_borrowed = 
 				prePostFromAnnotations(space, 
-					CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), binding, paramIndex), 
+					CrystalPermissionAnnotation.parameterAnnotations(getAnnoDB(), ip, binding, paramIndex), 
 					namedFractions,
 					checkingKind,
 					ReceiverOrArg.ARGUMENT);

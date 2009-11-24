@@ -68,6 +68,7 @@ import org.eclipse.jdt.core.dom.InstanceofExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
+import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.ParenthesizedExpression;
 import org.eclipse.jdt.core.dom.PostfixExpression;
@@ -94,8 +95,8 @@ import org.eclipse.jdt.core.dom.WhileStatement;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
-import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
+import edu.cmu.cs.crystal.internal.CrystalRuntimeException;
+import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
 import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
@@ -115,18 +116,16 @@ import edu.cmu.cs.plural.polymorphic.internal.PolyVarDeclAnnotation;
  * @since Nov 12, 2009
  */
 public final class InstantiatedTypeAnalysis {
-	final private CompilationUnitTACs compilationUnit;
+	final private ITACAnalysisContext tac;
 	final private AnnotationDatabase annoDB;
-	
-	private MethodDeclaration lastAnalyzed = null;
 	private Map<Variable,List<String>> types = null;
 	
-	public InstantiatedTypeAnalysis(CompilationUnitTACs compilationUnit,
+	public InstantiatedTypeAnalysis(ITACAnalysisContext tacContext,
 			AnnotationDatabase annoDB) {
-		this.compilationUnit = compilationUnit;
+		this.tac = tacContext;
 		this.annoDB = annoDB;
 	}
-	
+
 	public static class TypeError extends RuntimeException {
 		private static final long serialVersionUID = 2922005566056611578L;
 		final public String errorMsg;
@@ -142,7 +141,7 @@ public final class InstantiatedTypeAnalysis {
 	 *  tells us which elements of original are actually applicable for substitution. Error if the
 	 *  length of applications is not the same as the number of params on type.  */
 	public static List<String> substitute(List<String> applications, ITypeBinding type, List<String> original,
-			AnnotationDatabase annoDB, ASTNode errorNode) {
+			AnnotationDatabase annoDB) {
 		List<String> type_args = new LinkedList<String>();
 		for( ICrystalAnnotation anno : annoDB.getAnnosForType(type) ) {
 			if( anno instanceof PolyVarDeclAnnotation ) {
@@ -151,7 +150,7 @@ public final class InstantiatedTypeAnalysis {
 		}
 		if( applications.size() != type_args.size() ) {
 			String error_msg = "Different number of static args.";
-			throw new TypeError(error_msg, errorNode);
+			throw new RuntimeException(error_msg);
 		}
 		
 		List<String> result = new LinkedList<String>();
@@ -186,17 +185,18 @@ public final class InstantiatedTypeAnalysis {
 	 * is actually a field, the method where the field was used should be
 	 * given, ideally.
 	 */
-	public List<String> findType(Variable var, MethodDeclaration decl) {
-		if( decl.equals(lastAnalyzed) ) {
+	public List<String> findType(Variable var) {
+		if( this.types != null ) {
 			assert(this.types.containsKey(var));
 			return this.types.get(var);
 		}
 		
 		// Need to do some analysis...
-		this.lastAnalyzed = decl;
+		// We just do this analysis lazily... maybe we will
+		// never need it.
 		this.types = new HashMap<Variable,List<String>>();
 		
-		buildTypesForMethod(decl);
+		buildTypesForMethod(this.tac.getAnalyzedMethod());
 		assert(this.types.containsKey(var));
 		return this.types.get(var);
 	}
@@ -217,17 +217,16 @@ public final class InstantiatedTypeAnalysis {
 	 * Does type-checking for the given method, 
 	 */
 	private void buildTypesForMethod(MethodDeclaration decl) {
-		EclipseTAC tac = this.compilationUnit.getMethodTAC(decl);
 		// First, build up types for all of the parameters.
 		for( Object param_ : decl.parameters() ) {
 			SingleVariableDeclaration param = (SingleVariableDeclaration)param_;
 			IVariableBinding binding = param.resolveBinding();
-			Variable tac_var = tac.sourceVariable(binding);
+			Variable tac_var = tac.getSourceVariable(binding);
 			List<String> type = this.findType(binding);
 			this.types.put(tac_var, type);
 		}
 		// Then, add 'this' variable
-		ThisVariable this_var = tac.thisVariable();
+		ThisVariable this_var = tac.getThisVariable();
 		List<String> type_type = thisType(decl.resolveBinding());
 		this.types.put(this_var, type_type);
 		// Then visit the body
@@ -236,7 +235,8 @@ public final class InstantiatedTypeAnalysis {
 	
 	/** What is the return type for the most recently analyzed method? */
 	private List<String> returnTypeForCurMethod() {
-		AnnotationSummary summary = this.annoDB.getSummaryForMethod(this.lastAnalyzed.resolveBinding());
+		AnnotationSummary summary = 
+			this.annoDB.getSummaryForMethod(this.tac.getAnalyzedMethod().resolveBinding());
 		ICrystalAnnotation anno = summary.getReturn(ResultApply.class.getName());
 		if( anno == null )
 			return Collections.emptyList();
@@ -249,9 +249,9 @@ public final class InstantiatedTypeAnalysis {
 	// actually has a type, but for local variable declaration statements, it will
 	// put the variable into the map.
 	private class StmtVisitor extends ASTVisitor {
-		private final EclipseTAC tac;
+		private final ITACAnalysisContext tac;
 		
-		public StmtVisitor(EclipseTAC tac) {
+		public StmtVisitor(ITACAnalysisContext tac) {
 			this.tac = tac;
 		}
 		
@@ -286,7 +286,10 @@ public final class InstantiatedTypeAnalysis {
 		public boolean visit(IfStatement node) {
 			node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
 			node.getThenStatement().accept(this);
-			node.getElseStatement().accept(this);
+			
+			if( node.getElseStatement() != null )
+				node.getElseStatement().accept(this);
+			
 			return false;
 		}
 
@@ -332,12 +335,15 @@ public final class InstantiatedTypeAnalysis {
 			for( Object ketch_ : node.catchClauses() ) {
 				CatchClause ketch = (CatchClause)ketch_;
 				SingleVariableDeclaration decl = ketch.getException();
-				Variable var = tac.sourceVariable(decl.resolveBinding());
+				Variable var = tac.getSourceVariable(decl.resolveBinding());
 				List<String> type = findType(decl.resolveBinding());
 				types.put(var, type);
 				ketch.getBody().accept(this);
 			}
-			node.getFinally().accept(this);
+			
+			if( node.getFinally() != null )
+				node.getFinally().accept(this);
+			
 			return false;
 		}
 
@@ -357,7 +363,7 @@ public final class InstantiatedTypeAnalysis {
 			for( Object decl_ : node.fragments() ) {
 				VariableDeclarationFragment decl = (VariableDeclarationFragment)decl_;
 				IVariableBinding binding = decl.resolveBinding();
-				Variable var = tac.sourceVariable(binding);
+				Variable var = tac.getSourceVariable(binding);
 				List<String> type = findType(binding);
 				types.put(var, type);
 				
@@ -422,6 +428,9 @@ public final class InstantiatedTypeAnalysis {
 			
 			/** Arguments to string. */
 			private String argString(List<String> strings) {
+				if( strings.isEmpty() )
+					return "<>";
+					
 				StringBuilder result_ = new StringBuilder('<');
 				for( String arg : strings ) {
 					result_.append(arg);
@@ -435,9 +444,20 @@ public final class InstantiatedTypeAnalysis {
 			/** Store the given type in the types map for the variable corresponding
 			 *  to this Expression. */
 			private void storeTypeForExpr(List<String> type, Expression expr) {
-				Variable var = tac.variable(expr);
-				assert(var != null);
-				types.put(var, type);
+				try {
+					Variable var = tac.getVariable(expr);
+					assert(var != null);
+					types.put(var, type); 
+				} catch(CrystalRuntimeException e) {
+					// If there is no instruction for the given expression, then no problem,
+					// b/c that means we will never be asked about it.
+					// TODO: Fix the expr that you ask about or the response from the
+					// variable method.
+				} catch(IllegalArgumentException e) {
+					// This exception is thrown if the expression is a
+					// field reference, which means that we don't need
+					// to have it in our map anyway.
+				}
 			}
 
 //			/** Should only be called if variable is already known to
@@ -491,7 +511,8 @@ public final class InstantiatedTypeAnalysis {
 				// This is the new expression. We can safely ignore
 				// the expression on the left-hand side, for now.
 				// Type needs to come from the downwards direction!
-				this.resultType = downwardType.unwrap();
+				this.resultType = downwardType.isNone() ? 
+						Collections.<String>emptyList() : downwardType.unwrap();
 				storeTypeForExpr(resultType, node);
 				
 				// BUT, we should also check the argument expressions have
@@ -511,7 +532,7 @@ public final class InstantiatedTypeAnalysis {
 					Expression arg = (Expression)arg_;
 					// Find out the type from annotations
 					List<String> pre_sub_arg_type = ithArgApplyType(arg_num, node.resolveConstructorBinding(), annoDB);
-					List<String> post_sub_arg_type = substitute(xtor_type, xtor_jtype, pre_sub_arg_type, annoDB, node);
+					List<String> post_sub_arg_type = substitute(xtor_type, xtor_jtype, pre_sub_arg_type, annoDB);
 					// Now check the argument
 					(new ExprVisitor(post_sub_arg_type)).check(arg);
 					arg_num++;
@@ -536,7 +557,7 @@ public final class InstantiatedTypeAnalysis {
 				List<String> rcvr_type = (new ExprVisitor()).check(node.getExpression());
 				ITypeBinding rcvr_type_binding = node.getExpression().resolveTypeBinding();
 				List<String> field_type = findType(node.resolveFieldBinding());
-				List<String> new_field_type = substitute(rcvr_type, rcvr_type_binding, field_type, annoDB, node);
+				List<String> new_field_type = substitute(rcvr_type, rcvr_type_binding, field_type, annoDB);
 				
 				this.resultType = new_field_type;
 				assertEqualIfNecessary(this.downwardType, new_field_type, node);
@@ -591,8 +612,11 @@ public final class InstantiatedTypeAnalysis {
 			 *  method is necessary because in the AST the receiver could be
 			 *  implicit, in which case the expression node of the method invocation
 			 *  will be null. If the method is static, this will return an empty
-			 *  list. */
+			 *  list. Returns the empty list if the method is static. */
 			private List<String> findTypeForMethodReceiver(MethodInvocation node) {
+				if( Modifier.isStatic(node.resolveMethodBinding().getModifiers()) )
+					return Collections.emptyList();
+				
 				if( node.getExpression() != null )
 					return (new ExprVisitor()).check(node.getExpression());
 				
@@ -642,7 +666,7 @@ public final class InstantiatedTypeAnalysis {
 					// Find out the type from annotations
 					List<String> pre_sub_arg_type = ithArgApplyType(arg_num, node.resolveMethodBinding(), annoDB);
 					List<String> post_sub_arg_type = rcvr_jtype.isNone() ? pre_sub_arg_type :
-						substitute(rcvr_type, rcvr_jtype.unwrap(), pre_sub_arg_type, annoDB, node);
+						substitute(rcvr_type, rcvr_jtype.unwrap(), pre_sub_arg_type, annoDB);
 					// Now check the argument
 					(new ExprVisitor(post_sub_arg_type)).check(arg);
 					arg_num++;
@@ -651,7 +675,7 @@ public final class InstantiatedTypeAnalysis {
 				// Now substitute return type.
 				List<String> pre_sub_result_type = resultApplyType(node.resolveMethodBinding(), annoDB);
 				List<String> post_sub_result_type = rcvr_jtype.isNone() ? pre_sub_result_type :
-					substitute(rcvr_type, rcvr_jtype.unwrap(), pre_sub_result_type, annoDB, node);
+					substitute(rcvr_type, rcvr_jtype.unwrap(), pre_sub_result_type, annoDB);
 				
 				// Set the type for this expression
 				this.resultType = post_sub_result_type;
@@ -663,6 +687,14 @@ public final class InstantiatedTypeAnalysis {
 
 			@Override
 			public boolean visit(NumberLiteral node) {
+				this.resultType = Collections.emptyList();
+				assertEqualIfNecessary(downwardType, resultType, node);
+				storeTypeForExpr(resultType, node);
+				return false;
+			}
+			
+			@Override
+			public boolean visit(NullLiteral node) {
 				this.resultType = Collections.emptyList();
 				assertEqualIfNecessary(downwardType, resultType, node);
 				storeTypeForExpr(resultType, node);
@@ -704,7 +736,8 @@ public final class InstantiatedTypeAnalysis {
 					storeTypeForExpr(resultType, node);
 				}
 				else {
-					Utilities.nyi("Is this possible if we have an expression?");
+					// We can get non-expression names here.
+					// The right answer seems to be not to store anything.
 				}
 				return false;
 			}
@@ -732,7 +765,7 @@ public final class InstantiatedTypeAnalysis {
 				// AS in Java Generics, the type of the this node is
 				// implicitly instantiated with the parameters that are
 				// in scope.
-				this.resultType = thisType(lastAnalyzed.resolveBinding());
+				this.resultType = thisType(tac.getAnalyzedMethod().resolveBinding());
 
 				storeTypeForExpr(resultType, node);
 				assertEqualIfNecessary(downwardType, resultType, node);
@@ -753,7 +786,7 @@ public final class InstantiatedTypeAnalysis {
 					VariableDeclarationFragment decl = (VariableDeclarationFragment)decl_;
 					IVariableBinding binding = decl.resolveBinding();
 					List<String> type = findType(binding);
-					Variable var = tac.sourceVariable(binding);
+					Variable var = tac.getSourceVariable(binding);
 					types.put(var, type);
 					
 					decl.getInitializer().accept(new ExprVisitor(type));

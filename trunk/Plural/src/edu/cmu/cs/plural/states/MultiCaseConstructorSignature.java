@@ -43,9 +43,11 @@ import java.util.List;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.pred.MethodPrecondition;
 import edu.cmu.cs.plural.pred.PredicateChecker;
@@ -83,11 +85,11 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 	@Override
 	public List<IConstructorCaseInstance> createPermissionsForCases(
 			MethodCheckingKind checkingKind,
-			
-			boolean forAnalyzingBody, boolean isConstructorCall) {
+			boolean forAnalyzingBody, boolean isConstructorCall,
+			Option<RcvrInstantiationPackage> ip) {
 		List<IConstructorCaseInstance> result = new ArrayList<IConstructorCaseInstance>(cases().size());
 		for(IConstructorCase c : cases()) {
-			result.add(c.createPermissions(checkingKind, forAnalyzingBody, isConstructorCall));
+			result.add(c.createPermissions(checkingKind, forAnalyzingBody, isConstructorCall, ip));
 		}
 		return result;
 	}
@@ -147,7 +149,8 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 		@Override
 		public IConstructorCaseInstance createPermissions(
 				MethodCheckingKind checkingKind,
-				final boolean forAnalyzingBody, boolean isConstructorCall) {
+				final boolean forAnalyzingBody, boolean isConstructorCall,
+				Option<RcvrInstantiationPackage> ip) {
 			final Pair<MethodPrecondition, MethodPostcondition> preAndPost;
 			if(forAnalyzingBody) {
 				preAndPost = preAndPost(
@@ -155,14 +158,14 @@ class MultiCaseConstructorSignature extends AbstractMultiCaseSignature<IConstruc
 						checkingKind,
 						false, 
 						false, 
-						isConstructorCall);
+						isConstructorCall, ip);
 			}
 			else {
 				preAndPost = preAndPost(
 						forAnalyzingBody, preAndPostString, 
 						checkingKind,
 						!isConstructorCall, 
-						!isConstructorCall, !isConstructorCall);
+						!isConstructorCall, !isConstructorCall, ip);
 			}
 			
 			return new IConstructorCaseInstance() {
