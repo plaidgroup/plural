@@ -37,9 +37,10 @@
  */
 package edu.cmu.cs.plural.states;
 
-import java.util.Set;
-
 import org.eclipse.jdt.core.dom.IMethodBinding;
+
+import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 
 /**
  * @author Kevin Bierhoff
@@ -57,14 +58,7 @@ public interface IInvocationCase {
 	 * represented in this method case.
 	 */
 	IMethodBinding getSpecifiedMethodBinding();
-	
-	Set<String> getRequiredParameterStates(int paramIndex);
 
-	Set<String> getEnsuredParameterStates(int paramIndex);
-
-	Set<String> getRequiredReceiverStates();
-
-	Set<String> getEnsuredReceiverStates();
 	
 	/**
 	 * @param forAnalyzingBody
@@ -73,9 +67,9 @@ public interface IInvocationCase {
 	 * @see IInvocationSignature#createPermissionsForCases(boolean, boolean)
 	 */
 	IInvocationCaseInstance createPermissions(
-			MethodCheckingKind checkingKind,
-			
-			boolean forAnalyzingBody, boolean isSuperCall);
+			MethodCheckingKind checkingKind,			
+			boolean forAnalyzingBody, boolean isSuperCall,
+			Option<RcvrInstantiationPackage> ip);
 	
 	boolean isReentrant();
 	

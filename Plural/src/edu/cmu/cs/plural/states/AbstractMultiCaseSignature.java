@@ -39,12 +39,9 @@ package edu.cmu.cs.plural.states;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
@@ -97,53 +94,4 @@ abstract class AbstractMultiCaseSignature<T extends IInvocationCase> extends Abs
 	public List<T> cases() {
 		return cases;
 	}
-
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.states.IInvocationSignature#getEnsuredParameterStateOptions(int)
-	 */
-	@Override
-	public Set<Set<String>> getEnsuredParameterStateOptions(int paramIndex) {
-		Set<Set<String>> result = new LinkedHashSet<Set<String>>(cases().size());
-		for(T c : cases) {
-			result.add(c.getEnsuredParameterStates(paramIndex));
-		}
-		return result;
-	}
-
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.states.IInvocationSignature#getEnsuredReceiverStateOptions()
-	 */
-	@Override
-	public Set<Set<String>> getEnsuredReceiverStateOptions() {
-		Set<Set<String>> result = new LinkedHashSet<Set<String>>(cases().size());
-		for(T c : cases) {
-			result.add(c.getEnsuredReceiverStates());
-		}
-		return result;
-	}
-
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.states.IInvocationSignature#getRequiredParameterStateOptions(int)
-	 */
-	@Override
-	public Set<Set<String>> getRequiredParameterStateOptions(int paramIndex) {
-		Set<Set<String>> result = new LinkedHashSet<Set<String>>(cases().size());
-		for(T c : cases) {
-			result.add(c.getRequiredParameterStates(paramIndex));
-		}
-		return result;
-	}
-
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.states.IInvocationSignature#getEnsuredReceiverStateOptions()
-	 */
-	@Override
-	public Set<Set<String>> getRequiredReceiverStateOptions() {
-		Set<Set<String>> result = new LinkedHashSet<Set<String>>(cases().size());
-		for(T c : cases) {
-			result.add(c.getRequiredReceiverStates());
-		}
-		return result;
-	}
-
 }

@@ -36,59 +36,38 @@
  * release a modified version which carries forward this exception.
  */
 
-package edu.cmu.cs.plural.concurrent.syncorswim;
+package edu.cmu.cs.plural.polymorphic.instantiation;
 
-import org.eclipse.jdt.core.dom.MethodDeclaration;
+import java.util.List;
 
-import edu.cmu.cs.plural.concurrent.ConcurrentChecker;
-import edu.cmu.cs.plural.concurrent.MutexWalker;
-import edu.cmu.cs.plural.track.FractionalTransfer;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+
+import edu.cmu.cs.crystal.tac.model.Variable;
 
 /**
- * Sync or swim is a static analysis that uses the permission-based
- * reasoning of NIMBY on Java programs that use synchronized blocks
- * as the primary means of mutual exclusion.<br>
- * <br>
- * This analysis is very similar to Plural's FractionalAnalysis, which
- * it extends, but it must forget some extra things and adds some
- * additional constraints.<br>
- * <br>
- * Plan:<br> 
- * - Proactively drop state to alive for non-synchronized pure & share<br>
- * - make sure we have synchronized if we unpack for pure/share/full
+ * A 'package,' meaning a pair, that allows annotation code
+ * deep inside of Plural to look up the instantiation types
+ * for parameters.
+ * 
  * @author Nels E. Beckman
- * @since May 4, 2009
+ * @since Nov 20, 2009
+ *
  */
-public class SyncOrSwim extends ConcurrentChecker {
-
-	@Override
-	protected FractionalChecker createASTWalker(MethodDeclaration d) {
-		return new SynchronizedVisitor(d);
-	}
-
-	@Override
-	protected FractionalTransfer createNewFractionalTransfer() {
-		return new SyncOrSwimTransferFunction(analysisInput, this);
+public final class RcvrInstantiationPackage {
+	private final InstantiatedTypeAnalysis typeAnalysis;
+	private final Variable varToLookup;
+	
+	public RcvrInstantiationPackage(InstantiatedTypeAnalysis typeAnalysis,
+			Variable varToLookup) {
+		this.typeAnalysis = typeAnalysis;
+		this.varToLookup = varToLookup;
 	}
 	
-	private class SynchronizedVisitor extends ConcurrentVisitor {
-
-		private final IsSynchronizedRefAnalysis isSynchronizedRef = 
-			new IsSynchronizedRefAnalysis();
-		
-		public SynchronizedVisitor(MethodDeclaration d) {
-			super(d);
-		}
-
-		@Override
-		protected MutexWalker getMutexWalker() {
-			return this.isSynchronizedRef;
-		}
-
-		@Override
-		protected String getUnpackedErrorMsg() {
-			return "The receiver is unpacked and has full, pure or share permission, " +
-					"but is not synchronized.";
-		}
-	}	
+	public List<String> getVarType() {
+		return this.typeAnalysis.findType(varToLookup);
+	}
+	
+	public ITypeBinding getVarJType() {
+		return varToLookup.resolveType();
+	}
 }

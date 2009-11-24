@@ -37,6 +37,8 @@
  */
 package edu.cmu.cs.plural.concurrent.nimby;
 
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concurrent.ConcurrentChecker;
 import edu.cmu.cs.plural.concurrent.MutexWalker;
@@ -62,8 +64,8 @@ public class NIMBYChecker extends ConcurrentChecker {
 	}
 	
 	@Override
-	protected FractionalChecker createASTWalker() {
-		return new NIMBYVisitor();
+	protected FractionalChecker createASTWalker(MethodDeclaration d) {
+		return new NIMBYVisitor(d);
 	}
 
 	/**
@@ -85,6 +87,11 @@ public class NIMBYChecker extends ConcurrentChecker {
 		 * exact same analysis on the same methods inside of NIMBYTransferFunction.
 		 */
 		private final IsInAtomicAnalysis isInAtomicAnalysis = new IsInAtomicAnalysis();
+
+		
+		public NIMBYVisitor(MethodDeclaration d) {
+			super(d);
+		}
 
 		@Override
 		protected boolean doesRcvrPermissionRequireProtection(PluralContext lattice) {

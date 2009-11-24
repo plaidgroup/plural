@@ -56,8 +56,10 @@ import org.eclipse.jdt.core.dom.TypeDeclaration;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
 import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
@@ -330,7 +332,7 @@ public class StateSpaceRepository {
 			hasSpec = true;
 		else 
 			for(int i = 0; i < binding.getParameterTypes().length; i++) {
-				if(!CrystalPermissionAnnotation.parameterAnnotations(getAnnotationDB(), binding, i).isEmpty()) {
+				if(!CrystalPermissionAnnotation.parameterAnnotations(getAnnotationDB(), Option.<RcvrInstantiationPackage>none(), binding, i).isEmpty()) {
 					hasSpec = true;
 					break;
 				}

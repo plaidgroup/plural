@@ -61,9 +61,13 @@ import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.simple.TupleLatticeElement;
+import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
 import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
+import edu.cmu.cs.crystal.tac.model.SourceVariable;
+import edu.cmu.cs.crystal.tac.model.SuperVariable;
+import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
@@ -326,15 +330,44 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			this.returnToCheck = returnToCheck;
 			this.paramsToCheck = paramsToCheck;
 			
+			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(node);
 			this.aliasAnalysis = aliasAnalysis;
-			InstantiatedTypeAnalysis typeAnalysis = 
-				new InstantiatedTypeAnalysis(getInput().getComUnitTACs().unwrap(), getInput().getAnnoDB());
+			InstantiatedTypeAnalysis typeAnalysis = new InstantiatedTypeAnalysis(contextFromTAC(tac, method), getInput().getAnnoDB());
 			
 			PolyInternalTransfer transferFunction = 
 				new PolyInternalTransfer(aliasAnalysis, simpleLookupMap(), 
 						param_entry, rcvr_entry, getInput().getAnnoDB(), typeAnalysis);
 			this.polyAnalysis = new TACFlowAnalysis<TupleLatticeElement<Aliasing,PolyVarLE>>(
 					transferFunction, getInput().getComUnitTACs().unwrap());
+		}
+		
+		private ITACAnalysisContext contextFromTAC(final EclipseTAC tac, final MethodDeclaration dec) {
+			return new ITACAnalysisContext() {
+				@Override
+				public MethodDeclaration getAnalyzedMethod() {
+					return dec;
+				}
+
+				@Override
+				public SourceVariable getSourceVariable(
+						IVariableBinding varBinding) {
+					return tac.sourceVariable(varBinding);
+				}
+
+				@Override
+				public SuperVariable getSuperVariable() {
+					return tac.superVariable(null);
+				}
+
+				@Override
+				public ThisVariable getThisVariable() {
+					return tac.thisVariable();
+				}
+
+				@Override
+				public Variable getVariable(ASTNode node) {
+					return tac.variable(node);
+				}};
 		}
 		
 		private SimpleMap<String,Option<PolyVar>> simpleLookupMap() {

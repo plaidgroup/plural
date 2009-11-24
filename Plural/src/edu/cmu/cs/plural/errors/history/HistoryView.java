@@ -75,6 +75,7 @@ import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.concurrent.nimby.NIMBYTransferFunction;
 import edu.cmu.cs.plural.concurrent.syncorswim.SyncOrSwimTransferFunction;
 import edu.cmu.cs.plural.contexts.PluralContext;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 import edu.cmu.cs.plural.states.IInvocationCase;
 import edu.cmu.cs.plural.states.IInvocationCaseInstance;
 import edu.cmu.cs.plural.states.IInvocationSignature;
@@ -344,7 +345,7 @@ public class HistoryView extends ViewPart implements ISelectionListener, ISelect
 
 			// Create case instance
 			IInvocationCaseInstance case_instance =
-				case_.createPermissions(checkingKind, true, assumeVirtual_);
+				case_.createPermissions(checkingKind, true, assumeVirtual_, Option.<RcvrInstantiationPackage>none());
 			
 			// Then analysis context
 			FractionAnalysisContext context = 

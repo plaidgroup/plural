@@ -138,7 +138,7 @@ public final class PolyInternalTransfer extends
 		
 		// If permission is needed, we need to substitute based on the given params.
 		List<String> needed_perms_pre_sub = Collections.singletonList(anno.getVariableName());
-		List<String> needed_perms = InstantiatedTypeAnalysis.substitute(rcvr_app, rcvr_type, needed_perms_pre_sub, annoDB, error_node);
+		List<String> needed_perms = InstantiatedTypeAnalysis.substitute(rcvr_app, rcvr_type, needed_perms_pre_sub, annoDB);
 		assert(needed_perms.size() == 1);
 		
 		String needed_perm = needed_perms.get(0); 
@@ -186,7 +186,7 @@ public final class PolyInternalTransfer extends
 			TupleLatticeElement<Aliasing, PolyVarLE> value) {
 		// First get the application type for the receiver.
 		MethodDeclaration method = this.getAnalysisContext().getAnalyzedMethod();
-		List<String> rcvr_type = typeAnalysis.findType(instr.getReceiverOperand(), method);
+		List<String> rcvr_type = typeAnalysis.findType(instr.getReceiverOperand());
 		ITypeBinding rcvr_jtype = instr.getReceiverOperand().resolveType();
 		
 		// Now we can iterate through the arguments.

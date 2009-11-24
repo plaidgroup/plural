@@ -46,9 +46,11 @@ import java.util.Set;
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.fractions.PermissionSetFromAnnotations;
 import edu.cmu.cs.plural.perm.parser.PermAnnotation;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 import edu.cmu.cs.plural.pred.MethodPostcondition;
 import edu.cmu.cs.plural.pred.MethodPrecondition;
 import edu.cmu.cs.plural.pred.PredicateChecker;
@@ -94,26 +96,14 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 		return result;
 	}
 
-	/* (non-Javadoc)
-	 * @see edu.cmu.cs.plural.states.IMethodCase#getRequiredReceiverStates()
-	 */
-	@Override
-	public Set<Set<String>> getRequiredReceiverStateOptions() {
-		Set<Set<String>> result = new LinkedHashSet<Set<String>>(cases().size());
-		for(IMethodCase c : cases()) {
-			result.add(c.getRequiredReceiverStates());
-		}
-		return result;
-	}
-
 	@Override
 	public List<IMethodCaseInstance> createPermissionsForCases(
 			MethodCheckingKind checkingKind,
-			
-			boolean forAnalyzingBody, boolean isSuperCall) {
+			boolean forAnalyzingBody, boolean isSuperCall,
+			Option<RcvrInstantiationPackage> ip) {
 		List<IMethodCaseInstance> result = new ArrayList<IMethodCaseInstance>(cases().size());
 		for(IMethodCase c : cases()) {
-			result.add(c.createPermissions(checkingKind, forAnalyzingBody, isSuperCall));
+			result.add(c.createPermissions(checkingKind, forAnalyzingBody, isSuperCall, ip));
 		}
 		return result;
 	}
@@ -168,15 +158,16 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 		@Override
 		public IMethodCaseInstance createPermissions(
 				MethodCheckingKind checkingKind,
-				
-				final boolean forAnalyzingBody, boolean isSuperCall) {
+				final boolean forAnalyzingBody, boolean isSuperCall,
+				Option<RcvrInstantiationPackage> ip) {
 			final Pair<MethodPrecondition,MethodPostcondition> preAndPost;
 			if(forAnalyzingBody) {
 				preAndPost = preAndPost(forAnalyzingBody, preAndPostString, 
 						checkingKind,
 						false,
 						false,
-						isSuperCall);
+						isSuperCall,
+						ip);
 			}
 			else {
 				boolean coerce;
@@ -190,7 +181,8 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 						checkingKind,
 						coerce, 
 						false,
-						false);
+						false,
+						ip);
 			}
 			
 			

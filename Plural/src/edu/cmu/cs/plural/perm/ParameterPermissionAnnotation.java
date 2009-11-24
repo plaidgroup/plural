@@ -43,8 +43,6 @@ public interface ParameterPermissionAnnotation extends PermissionAnnotation {
 
 	public boolean isReturned();
 
-	public String getParameter();
-
 	public PermissionKind getKind();
 
 	public String getRootNode();

@@ -37,6 +37,9 @@
  */
 package edu.cmu.cs.plural.states;
 
+import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
+
 /**
  * @author Kevin Bierhoff
  * @since 4/28/2008
@@ -45,7 +48,7 @@ public interface IConstructorCase extends IInvocationCase {
 
 	IConstructorCaseInstance createPermissions(
 			MethodCheckingKind checkingKind,
-			
-			boolean forAnalyzingBody, boolean isSuperCall);
+			boolean forAnalyzingBody, boolean isSuperCall,
+			Option<RcvrInstantiationPackage> ip);
 
 }

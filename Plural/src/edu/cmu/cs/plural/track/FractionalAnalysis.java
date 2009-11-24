@@ -54,6 +54,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
@@ -64,12 +65,19 @@ import org.eclipse.jdt.core.dom.TypeDeclarationStatement;
 
 import edu.cmu.cs.crystal.AbstractCrystalMethodAnalysis;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
 import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.eclipse.CompilationUnitTACs;
+import edu.cmu.cs.crystal.tac.eclipse.EclipseTAC;
+import edu.cmu.cs.crystal.tac.model.SourceVariable;
+import edu.cmu.cs.crystal.tac.model.SuperVariable;
+import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.plural.contexts.PluralContext;
+import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 import edu.cmu.cs.plural.states.IConstructorSignature;
 import edu.cmu.cs.plural.states.IInvocationCase;
 import edu.cmu.cs.plural.states.IInvocationCaseInstance;
@@ -116,10 +124,11 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	
 	/**
 	 * Another factory method. Allows subclasses to also extend FractionalChecker. 
+	 * @param d 
 	 * @return
 	 */
-	protected FractionalChecker createASTWalker() {
-		return new FractionalChecker();
+	protected FractionalChecker createASTWalker(MethodDeclaration d) {
+		return new FractionalChecker(d);
 	}
 	
 	protected ITACFlowAnalysis<PluralContext> getFa() {
@@ -178,7 +187,8 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 		MethodCheckingKind checkingKind = 
 			MethodCheckingKind.methodCheckingKindImpl(d.isConstructor(), this.assumeVirtualFrame);
 		
-		analyzedCase = c.createPermissions(checkingKind, true, this.assumeVirtualFrame);
+		analyzedCase = c.createPermissions(checkingKind, true, 
+				this.assumeVirtualFrame, Option.<RcvrInstantiationPackage>none());
 		tf = createNewFractionalTransfer();
 		
 		// need local to be able to set monitor
@@ -187,7 +197,7 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 				this.analysisInput.getComUnitTACs().unwrap());
 		temp.setMonitor(analysisInput.getProgressMonitor());
 		
-		FractionalChecker checker = createASTWalker();
+		FractionalChecker checker = createASTWalker(d);
 		if(sig.cases().size() > 1) {
 			// make sure checker prints the case in which errors occurred 
 			// (if more than one case)
@@ -249,7 +259,12 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 	protected class FractionalChecker extends ASTVisitor {
 		
 		protected String errorCtx = "";
+		private final MethodDeclaration methodUnderAnalysis;
 		
+		public FractionalChecker(MethodDeclaration d) {
+			this.methodUnderAnalysis = d;
+		}
+
 		public void setErrorContext(String ctx) {
 			errorCtx = " (" + ctx + ")";
 		}
@@ -521,6 +536,37 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			}
 		}
 		
+		private ITACAnalysisContext contextFromTAC() {
+			final EclipseTAC tac = getComUnitTACs().unwrap().getMethodTAC(this.methodUnderAnalysis);
+			final MethodDeclaration decl = this.methodUnderAnalysis;
+			return new ITACAnalysisContext(){
+
+				@Override
+				public MethodDeclaration getAnalyzedMethod() {
+					return decl;
+				}
+
+				@Override
+				public SourceVariable getSourceVariable(IVariableBinding varBinding) {
+					return tac.sourceVariable(varBinding);
+				}
+
+				@Override
+				public SuperVariable getSuperVariable() {
+					return tac.superVariable(null);
+				}
+
+				@Override
+				public ThisVariable getThisVariable() {
+					return tac.thisVariable();
+				}
+
+				@Override
+				public Variable getVariable(ASTNode node) {
+					return tac.variable(node);
+				}};
+		}
+		
 		/**
 		 * @param node
 		 * @param before
@@ -538,7 +584,12 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 			List<String> errors = new LinkedList<String>();
 			MethodCheckingKind checkingKind = methodCheckingKindInvoc(sig.isConstructorSignature(),
 					receiverIsStaticallyBound);
-			for(IInvocationCaseInstance c : sig.createPermissionsForCases(checkingKind, false, receiverIsStaticallyBound)) {
+			
+			InstantiatedTypeAnalysis ta = new InstantiatedTypeAnalysis(contextFromTAC(),getAnnoDB());
+			Option<RcvrInstantiationPackage> ip = receiver == null ? Option.<RcvrInstantiationPackage>none() : 
+				Option.some(new RcvrInstantiationPackage(ta, receiver));
+			for(IInvocationCaseInstance c : 
+				sig.createPermissionsForCases(checkingKind, false, receiverIsStaticallyBound, ip)) {
 				String err;
 				if(receiver == null && receiverIsStaticallyBound)
 					err = before.checkSuperCallPrecondition(node, 

@@ -38,19 +38,7 @@
 
 package edu.cmu.cs.plural.polymorphic.instantiation;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-
-import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
-import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
-import edu.cmu.cs.plural.perm.parser.PermParser;
-import edu.cmu.cs.plural.polymorphic.internal.PolyInternalChecker;
-import edu.cmu.cs.plural.polymorphic.internal.PolyInternalLatticeOps;
-import edu.cmu.cs.plural.polymorphic.internal.PolyInternalTransfer;
-import edu.cmu.cs.plural.polymorphic.internal.PolyVarDeclAnnotation;
 import edu.cmu.cs.plural.polymorphic.internal.PolyVarUseAnnotation;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
@@ -70,52 +58,17 @@ import edu.cmu.cs.plural.track.Permission.PermissionKind;
  */
 public final class InstantiatedParameterPermissionAnnotation implements
 		ParameterPermissionAnnotation {
-	// Which method declaration does this parameter come from?
-	private final MethodDeclaration methodDecl;
-	// What variable is associated with the receiver of this method?
-	private final Variable rcvrVar;
 	// What is the polymorphic permission for this parameter (which will presumably be substituted based
 	// on the application of the receiver)?
 	private final PolyVarUseAnnotation paramPermAnnotation;
-	// Type analysis, so we can ask what kind of type the rcvrVariable has.
-	private final InstantiatedTypeAnalysis typeAnalysis;
-
-	private final AnnotationDatabase annoDB;
 
 	private final GroundInstantiation parsedSubstitutedPerm;
 	
-	public InstantiatedParameterPermissionAnnotation(MethodDeclaration methodDecl, Variable rcvrVar,
-			PolyVarUseAnnotation paramPermAnnotation, InstantiatedTypeAnalysis typeAnalysis, AnnotationDatabase annoDB) {
-		this.methodDecl = methodDecl;
-		this.rcvrVar = rcvrVar;
+	public InstantiatedParameterPermissionAnnotation(PolyVarUseAnnotation paramPermAnnotation,
+			GroundInstantiation parsedSubstitutedPerm) {
 		this.paramPermAnnotation = paramPermAnnotation;
-		this.typeAnalysis = typeAnalysis;
-		this.annoDB = annoDB;
-		this.parsedSubstitutedPerm = parseInstantiation();
+		this.parsedSubstitutedPerm = parsedSubstitutedPerm;
 	}
-
-
-	/**
-	 * Parse the instantiation of this permission, so that we will be ready when the pre & post-condition methods
-	 * are called.
-	 */
-	private GroundInstantiation parseInstantiation() {
-		List<String> rcvr_application = this.typeAnalysis.findType(rcvrVar, methodDecl);
-		List<String> poly_vars = Collections.singletonList(paramPermAnnotation.getVariableName());
-		// TODO Method decl is totally innapropriate to pass as an error node, maybe we should remove
-		// this parameter from the substitute method and just cover it with the spec checker. 
-		List<String> perms = InstantiatedTypeAnalysis.substitute(rcvr_application, rcvrVar.resolveType(), poly_vars, annoDB, methodDecl);
-		assert(perms.size() == 1);
-		// Now we need to parse the result and figure out what it is!
-		String perm = perms.get(0);
-		// This annotation should only be CONSTRUCTED if we know its an instantiation.
-		assert(PolyInternalChecker.isPermLitteral(perm));
-		GroundInstantiation result = GroundParser.parse(perm).unwrap();
-		return result;
-		
-	}
-
-
 
 	@Override
 	public String[] getEnsures() {
@@ -125,12 +78,6 @@ public final class InstantiatedParameterPermissionAnnotation implements
 	@Override
 	public PermissionKind getKind() {
 		return this.parsedSubstitutedPerm.getKind();
-	}
-
-	@Override
-	public String getParameter() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	@Override

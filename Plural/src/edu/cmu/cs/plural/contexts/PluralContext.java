@@ -62,6 +62,7 @@ import edu.cmu.cs.crystal.tac.model.TACInstruction;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Box;
 import edu.cmu.cs.crystal.util.Freezable;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.crystal.util.Utilities;
@@ -77,6 +78,8 @@ import edu.cmu.cs.plural.linear.ErrorReportingVisitor;
 import edu.cmu.cs.plural.linear.LinearOperations;
 import edu.cmu.cs.plural.linear.RewritingVisitor;
 import edu.cmu.cs.plural.linear.TestVisitor;
+import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 import edu.cmu.cs.plural.pred.PredicateChecker;
 import edu.cmu.cs.plural.states.IConstructorCaseInstance;
 import edu.cmu.cs.plural.states.IConstructorSignature;
@@ -100,14 +103,14 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 	
 	private static final PluralContext BOTTOM = new PluralContext();
 	
-	
 	/**
 	 * @param start
 	 * @return
 	 */
 	public static PluralContext createLE(LinearContext start,
 			ITACAnalysisContext tacContext, FractionAnalysisContext fractContext) {
-		return new PluralContext(start, new LinearOperations(tacContext, fractContext));
+		InstantiatedTypeAnalysis typeAnalysis = new InstantiatedTypeAnalysis(tacContext, fractContext.getAnnoDB());
+		return new PluralContext(start, new LinearOperations(tacContext, fractContext), typeAnalysis);
 	}
 	
 	/**
@@ -124,10 +127,12 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 	 */
 	private LinearContext le;
 	private final LinearOperations op;
+	private final InstantiatedTypeAnalysis itypeAnalysis;
 	
 	private PluralContext() {
 		this.le = null;
 		this.op = null;
+		this.itypeAnalysis = null;
 	}
 	
 	/**
@@ -144,15 +149,17 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		assert le != null;
 		this.le = le;
 		this.op = new LinearOperations(tacContext, fractContext);
+		this.itypeAnalysis = new InstantiatedTypeAnalysis(tacContext, annoDB);
 	}
 
 	/**
 	 * @param le
 	 */
-	private PluralContext(LinearContext le, LinearOperations op) {
+	private PluralContext(LinearContext le, LinearOperations op, InstantiatedTypeAnalysis typeAnalysis) {
 		assert le != null;
 		this.le = le;
 		this.op = op;
+		this.itypeAnalysis = typeAnalysis;
 	}
 
 	/**
@@ -207,7 +214,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			return other;
 		assert this.op == other.op;
 		return new PluralContext(this.le.join(other.le, node, 
-				JoiningChoices.NOT_JOINING_CHOICES).compact(node, true), op);
+				JoiningChoices.NOT_JOINING_CHOICES).compact(node, true), op, this.itypeAnalysis);
 	}
 
 	/* (non-Javadoc)
@@ -225,7 +232,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 	 */
 	@Override
 	public PluralContext mutableCopy() {
-		return new PluralContext(le.mutableCopy(), op);
+		return new PluralContext(le.mutableCopy(), op, this.itypeAnalysis);
 	}
 	
 	//
@@ -539,11 +546,12 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			final IMethodSignature sig
 			) {
 		boolean isPrivate = Modifier.isPrivate(	sig.getSpecifiedMethodBinding().getModifiers());
+		final RcvrInstantiationPackage ip = new RcvrInstantiationPackage(this.itypeAnalysis, instr.getReceiverOperand());
 		final List<IMethodCaseInstance> cases = 
 			sig.createPermissionsForCases(instr.isSuperCall() || isPrivate ? 
 					MethodCheckingKind.METHOD_CALL_STATIC_DISPATCH : 
 					MethodCheckingKind.METHOD_CALL_DYNAMIC_DISPATCH,
-					false, instr.isSuperCall());
+					false, instr.isSuperCall(), Option.some(ip));
 		
 		assert ! cases.isEmpty();
 		final int caseCount = cases.size();
@@ -586,10 +594,10 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 
 	public void handleNewObject(			
 			final NewObjectInstruction instr,
-			final IConstructorSignature sig
-			) {
+			final IConstructorSignature sig) {
+		final RcvrInstantiationPackage ip = new RcvrInstantiationPackage(this.itypeAnalysis, instr.getTarget());
 		final List<IConstructorCaseInstance> cases = 
-			sig.createPermissionsForCases(MethodCheckingKind.CONSTRUCTOR_NEW, false, false);
+			sig.createPermissionsForCases(MethodCheckingKind.CONSTRUCTOR_NEW, false, false, Option.some(ip));
 		assert ! cases.isEmpty();
 		final IConstructorCaseInstance singleCase;
 		final int caseCount = cases.size();
@@ -632,7 +640,7 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			final ConstructorCallInstruction instr,
 			final IConstructorSignature sig) {
 		final List<IConstructorCaseInstance> cases = 
-			sig.createPermissionsForCases(MethodCheckingKind.CONSTRUCTOR_SUPER_CALL, false, true);
+			sig.createPermissionsForCases(MethodCheckingKind.CONSTRUCTOR_SUPER_CALL, false, true, Option.<RcvrInstantiationPackage>none());
 		assert ! cases.isEmpty();
 		final IConstructorCaseInstance singleCase;
 		final int caseCount = cases.size();

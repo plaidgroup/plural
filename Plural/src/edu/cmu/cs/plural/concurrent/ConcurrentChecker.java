@@ -46,6 +46,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.IVariableBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
 
@@ -69,6 +70,10 @@ public class ConcurrentChecker extends FractionalAnalysis {
 		
 		private final Set<ASTNode> previouslyReportedErrorNodes = new HashSet<ASTNode>();
 		
+		public ConcurrentVisitor(MethodDeclaration d) {
+			super(d);
+		}
+
 		/**
 		 * Does this receiver permission, as stored in the given lattice, require
 		 * that it be protected? Can be overriden, but by default returns true for
