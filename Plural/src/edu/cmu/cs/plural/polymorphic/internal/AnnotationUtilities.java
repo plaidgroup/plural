@@ -42,6 +42,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
@@ -53,6 +55,7 @@ import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.plural.alias.AliasingLE;
+import edu.cmu.cs.plural.polymorphic.instantiation.ApplyAnnotationWrapper;
 
 /**
  * @author Nels E. Beckman
@@ -129,6 +132,21 @@ public final class AnnotationUtilities {
 		return Option.none();
 	}
 	
+	/**
+	 * Returns the kinds of static parameters declared by the given class.
+	 */
+	public static List<PolyVarKind> classParameterKinds(ITypeBinding binding,
+			AnnotationDatabase annoDB) {
+		List<ICrystalAnnotation> annos = annoDB.getAnnosForType(binding);
+		List<PolyVarKind> result = new LinkedList<PolyVarKind>();
+		for( ICrystalAnnotation anno : annos ) {
+			if( anno instanceof PolyVarDeclAnnotation ) {
+				result.add(((PolyVarDeclAnnotation) anno).getKind());
+			}
+		}
+		return result;
+	}
+	
 	/** By looking at the method annotations, find out how much permission should
 	 *  be available for the return value. */
 	public static Option<String> findReturnValueToCheck(AnnotationSummary summary) {
@@ -167,5 +185,21 @@ public final class AnnotationUtilities {
 			}
 		}
 		return Option.none();
+	}
+
+	/**
+	 * Get the applications for this variable. (Ie., return the strings
+	 * in the @Apply annotations on this variable.)
+	 */
+	public static List<String> applications(IVariableBinding binding,
+			AnnotationDatabase annoDB) {
+		List<ICrystalAnnotation> annos = annoDB.getAnnosForVariable(binding);
+		List<String> result = new LinkedList<String>();
+		for( ICrystalAnnotation anno : annos ) {
+			if( anno instanceof ApplyAnnotationWrapper ) {
+				result.addAll(((ApplyAnnotationWrapper) anno).getValue());
+			}
+		}
+		return result;
 	}
 }
