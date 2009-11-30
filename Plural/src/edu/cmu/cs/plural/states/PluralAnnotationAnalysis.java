@@ -795,13 +795,18 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 		public final Option<String> visit(TempPermission perm) {
 			// Check to see if this permission is a permission at all.
 			try {
-				PermissionKind.valueOf(perm.getType().toUpperCase());
+				checkPermTypeIsLegal(perm);
 				return this.visitPerm(perm);
 			} catch(IllegalArgumentException iae) {
 				return Option.some("Unknown permission kind: " + perm.getType());
 			}
 		}
 
+		protected void checkPermTypeIsLegal(TempPermission perm) throws IllegalArgumentException {
+			// Default case. This method may be overriden, like eg by the InvariantVisitor.
+			PermissionKind.valueOf(perm.getType().toUpperCase());
+		}
+		
 		protected abstract Option<String> visitPerm(TempPermission perm);
 
 		@Override
@@ -932,6 +937,13 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			}
 		}
 		
+		@Override
+		protected void checkPermTypeIsLegal(TempPermission perm)
+				throws IllegalArgumentException {
+			// DO NOTHING
+			// We'll defer this check to the polymorphic internal checker.
+		}
+
 		// Is the state info for the given permission anything other than the single
 		// string "alive" ?
 		private boolean hasTempStateInfo(String root, String[] stateInfo) {
@@ -982,9 +994,6 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 
 	}
 
-	/**
-	 * A visitor to check that the fields actually exist.
-	 */
 	class PreconditionParamVisitor extends ReferenceVisitor {
 		
 		protected final IMethodBinding meth;

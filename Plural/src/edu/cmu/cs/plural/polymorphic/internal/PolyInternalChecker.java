@@ -41,7 +41,6 @@ package edu.cmu.cs.plural.polymorphic.internal;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -76,13 +75,28 @@ import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
+import edu.cmu.cs.crystal.util.VOID;
 import edu.cmu.cs.plural.alias.AliasingLE;
 import edu.cmu.cs.plural.alias.LocalAliasTransfer;
+import edu.cmu.cs.plural.perm.parser.AccessPredVisitor;
+import edu.cmu.cs.plural.perm.parser.BinaryExprAP;
+import edu.cmu.cs.plural.perm.parser.Conjunction;
+import edu.cmu.cs.plural.perm.parser.Disjunction;
+import edu.cmu.cs.plural.perm.parser.EmptyPredicate;
+import edu.cmu.cs.plural.perm.parser.EqualsExpr;
+import edu.cmu.cs.plural.perm.parser.NotEqualsExpr;
+import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.perm.parser.PermissionImplication;
+import edu.cmu.cs.plural.perm.parser.StateOnly;
+import edu.cmu.cs.plural.perm.parser.TempPermission;
+import edu.cmu.cs.plural.perm.parser.Withing;
 import edu.cmu.cs.plural.polymorphic.instantiation.ApplyAnnotationWrapper;
 import edu.cmu.cs.plural.polymorphic.instantiation.GroundInstantiation;
 import edu.cmu.cs.plural.polymorphic.instantiation.GroundParser;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
 import edu.cmu.cs.plural.polymorphic.instantiation.ResultApplyAnnotationWrapper;
+import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
+import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
 /**
@@ -127,6 +141,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 	
 		checkPolyVarDeclAnnotations(clazz);
 		checkApplyAnnotations(clazz, vars_in_scope);
+		checkPolyVarsInInvariants(clazz, vars_in_scope);
 		
 		clazz.accept(new ASTVisitor(){
 			@Override
@@ -148,6 +163,68 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 					String error_msg = "This class declares a polymoprhic permission " +
 					 "with a reserved name; " + anno.getVariableName() + ".";
 					this.getReporter().reportUserProblem(error_msg, clazz, getName());
+				}
+			}
+		}
+	}
+	
+	/** 
+	 * Check that any poly vars used in invariants are well-known.
+	 * If Poly Var is neither a ground permission nor a known poly var,
+	 * it must be a programmer mistake.
+	 * */
+	private void checkPolyVarsInInvariants(final TypeDeclaration clazz,
+			final Map<String,PolyVar> vars_in_scope) {
+		List<ICrystalAnnotation> annos = getInput().getAnnoDB().getAnnosForType(clazz.resolveBinding());
+		for( ICrystalAnnotation anno : annos ) {
+			// Look for @ClassStates
+			if( anno instanceof ClassStateDeclAnnotation ) {
+				for( StateDeclAnnotation state_anno : ((ClassStateDeclAnnotation) anno).getStates() ) {
+					String inv = state_anno.getInv();
+					// Parse it & visit the result.
+					PermParser.accept(inv, new AccessPredVisitor<VOID>(){
+
+						@Override
+						public VOID visit(TempPermission perm) {
+							// THE ONLY INTERSTING CASE
+							String type = perm.getType();
+							if( !isPermLitteral(type) && !vars_in_scope.containsKey(type) ) {
+								// This is bad. 
+								String error = "Invariant permission " + type + " is unrecognized.";
+								getReporter().reportUserProblem(error, clazz, getName());
+							}
+							return VOID.V();
+						}
+
+						@Override public VOID visit(Disjunction disj) {
+							disj.getP1().accept(this);
+							return disj.getP2().accept(this);
+						}
+
+						@Override
+						public VOID visit(Conjunction conj) {
+							conj.getP1().accept(this);
+							return conj.getP2().accept(this);
+						}
+
+						@Override
+						public VOID visit(Withing withing) {
+							withing.getP1().accept(this);
+							return withing.getP2().accept(this);
+						}
+
+						@Override
+						public VOID visit(
+								PermissionImplication permissionImplication) {
+							return permissionImplication.cons().accept(this);
+						}
+						
+						@Override public VOID visit(BinaryExprAP binaryExpr) {return VOID.V();}
+						@Override public VOID visit(EqualsExpr equalsExpr) {return VOID.V();}
+						@Override public VOID visit(NotEqualsExpr notEqualsExpr) {return VOID.V();}
+						@Override public VOID visit(StateOnly stateOnly) {return VOID.V();}
+						@Override public VOID visit(EmptyPredicate emptyPredicate) {return VOID.V();}
+					});
 				}
 			}
 		}
