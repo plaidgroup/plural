@@ -38,6 +38,7 @@
 
 package edu.cmu.cs.plural.polymorphic.internal;
 
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +49,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -318,6 +320,8 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		final private ITACFlowAnalysis<AliasingLE> aliasAnalysis;
 		final private ITACFlowAnalysis<TupleLatticeElement<Aliasing, PolyVarLE>> polyAnalysis;
 		
+		final private InstantiatedTypeAnalysis typeAnalysis;
+		
 		ErrorCheckingVisitor(Map<String,PolyVar> class_vars, 
 				Map<String,PolyVar> method_vars, MethodDeclaration node, 
 				List<Pair<Aliasing,String>> paramsToCheck,
@@ -332,7 +336,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			
 			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(node);
 			this.aliasAnalysis = aliasAnalysis;
-			InstantiatedTypeAnalysis typeAnalysis = new InstantiatedTypeAnalysis(contextFromTAC(tac, method), getInput().getAnnoDB());
+			this.typeAnalysis = new InstantiatedTypeAnalysis(contextFromTAC(tac, method), getInput().getAnnoDB());
 			
 			PolyInternalTransfer transferFunction = 
 				new PolyInternalTransfer(aliasAnalysis, simpleLookupMap(), 
@@ -452,6 +456,15 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			AliasingLE locs = this.aliasAnalysis.getResultsBefore(node);
 			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
 			IMethodBinding binding = node.resolveMethodBinding();
+			
+			// If we have a non static method call, we may need to substitute.
+			boolean isStatic = Modifier.isStatic(binding.getModifiers());
+			Variable rcvrVar = isStatic ? null : 
+				(node.getExpression() == null ? tac.thisVariable() : tac.variable(node.getExpression()));
+			List<String> rcvrType = isStatic ? Collections.<String>emptyList() : 
+					this.typeAnalysis.findType(rcvrVar);
+			ITypeBinding rcvrJType = isStatic ? null : rcvrVar.resolveType();
+			
 			// Check arguments
 			int arg_num = 0;
 			for( Object arg_ : node.arguments() ) {
@@ -462,6 +475,18 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 				
 				if( anno_.isNone() ) continue; // Nothing required...
 				String needed_perm = anno_.unwrap().getVariableName();
+				
+				// Must perform substitution in order to see if we have
+				// enough permission at this point.
+				if( !isStatic ) {
+					List<String> needed_perm_ = Collections.singletonList(needed_perm);
+					List<String> new_type = InstantiatedTypeAnalysis.substitute(rcvrType, rcvrJType, needed_perm_, getInput().getAnnoDB());
+					assert(new_type.size() == 1);
+					needed_perm = new_type.get(0);
+				}
+				
+				if(  isPermLitteral(needed_perm) ) continue; // Checked in the instantiated checker
+				
 				PolyVarLE cur_perm = lattice.get(arg_loc);
 				if( cur_perm.isTop() || cur_perm.name().isNone() || !needed_perm.equals(cur_perm.name().unwrap()) ) {
 					// ERROR
