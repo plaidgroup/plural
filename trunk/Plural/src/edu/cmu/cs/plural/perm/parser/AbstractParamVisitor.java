@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.logging.Logger;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
+import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.fractions.PermissionFactory;
@@ -370,21 +371,21 @@ public abstract class AbstractParamVisitor
 	 * Given a string returns the permission kind for this string, or
 	 * if it is not a string returns a default, which is Share.
 	 */
-	private PermissionKind kindFromStringWithDefault(String type) {
+	private Option<PermissionKind> kindFromStringWithDefault(String type) {
 		try {
 			return
-			PermissionKind.valueOf(type.toUpperCase());
+			Option.some(PermissionKind.valueOf(type.toUpperCase()));
 		} catch(IllegalArgumentException iae) {
-			return PermissionKind.SHARE;
+			return Option.none();
 		}
 	}
 	
 	@Override
 	public Boolean visit(TempPermission perm) {
 		RefExpr ref = perm.getRef();
-		PermissionKind p_type = kindFromStringWithDefault(perm.getType().toUpperCase());
+		Option<PermissionKind> p_type = kindFromStringWithDefault(perm.getType().toUpperCase());
 		StateSpace space = getStateSpace(ref);
-		if(space != null) {
+		if(space != null && p_type.isSome() ) {
 			Pair<String, PermissionUse> refPair = getRefPair(ref);
 			if(refPair.snd() == null)
 				// ignore
@@ -393,12 +394,12 @@ public abstract class AbstractParamVisitor
 			if(refPair.snd().isVirtual()) {
 				assert !"super".equals(refPair.fst());
 				PermissionFromAnnotation pa = 
-					pf.createOrphan(space, perm.getRoot(), p_type, false, perm.getStateInfo(), named.createNamed());
+					pf.createOrphan(space, perm.getRoot(), p_type.unwrap(), false, perm.getStateInfo(), named.createNamed());
 				addPerm(refPair.fst(), pa);
 			}
 			if(refPair.snd().isFrame()) {
 				PermissionFromAnnotation pa = 
-					pf.createOrphan(space, perm.getRoot(), p_type, true, perm.getStateInfo(), named.createNamed());
+					pf.createOrphan(space, perm.getRoot(), p_type.unwrap(), true, perm.getStateInfo(), named.createNamed());
 				// construct canonical name for frame reference
 				String r = refPair.fst();
 				// super by definition refers to a frame, but turn this into this!fr
