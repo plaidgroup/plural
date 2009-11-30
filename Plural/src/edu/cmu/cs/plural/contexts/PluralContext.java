@@ -541,10 +541,8 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 		});
 	}
 	
-	public void handleMethodCall(			
-			final MethodCallInstruction instr,
-			final IMethodSignature sig
-			) {
+	public void handleMethodCall(final MethodCallInstruction instr,
+			final IMethodSignature sig) {
 		boolean isPrivate = Modifier.isPrivate(	sig.getSpecifiedMethodBinding().getModifiers());
 		boolean isStatic  = Modifier.isStatic(sig.getSpecifiedMethodBinding().getModifiers());
 		final Option<RcvrInstantiationPackage> ip = isStatic ? 
