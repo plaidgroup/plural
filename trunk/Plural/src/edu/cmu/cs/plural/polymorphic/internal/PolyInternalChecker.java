@@ -41,6 +41,7 @@ package edu.cmu.cs.plural.polymorphic.internal;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +57,7 @@ import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import edu.cmu.cs.crystal.AbstractCompilationUnitAnalysis;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
@@ -77,9 +79,11 @@ import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.plural.alias.AliasingLE;
 import edu.cmu.cs.plural.alias.LocalAliasTransfer;
 import edu.cmu.cs.plural.polymorphic.instantiation.ApplyAnnotationWrapper;
+import edu.cmu.cs.plural.polymorphic.instantiation.GroundInstantiation;
 import edu.cmu.cs.plural.polymorphic.instantiation.GroundParser;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
 import edu.cmu.cs.plural.polymorphic.instantiation.ResultApplyAnnotationWrapper;
+import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
 /**
  * One half of Polymorphic Plural, checks that polymorphic variables are
@@ -122,6 +126,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			Collections.unmodifiableMap(getPolyVarsInScope(annotations));
 	
 		checkPolyVarDeclAnnotations(clazz);
+		checkApplyAnnotations(clazz, vars_in_scope);
 		
 		clazz.accept(new ASTVisitor(){
 			@Override
@@ -146,6 +151,74 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Check that apply annotations are valid. One of the most important things
+	 * that this method will do is to verify that only symmetric permissions
+	 * are instantiated for @Symmetric annotations. 
+	 */
+	private void checkApplyAnnotations(TypeDeclaration clazz,
+			final Map<String,PolyVar> class_vars_in_scope) {
+		// Things we need to check:
+		// 1 - All variable declarations...
+		// 2 - Anything else?
+		clazz.accept(new ASTVisitor() {
+			@Override
+			public void endVisit(VariableDeclarationFragment node) {
+				check(node.resolveBinding(), node);
+			}
+
+			@Override
+			public void endVisit(SingleVariableDeclaration node) {
+				check(node.resolveBinding(), node);
+			}
+			
+			private void check(IVariableBinding binding, ASTNode errorNode) {
+				List<PolyVarKind> typeParameters = AnnotationUtilities.classParameterKinds(binding.getType(), getInput().getAnnoDB());
+				List<String> applyAnnotations = AnnotationUtilities.applications(binding, getInput().getAnnoDB());
+				// Make sure arg # matches param #
+				if( typeParameters.size() != applyAnnotations.size() ) {
+					String error = "Number of static arguments does not match" +
+							" number of static parameters.";
+					getReporter().reportUserProblem(error, errorNode, getName());
+					return;
+				}
+				// Now, for all symmetric parameters...
+				int param_num = 0;
+				for( PolyVarKind kind : typeParameters ) {
+					if( kind.equals(PolyVarKind.SYMMETRIC) ) {
+						String applied = applyAnnotations.get(param_num);
+						if( isPermLitteral(applied) ) {
+							// Make sure it's a PURE/IMM/SHARE
+							Option<GroundInstantiation> parse_ = GroundParser.parse(applied);
+							PermissionKind p_kind = parse_.unwrap().getKind();
+							if( p_kind.equals(PermissionKind.FULL) || p_kind.equals(PermissionKind.UNIQUE) ) {
+								String error = "Static parameter must be symmetric but argument is " + p_kind;
+								getReporter().reportUserProblem(error, errorNode, getName());
+								return;
+							}
+						} 
+						else {
+							// Look up param, make sure IT'S a SYM
+							if( !class_vars_in_scope.containsKey(applied) ) {
+								String error = "Application contains out of scope variable: " + applied;
+								getReporter().reportUserProblem(error, errorNode, getName());
+								return;
+							}
+							PolyVarKind app_kind = class_vars_in_scope.get(applied).getKind();
+							if( !app_kind.equals(PolyVarKind.SYMMETRIC) ) {
+								String error = "Static parameter must be symmetric but argument " + applied + " is " + app_kind;
+								getReporter().reportUserProblem(error, errorNode, getName());
+								return;
+							}
+						}
+					}
+					param_num++;
+				}
+			}
+			
+		});
 	}
 
 	/**
