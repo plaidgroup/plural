@@ -546,12 +546,15 @@ public class PluralContext implements LatticeElement<PluralContext>, Freezable<P
 			final IMethodSignature sig
 			) {
 		boolean isPrivate = Modifier.isPrivate(	sig.getSpecifiedMethodBinding().getModifiers());
-		final RcvrInstantiationPackage ip = new RcvrInstantiationPackage(this.itypeAnalysis, instr.getReceiverOperand());
+		boolean isStatic  = Modifier.isStatic(sig.getSpecifiedMethodBinding().getModifiers());
+		final Option<RcvrInstantiationPackage> ip = isStatic ? 
+		    Option.<RcvrInstantiationPackage>none() :
+			Option.some(new RcvrInstantiationPackage(this.itypeAnalysis, instr.getReceiverOperand()));
 		final List<IMethodCaseInstance> cases = 
 			sig.createPermissionsForCases(instr.isSuperCall() || isPrivate ? 
 					MethodCheckingKind.METHOD_CALL_STATIC_DISPATCH : 
 					MethodCheckingKind.METHOD_CALL_DYNAMIC_DISPATCH,
-					false, instr.isSuperCall(), Option.some(ip));
+					false, instr.isSuperCall(), ip);
 		
 		assert ! cases.isEmpty();
 		final int caseCount = cases.size();

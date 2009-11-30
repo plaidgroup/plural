@@ -42,6 +42,7 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.ITypeBinding;
 
+import edu.cmu.cs.crystal.tac.model.TypeVariable;
 import edu.cmu.cs.crystal.tac.model.Variable;
 
 /**
@@ -59,6 +60,7 @@ public final class RcvrInstantiationPackage {
 	
 	public RcvrInstantiationPackage(InstantiatedTypeAnalysis typeAnalysis,
 			Variable varToLookup) {
+		assert( !(varToLookup instanceof TypeVariable) );
 		this.typeAnalysis = typeAnalysis;
 		this.varToLookup = varToLookup;
 	}

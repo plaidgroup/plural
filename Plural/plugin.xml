@@ -141,14 +141,6 @@
          </sourceAnnotation>
       </customAnnotation>
       <customAnnotation
-            name="Invariant Declaration"
-            parserClass="edu.cmu.cs.plural.states.annowrappers.StateInvAnnotation">
-         <sourceAnnotation
-               annotationClass="edu.cmu.cs.plural.annot.Inv"
-               name="Inv">
-         </sourceAnnotation>
-      </customAnnotation>
-      <customAnnotation
             name="Parsed Method Permission Annotation"
             parserClass="edu.cmu.cs.plural.perm.parser.PermAnnotation">
          <sourceAnnotation
@@ -190,10 +182,6 @@
          <sourceAnnotation
                annotationClass="edu.cmu.cs.plural.annot.FalseIndicates"
                name="False indicator">
-         </sourceAnnotation>
-         <sourceAnnotation
-               annotationClass="edu.cmu.cs.plural.annot.Indicates"
-               name="General-purpose indicator">
          </sourceAnnotation>
       </customAnnotation>
       <customAnnotation
