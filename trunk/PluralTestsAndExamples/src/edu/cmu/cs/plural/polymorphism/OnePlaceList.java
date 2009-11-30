@@ -1,5 +1,6 @@
 /**
- * Copyright (C) 2007-2009 Carnegie Mellon University and others.
+ * Copyright (C) 2007, 2008 Carnegie Mellon University and others.
+
  *
  * This file is part of Plural.
  *
@@ -35,30 +36,38 @@
  * without this exception; this exception also makes it possible to
  * release a modified version which carries forward this exception.
  */
-package edu.cmu.cs.plural.test;
+package edu.cmu.cs.plural.polymorphism;
 
-import edu.cmu.cs.crystal.annotations.FailingTest;
+import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
+import edu.cmu.cs.plural.annot.PolyVar;
+import edu.cmu.cs.plural.annot.ResultPolyVar;
 import edu.cmu.cs.plural.annot.State;
+import edu.cmu.cs.plural.annot.Symmetric;
+import edu.cmu.cs.plural.annot.Unique;
+import edu.cmu.cs.plural.annot.Use;
 
-@FailingTest(3)
-@UseAnalyses({PluralAnalysis.SYNTAX, "PolyInternalChecker"}) // PolyInternalChecker necessary for invariant error!
-@ClassStates(@State(name="alive", inv="fulll(field)"))
-public class Issue69Test1 {
 
-	private Object field;
+@Symmetric("p")
+@ClassStates(@State(name="alive", inv="p(o)"))
+//@PassingTest
+@UseAnalyses({PluralAnalysis.PLURAL, PluralAnalysis.EFFECT,
+	PluralAnalysis.SYNTAX, "PolyInternalChecker"})
+public final class OnePlaceList {
+
+	private Object o;
 	
-	@Perm(requires="unqie(this)")
-	void foo() {
-		
+	@Perm(ensures="unique(this!fr)")
+	public OnePlaceList(@PolyVar(value="p",returned=false) Object o) {
+		this.o = o;
 	}
-	
-	@Perm(ensures="shre(this)")
-	void bar() {
-		
-	}
-	
+
+	@ResultPolyVar("p")
+	@Unique(use=Use.FIELDS)
+	public Object getSome() {
+		return o;
+	}	
 }
