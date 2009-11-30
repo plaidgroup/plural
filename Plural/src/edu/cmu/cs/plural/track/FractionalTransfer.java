@@ -475,7 +475,7 @@ public class FractionalTransfer extends
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		if(instr.isStaticFieldAccess()) {
-			PermissionSetFromAnnotations perms = getFieldPermissionsFromAnnotations(instr.resolveFieldBinding());
+			PermissionSetFromAnnotations perms = getStaticFieldPermissionsFromAnnotations(instr.resolveFieldBinding());
 			if(perms != null) {
 				value.put(instr, instr.getTarget(), perms.toLatticeElement());
 			}
@@ -494,7 +494,7 @@ public class FractionalTransfer extends
 	 * @param fieldBinding
 	 * @return
 	 */
-	private PermissionSetFromAnnotations getFieldPermissionsFromAnnotations(
+	private PermissionSetFromAnnotations getStaticFieldPermissionsFromAnnotations(
 			IVariableBinding fieldBinding) {
 		List<ParameterPermissionAnnotation> annos = CrystalPermissionAnnotation.fieldAnnotations(getAnnoDB(), fieldBinding);
 		if(annos.isEmpty()) 
@@ -759,7 +759,7 @@ public class FractionalTransfer extends
 //		value.killDeadVariables(instr, createVariableLivenessAfter(instr));
 		
 		if(instr.isStaticFieldAccess()) {
-			PermissionSetFromAnnotations perms = getFieldPermissionsFromAnnotations(instr.resolveFieldBinding());
+			PermissionSetFromAnnotations perms = getStaticFieldPermissionsFromAnnotations(instr.resolveFieldBinding());
 			if(perms != null) {
 				value.splitOff(instr.getSourceOperand(), perms);
 			}
