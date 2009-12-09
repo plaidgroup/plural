@@ -40,6 +40,7 @@ package edu.cmu.cs.plural.polymorphic.internal;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +49,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
+import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
@@ -80,7 +82,6 @@ import edu.cmu.cs.plural.contexts.LinearContext;
 import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TrueContext;
-import edu.cmu.cs.plural.fractions.FractionalPermission;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 import edu.cmu.cs.plural.perm.parser.AccessPredVisitor;
@@ -120,9 +121,11 @@ public final class PolyInternalTransfer extends
 	private final List<Pair<Aliasing,Option<String>>> paramsEntryPerm;
 	private final Option<String> rcvrEntryPerm;
 	private final AnnotationDatabase annoDB;
+	private final IAnalysisInput input;
 	
-	/** This analysis depends on plural to determine what state 'this' is in. */
-	private final ITACFlowAnalysis<PluralContext> plural = null;
+	/** This analysis depends on plural to determine what state 'this' is in. 
+	 *  Value will change! Each time createEntryLattice is called. */
+	private ITACFlowAnalysis<PluralContext> plural = null;
 	
 	/** Shows us which parameters have been applied to the types of each variable. */
 	private final InstantiatedTypeAnalysis typeAnalysis;
@@ -130,12 +133,13 @@ public final class PolyInternalTransfer extends
 	public PolyInternalTransfer(ITACFlowAnalysis<AliasingLE> aliasAnalysis,
 			SimpleMap<String,Option<PolyVar>> varLookup,
 			List<Pair<Aliasing,Option<String>>> paramsForEntry, Option<String> rcvrEntryPerm,
-			AnnotationDatabase annoDB, InstantiatedTypeAnalysis typeAnalysis) {
+			IAnalysisInput input, InstantiatedTypeAnalysis typeAnalysis) {
 		this.aliasAnalysis = aliasAnalysis;
 		this.varLookup = varLookup;
 		this.paramsEntryPerm = paramsForEntry;
 		this.rcvrEntryPerm = rcvrEntryPerm;
-		this.annoDB = annoDB;
+		this.annoDB = input.getAnnoDB();
+		this.input = input;
 		this.typeAnalysis = typeAnalysis;
 	}
 	
@@ -153,6 +157,10 @@ public final class PolyInternalTransfer extends
 				le = PolyVarLE.NONE;
 			result.put(param.fst(), le);
 		}
+		
+		// Assign the plural analysis, since here we have the method decl
+		this.plural = (new PluralWrapper(method, input)).getFractionalAnalysis();
+		
 		return result;
 	}
 
@@ -261,7 +269,7 @@ public final class PolyInternalTransfer extends
 			TupleLatticeElement<Aliasing, PolyVarLE> value) {
 		ThisVariable this_var = getAnalysisContext().getThisVariable();
 		
-		if( instr.getTarget().equals(this_var) )
+		if( instr.getSourceObject().equals(this_var) )
 			value = unpackIfNeeded(instr, value, this_var);
 		
 		return super.transfer(instr, labels, value);
@@ -288,8 +296,9 @@ public final class PolyInternalTransfer extends
 				@Override
 				public Option<Set<String>> context(TensorContext le) {
 					FractionalPermissions this_perms = le.getTuple().get(instr, this_var);
-					FractionalPermission unpacked_perm = this_perms.getUnpackedPermission();
-					return Option.some(unpacked_perm.getStateInfo());
+					List<String> packed_states = this_perms.getStateInfo(true);
+					
+					return Option.<Set<String>>some(new HashSet<String>(packed_states));
 				}
 			});
 		
@@ -322,7 +331,7 @@ public final class PolyInternalTransfer extends
 		for( ICrystalAnnotation anno_ : annos ) {
 			if( anno_ instanceof ClassStateDeclAnnotation ) {
 				for( StateDeclAnnotation anno : ((ClassStateDeclAnnotation) anno_).getStates() ) {
-					if( unpacked_states.contains(anno.getName()) ) {
+					if( unpacked_states.contains(anno.getStateName()) ) {
 						String inv = anno.getInv();
 						PermParser.accept(inv, new AccessPredVisitor<VOID>(){
 							@Override
@@ -380,7 +389,7 @@ public final class PolyInternalTransfer extends
 				}
 			}
 		}
-		return null;
+		return result;
 	}
 
 	@Override
