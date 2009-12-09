@@ -63,7 +63,6 @@ import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 import edu.cmu.cs.crystal.tac.ITACAnalysisContext;
 import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.TACFlowAnalysis;
@@ -468,7 +467,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		final private List<Pair<Aliasing,String>> paramsToCheck;
 		
 		final private ITACFlowAnalysis<AliasingLE> aliasAnalysis;
-		final private ITACFlowAnalysis<TupleLatticeElement<Aliasing, PolyVarLE>> polyAnalysis;
+		final private ITACFlowAnalysis<PolyTupleLattice> polyAnalysis;
 		
 		final private InstantiatedTypeAnalysis typeAnalysis;
 		
@@ -491,7 +490,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			PolyInternalTransfer transferFunction = 
 				new PolyInternalTransfer(aliasAnalysis, simpleLookupMap(), 
 						param_entry, rcvr_entry, getInput(),typeAnalysis);
-			this.polyAnalysis = new TACFlowAnalysis<TupleLatticeElement<Aliasing,PolyVarLE>>(
+			this.polyAnalysis = new TACFlowAnalysis<PolyTupleLattice>(
 					transferFunction, getInput().getComUnitTACs().unwrap());
 		}
 		
@@ -561,7 +560,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		public void endVisit(MethodDeclaration node) {
 			// Here's where we do the check for an implicit
 			// return...
-			TupleLatticeElement<Aliasing,PolyVarLE> lattice = this.polyAnalysis.getResultsBefore(node.getBody());
+			PolyTupleLattice lattice = this.polyAnalysis.getResultsBefore(node.getBody());
 			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
 			
 			checkParameterReturns(lattice, tac, node);
@@ -572,7 +571,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			// Return statement: Make sure any permissions that were
 			// borrowed are available, and same for result permissions.
 			ASTNode node_of_interest = node.getExpression() == null ? node : node.getExpression();
-			TupleLatticeElement<Aliasing,PolyVarLE> lattice = this.polyAnalysis.getResultsAfter(node_of_interest);
+			PolyTupleLattice lattice = this.polyAnalysis.getResultsAfter(node_of_interest);
 			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
 			
 			if( this.returnToCheck.isSome() ) {
@@ -602,7 +601,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		public void endVisit(MethodInvocation node) {
 			// We have to check that there is enough permission to each
 			// parameter, otherwise we signal an error.
-			TupleLatticeElement<Aliasing, PolyVarLE> lattice = this.polyAnalysis.getResultsBefore(node);
+			PolyTupleLattice lattice = this.polyAnalysis.getResultsBefore(node);
 			AliasingLE locs = this.aliasAnalysis.getResultsBefore(node);
 			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
 			IMethodBinding binding = node.resolveMethodBinding();
@@ -654,7 +653,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			}
 		}
 
-		private void checkParameterReturns(TupleLatticeElement<Aliasing,PolyVarLE> lattice,
+		private void checkParameterReturns(PolyTupleLattice lattice,
 				EclipseTAC tac, ASTNode error_node) {
 			for( Pair<Aliasing,String> param_to_check : this.paramsToCheck ) {
 				Aliasing param_loc = param_to_check.fst();
