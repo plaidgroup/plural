@@ -39,7 +39,10 @@
 package edu.cmu.cs.plural.polymorphic.internal;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ITypeBinding;
@@ -47,6 +50,7 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.flow.ILabel;
 import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
@@ -61,12 +65,41 @@ import edu.cmu.cs.crystal.tac.model.MethodCallInstruction;
 import edu.cmu.cs.crystal.tac.model.NewObjectInstruction;
 import edu.cmu.cs.crystal.tac.model.ReturnInstruction;
 import edu.cmu.cs.crystal.tac.model.StoreFieldInstruction;
+import edu.cmu.cs.crystal.tac.model.TACInstruction;
+import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
+import edu.cmu.cs.crystal.util.Utilities;
+import edu.cmu.cs.crystal.util.VOID;
 import edu.cmu.cs.plural.alias.AliasingLE;
+import edu.cmu.cs.plural.contexts.ContextChoiceLE;
+import edu.cmu.cs.plural.contexts.FalseContext;
+import edu.cmu.cs.plural.contexts.LinearContext;
+import edu.cmu.cs.plural.contexts.PluralContext;
+import edu.cmu.cs.plural.contexts.TensorContext;
+import edu.cmu.cs.plural.contexts.TrueContext;
+import edu.cmu.cs.plural.fractions.FractionalPermission;
+import edu.cmu.cs.plural.fractions.FractionalPermissions;
+import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
+import edu.cmu.cs.plural.perm.parser.AccessPredVisitor;
+import edu.cmu.cs.plural.perm.parser.BinaryExprAP;
+import edu.cmu.cs.plural.perm.parser.Conjunction;
+import edu.cmu.cs.plural.perm.parser.Disjunction;
+import edu.cmu.cs.plural.perm.parser.EmptyPredicate;
+import edu.cmu.cs.plural.perm.parser.EqualsExpr;
+import edu.cmu.cs.plural.perm.parser.Identifier;
+import edu.cmu.cs.plural.perm.parser.NotEqualsExpr;
+import edu.cmu.cs.plural.perm.parser.PermParser;
+import edu.cmu.cs.plural.perm.parser.PermissionImplication;
+import edu.cmu.cs.plural.perm.parser.StateOnly;
+import edu.cmu.cs.plural.perm.parser.TempPermission;
+import edu.cmu.cs.plural.perm.parser.Withing;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
+import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
+import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
+import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
  * Transfer function for the internal polymorphism checker.
@@ -87,6 +120,9 @@ public final class PolyInternalTransfer extends
 	private final List<Pair<Aliasing,Option<String>>> paramsEntryPerm;
 	private final Option<String> rcvrEntryPerm;
 	private final AnnotationDatabase annoDB;
+	
+	/** This analysis depends on plural to determine what state 'this' is in. */
+	private final ITACFlowAnalysis<PluralContext> plural = null;
 	
 	/** Shows us which parameters have been applied to the types of each variable. */
 	private final InstantiatedTypeAnalysis typeAnalysis;
@@ -223,8 +259,128 @@ public final class PolyInternalTransfer extends
 	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
 			LoadFieldInstruction instr, List<ILabel> labels,
 			TupleLatticeElement<Aliasing, PolyVarLE> value) {
-		// TODO Auto-generated method stub
+		ThisVariable this_var = getAnalysisContext().getThisVariable();
+		
+		if( instr.getTarget().equals(this_var) )
+			value = unpackIfNeeded(instr, value, this_var);
+		
 		return super.transfer(instr, labels, value);
+	}
+
+	/**
+	 * Unpack, based on the current state as determined by plural. Return
+	 * the resulting lattice as 
+	 */
+	private TupleLatticeElement<Aliasing, PolyVarLE> unpackIfNeeded(final TACInstruction instr,
+			TupleLatticeElement<Aliasing, PolyVarLE> value, final ThisVariable this_var) {
+		PluralContext plural_ctx = plural.getResultsBefore(instr);
+		
+		if( plural_ctx.isRcvrUnpackedInAnyDisjunct() )
+			return value;
+		
+		// So, figure out what state the receiver is in...
+		LinearContext ctx = plural_ctx.getLinearContext();
+		Option<Set<String>> cur_rcvr_state =
+			ctx.dispatch(new DisjunctiveVisitor<Option<Set<String>>>() {
+				@Override public Option<Set<String>> falseContext(FalseContext falseContext) {return Option.none();}
+				@Override public Option<Set<String>> trueContext(TrueContext trueContext) {return Option.none();}
+				@Override public Option<Set<String>> choice(ContextChoiceLE le) {return Utilities.nyi();}
+				@Override
+				public Option<Set<String>> context(TensorContext le) {
+					FractionalPermissions this_perms = le.getTuple().get(instr, this_var);
+					FractionalPermission unpacked_perm = this_perms.getUnpackedPermission();
+					return Option.some(unpacked_perm.getStateInfo());
+				}
+			});
+		
+		if( cur_rcvr_state.isNone() )
+			return value;
+		
+		ITypeBinding this_type = this_var.resolveType();
+		Set<String> unpacked_states = cur_rcvr_state.unwrap();
+		Map<Variable, PolyVar> fieldToInvMap = invariants(this_type, unpacked_states, 
+				PluralTupleLatticeElement.createFieldNameToVariableMapping(this_type));
+		
+		AliasingLE locs = aliasAnalysis.getResultsBefore(instr);
+		for( Map.Entry<Variable, PolyVar> entry : fieldToInvMap.entrySet() ) {
+			Aliasing field_loc = locs.get(entry.getKey());
+			PolyVar poly_var = entry.getValue();
+			value.put(field_loc, PolyVarLE.HAVE_FACTORY.call(poly_var.getName()));
+		}
+		
+		return value;
+	}
+	
+	/**
+	 * Get the invariants in terms of a field to poly-var map.
+	 */
+	private Map<Variable, PolyVar> invariants(ITypeBinding this_type, Set<String> unpacked_states,
+			final SimpleMap<String,Variable> fields) {
+		// Look up the class states, find the invariants, add them to the result.
+		final Map<Variable,PolyVar> result = new HashMap<Variable,PolyVar>();
+		List<ICrystalAnnotation> annos = this.annoDB.getAnnosForType(this_type);
+		for( ICrystalAnnotation anno_ : annos ) {
+			if( anno_ instanceof ClassStateDeclAnnotation ) {
+				for( StateDeclAnnotation anno : ((ClassStateDeclAnnotation) anno_).getStates() ) {
+					if( unpacked_states.contains(anno.getName()) ) {
+						String inv = anno.getInv();
+						PermParser.accept(inv, new AccessPredVisitor<VOID>(){
+							@Override
+							public VOID visit(TempPermission perm) {
+								Option<PolyVar> perm_var = varLookup.get(perm.getType());
+								if( perm_var.isSome() ) {
+									String field_name = ((Identifier)perm.getRef()).getName();
+									Variable var = fields.get(field_name);
+									result.put(var, perm_var.unwrap());
+								}
+								return VOID.V();
+							}
+
+							@Override public VOID visit(Disjunction disj) {return Utilities.nyi();}
+							@Override public VOID visit(Withing withing) {return Utilities.nyi();}
+							
+							@Override
+							public VOID visit(Conjunction conj) {
+								conj.getP1().accept(this);
+								conj.getP2().accept(this);
+								return VOID.V();
+							}
+
+							@Override
+							public VOID visit(BinaryExprAP binaryExpr) {
+								return VOID.V();
+							}
+
+							@Override
+							public VOID visit(EqualsExpr equalsExpr) {
+								return VOID.V();
+							}
+
+							@Override
+							public VOID visit(NotEqualsExpr notEqualsExpr) {
+								return VOID.V();
+							}
+
+							@Override
+							public VOID visit(StateOnly stateOnly) {
+								return VOID.V();
+							}
+
+							@Override
+							public VOID visit(
+									PermissionImplication permissionImplication) {
+								return VOID.V();
+							}
+
+							@Override
+							public VOID visit(EmptyPredicate emptyPredicate) {
+								return VOID.V();
+							}});
+					}
+				}
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -239,7 +395,6 @@ public final class PolyInternalTransfer extends
 	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
 			ReturnInstruction instr, List<ILabel> labels,
 			TupleLatticeElement<Aliasing, PolyVarLE> value) {
-		// TODO Auto-generated method stub
 		return super.transfer(instr, labels, value);
 	}
 
