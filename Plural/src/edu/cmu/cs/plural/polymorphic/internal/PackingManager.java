@@ -48,7 +48,6 @@ import org.eclipse.jdt.core.dom.ITypeBinding;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
-import edu.cmu.cs.crystal.simple.TupleLatticeElement;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.SimpleMap;
@@ -67,6 +66,7 @@ import edu.cmu.cs.plural.perm.parser.PermissionImplication;
 import edu.cmu.cs.plural.perm.parser.StateOnly;
 import edu.cmu.cs.plural.perm.parser.TempPermission;
 import edu.cmu.cs.plural.perm.parser.Withing;
+import edu.cmu.cs.plural.polymorphic.internal.PolyTupleLattice.PackedNess;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
@@ -84,17 +84,45 @@ public final class PackingManager {
 	
 	/** 
 	 * In the given lattice, pack the receiver to the given state.
-	 * If this is not possible, return NONE. This method does not have
-	 * enough information to determine whether or not the receiver is
-	 * already unpacked, so it should not be called in the case where
-	 * it is unpacked.
+	 * If this is not possible, return NONE. If the receiver is already
+	 * unpacked, or if it is unknown, this method will return the
+	 * incoming_lattice. THIS METHOD EXPECTS THE INCOMING LATTICE TO
+	 * BE A COPY! COPY IT BEFORE CALLING THIS METHOD!
 	 */
-	public static Option<TupleLatticeElement<Aliasing,PolyVarLE>>
-	packRcvr(TupleLatticeElement<Aliasing,PolyVarLE> incoming_lattice,
+	public static Option<PolyTupleLattice> packRcvr(PolyTupleLattice incoming_lattice,
 			Set<String> states_to_pack_to, AnnotationDatabase annoDB,
-			final SimpleMap<String,Option<PolyVar>> varLookup, ITypeBinding this_type) {
+			final SimpleMap<String,Option<PolyVar>> varLookup,
+			final SimpleMap<Variable,Aliasing> locs,
+			ITypeBinding this_type) {
+		if( !incoming_lattice.getPackedness().equals(PackedNess.UNPACKED) )
+			return Option.some(incoming_lattice);
 		
-		return Option.none();
+		PolyTupleLattice result = incoming_lattice;
+		Map<Variable, PolyVar> invariants = 
+			invariants(this_type, states_to_pack_to, annoDB, varLookup);
+		
+		for( Map.Entry<Variable, PolyVar> entry : invariants.entrySet() ) {
+			Aliasing loc = locs.get(entry.getKey());
+			PolyVarLE cur_le = result.get(loc);
+			
+			if( cur_le.isTop() || cur_le.name().isNone() ) {
+				// CANNOT PACK!
+				return Option.none();
+			}
+
+			PolyVar needs = entry.getValue();
+			if( !cur_le.name().unwrap().equals(needs.getName()) ) {
+				// CANNOT PACK!
+				return Option.none();
+			}
+			
+			if( !needs.getKind().equals(PolyVarKind.SYMMETRIC) ) {
+				// All permission is removed
+				result.put(loc, PolyVarLE.NONE);
+			}
+		}
+		
+		return Option.some(result);
 	}
 
 	/**

@@ -80,6 +80,7 @@ import edu.cmu.cs.plural.contexts.TrueContext;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
+import edu.cmu.cs.plural.polymorphic.internal.PolyTupleLattice.PackedNess;
 
 /**
  * Transfer function for the internal polymorphism checker.
@@ -259,10 +260,10 @@ public final class PolyInternalTransfer extends
 	 */
 	private PolyTupleLattice unpackIfNeeded(final TACInstruction instr,
 			PolyTupleLattice value, final ThisVariable this_var) {
-		PluralContext plural_ctx = plural.getResultsBefore(instr);
-		
-		if( plural_ctx.isRcvrUnpackedInAnyDisjunct() )
+		if( value.getPackedness().equals(PackedNess.UNPACKED) )
 			return value;
+		
+		PluralContext plural_ctx = plural.getResultsBefore(instr);
 		
 		// So, figure out what state the receiver is in...
 		LinearContext ctx = plural_ctx.getLinearContext();
