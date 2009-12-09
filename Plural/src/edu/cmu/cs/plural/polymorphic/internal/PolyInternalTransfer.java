@@ -39,7 +39,6 @@
 package edu.cmu.cs.plural.polymorphic.internal;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -52,12 +51,9 @@ import org.eclipse.jdt.core.dom.MethodDeclaration;
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
-import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.flow.ILabel;
 import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
-import edu.cmu.cs.crystal.simple.TupleLatticeElement;
-import edu.cmu.cs.crystal.simple.TupleLatticeOperations;
 import edu.cmu.cs.crystal.tac.AbstractTACBranchSensitiveTransferFunction;
 import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.model.ConstructorCallInstruction;
@@ -74,7 +70,6 @@ import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.crystal.util.Utilities;
-import edu.cmu.cs.crystal.util.VOID;
 import edu.cmu.cs.plural.alias.AliasingLE;
 import edu.cmu.cs.plural.contexts.ContextChoiceLE;
 import edu.cmu.cs.plural.contexts.FalseContext;
@@ -84,23 +79,7 @@ import edu.cmu.cs.plural.contexts.TensorContext;
 import edu.cmu.cs.plural.contexts.TrueContext;
 import edu.cmu.cs.plural.fractions.FractionalPermissions;
 import edu.cmu.cs.plural.linear.DisjunctiveVisitor;
-import edu.cmu.cs.plural.perm.parser.AccessPredVisitor;
-import edu.cmu.cs.plural.perm.parser.BinaryExprAP;
-import edu.cmu.cs.plural.perm.parser.Conjunction;
-import edu.cmu.cs.plural.perm.parser.Disjunction;
-import edu.cmu.cs.plural.perm.parser.EmptyPredicate;
-import edu.cmu.cs.plural.perm.parser.EqualsExpr;
-import edu.cmu.cs.plural.perm.parser.Identifier;
-import edu.cmu.cs.plural.perm.parser.NotEqualsExpr;
-import edu.cmu.cs.plural.perm.parser.PermParser;
-import edu.cmu.cs.plural.perm.parser.PermissionImplication;
-import edu.cmu.cs.plural.perm.parser.StateOnly;
-import edu.cmu.cs.plural.perm.parser.TempPermission;
-import edu.cmu.cs.plural.perm.parser.Withing;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
-import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
-import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
-import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
 
 /**
  * Transfer function for the internal polymorphism checker.
@@ -111,10 +90,9 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
  */
 public final class PolyInternalTransfer extends
 	// Lol at the length of this superclass name...	
-	AbstractTACBranchSensitiveTransferFunction<TupleLatticeElement<Aliasing, PolyVarLE>> {
+	AbstractTACBranchSensitiveTransferFunction<PolyTupleLattice> {
 
-	private final TupleLatticeOperations<Aliasing,PolyVarLE> ops =
-		new TupleLatticeOperations<Aliasing,PolyVarLE>(new PolyInternalLatticeOps(), PolyVarLE.TOP);
+	private final PolyTupleLatticeOps ops = new PolyTupleLatticeOps();
 	
 	private final ITACFlowAnalysis<AliasingLE> aliasAnalysis;
 	private final SimpleMap<String,Option<PolyVar>> varLookup;
@@ -144,9 +122,9 @@ public final class PolyInternalTransfer extends
 	}
 	
 	@Override
-	public TupleLatticeElement<Aliasing, PolyVarLE> createEntryValue(
+	public PolyTupleLattice createEntryValue(
 			MethodDeclaration method) {
-		TupleLatticeElement<Aliasing, PolyVarLE> result = ops.getDefault();
+		PolyTupleLattice result = ops.getDefault();
 		// Put in initial values for parameters and receiver as indicated
 		// by the annotations.
 		for( Pair<Aliasing,Option<String>> param : paramsEntryPerm ) {
@@ -165,7 +143,7 @@ public final class PolyInternalTransfer extends
 	}
 
 	@Override
-	public ILatticeOperations<TupleLatticeElement<Aliasing, PolyVarLE>> getLatticeOperations() {
+	public ILatticeOperations<PolyTupleLattice> getLatticeOperations() {
 		return ops;
 	}
 
@@ -225,9 +203,9 @@ public final class PolyInternalTransfer extends
 	}
 	
 	@Override
-	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
+	public IResult<PolyTupleLattice> transfer(
 			MethodCallInstruction instr, List<ILabel> labels,
-			TupleLatticeElement<Aliasing, PolyVarLE> value) {
+			PolyTupleLattice value) {
 		// First get the application type for the receiver.
 		MethodDeclaration method = this.getAnalysisContext().getAnalyzedMethod();
 		List<String> rcvr_type = typeAnalysis.findType(instr.getReceiverOperand());
@@ -248,25 +226,25 @@ public final class PolyInternalTransfer extends
 	}
 
 	@Override
-	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
+	public IResult<PolyTupleLattice> transfer(
 			ConstructorCallInstruction instr, List<ILabel> labels,
-			TupleLatticeElement<Aliasing, PolyVarLE> value) {
+			PolyTupleLattice value) {
 		// TODO Auto-generated method stub
 		return super.transfer(instr, labels, value);
 	}
 
 	@Override
-	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
+	public IResult<PolyTupleLattice> transfer(
 			CopyInstruction instr, List<ILabel> labels,
-			TupleLatticeElement<Aliasing, PolyVarLE> value) {
+			PolyTupleLattice value) {
 		// TODO Auto-generated method stub
 		return super.transfer(instr, labels, value);
 	}
 
 	@Override
-	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
+	public IResult<PolyTupleLattice> transfer(
 			LoadFieldInstruction instr, List<ILabel> labels,
-			TupleLatticeElement<Aliasing, PolyVarLE> value) {
+			PolyTupleLattice value) {
 		ThisVariable this_var = getAnalysisContext().getThisVariable();
 		
 		if( instr.getSourceObject().equals(this_var) )
@@ -279,8 +257,8 @@ public final class PolyInternalTransfer extends
 	 * Unpack, based on the current state as determined by plural. Return
 	 * the resulting lattice as 
 	 */
-	private TupleLatticeElement<Aliasing, PolyVarLE> unpackIfNeeded(final TACInstruction instr,
-			TupleLatticeElement<Aliasing, PolyVarLE> value, final ThisVariable this_var) {
+	private PolyTupleLattice unpackIfNeeded(final TACInstruction instr,
+			PolyTupleLattice value, final ThisVariable this_var) {
 		PluralContext plural_ctx = plural.getResultsBefore(instr);
 		
 		if( plural_ctx.isRcvrUnpackedInAnyDisjunct() )
@@ -307,8 +285,7 @@ public final class PolyInternalTransfer extends
 		
 		ITypeBinding this_type = this_var.resolveType();
 		Set<String> unpacked_states = cur_rcvr_state.unwrap();
-		Map<Variable, PolyVar> fieldToInvMap = invariants(this_type, unpacked_states, 
-				PluralTupleLatticeElement.createFieldNameToVariableMapping(this_type));
+		Map<Variable, PolyVar> fieldToInvMap = invariants(this_type, unpacked_states);
 		
 		AliasingLE locs = aliasAnalysis.getResultsBefore(instr);
 		for( Map.Entry<Variable, PolyVar> entry : fieldToInvMap.entrySet() ) {
@@ -320,97 +297,28 @@ public final class PolyInternalTransfer extends
 		return value;
 	}
 	
-	/**
-	 * Get the invariants in terms of a field to poly-var map.
-	 */
-	private Map<Variable, PolyVar> invariants(ITypeBinding this_type, Set<String> unpacked_states,
-			final SimpleMap<String,Variable> fields) {
-		// Look up the class states, find the invariants, add them to the result.
-		final Map<Variable,PolyVar> result = new HashMap<Variable,PolyVar>();
-		List<ICrystalAnnotation> annos = this.annoDB.getAnnosForType(this_type);
-		for( ICrystalAnnotation anno_ : annos ) {
-			if( anno_ instanceof ClassStateDeclAnnotation ) {
-				for( StateDeclAnnotation anno : ((ClassStateDeclAnnotation) anno_).getStates() ) {
-					if( unpacked_states.contains(anno.getStateName()) ) {
-						String inv = anno.getInv();
-						PermParser.accept(inv, new AccessPredVisitor<VOID>(){
-							@Override
-							public VOID visit(TempPermission perm) {
-								Option<PolyVar> perm_var = varLookup.get(perm.getType());
-								if( perm_var.isSome() ) {
-									String field_name = ((Identifier)perm.getRef()).getName();
-									Variable var = fields.get(field_name);
-									result.put(var, perm_var.unwrap());
-								}
-								return VOID.V();
-							}
-
-							@Override public VOID visit(Disjunction disj) {return Utilities.nyi();}
-							@Override public VOID visit(Withing withing) {return Utilities.nyi();}
-							
-							@Override
-							public VOID visit(Conjunction conj) {
-								conj.getP1().accept(this);
-								conj.getP2().accept(this);
-								return VOID.V();
-							}
-
-							@Override
-							public VOID visit(BinaryExprAP binaryExpr) {
-								return VOID.V();
-							}
-
-							@Override
-							public VOID visit(EqualsExpr equalsExpr) {
-								return VOID.V();
-							}
-
-							@Override
-							public VOID visit(NotEqualsExpr notEqualsExpr) {
-								return VOID.V();
-							}
-
-							@Override
-							public VOID visit(StateOnly stateOnly) {
-								return VOID.V();
-							}
-
-							@Override
-							public VOID visit(
-									PermissionImplication permissionImplication) {
-								return VOID.V();
-							}
-
-							@Override
-							public VOID visit(EmptyPredicate emptyPredicate) {
-								return VOID.V();
-							}});
-					}
-				}
-			}
-		}
-		return result;
+	private Map<Variable, PolyVar> invariants(ITypeBinding this_type, Set<String> unpacked_states) {
+		return PackingManager.invariants(this_type, unpacked_states, annoDB, varLookup);
 	}
-
+	
 	@Override
-	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
+	public IResult<PolyTupleLattice> transfer(
 			NewObjectInstruction instr, List<ILabel> labels,
-			TupleLatticeElement<Aliasing, PolyVarLE> value) {
+			PolyTupleLattice value) {
 		// TODO Auto-generated method stub
 		return super.transfer(instr, labels, value);
 	}
 
 	@Override
-	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
-			ReturnInstruction instr, List<ILabel> labels,
-			TupleLatticeElement<Aliasing, PolyVarLE> value) {
+	public IResult<PolyTupleLattice> transfer(ReturnInstruction instr, 
+			List<ILabel> labels, PolyTupleLattice value) {
 		return super.transfer(instr, labels, value);
 	}
 
 	@Override
-	public IResult<TupleLatticeElement<Aliasing, PolyVarLE>> transfer(
+	public IResult<PolyTupleLattice> transfer(
 			StoreFieldInstruction instr, List<ILabel> labels,
-			TupleLatticeElement<Aliasing, PolyVarLE> value) {
+			PolyTupleLattice value) {
 		// TODO Auto-generated method stub
 		return super.transfer(instr, labels, value);
 	}	
