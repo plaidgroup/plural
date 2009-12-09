@@ -490,7 +490,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			
 			PolyInternalTransfer transferFunction = 
 				new PolyInternalTransfer(aliasAnalysis, simpleLookupMap(), 
-						param_entry, rcvr_entry, getInput().getAnnoDB(), typeAnalysis);
+						param_entry, rcvr_entry, getInput(),typeAnalysis);
 			this.polyAnalysis = new TACFlowAnalysis<TupleLatticeElement<Aliasing,PolyVarLE>>(
 					transferFunction, getInput().getComUnitTACs().unwrap());
 		}
