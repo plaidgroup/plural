@@ -47,15 +47,15 @@ import edu.cmu.cs.plural.annot.Unique;
 
 // The pack after the method call should succeed, assuming we
 // can unpack correctly, because the permission is symmetric.
-//@PassingTest
-//@UseAnalyses("PolyInternalChecker")
+@PassingTest
+@UseAnalyses("PolyInternalChecker")
 @Symmetric("p")
 @ClassStates(@State(name="alive", inv="p(something)"))
 public final class PackShouldSucceed<T> {
 	private T something;
 	
 	@Unique
-	public void cannotPack() {
+	public void canPack() {
 		this.takesP(this.something);
 	}
 	
