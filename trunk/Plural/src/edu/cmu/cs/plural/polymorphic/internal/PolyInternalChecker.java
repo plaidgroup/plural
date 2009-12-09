@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -74,6 +75,7 @@ import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
 import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
+import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.crystal.util.VOID;
 import edu.cmu.cs.plural.alias.AliasingLE;
 import edu.cmu.cs.plural.alias.LocalAliasTransfer;
@@ -93,7 +95,13 @@ import edu.cmu.cs.plural.polymorphic.instantiation.ApplyAnnotationWrapper;
 import edu.cmu.cs.plural.polymorphic.instantiation.GroundInstantiation;
 import edu.cmu.cs.plural.polymorphic.instantiation.GroundParser;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
+import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
 import edu.cmu.cs.plural.polymorphic.instantiation.ResultApplyAnnotationWrapper;
+import edu.cmu.cs.plural.states.IMethodCase;
+import edu.cmu.cs.plural.states.IMethodCaseInstance;
+import edu.cmu.cs.plural.states.IMethodSignature;
+import edu.cmu.cs.plural.states.MethodCheckingKind;
+import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
@@ -564,6 +572,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
 			
 			checkParameterReturns(lattice, tac, node);
+			//checkPackToPost(lattice, tac, node);
 		}
 
 		@Override
@@ -595,6 +604,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			}
 			
 			checkParameterReturns(lattice, tac, node);
+			//checkPackToPost(lattice, tac, node.getExpression());
 		}
 		
 		@Override
@@ -653,7 +663,8 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			}
 		}
 
-		private void checkParameterReturns(PolyTupleLattice lattice,
+		/** Check that each parameter has enough permission to return. */
+		private PolyTupleLattice checkParameterReturns(PolyTupleLattice lattice,
 				EclipseTAC tac, ASTNode error_node) {
 			for( Pair<Aliasing,String> param_to_check : this.paramsToCheck ) {
 				Aliasing param_loc = param_to_check.fst();
@@ -680,6 +691,56 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 					lattice.put(param_loc, new_le);
 				}
 			}
+			return lattice;
+		}
+		
+		/** Make sure the receiver is in the proper post-condition
+		 * state, which may include packing it to the post-condition
+		 * state. If that cannot be done, errors would be issued. */
+		private void checkPackToPost(PolyTupleLattice lattice, 
+				EclipseTAC tac, final ASTNode error_node) {
+			Set<String> rcvr_post = getRcvrPostState();
+			AnnotationDatabase annoDB = analysisInput.getAnnoDB();
+			ThisVariable this_var = tac.thisVariable();
+			
+			SimpleMap<Variable,Aliasing> locs = new SimpleMap<Variable,Aliasing>() {
+				@Override
+				public Aliasing get(Variable key) {
+					return aliasAnalysis.getResultsAfter(error_node).get(key);
+				}};
+			SimpleMap<String,Option<PolyVar>> varLookup = new SimpleMap<String,Option<PolyVar>>() {
+				@Override
+				public Option<PolyVar> get(String key) {
+					return lookup(key);
+				}};
+			Option<PolyTupleLattice> new_lattice =
+				PackingManager.packRcvr(lattice, rcvr_post, annoDB, 
+					varLookup, locs, this_var.resolveType());
+			
+			if( new_lattice.isNone() ) {
+				// ERROR!
+				String error_msg = "On return, could not pack to required " +
+						"receiver post-condition states: " + rcvr_post;
+				getReporter().reportUserProblem(error_msg, error_node, getName());
+			}
+		}
+
+		/**
+		 * @return
+		 */
+		private Set<String> getRcvrPostState() {
+			AnnotationDatabase annoDB = analysisInput.getAnnoDB();
+			IMethodBinding resolveBinding = method.resolveBinding();
+			IMethodSignature sig =
+				StateSpaceRepository.getInstance(annoDB).getMethodSignature(resolveBinding);
+			
+			if( sig.cases().size() > 1 )
+				Utilities.nyi();
+				
+			IMethodCase case_ = sig.cases().get(0);
+			IMethodCaseInstance case_instance =
+				case_.createPermissions(MethodCheckingKind.METHOD_IMPL_CUR_IS_VIRTUAL, true, false, Option.<RcvrInstantiationPackage>none());
+			return case_instance.getEnsuredReceiverPermissions().getStateInfo(true);
 		}
 	}
 }
