@@ -295,6 +295,7 @@ public final class PolyInternalTransfer extends
 			value.put(field_loc, PolyVarLE.HAVE_FACTORY.call(poly_var.getName()));
 		}
 		
+		value.setPackedness(PackedNess.UNPACKED);
 		return value;
 	}
 	
