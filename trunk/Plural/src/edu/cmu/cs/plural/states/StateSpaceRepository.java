@@ -328,7 +328,8 @@ public class StateSpaceRepository {
 			hasSpec = true;
 		else if(!CrystalPermissionAnnotation.receiverAnnotations(getAnnotationDB(), binding).isEmpty())
 			hasSpec = true;
-		else if(!CrystalPermissionAnnotation.resultAnnotations(getAnnotationDB(), binding).isEmpty())
+		else if(!CrystalPermissionAnnotation.resultAnnotations(getAnnotationDB(), 
+				Option.<RcvrInstantiationPackage>none(),binding).isEmpty())
 			hasSpec = true;
 		else 
 			for(int i = 0; i < binding.getParameterTypes().length; i++) {
