@@ -40,90 +40,36 @@ package edu.cmu.cs.plural.polymorphism.ecoop;
 import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Apply;
-import edu.cmu.cs.plural.annot.ClassStates;
-import edu.cmu.cs.plural.annot.Imm;
-import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
-import edu.cmu.cs.plural.annot.PolyVar;
-import edu.cmu.cs.plural.annot.ResultPolyVar;
-import edu.cmu.cs.plural.annot.State;
-import edu.cmu.cs.plural.annot.Symmetric;
+import edu.cmu.cs.plural.annot.ResultShare;
+import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.Unique;
-import edu.cmu.cs.plural.annot.Use;
 
 /**
- * The LinkedList class, originally presented in Figure 10. 
- * The Node class is not an member class because the Crystal
- * state analysis framework does not support member classes. 
- * For legacy reasons, the @Invariants annotation in the paper
- * is actually @ClassStates.
+ * LinkedList client code seen in Section 4.
  * 
  * @author Nels E. Beckman
  * @since Dec 10, 2009
  *
- * @see {@link LinkedListClient}
- *
- * @param <T> Type of element held by this list.
+ * @see {@link LinkedList}
  */
-// For automated testing.
+//For automated testing.
 @PassingTest
 @UseAnalyses({PluralAnalysis.PLURAL, PluralAnalysis.SYNTAX,
 	          PluralAnalysis.EFFECT, "PolyInternalChecker"})
+public final class LinkedListClient {
 
-//Invariants & polyrmophic permission
-@Symmetric("p")
-@ClassStates(@State(name="alive", inv="unique(first)"))
-public final class LinkedList<T> {
-
-	@Apply("p")
-	private Node<T> first;
-	
-	private int size = 0;
-	
-	@Perm(ensures="unique(this!fr)")
-	public LinkedList() {
-		first = null;
+	@ResultShare(guarantee="Open")
+	Socket getItemFromList(@Unique @Apply("share(Open, vr) in Open") LinkedList <Socket > l) {
+		return l.get(0);
 	}
 	
-	@Imm
-	public int size() {
-		return size;
-	}
-	
-	@Unique(use=Use.FIELDS)
-	public void add(@PolyVar(value="p", returned=false) T item) {
-		@Apply("p") Node<T> old_node = first;
-		@Apply("p") Node<T> new_first = new Node<T>(item, old_node); 
-		first = new_first;
-	}
-	
-	@Unique(use=Use.FIELDS)
-	@ResultPolyVar("p")
-	public T get(int i) {
-		if( first == null ) return null;
-		else return first.get(i, 0);
-	}
 }
 
-//Invariants & polyrmophic permission	          
-@Symmetric("p")
-@ClassStates(@State(name="alive", inv="unique(next) * p(item)"))
-class Node<T> {
-	private T item;
-	@Apply("p")
-	private Node<T> next;
+/**
+ * A mock Socket class, so we can define our own abstract states.
+ */
+@States({"Open","Closed"})
+class Socket {
 	
-	@Unique(use=Use.FIELDS)
-	@ResultPolyVar("p")
-	T get(int i, int cur) {
-		if( i == cur ) return item;
-		else if( next == null ) return null;
-		else return next.get(i, cur + 1);
-	}
-	
-	@Perm(ensures="unique(this!fr)")
-	Node(@PolyVar(value="p", returned=false) T item, @Apply("p") @Unique(returned=false) Node<T> next) {
-		this.item = item;
-		this.next = next;
-	}
 }
