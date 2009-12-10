@@ -47,8 +47,8 @@ import edu.cmu.cs.plural.annot.Unique;
 
 // The pack after the method call should fail, since there is
 // no longer enough permission for the alive state.
-//@FailingTest
-//@UseAnalyses("PolyInternalChecker")
+@FailingTest
+@UseAnalyses("PolyInternalChecker")
 @Similar("p")
 @ClassStates(@State(name="alive", inv="p(something)"))
 public final class PackShouldFail<T> {
