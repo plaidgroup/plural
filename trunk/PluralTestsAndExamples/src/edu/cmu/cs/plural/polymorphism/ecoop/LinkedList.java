@@ -37,9 +37,13 @@
  */
 package edu.cmu.cs.plural.polymorphism.ecoop;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Apply;
 import edu.cmu.cs.plural.annot.ClassStates;
+import edu.cmu.cs.plural.annot.Imm;
 import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.PolyVar;
 import edu.cmu.cs.plural.annot.ResultPolyVar;
 import edu.cmu.cs.plural.annot.State;
@@ -47,17 +51,49 @@ import edu.cmu.cs.plural.annot.Symmetric;
 import edu.cmu.cs.plural.annot.Unique;
 import edu.cmu.cs.plural.annot.Use;
 
+@PassingTest
+@UseAnalyses({PluralAnalysis.PLURAL, PluralAnalysis.SYNTAX,
+	          PluralAnalysis.EFFECT, "PolyInternalChecker"})
+@Symmetric("p")
+@ClassStates(@State(name="alive", inv="unique(next) * p(item)"))
+class Node<T> {
+	private T item;
+	@Apply("p")
+	private Node<T> next;
+	
+	@Unique(use=Use.FIELDS)
+	@ResultPolyVar("p")
+	T get(int i, int cur) {
+		if( i == cur ) return item;
+		else if( next == null ) return null;
+		else return next.get(i, cur + 1);
+	}
+	
+	@Perm(ensures="unique(this!fr)")
+	Node(@PolyVar(value="p", returned=false) T item, @Apply("p") @Unique(returned=false) Node<T> next) {
+		this.item = item;
+		this.next = next;
+	}
+}
+
 @Symmetric("p")
 @ClassStates(@State(name="alive", inv="unique(first)"))
 public final class LinkedList<T> {
 
 	@Apply("p")
-	private Node<T> first = null;
+	private Node<T> first;
 	
 	private int size = 0;
 	
 	@Perm(ensures="unique(this!fr)")
-	public LinkedList() {}
+	public LinkedList() {
+		first = null;
+	}
+	
+	@Imm
+	public int size() {
+		return size;
+	}
 	
 	@Unique(use=Use.FIELDS)
 	public void add(@PolyVar(value="p", returned=false) T item) {
@@ -71,27 +107,5 @@ public final class LinkedList<T> {
 	public T get(int i) {
 		if( first == null ) return null;
 		else return first.get(i, 0);
-	}
-}
-
-@Symmetric("p")
-@ClassStates(@State(name="alive", inv="unique(next) * p(item)"))
-class Node<T> {
-	private T item;
-	@Apply("p")
-	private Node<T> next;
-	
-	@Perm(ensures="unique(this!fr)")
-	Node(@PolyVar(value="p", returned=false) T item, @Apply("p") @Unique(returned=false) Node<T> next) {
-		this.item = item;
-		this.next = next;
-	}
-	
-	@Unique(use=Use.FIELDS)
-	@ResultPolyVar("p")
-	T get(int i, int cur) {
-		if( i == cur ) return item;
-		else if( next == null ) return null;
-		else return next.get(i, cur + 1);
 	}
 }
