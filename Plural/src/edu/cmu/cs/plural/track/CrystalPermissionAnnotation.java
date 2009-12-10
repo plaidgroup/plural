@@ -51,6 +51,7 @@ import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.annotations.CrystalAnnotation;
 import edu.cmu.cs.crystal.annotations.ICrystalAnnotation;
 import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.plural.annot.ResultPolyVar;
 import edu.cmu.cs.plural.perm.ParameterPermissionAnnotation;
 import edu.cmu.cs.plural.perm.PermissionAnnotation;
 import edu.cmu.cs.plural.perm.ResultPermissionAnnotation;
@@ -58,8 +59,10 @@ import edu.cmu.cs.plural.perm.parser.PermissionUse;
 import edu.cmu.cs.plural.polymorphic.instantiation.GroundInstantiation;
 import edu.cmu.cs.plural.polymorphic.instantiation.GroundParser;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedParameterPermissionAnnotation;
+import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedReturnPermissionAnnotation;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
 import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
+import edu.cmu.cs.plural.polymorphic.internal.PolyVarReturnedAnnotation;
 import edu.cmu.cs.plural.polymorphic.internal.PolyVarUseAnnotation;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
@@ -88,9 +91,20 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 	 * @return a (possibly empty) list of permission annotations for the result of the given method.
 	 */
 	public static List<ResultPermissionAnnotation> resultAnnotations(
-			AnnotationDatabase db,
+			AnnotationDatabase db, Option<RcvrInstantiationPackage> ip,
 			IMethodBinding method) {
-		return annotationsOnMethod(ResultPermissionAnnotation.class, db, method);
+		List<ResultPermissionAnnotation> result = new LinkedList<ResultPermissionAnnotation>();
+		result.addAll(annotationsOnMethod(ResultPermissionAnnotation.class, db, method));
+		
+		ICrystalAnnotation poly_result_ = db.getSummaryForMethod(method).getReturn(ResultPolyVar.class.getName());
+		if( poly_result_ != null ) {
+			PolyVarReturnedAnnotation poly_result = (PolyVarReturnedAnnotation)poly_result_;
+			Collection<InstantiatedReturnPermissionAnnotation> result_anno = 
+				instantiatePolyVar(poly_result, ip, db);
+			result.addAll(result_anno);
+		}
+		
+		return result;
 	}
 
 	private static <A extends PermissionAnnotation> List<A> annotationsOnMethod(
@@ -177,6 +191,38 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 		return result;
 	}
 
+	/**
+	 * @param polyResult
+	 * @param ip
+	 * @param db
+	 * @return
+	 */
+	private static Collection<InstantiatedReturnPermissionAnnotation> instantiatePolyVar(
+			PolyVarReturnedAnnotation anno,
+			Option<RcvrInstantiationPackage> ip, AnnotationDatabase db) {
+		if( ip.isNone() ) {
+			return Collections.emptySet();
+		}
+		
+		List<String> rcvr_type = ip.unwrap().getVarType();
+		ITypeBinding rcvr_jtype = ip.unwrap().getVarJType();
+		
+		List<String> originals = Collections.singletonList(anno.getVariableName());
+		List<String> subst_type = InstantiatedTypeAnalysis.substitute(rcvr_type, rcvr_jtype, originals, db);
+		assert(subst_type.size() == 1);
+		// Now we need to parse the result and figure out what it is!
+		String perm = subst_type.get(0);
+		// This annotation should only be CONSTRUCTED if we know its an instantiation.
+		Option<GroundInstantiation> ground_perm_ = GroundParser.parse(perm);
+		if( ground_perm_.isSome() ) {
+			// YES an instantiation
+			InstantiatedReturnPermissionAnnotation anno_wrapper = 
+				new InstantiatedReturnPermissionAnnotation(anno, ground_perm_.unwrap());
+			return Collections.singleton(anno_wrapper);
+		}
+		
+		return Collections.emptySet();
+	}
 
 	/**
 	 * Parse the instantiation of this permission, so that we will be ready when the pre & post-condition methods

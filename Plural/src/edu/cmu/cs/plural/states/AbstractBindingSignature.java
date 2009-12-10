@@ -223,7 +223,7 @@ abstract class AbstractBindingSignature extends AbstractBinding
 			spaces.put("result", space);
 			
 			PermissionSetFromAnnotations result = PermissionSetFromAnnotations.createEmpty(space);
-			for(ResultPermissionAnnotation a : CrystalPermissionAnnotation.resultAnnotations(getAnnoDB(), binding)) {
+			for(ResultPermissionAnnotation a : CrystalPermissionAnnotation.resultAnnotations(getAnnoDB(), ip, binding)) {
 				PermissionFromAnnotation p = PermissionFactory.INSTANCE.createOrphan(
 						space, a.getRootNode(), a.getKind(), 
 						false, // virtual permission 
