@@ -54,7 +54,7 @@ import edu.cmu.cs.crystal.util.Option;
 public final class PolyTupleLattice {
 
 	private final TupleLatticeElement<Aliasing, PolyVarLE> tupleLattice;
-	private final PackedNess isRcvrUnpacked;
+	private PackedNess isRcvrUnpacked;
 	
 	enum PackedNess {
 		TOP, BOTTOM, PACKED, UNPACKED
@@ -89,5 +89,12 @@ public final class PolyTupleLattice {
 	 */
 	PackedNess getPackedness() {
 		return this.isRcvrUnpacked;
+	}
+
+	/**
+	 * @param unpacked
+	 */
+	public void setPackedness(PackedNess unpacked) {
+		this.isRcvrUnpacked = unpacked;
 	}
 }

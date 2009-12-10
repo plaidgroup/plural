@@ -41,6 +41,8 @@ package edu.cmu.cs.plural.polymorphic.internal;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -79,6 +81,11 @@ import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.crystal.util.VOID;
 import edu.cmu.cs.plural.alias.AliasingLE;
 import edu.cmu.cs.plural.alias.LocalAliasTransfer;
+import edu.cmu.cs.plural.annot.Full;
+import edu.cmu.cs.plural.annot.Imm;
+import edu.cmu.cs.plural.annot.Pure;
+import edu.cmu.cs.plural.annot.Share;
+import edu.cmu.cs.plural.annot.Unique;
 import edu.cmu.cs.plural.perm.parser.AccessPredVisitor;
 import edu.cmu.cs.plural.perm.parser.BinaryExprAP;
 import edu.cmu.cs.plural.perm.parser.Conjunction;
@@ -104,6 +111,7 @@ import edu.cmu.cs.plural.states.MethodCheckingKind;
 import edu.cmu.cs.plural.states.StateSpaceRepository;
 import edu.cmu.cs.plural.states.annowrappers.ClassStateDeclAnnotation;
 import edu.cmu.cs.plural.states.annowrappers.StateDeclAnnotation;
+import edu.cmu.cs.plural.track.CrystalPermissionAnnotation;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
 /**
@@ -572,7 +580,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			EclipseTAC tac = getInput().getComUnitTACs().unwrap().getMethodTAC(method);
 			
 			checkParameterReturns(lattice, tac, node);
-			//checkPackToPost(lattice, tac, node);
+			checkPackToPost(lattice, tac, node);
 		}
 
 		@Override
@@ -604,7 +612,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			}
 			
 			checkParameterReturns(lattice, tac, node);
-			//checkPackToPost(lattice, tac, node.getExpression());
+			checkPackToPost(lattice, tac, node.getExpression());
 		}
 		
 		@Override
@@ -706,7 +714,7 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			SimpleMap<Variable,Aliasing> locs = new SimpleMap<Variable,Aliasing>() {
 				@Override
 				public Aliasing get(Variable key) {
-					return aliasAnalysis.getResultsAfter(error_node).get(key);
+					return aliasAnalysis.getResultsBefore(error_node).get(key);
 				}};
 			SimpleMap<String,Option<PolyVar>> varLookup = new SimpleMap<String,Option<PolyVar>>() {
 				@Override
@@ -731,16 +739,25 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 		private Set<String> getRcvrPostState() {
 			AnnotationDatabase annoDB = analysisInput.getAnnoDB();
 			IMethodBinding resolveBinding = method.resolveBinding();
-			IMethodSignature sig =
-				StateSpaceRepository.getInstance(annoDB).getMethodSignature(resolveBinding);
-			
-			if( sig.cases().size() > 1 )
-				Utilities.nyi();
 				
-			IMethodCase case_ = sig.cases().get(0);
-			IMethodCaseInstance case_instance =
-				case_.createPermissions(MethodCheckingKind.METHOD_IMPL_CUR_IS_VIRTUAL, true, false, Option.<RcvrInstantiationPackage>none());
-			return case_instance.getEnsuredReceiverPermissions().getStateInfo(true);
+			// Just look up unique, full, share, etc. and get the states
+			AnnotationSummary summary = annoDB.getSummaryForMethod(resolveBinding);
+			List<CrystalPermissionAnnotation> annos = new LinkedList<CrystalPermissionAnnotation>();
+
+			for( ICrystalAnnotation anno : summary.getReturn() ) {
+				if( anno instanceof CrystalPermissionAnnotation )
+					annos.add((CrystalPermissionAnnotation)anno);
+			}
+			
+			if( annos.size() > 1 )
+				Utilities.nyi();
+			else if( annos.size() == 0 )
+				return Collections.singleton("alive");
+			
+			CrystalPermissionAnnotation rcvr_anno = annos.get(0);
+			Set<String> result = new HashSet<String>();
+			Collections.addAll(result, rcvr_anno.getEnsures());
+			return result;
 		}
 	}
 }
