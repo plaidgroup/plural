@@ -594,11 +594,15 @@ public class PolyInternalChecker extends AbstractCompilationUnitAnalysis {
 			if( this.returnToCheck.isSome() ) {
 				// Check result
 				Variable return_var = tac.variable(node.getExpression());
-				Aliasing return_loc = aliasAnalysis.getResultsBefore(node.getExpression()).get(return_var);
-				PolyVarLE le = lattice.get(return_loc);
 				
-				if( le.isBottom() || le.isTop() || 
-				    le.name().isNone() || !le.name().unwrap().equals(returnToCheck.unwrap()) ) {
+				Aliasing return_loc = aliasAnalysis.getResultsBefore(node.getExpression()).get(return_var);
+				Aliasing other_return_loc = aliasAnalysis.getResultsAfter(node.getExpression()).get(return_var);
+				Aliasing correct_loc = return_loc.getLabels().isEmpty() ? other_return_loc : return_loc;
+				
+				PolyVarLE le = lattice.get(correct_loc);
+				
+				if(  !le.isBottom() && (le.isTop() || le.name().isNone() || 
+				                        !le.name().unwrap().equals(returnToCheck.unwrap())) ) {
 					// ERROR!
 					String error_msg = "Return value must have permission " + returnToCheck.unwrap() +
 					                   " but instead has " + le + ".";

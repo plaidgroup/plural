@@ -45,12 +45,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.IMethodBinding;
 import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.cmu.cs.crystal.IAnalysisInput;
 import edu.cmu.cs.crystal.analysis.alias.Aliasing;
 import edu.cmu.cs.crystal.annotations.AnnotationDatabase;
+import edu.cmu.cs.crystal.annotations.AnnotationSummary;
 import edu.cmu.cs.crystal.flow.ILabel;
 import edu.cmu.cs.crystal.flow.ILatticeOperations;
 import edu.cmu.cs.crystal.flow.IResult;
@@ -59,6 +61,7 @@ import edu.cmu.cs.crystal.tac.ITACFlowAnalysis;
 import edu.cmu.cs.crystal.tac.model.ConstructorCallInstruction;
 import edu.cmu.cs.crystal.tac.model.CopyInstruction;
 import edu.cmu.cs.crystal.tac.model.LoadFieldInstruction;
+import edu.cmu.cs.crystal.tac.model.LoadLiteralInstruction;
 import edu.cmu.cs.crystal.tac.model.MethodCallInstruction;
 import edu.cmu.cs.crystal.tac.model.NewObjectInstruction;
 import edu.cmu.cs.crystal.tac.model.ReturnInstruction;
@@ -71,6 +74,7 @@ import edu.cmu.cs.crystal.util.Pair;
 import edu.cmu.cs.crystal.util.SimpleMap;
 import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.alias.AliasingLE;
+import edu.cmu.cs.plural.annot.ResultPolyVar;
 import edu.cmu.cs.plural.contexts.ContextChoiceLE;
 import edu.cmu.cs.plural.contexts.FalseContext;
 import edu.cmu.cs.plural.contexts.LinearContext;
@@ -208,7 +212,6 @@ public final class PolyInternalTransfer extends
 			MethodCallInstruction instr, List<ILabel> labels,
 			PolyTupleLattice value) {
 		// First get the application type for the receiver.
-		MethodDeclaration method = this.getAnalysisContext().getAnalyzedMethod();
 		List<String> rcvr_type = typeAnalysis.findType(instr.getReceiverOperand());
 		ITypeBinding rcvr_jtype = instr.getReceiverOperand().resolveType();
 		
@@ -222,8 +225,37 @@ public final class PolyInternalTransfer extends
 			value.put(arg_loc, new_le);
 			arg_num++;
 		}
+
+		Option<String> method_result_ = findMethodResult(instr.resolveBinding());
+		if( method_result_.isSome() ) {
+			// Method result!
+			List<String> pre_sub = Collections.singletonList(method_result_.unwrap());
+			List<String> needed_perms = 
+				InstantiatedTypeAnalysis.substitute(rcvr_type, rcvr_jtype, pre_sub, annoDB);
+			if( needed_perms.size() > 1 ) Utilities.nyi();
+			
+			String needed = needed_perms.get(0);
+			if( !PolyInternalChecker.isPermLitteral(needed) ) {
+				Variable target = instr.getTarget();
+				Aliasing target_loc = aliasAnalysis.getResultsAfter(instr).get(target);
+				value.put(target_loc, PolyVarLE.HAVE_FACTORY.call(needed));
+			}
+		}
 		
 		return super.transfer(instr, labels, value);
+	}
+
+	/**
+	 * Find the return value polymorphic permission, if there is one.
+	 */
+	private Option<String> findMethodResult(IMethodBinding method) {
+		AnnotationSummary summary = annoDB.getSummaryForMethod(method);
+		PolyVarReturnedAnnotation anno = 
+			(PolyVarReturnedAnnotation)summary.getReturn(ResultPolyVar.class.getName());
+		if( anno != null )
+			return Option.some(anno.getVariableName());
+		else 
+			return Option.none();
 	}
 
 	@Override
@@ -289,8 +321,9 @@ public final class PolyInternalTransfer extends
 		Map<Variable, PolyVar> fieldToInvMap = invariants(this_type, unpacked_states);
 		
 		AliasingLE locs = aliasAnalysis.getResultsBefore(instr);
+		AliasingLE other_locs = aliasAnalysis.getResultsAfter(instr);
 		for( Map.Entry<Variable, PolyVar> entry : fieldToInvMap.entrySet() ) {
-			Aliasing field_loc = locs.get(entry.getKey());
+			Aliasing field_loc = other_locs.get(entry.getKey());
 			PolyVar poly_var = entry.getValue();
 			value.put(field_loc, PolyVarLE.HAVE_FACTORY.call(poly_var.getName()));
 		}
@@ -303,6 +336,18 @@ public final class PolyInternalTransfer extends
 		return PackingManager.invariants(this_type, unpacked_states, annoDB, varLookup);
 	}
 	
+	@Override
+	public IResult<PolyTupleLattice> transfer(LoadLiteralInstruction instr,
+			List<ILabel> labels, PolyTupleLattice value) {
+		if( instr.isNull() ) {
+			Aliasing t_loc_b = this.aliasAnalysis.getResultsBefore(instr).get(instr.getTarget());
+			Aliasing t_loc_a = this.aliasAnalysis.getResultsAfter(instr).get(instr.getTarget());
+			Aliasing correct_loc = t_loc_b.getLabels().isEmpty() ? t_loc_a : t_loc_b;
+			value.put(correct_loc, PolyVarLE.BOTTOM);
+		}
+		return super.transfer(instr, labels, value);
+	}
+
 	@Override
 	public IResult<PolyTupleLattice> transfer(
 			NewObjectInstruction instr, List<ILabel> labels,

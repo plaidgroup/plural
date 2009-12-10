@@ -59,6 +59,8 @@ public class PolyInternalLatticeOps implements
 			return true;
 		else if( reference.isTop() )
 			return true;
+		else if( reference.isBottom() || info.isTop() )
+			return false;
 		else if( info.name().isSome() && reference.name().isSome() )
 			return true;
 		else if( info.name().isNone() && reference.name().isNone() )
@@ -77,7 +79,7 @@ public class PolyInternalLatticeOps implements
 
 	@Override
 	public PolyVarLE join(PolyVarLE someInfo, PolyVarLE otherInfo, ASTNode node) {
-		if( someInfo.isTop() && otherInfo.isTop() )
+		if( someInfo.isTop() || otherInfo.isTop() )
 			return PolyVarLE.TOP;
 		else if( someInfo.isBottom() && otherInfo.isBottom() )
 			return PolyVarLE.BOTTOM;
