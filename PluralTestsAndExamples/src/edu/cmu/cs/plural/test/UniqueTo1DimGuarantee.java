@@ -37,7 +37,10 @@
  */
 package edu.cmu.cs.plural.test;
 
+import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.Refine;
 import edu.cmu.cs.plural.annot.States;
 import edu.cmu.cs.plural.annot.Unique;
@@ -48,6 +51,8 @@ import edu.cmu.cs.plural.annot.Unique;
  * @author Nels E. Beckman
  * @since Jan 20, 2010
  */
+@PassingTest
+@UseAnalyses({PluralAnalysis.PLURAL,PluralAnalysis.SYNTAX,PluralAnalysis.EFFECT})
 public final class UniqueTo1DimGuarantee {
 	
 	public static void getsUnique(
