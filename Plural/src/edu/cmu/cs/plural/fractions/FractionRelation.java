@@ -42,6 +42,12 @@ import java.util.Collections;
 import java.util.List;
 
 /**
+ * A FractionRelation is a left-to-right list of fractions that hold a particular equality or
+ * inequality relationship. If the relop is '==', then it is just a set of fractions that must
+ * be equal. However, if the relop is either '<' or '<=' then it is an order of values. For example,
+ * Fraction relation, <code><=[VAR1,VAR2,VAR3]</code> stands for the expression,
+ * <code>VAR1 <= VAR2 <= VAR3</code>.
+ * 
  * @author Kevin Bierhoff
  *
  */

@@ -666,13 +666,18 @@ public class FractionalPermission extends AbstractFractionalPermission {
 						throw new IllegalStateException(immediateChildNode + " wasn't a dimension in " + n);
 				}
 
-				if( !immediateChildNode.equals(newRootNode) ) {
-					// new constraint: sum of fractions on below's "level" (below node and peer dimensions) must be 1
-					// But only for the non-root-level nodes.
-					constraints.addConstraint(FractionConstraint.createEquality(
-							Fraction.one(),
-							FractionTerm.createSum(fractionsToImmChild)));
-				}
+//				if( !immediateChildNode.equals(newRootNode) ) {
+//					// new constraint: sum of fractions on below's "level" (below node and peer dimensions) must be 1
+//					// But only for the non-root-level nodes.
+//					// NEB: 1/20/10. I think I wrote this code incorrectly. In this
+//					// case, where the new root node is a node below the dimensions
+//					// around which the permission will be split, I think that things
+//					// only need to sum up to 1 above the newly split dimensions!
+//					// That could be arbitrarily high up, right?
+//					constraints.addConstraint(FractionConstraint.createEquality(
+//							Fraction.one(),
+//							FractionTerm.createSum(fractionsToImmChild)));
+//				}
 			}
 			if(n.equals(rootNode))
 				break;
