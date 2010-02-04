@@ -37,6 +37,8 @@
  */
 package edu.cmu.cs.plural.states;
 
+import java.util.Set;
+
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
 import edu.cmu.cs.crystal.util.Option;
@@ -85,6 +87,10 @@ public interface IInvocationCase {
 	 * be checked separately for the case where the declaring class is the
 	 * runtime type of the receiver object, <code>false</code> otherwise.
 	 */
-	boolean isVirtualFrameSpecial();
+	boolean isVirtualFrameSpecial();		
+
+	Set<String> getRequiredReceiverStates();		
+
+	Set<String> getEnsuredReceiverStates();
 
 }

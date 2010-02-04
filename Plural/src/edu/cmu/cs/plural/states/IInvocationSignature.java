@@ -38,6 +38,7 @@
 package edu.cmu.cs.plural.states;
 
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
@@ -102,7 +103,7 @@ public abstract interface IInvocationSignature {
 	 * @see #isConstructorSignature()
 	 */
 	IMethodSignature getMethodSignature();
-	
+
 	/**
 	 * Calls {@link IInvocationCase#createPermissions(boolean, boolean)} for each {@link #cases() case}.
 	 * @param forAnalyzingBody
@@ -115,5 +116,37 @@ public abstract interface IInvocationSignature {
 			MethodCheckingKind checkingKind,
 			boolean forAnalyzingBody, boolean isSuperCall,
 			Option<RcvrInstantiationPackage> ip);
-	
+
+//	/**		
+//	 * Returns the required states for the given parameter		
+//	 * for each method case.		
+//	 * @return		
+//	 * @see IMethodCase#getRequiredParameterStates(int)		
+//	 */		
+//	Set<Set<String>> getRequiredParameterStateOptions(int paramIndex);		
+//
+//	/**		
+//	 * Returns the ensured states for the given parameter		
+//	 * for each method case.		
+//	 * @return		
+//	 * @see IMethodCase#getEnsuredParameterStates(int)		
+//	 */		
+//	Set<Set<String>> getEnsuredParameterStateOptions(int paramIndex);		
+
+	/**		
+	 * Returns the required states for the receiver		
+	 * for each method case.		
+	 * @return		
+	 * @see IMethodCase#getRequiredReceiverStates()		
+	 */		
+	Set<Set<String>> getRequiredReceiverStateOptions();		
+
+	/**		
+	 * Returns the ensured states for the receiver		
+	 * for each method case.		
+	 * @return		
+	 * @see IMethodCase#getEnsuredReceiverStates()		
+	 */		
+	Set<Set<String>> getEnsuredReceiverStateOptions();
+
 }

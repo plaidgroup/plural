@@ -87,6 +87,24 @@ public abstract class AbstractBindingCase extends AbstractBinding implements IIn
 		preAndPostString = Pair.create(perm.getRequires(), perm.getEnsures());
 	}
 
+	@Override		
+	public Set<String> getEnsuredReceiverStates() {		
+		Set<String> result = new LinkedHashSet<String>();		
+
+		// required states from @Unique, @Full, etc. annotations		
+		for(ParameterPermissionAnnotation anno :		
+			CrystalPermissionAnnotation.receiverAnnotations(getAnnoDB(), binding)) {		
+			if(anno.isReturned())		
+				for(String s : anno.getEnsures())		
+					result.add(s);		
+		}		
+
+		// required states from @Perm annotations		
+		result.addAll(PermParser.getReceiverStateInfo(		
+				preAndPostString.fst(), preAndPostString.snd()).snd());		
+		return result;		
+	}
+	
 	/**
 	 * This method only makes sense for methods; <b>do not call
 	 * this method for constructors</b>.  We put it
