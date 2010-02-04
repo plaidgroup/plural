@@ -344,7 +344,8 @@ public class StateMachine implements IHasProperties {
 						createStateIfNew(false_state, state_space, stringToNode, machine);
 						indicates_state = stringToNode.get(false_state);
 					}
-					createTransition(stringToNode.get(req_state), stringToNode.get(indicates_state), machine, method, message);
+
+					createTransition(stringToNode.get(req_state), indicates_state, machine, method, message);
 					
 					// And we still have to do all the normal transitions.
 					for( Set<String> ens_states : sig.getEnsuredReceiverStateOptions() ) {
