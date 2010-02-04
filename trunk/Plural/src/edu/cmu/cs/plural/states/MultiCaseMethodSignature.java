@@ -292,4 +292,16 @@ class MultiCaseMethodSignature extends AbstractMultiCaseSignature<IMethodCase>
 		}
 		
 	}
+	
+	/* (non-Javadoc)		
+	 * @see edu.cmu.cs.plural.states.IMethodCase#getRequiredReceiverStates()		
+	 */		
+	@Override		
+	public Set<Set<String>> getRequiredReceiverStateOptions() {		
+		Set<Set<String>> result = new LinkedHashSet<Set<String>>(cases().size());		
+		for(IMethodCase c : cases()) {		
+			result.add(c.getRequiredReceiverStates());		
+		}		
+		return result;		
+	}
 }

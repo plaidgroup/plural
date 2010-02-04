@@ -39,7 +39,9 @@ package edu.cmu.cs.plural.states;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.IMethodBinding;
 
@@ -93,5 +95,29 @@ abstract class AbstractMultiCaseSignature<T extends IInvocationCase> extends Abs
 	@Override
 	public List<T> cases() {
 		return cases;
+	}
+		
+	/* (non-Javadoc)		
+	 * @see edu.cmu.cs.plural.states.IInvocationSignature#getEnsuredReceiverStateOptions()		
+	 */		
+	@Override		
+	public Set<Set<String>> getEnsuredReceiverStateOptions() {		
+		Set<Set<String>> result = new LinkedHashSet<Set<String>>(cases().size());		
+		for(T c : cases) {		
+			result.add(c.getEnsuredReceiverStates());		
+		}		
+		return result;		
+	}
+
+	/* (non-Javadoc)		
+	 * @see edu.cmu.cs.plural.states.IInvocationSignature#getEnsuredReceiverStateOptions()		
+	 */		
+	@Override		
+	public Set<Set<String>> getRequiredReceiverStateOptions() {		
+		Set<Set<String>> result = new LinkedHashSet<Set<String>>(cases().size());		
+		for(T c : cases) {		
+			result.add(c.getRequiredReceiverStates());		
+		}		
+		return result;		
 	}
 }
