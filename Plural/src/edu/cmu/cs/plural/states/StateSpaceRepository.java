@@ -42,6 +42,7 @@ import java.lang.reflect.Array;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
@@ -360,9 +361,20 @@ public class StateSpaceRepository {
 			return false;
 		
 		if(!skipGivenType) {
+			next_method:
 			for(IMethodBinding m : type.getDeclaredMethods()) {
 				if(overriding.isSubsignature(m)) {
 					if(hasSpecification(m)) {
+						for (Iterator<IMethodBinding> it = result.iterator(); it.hasNext(); ) {
+							IMethodBinding other = it.next();
+							ITypeBinding otherType = other.getDeclaringClass();
+							if (type.isSubTypeCompatible(otherType))
+								// will replace other with m in the result set
+								it.remove();
+							else if (otherType.isSubTypeCompatible(type))
+								// ignore m in favor of other
+								continue next_method;
+						}
 						result.add(m);
 						if(shortCircuit)
 							return true;
