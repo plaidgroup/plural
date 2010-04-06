@@ -116,7 +116,7 @@ public class SpecInheritanceTest {
 		@Pure
 		public void ambiguous() {
 			this.ambiguous();
-//			super.ambiguous(); // error: call to ambiguous method (problems with super)
+			super.ambiguous(); // error: call to ambiguous method (problems with super)
 		}
 		
 	}
