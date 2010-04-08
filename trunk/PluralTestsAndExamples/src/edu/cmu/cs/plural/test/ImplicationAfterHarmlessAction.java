@@ -38,9 +38,11 @@
 package edu.cmu.cs.plural.test;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
+import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.NoEffects;
 import edu.cmu.cs.plural.annot.Perm;
+import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.Pure;
 import edu.cmu.cs.plural.annot.Share;
 import edu.cmu.cs.plural.annot.TrueIndicates;
@@ -51,8 +53,9 @@ import edu.cmu.cs.plural.annot.Use;
  * @since Oct 9, 2008
  *
  */
-@FailingTest(1)
-@UseAnalyses({ "EffectChecker", "FractionalAnalysis" })
+@FailingTest(value=1,analysis=PluralAnalysis.PLURAL)
+@PassingTest(analysis="EffectChecker")
+//@UseAnalyses({ "EffectChecker", "FractionalAnalysis" })
 public class ImplicationAfterHarmlessAction {
 	
 	@SuppressWarnings("unused")

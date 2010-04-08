@@ -38,13 +38,14 @@
 package edu.cmu.cs.plural.polymorphism;
 
 import edu.cmu.cs.crystal.annotations.FailingTest;
+import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.Apply;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.Pure;
 
-@FailingTest
-@UseAnalyses({"PolyInternalChecker",PluralAnalysis.PLURAL})
+@FailingTest(analysis=PluralAnalysis.PLURAL)
+@PassingTest(analysis="PolyInternalChecker")
 public final class InstantiationTest2 {
 	
 	public void foo(@Apply("share") HasParameter hp, @Pure Object o) {
