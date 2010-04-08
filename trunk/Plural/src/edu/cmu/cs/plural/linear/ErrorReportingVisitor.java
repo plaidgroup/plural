@@ -66,7 +66,7 @@ public abstract class ErrorReportingVisitor extends DisjunctiveVisitor<String> {
 	 * <code>errors</code> is empty.
 	 */
 	public static String errorString(Iterable<String> errors, String separator) {
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		boolean first = true;
 		for(String s : errors) {
 			if(first)

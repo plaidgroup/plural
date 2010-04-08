@@ -235,7 +235,7 @@ public final class ContextChoiceLE implements LinearContext {
 	protected final String elemString(String empty, String separator) {
 		if(elements.isEmpty())
 			return empty;
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		boolean first = true;
 		for(LinearContext e : elements) {
 			if(first)
