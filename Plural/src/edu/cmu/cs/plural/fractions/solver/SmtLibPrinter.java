@@ -64,6 +64,7 @@ import edu.cmu.cs.plural.fractions.FractionRelation.Relop;
 public class SmtLibPrinter implements ConstraintsPrinter {
 
 	/** SMT-LIB false. */
+	@SuppressWarnings("unused")
 	private static final String SMT_LIB_FALSE = "false";
 	/** SMT-LIB true. */
 	private static final String SMT_LIB_TRUE = "true";
@@ -138,7 +139,7 @@ public class SmtLibPrinter implements ConstraintsPrinter {
 	 */
 	private static class SmtLibBenchmarkPrinter {
 		
-		private StringBuffer buf = new StringBuffer();
+		private StringBuilder buf = new StringBuilder();
 		private String result;
 
 		/**
@@ -353,7 +354,7 @@ public class SmtLibPrinter implements ConstraintsPrinter {
 		 * @return
 		 */
 		private String formatRelation(String term1, Relop relop, String term2) {
-			StringBuffer result = new StringBuffer();
+			StringBuilder result = new StringBuilder();
 			result.append('(');
 			switch(relop) {
 			case EQ:
@@ -395,7 +396,7 @@ public class SmtLibPrinter implements ConstraintsPrinter {
 		public Pair<String, Boolean> sum(FractionSum fract) {
 			if(fract.getSummands().isEmpty())
 				throw new UnsupportedOperationException("Empty sum: " + fract);
-			StringBuffer str = new StringBuffer("(+");
+			StringBuilder str = new StringBuilder("(+");
 			boolean ground = true;
 			for(Fraction f : fract.getSummands()) {
 				Pair<String, Boolean> fString = f.dispatch((FractionVisitor<Pair<String, Boolean>>) this);

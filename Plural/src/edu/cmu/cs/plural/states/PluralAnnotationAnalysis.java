@@ -772,7 +772,7 @@ public class PluralAnnotationAnalysis extends AbstractCompilationUnitAnalysis {
 			IMethodBinding binding) {
 		Set<IMethodBinding> specSources = getRepository().findAllMethodsWithSpecification(binding);
 		if(specSources.size() > 1) {
-			StringBuffer error = new StringBuffer();
+			StringBuilder error = new StringBuilder();
 			error.append("Ambiguous protocol annotations inherited from types ");
 			boolean first = true;
 			for(IMethodBinding m : specSources) {

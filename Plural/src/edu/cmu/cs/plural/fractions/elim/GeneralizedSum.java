@@ -176,7 +176,7 @@ public abstract class GeneralizedSum {
 	 */
 	@Override
 	public String toString() {
-		StringBuffer result = new StringBuffer();
+		StringBuilder result = new StringBuilder();
 		if(coefficients.isEmpty()) result.append("0");
 		for(Fraction f : coefficients.keySet()) {
 			if(result.length() > 0)
