@@ -37,6 +37,7 @@
  */
 package edu.cmu.cs.plural.test;
 
+import edu.cmu.cs.crystal.annotations.AnalysisTests;
 import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
@@ -44,9 +45,13 @@ import edu.cmu.cs.plural.annot.Perm;
 import edu.cmu.cs.plural.annot.PluralAnalysis;
 import edu.cmu.cs.plural.annot.State;
 
-@FailingTest(3)
-@UseAnalyses({PluralAnalysis.SYNTAX, "PolyInternalChecker"}) // PolyInternalChecker necessary for invariant error!
+//@FailingTest(3)
+//@UseAnalyses({PluralAnalysis.SYNTAX, "PolyInternalChecker"}) // PolyInternalChecker necessary for invariant error!
 @ClassStates(@State(name="alive", inv="fulll(field)"))
+@AnalysisTests(fail={
+	@FailingTest(value=2, analysis=PluralAnalysis.SYNTAX),
+	@FailingTest(value=1, analysis="PolyInternalChecker")	
+})
 public class Issue69Test1 {
 
 	private Object field;

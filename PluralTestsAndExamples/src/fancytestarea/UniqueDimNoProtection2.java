@@ -38,8 +38,9 @@
  */
 package fancytestarea;
 
+import edu.cmu.cs.crystal.annotations.AnalysisTests;
 import edu.cmu.cs.crystal.annotations.FailingTest;
-import edu.cmu.cs.crystal.annotations.UseAnalyses;
+import edu.cmu.cs.crystal.annotations.PassingTest;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.ForcePack;
 import edu.cmu.cs.plural.annot.Perm;
@@ -69,9 +70,15 @@ import edu.cmu.cs.plural.annot.Use;
  * shared... */
 @ClassStates({@State(name="TLOCAL", inv="share(myFile)"),
 		      @State(name="TSHARED", inv="share(mySharedFile)")})
-@FailingTest(2)
-@UseAnalyses({PluralAnalysis.SOS, PluralAnalysis.SOS_PRE, 
-	PluralAnalysis.EFFECT, PluralAnalysis.SYNTAX})
+//@FailingTest(2)
+//@UseAnalyses({PluralAnalysis.SOS, PluralAnalysis.SOS_PRE, 
+//	PluralAnalysis.EFFECT, PluralAnalysis.SYNTAX})
+@AnalysisTests(
+	pass={@PassingTest(analysis=PluralAnalysis.SOS_PRE),
+		  @PassingTest(analysis=PluralAnalysis.SYNTAX),
+		  @PassingTest(analysis=PluralAnalysis.EFFECT)},
+	fail={@FailingTest(value=2,analysis=PluralAnalysis.SOS)}
+)
 public class UniqueDimNoProtection2 {
 
 	private File myFile;
