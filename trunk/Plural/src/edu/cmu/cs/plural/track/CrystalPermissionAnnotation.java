@@ -36,7 +36,6 @@
  * release a modified version which carries forward this exception.
  */
 package edu.cmu.cs.plural.track;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -290,17 +289,23 @@ public class CrystalPermissionAnnotation extends CrystalAnnotation implements Pa
 	}
 	
 	public String[] getRequires() {
-		Object[] result = (Object[]) getObject("requires");
-		if(result.length == 0)
+		Object[] requires = (Object[]) getObject("requires");
+		if(requires.length == 0)
 			return new String[] { getRootNode() };
-		return Arrays.copyOf(result, result.length, String[].class);
+		String[] result = new String[requires.length];
+		System.arraycopy(requires, 0, result, 0, requires.length);
+		return result;
+//		return Arrays.copyOf(result, result.length, String[].class);
 	}
 	
 	public String[] getEnsures() {
-		Object[] result = (Object[]) getObject("ensures");
-		if(result.length == 0)
+		Object[] ensures = (Object[]) getObject("ensures");
+		if(ensures.length == 0)
 			return new String[] { getRootNode() };
-		return Arrays.copyOf(result, result.length, String[].class);
+		String[] result = new String[ensures.length];
+		System.arraycopy(ensures, 0, result, 0, ensures.length);
+		return result;
+//		return Arrays.copyOf(ensures, ensures.length, String[].class);
 	}
 	
 	private static PermissionKind deriveKindFromName(String name) {
