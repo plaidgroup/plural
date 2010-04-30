@@ -37,8 +37,6 @@
  */
 package edu.cmu.cs.plural.perm;
 
-import java.util.Arrays;
-
 import edu.cmu.cs.crystal.annotations.CrystalAnnotation;
 import edu.cmu.cs.plural.track.Permission.PermissionKind;
 
@@ -78,10 +76,13 @@ public class ResultAnnotationImpl extends CrystalAnnotation implements ResultPer
 	 */
 	@Override
 	public String[] getEnsures() {
-		Object[] result = (Object[]) getObject("ensures");
-		if(result.length == 0)
+		Object[] ensures = (Object[]) getObject("ensures");
+		if(ensures.length == 0)
 			return new String[] { getRootNode() };
-		return Arrays.copyOf(result, result.length, String[].class);
+		String[] result = new String[ensures.length];
+		System.arraycopy(ensures, 0, result, 0, ensures.length);
+		return result;
+//		return Arrays.copyOf(result, result.length, String[].class);
 	}
 	
 	private static PermissionKind deriveKindFromName(String name) {
