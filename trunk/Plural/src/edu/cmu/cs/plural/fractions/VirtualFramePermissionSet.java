@@ -259,11 +259,6 @@ public class VirtualFramePermissionSet extends FractionalPermissions implements 
 		return createPermissions(framePermissions, newCs, null);
 	}
 
-	@Override
-	public FractionalPermissions learnTemporaryStateInfo(String new_state) {
-		throw new UnsupportedOperationException("Deprecated");
-	}
-
 	/*
 	 * This is a simplified version of the superclass method 
 	 * that only manipulates framePermissions.
