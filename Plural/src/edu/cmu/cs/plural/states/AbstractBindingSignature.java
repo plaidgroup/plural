@@ -190,6 +190,10 @@ abstract class AbstractBindingSignature extends AbstractBinding
 		 * 2. arguments
 		 */
 		for(int paramIndex = 0; paramIndex < binding.getParameterTypes().length; paramIndex++) {
+			// We straight-up ignore any varargs...
+			// So IF this method is varargs and we are on the last parameter...
+			if( binding.isVarargs() && paramIndex == (binding.getParameterTypes().length - 1) ) continue;
+			
 			String paramName = "#" + paramIndex;
 			// use possibly more precise parameter type from typechecking
 			StateSpace space = getStateSpace(staticallyInvokedBinding.getParameterTypes()[paramIndex]);
