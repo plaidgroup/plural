@@ -54,6 +54,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -75,6 +76,7 @@ import edu.cmu.cs.crystal.tac.model.SuperVariable;
 import edu.cmu.cs.crystal.tac.model.ThisVariable;
 import edu.cmu.cs.crystal.tac.model.Variable;
 import edu.cmu.cs.crystal.util.Option;
+import edu.cmu.cs.crystal.util.Utilities;
 import edu.cmu.cs.plural.contexts.PluralContext;
 import edu.cmu.cs.plural.polymorphic.instantiation.InstantiatedTypeAnalysis;
 import edu.cmu.cs.plural.polymorphic.instantiation.RcvrInstantiationPackage;
@@ -271,13 +273,18 @@ public class FractionalAnalysis extends AbstractCrystalMethodAnalysis
 
 		@Override
 		public void endVisit(MethodDeclaration node) {
-			if(isAbstract(node) == false) {
+			// b/c of various problems...
+			// we really only want this case to run if the method is void.
+			ITypeBinding return_type = node.resolveBinding().getReturnType();
+			
+			if(isAbstract(node) == false && Utilities.isVoidType(return_type) ) {
 				final Block block = node.getBody();
 				// check whether post-conditions for parameters are validated
 				PluralContext exit = getFa().getResultsBefore(block);
 				
 				// Sometimes this method is called on unreachable statements :-(
 				if( exit.isBottom() ) {
+					// TODO: Is this still necessary now that we check for void?
 					if(logger.isLoggable(Level.FINEST))
 						logger.finest("no implicit exit at the end of the method body");
 					return;
