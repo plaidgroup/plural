@@ -292,7 +292,10 @@ public final class InstantiatedTypeAnalysis {
 				Expression init = (Expression)init_;
 				init.accept(new ExprVisitor());
 			}
-			node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
+			
+			if( node.getExpression() != null )
+				node.getExpression().accept(new ExprVisitor(Collections.<String>emptyList()));
+			
 			for(Object updater_ : node.updaters() ) {
 				Expression updater = (Expression)updater_;
 				updater.accept(new ExprVisitor());
@@ -798,12 +801,16 @@ public final class InstantiatedTypeAnalysis {
 
 			@Override
 			public boolean visit(SuperFieldAccess node) {
-				return Utilities.nyi("Totally not ready for this.");
+//				return Utilities.nyi("Totally not ready for this.");
+				System.err.println("Polymorphic analysis not ready for super field access.");
+				return false;
 			}
 
 			@Override
 			public boolean visit(SuperMethodInvocation node) {
-				return Utilities.nyi("Totally not ready for this.");
+				//return Utilities.nyi("Totally not ready for this.");
+				System.err.println("Polymorphic analysis not ready for super calls.");
+				return false;
 			}
 			
 			@Override
