@@ -152,9 +152,13 @@ public final class InstantiatedTypeAnalysis {
 				type_args.add(((PolyVarDeclAnnotation)anno).getVariableName());
 			}
 		}
-		if( applications.size() != type_args.size() ) {
+		if( applications.size() > type_args.size() ) {
 			String error_msg = "Different number of static args.";
 			throw new RuntimeException(error_msg);
+		}
+		else if( applications.size() < type_args.size() ) {
+			// Just put in '1' for everything...
+			applications = Collections.nCopies(type_args.size(), "1");
 		}
 		
 		List<String> result = new LinkedList<String>();
@@ -502,6 +506,8 @@ public final class InstantiatedTypeAnalysis {
 			
 			@Override
 			public boolean visit(Assignment node) {
+				/// XXX Isn't it more likely that the rhs-typ should be equal to the
+				// lhs-type? And how was this working in other examples?
 				List<String> lhs_type = (new ExprVisitor(this.downwardType)).check(node.getLeftHandSide());
 				List<String> rhs_typ = (new ExprVisitor(this.downwardType)).check(node.getRightHandSide());
 				assertEqual(lhs_type, rhs_typ, node);
