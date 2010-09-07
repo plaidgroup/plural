@@ -506,10 +506,11 @@ public final class InstantiatedTypeAnalysis {
 			
 			@Override
 			public boolean visit(Assignment node) {
-				/// XXX Isn't it more likely that the rhs-typ should be equal to the
 				// lhs-type? And how was this working in other examples?
 				List<String> lhs_type = (new ExprVisitor(this.downwardType)).check(node.getLeftHandSide());
-				List<String> rhs_typ = (new ExprVisitor(this.downwardType)).check(node.getRightHandSide());
+				//List<String> rhs_typ = (new ExprVisitor(this.downwardType)).check(node.getRightHandSide());
+				// This may be an abuse of the concept of a downward type...
+				List<String> rhs_typ = (new ExprVisitor(lhs_type)).check(node.getRightHandSide());
 				assertEqual(lhs_type, rhs_typ, node);
 				storeTypeForExpr(lhs_type, node);
 				this.resultType = lhs_type;
