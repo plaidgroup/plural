@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{522a74ca-849d-412a-9355-8102e2dadb1d}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>GraphLoader</RootNamespace>
+    <AssemblyName>GraphLoader</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <Name>GraphLoader</Name>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <Tailcalls>false</Tailcalls>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <WarningLevel>3</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <DocumentationFile>bin\Debug\GraphLoader.XML</DocumentationFile>
+    <StartWorkingDirectory>C:\Users\t-nelbec\anek\GraphLoader\GraphLoader\</StartWorkingDirectory>
+    <StartArguments>../../FileExample.graphml ../../FileExample.inferred.graphml ../../ConstraintParameters.txt</StartArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <Tailcalls>true</Tailcalls>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <WarningLevel>3</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+    <DocumentationFile>bin\Release\GraphLoader.XML</DocumentationFile>
+    <OtherFlags>--standalone --warnon:1182</OtherFlags>
+    <StartArguments>../../PMD.graphml ../../PMD.inferred.graphml ../../ConstraintParameters.txt</StartArguments>
+    <StartWorkingDirectory>C:\Users\t-nelbec\anek\GraphLoader\GraphLoader\</StartWorkingDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Infer.Compiler">
+      <HintPath>infer.NET\Infer.Compiler.dll</HintPath>
+    </Reference>
+    <Reference Include="Infer.Runtime">
+      <HintPath>infer.NET\Infer.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="FSharpWrapper.fs" />
+    <Compile Include="Utilities.fsi" />
+    <Compile Include="Utilities.fs" />
+    <Compile Include="ProgramGraph.fs" />
+    <Compile Include="XMLLoader.fsi" />
+    <Compile Include="XMLLoader.fs" />
+    <Compile Include="XMLWriter.fsi" />
+    <Compile Include="XMLWriter.fs" />
+    <Compile Include="NodeConstraints.fs" />
+    <Compile Include="NodeConstraintGenerator.fsi" />
+    <Compile Include="NodeConstraintGenerator.fs" />
+    <Compile Include="ProbConstraints.fsi" />
+    <Compile Include="ProbConstraints.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+	     Other similar extension points exist, see Microsoft.Common.targets.
+	<Target Name="BeforeBuild">
+	</Target>
+	<Target Name="AfterBuild">
+	</Target>
+	-->
+</Project>

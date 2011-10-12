@@ -1,0 +1,21 @@
+#Tue Aug 24 15:34:21 EDT 2010
+eclipse.preferences.version=1
+encoding//src/edu/cmu/cs/anek/applier/AnnotationDiff.java=UTF-8
+encoding//src/edu/cmu/cs/anek/applier/AnnotationGeneration.java=UTF-8
+encoding//src/edu/cmu/cs/anek/applier/AtPermCreator.java=UTF-8
+encoding//src/edu/cmu/cs/anek/applier/GraphApplier.java=UTF-8
+encoding//src/edu/cmu/cs/anek/applier/MethodApplier.java=UTF-8
+encoding//src/edu/cmu/cs/anek/applier/eclipse/ApplyGraphAction.java=UTF-8
+encoding//src/edu/cmu/cs/anek/applier/eclipse/package-info.java=UTF-8
+encoding//src/edu/cmu/cs/anek/applier/package-info.java=UTF-8
+encoding//src/edu/cmu/cs/anek/eclipse/AnekConsole.java=UTF-8
+encoding//src/edu/cmu/cs/anek/eclipse/AnekPreferences.java=UTF-8
+encoding//src/edu/cmu/cs/anek/eclipse/CompleteInferenceAction.java=UTF-8
+encoding//src/edu/cmu/cs/anek/eclipse/EclipseUtils.java=UTF-8
+encoding//src/edu/cmu/cs/anek/eclipse/PreferenceConstants.java=UTF-8
+encoding//src/edu/cmu/cs/anek/eclipse/PreferenceInitializer.java=UTF-8
+encoding//src/edu/cmu/cs/anek/extractor/GraphOptimization.java=UTF-8
+encoding//src/edu/cmu/cs/anek/graph/MergeNode.java=UTF-8
+encoding//src/edu/cmu/cs/anek/graph/SplitNode.java=UTF-8
+encoding//src/edu/cmu/cs/anek/graph/permissions/PermissionUse.java=UTF-8
+encoding//src/edu/cmu/cs/anek/input/XMLToGraph.java=UTF-8

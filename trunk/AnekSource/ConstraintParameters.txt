@@ -1,0 +1,14 @@
+EqualLikelihood=0.9
+HEqualLikelihood=0.9
+HCreateUniqueLikelihood=0.8
+HGetterLikelihood=0.7
+HSyncLikelihood=0.8
+HConstructorLikelihood=0.8
+StrongerLikelihood=0.9
+MustReadLikelihood=0.9
+MustWriteLikelihood=0.9
+SplitLikelihood=0.9999
+EdgeLikelihood=0.9999
+ArgsAreParams=0.9999
+IsPermissionThreshold=0.9
+BorrowingThreshold=0.9
