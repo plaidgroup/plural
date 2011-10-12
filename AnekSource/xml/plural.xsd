@@ -1,0 +1,214 @@
+<?xml version="1.0"?>
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  targetNamespace="http://www.nelsbeckman.com"
+  xmlns="http://www.nelsbeckman.com"
+  elementFormDefault="qualified">
+
+  <xs:complexType name="statetype">
+    <xs:sequence>
+      <xs:element name="dim" type="dimtype" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+  
+  <xs:complexType name="dimtype">
+    <xs:sequence>
+      <xs:element name="state" type="statetype" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
+
+  <xs:element name="state-hierarchy">
+    <xs:complexType>
+      <xs:all>
+        <xs:element name="state" type="statetype"/>
+      </xs:all>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:complexType name="permtype">
+    <xs:choice>
+      <xs:element name="unground-perm"/>
+      <xs:element name="concrete-perm">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="concrete-perm-element" minOccurs="0" maxOccurs="unbounded">
+              <xs:complexType>
+                <xs:sequence>
+                  <xs:element name="state" minOccurs="1" maxOccurs="unbounded">
+                    <xs:complexType> 
+                       <xs:attribute name="name" type="xs:string"/>
+                    </xs:complexType>
+                  </xs:element>
+                </xs:sequence>
+                <xs:attribute name="guarantee" type="xs:string" use="required"/>
+                <xs:attribute name="fraction-id" type="xs:string" use="required"/>
+                <xs:attribute name="kind">
+                  <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                      <xs:enumeration value="UNIQUE"/>
+                      <xs:enumeration value="FULL"/>
+                      <xs:enumeration value="IMMUTABLE"/>
+                      <xs:enumeration value="SHARE"/>
+                      <xs:enumeration value="PURE"/>
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:attribute>
+                <xs:attribute name="usage">
+                  <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                      <xs:enumeration value="Frame"/>
+                      <xs:enumeration value="Virtual"/>
+                      <xs:enumeration value="Both"/>
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:attribute>
+              </xs:complexType>
+            </xs:element>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:choice>
+  </xs:complexType>
+  
+  <xs:element name="node-specifics">
+    <xs:complexType>
+      <xs:choice>
+        <xs:element name="standard-parameter">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+            <xs:attribute name="pos" type="xs:nonNegativeInteger" use="required"/>
+            <xs:attribute name="direction" use="required">
+              <xs:simpleType >
+                <xs:restriction base="xs:string">
+                  <xs:enumeration value="PRE"/>
+                  <xs:enumeration value="POST"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:attribute>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="return">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>  
+        <xs:element name="this">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+            </xs:sequence>
+            <xs:attribute name="direction" use="required">
+              <xs:simpleType >
+                <xs:restriction base="xs:string">
+                  <xs:enumeration value="PRE"/>
+                  <xs:enumeration value="POST"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:attribute>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="standard-argument">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+            </xs:sequence>
+            <xs:attribute name="method" type="xs:string" use="optional"/>
+            <xs:attribute name="methodKey" type="xs:string" use="required"/>
+            <xs:attribute name="argPos" type="xs:nonNegativeInteger" use="required"/>
+            <xs:attribute name="siteID" type="xs:long" use="required"/>
+            <xs:attribute name="direction" use="required">
+              <xs:simpleType >
+                <xs:restriction base="xs:string">
+                  <xs:enumeration value="PRE"/>
+                  <xs:enumeration value="POST"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:attribute>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="called-receiver">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+            </xs:sequence>
+            <xs:attribute name="method" type="xs:string" use="optional"/>
+            <xs:attribute name="methodKey" type="xs:string" use="required"/>
+            <xs:attribute name="siteID" type="xs:long" use="required"/>
+	    <xs:attribute name="isPrivate" type="xs:boolean" use="required"/>
+            <xs:attribute name="direction" use="required">
+              <xs:simpleType >
+                <xs:restriction base="xs:string">
+                  <xs:enumeration value="PRE"/>
+                  <xs:enumeration value="POST"/>
+                </xs:restriction>
+              </xs:simpleType>
+            </xs:attribute>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="called-return">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+            </xs:sequence>
+            <xs:attribute name="method" type="xs:string" use="optional"/>
+            <xs:attribute name="methodKey" type="xs:string" use="required"/>
+            <xs:attribute name="siteID" type="xs:long" use="required"/>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="field-load">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+              <xs:element name="receiver" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="id" type="xs:NMTOKEN"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="siteID" type="xs:long" use="required"/>
+            <xs:attribute name="field-name" type="xs:string" use="required"/>
+            <xs:attribute name="static" type="xs:boolean" use="required"/>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="field-store">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+              <xs:element name="receiver" minOccurs="0" maxOccurs="unbounded">
+                <xs:complexType>
+                  <xs:attribute name="id" type="xs:NMTOKEN"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+            <xs:attribute name="siteID" type="xs:long" use="required"/>
+            <xs:attribute name="field-name" type="xs:string" use="required"/>
+            <xs:attribute name="static" type="xs:boolean" use="required"/>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="split">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="merge">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="permission" type="permtype"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  
+</xs:schema>

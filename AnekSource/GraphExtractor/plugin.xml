@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            id="GraphExtractor.contribution1"
+            objectClass="org.eclipse.jdt.core.IJavaElement">
+         <menu
+               id="GraphExtractor.menu1"
+               label="अनेक (Ane&amp;k)"
+               path="additions">
+            <separator
+                  name="group1">
+            </separator>
+         </menu>
+         <action
+               class="edu.cmu.cs.anek.eclipse.ExtractGraphAction"
+               enablesFor="+"
+               id="GraphExtractor.extractAction"
+               label="&amp;Extract Graph"
+               menubarPath="GraphExtractor.menu1/group1">
+         </action>
+         <action
+               class="edu.cmu.cs.anek.applier.eclipse.ApplyGraphAction"
+               enablesFor="+"
+               id="GraphExtractor.applyAction"
+               label="&amp;Apply Inference Graph"
+               menubarPath="GraphExtractor.menu1/group1">
+         </action>
+         <action
+               class="edu.cmu.cs.anek.eclipse.CompleteInferenceAction"
+               enablesFor="+"
+               id="GraphExtractor.completeInference"
+               label="Perform Complete &amp;Inference"
+               menubarPath="GraphExtractor.menu1/group1">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+      <page
+            class="edu.cmu.cs.anek.eclipse.AnekPreferences"
+            id="com.microsoft.msri.anek.eclipse.AnekPreferences"
+            name="अनेक (Anek) Preferences">
+      </page>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.preferences">
+      <initializer
+            class="edu.cmu.cs.anek.eclipse.PreferenceInitializer">
+      </initializer>
+   </extension>
+
+</plugin>

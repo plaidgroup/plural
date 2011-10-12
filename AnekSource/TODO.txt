@@ -1,0 +1,6 @@
+Things that still need to be done:
+
+- State Hierarchies for subtypes: The state hierarchies generated will ignore any states defined by supertypes,
+  which is not correct.
+- Overriden methods: the method extractor should record the methods that are overriden, bc specifications
+  should really go on the supertype method.

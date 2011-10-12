@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:plural="http://www.nelsbeckman.com"
+xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns 
+xml/graphml+plural.xsd">
+<key for="graphml" id="hierarchykey"/>
+<key for="node" id="nodespecskey"/>
+<key id="tname" for="node" attr.name="typename" attr.type="string"/>
+<data key="hierarchykey">
+<plural:state-hierarchy type="working.File">
+<plural:state name="alive">
+	<plural:dim name="ANONYMOUS_DIM_0">
+		<plural:state name="closed">
+		</plural:state>
+		<plural:state name="open">
+		</plural:state>
+	</plural:dim>
+</plural:state>
+
+</plural:state-hierarchy>
+</data>
+<graph id="LworkingFileExample.doItLworkingFileV" edgedefault="directed">
+<edge source="Arg-Rcvr-POST-LworkingFileExampleFile.openV-0" target="MERGE-0"/>
+<edge source="Param-LworkingFileExample.doItLworkingFileVf-PRE" target="SPLIT-0"/>
+<edge source="SPLIT-0" target="Arg-Rcvr-PRE-LworkingFileExampleFile.openV-0"/>
+<edge source="MERGE-0" target="Param-LworkingFileExample.doItLworkingFileVf-POST"/>
+<edge source="SPLIT-0" target="MERGE-0"/>
+
+<node id="Arg-Rcvr-PRE-LworkingFileExampleFile.openV-0">
+  <data key="tname">working.File</data>
+  <data key="nodespecskey">
+    <plural:node-specifics>
+      <plural:called-receiver method="working.File.open" methodKey="LworkingFileExampleFile.openV" direction="PRE" siteID="0">
+        <plural:permission>
+          <plural:concrete-perm>
+            <plural:concrete-perm-element kind="FULL" guarantee="alive" fraction-id="15217405" usage="Frame">
+              <plural:state name="closed"/>
+            </plural:concrete-perm-element>
+          </plural:concrete-perm>
+        </plural:permission>
+      </plural:called-receiver>
+    </plural:node-specifics>
+  </data>
+</node>
+
+<node id="SPLIT-0">
+  <data key="tname">working.File</data>
+  <data key="nodespecskey">
+    <plural:node-specifics>
+      <plural:split>
+        <plural:permission>
+          <plural:unground-perm/>
+        </plural:permission>
+      </plural:split>
+    </plural:node-specifics>
+  </data>
+</node>
+
+<node id="Param-LworkingFileExample.doItLworkingFileVf-PRE">
+  <data key="tname">working.File</data>
+  <data key="nodespecskey">
+    <plural:node-specifics>
+      <plural:standard-parameter direction="PRE" name="f" pos="0">
+        <plural:permission>
+          <plural:unground-perm/>
+        </plural:permission>
+      </plural:standard-parameter>
+    </plural:node-specifics>
+  </data>
+</node>
+
+<node id="MERGE-0">
+  <data key="tname">working.File</data>
+  <data key="nodespecskey">
+    <plural:node-specifics>
+      <plural:merge>
+        <plural:permission>
+          <plural:unground-perm/>
+        </plural:permission>
+      </plural:merge>
+    </plural:node-specifics>
+  </data>
+</node>
+
+<node id="Param-LworkingFileExample.doItLworkingFileVf-POST">
+  <data key="tname">working.File</data>
+  <data key="nodespecskey">
+    <plural:node-specifics>
+      <plural:standard-parameter direction="POST" name="f" pos="0">
+        <plural:permission>
+          <plural:unground-perm/>
+        </plural:permission>
+      </plural:standard-parameter>
+    </plural:node-specifics>
+  </data>
+</node>
+
+<node id="Arg-Rcvr-POST-LworkingFileExampleFile.openV-0">
+  <data key="tname">working.File</data>
+  <data key="nodespecskey">
+    <plural:node-specifics>
+      <plural:called-receiver method="working.File.open" methodKey="LworkingFileExampleFile.openV" direction="POST" siteID="0">
+        <plural:permission>
+          <plural:concrete-perm>
+            <plural:concrete-perm-element kind="FULL" guarantee="alive" fraction-id="15217405" usage="Frame">
+              <plural:state name="open"/>
+            </plural:concrete-perm-element>
+          </plural:concrete-perm>
+        </plural:permission>
+      </plural:called-receiver>
+    </plural:node-specifics>
+  </data>
+</node>
+
+
+</graph>
+
+<graph id="LworkingFileExampleFile.openV" edgedefault="directed">
+<edge source="THIS-LworkingFileExampleFile.openV-PRE" target="THIS-LworkingFileExampleFile.openV-POST"/>
+
+<node id="THIS-LworkingFileExampleFile.openV-PRE">
+  <data key="tname">working.File</data>
+  <data key="nodespecskey">
+    <plural:node-specifics>
+      <plural:this direction="PRE">
+        <plural:permission>
+          <plural:concrete-perm>
+            <plural:concrete-perm-element kind="FULL" guarantee="alive" fraction-id="7048401" usage="Frame">
+              <plural:state name="closed"/>
+            </plural:concrete-perm-element>
+          </plural:concrete-perm>
+        </plural:permission>
+      </plural:this>
+    </plural:node-specifics>
+  </data>
+</node>
+
+<node id="THIS-LworkingFileExampleFile.openV-POST">
+  <data key="tname">working.File</data>
+  <data key="nodespecskey">
+    <plural:node-specifics>
+      <plural:this direction="POST">
+        <plural:permission>
+          <plural:concrete-perm>
+            <plural:concrete-perm-element kind="FULL" guarantee="alive" fraction-id="7048401" usage="Frame">
+              <plural:state name="open"/>
+            </plural:concrete-perm-element>
+          </plural:concrete-perm>
+        </plural:permission>
+      </plural:this>
+    </plural:node-specifics>
+  </data>
+</node>
+
+
+</graph>
+
+</graphml>

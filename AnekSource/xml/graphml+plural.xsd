@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema
+   targetNamespace="http://graphml.graphdrawing.org/xmlns"
+   xmlns="http://graphml.graphdrawing.org/xmlns"
+   xmlns:plural="http://www.nelsbeckman.com"
+   xmlns:xs="http://www.w3.org/2001/XMLSchema"
+   elementFormDefault="qualified"
+   attributeFormDefault="unqualified"
+>
+
+  <xs:import namespace="http://www.nelsbeckman.com"
+             schemaLocation="plural.xsd"/>
+  
+  <xs:redefine
+    schemaLocation="http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+    <xs:complexType name="data-extension.type">
+      <xs:complexContent mixed="true">
+        <xs:extension base="data-extension.type">
+          <xs:choice>
+            <xs:element ref="plural:state-hierarchy" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element ref="plural:node-specifics" maxOccurs="1"/>
+          </xs:choice>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:redefine>
+
+  <!--<xs:redefine
+    schemaLocation="http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
+    
+  </xs:redefine>-->
+
+
+</xs:schema>
