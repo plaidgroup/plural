@@ -37,7 +37,7 @@
  */
 package edu.cmu.cs.plural.test;
 
-import edu.cmu.cs.crystal.annotations.PassingTest;
+import edu.cmu.cs.crystal.annotations.FailingTest;
 import edu.cmu.cs.crystal.annotations.UseAnalyses;
 import edu.cmu.cs.plural.annot.ClassStates;
 import edu.cmu.cs.plural.annot.Full;
@@ -50,10 +50,12 @@ import edu.cmu.cs.plural.annot.TrueIndicates;
  * Regression test for a bug where equaling the result of a state test method
  * (like {@link #hasNext()}) leads to an infinite recursion that ends in a
  * stack overflow.
+ * The test is written as failing b/c exceptions apparently get caught before
+ * they reach JUnit.  So if there's an exception there's one less failure.
  * @author kevin
  * @since Oct 22, 2011
  */
-@PassingTest
+@FailingTest(2)
 @UseAnalyses(PluralAnalysis.PLURAL)
 @ClassStates(@State(name = "hasNext", inv = "next != null"))
 public final class ImplicationCopyTest {
@@ -69,20 +71,19 @@ public final class ImplicationCopyTest {
 			return false; 
 	}
 	
-	public static boolean implicitTrueTest(@Full ImplicationCopyTest t) {
-		if (t.hasNext())
-			return true;
-		else
-			return false;
+	@Full(requires = "hasNext")
+	public void next() { }
+	
+	public static void implicitTrueTest(@Full ImplicationCopyTest t) {
+		if (!t.hasNext())
+			t.next();
 	}
 
-	public static boolean explicitTrueTest(@Full ImplicationCopyTest t) {
+	public static void explicitTrueTest(@Full ImplicationCopyTest t) {
 		// the following used to create a stack overflow
 		// from infinite recursion trying to copy t.hasNext()'s
 		// state implication to "true"
-		if (t.hasNext() == true)
-			return true;
-		else
-			return false;
+		if (t.hasNext() == false)
+			t.next();
 	}
 }
