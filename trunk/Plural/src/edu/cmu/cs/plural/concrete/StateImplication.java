@@ -48,11 +48,11 @@ import edu.cmu.cs.plural.track.PluralTupleLatticeElement;
  * An implication useful for implementing dynamic state tests. Often it is the
  * case that the truth of some variable implies another variable is in a particular
  * state, and this information can then be used in dynamic state tests. This class
- * represents those implications. 
- * 
+ * represents those implications.
+ *
  * Eventually we envision this class being replaced by actual linear logic
  * implication as described in Kevin's paper, but for the time-being, this will do.
- * 
+ *
  * @author Nels Beckman
  * @date Feb 11, 2008
  *
@@ -65,11 +65,11 @@ public final class StateImplication implements Implication {
 	 * the implication, the variable that will be in a certain state if the antecedent
 	 * is true, and the state that variable will be in given elimination of the
 	 * implication.
-	 * 
+	 *
 	 * ex.
 	 * true(var43) implies this in "Closed"
 	 * false(x) implies gi in "Open"
-	 * 
+	 *
 	 * We anticipate that objects of this type will be stored in a map from variable
 	 * name to implication involving that variable.
 	 */
@@ -80,15 +80,15 @@ public final class StateImplication implements Implication {
 	private final VariablePredicate antecedantPred;
 
 	/*
-	 * The variable whose state is under discussion. this or gi from above. 
+	 * The variable whose state is under discussion. this or gi from above.
 	 */
 	private final Aliasing describedVar;
-	
+
 	/*
 	 * The state of the describedVar. Closed or Open from above.
 	 */
 	private final String varState;
-	
+
 	/**
 	 * Returns the right hand side of the implication, assuming
 	 * the left is true.
@@ -111,21 +111,21 @@ public final class StateImplication implements Implication {
 			}
 		};
 	}
-	
+
 	@Override
 	public boolean isSatisfied(PluralTupleLatticeElement value) {
 		final Aliasing anteVar = antecedantPred.getVariable();
 		if(value.isKnownImplication(anteVar, this).isSome())
 			return true;
-		
+
 		if(antecedantPred.isUnsatisfiable(value))
 			// antecedent is false --> implication trivially holds
 			return true;
-		
-		// TODO can we assume antecedent when testing the consequence? 
+
+		// TODO can we assume antecedent when testing the consequence?
 		return value.get(describedVar).isInState(varState);
 	}
-	
+
 	@Override
 	public VariablePredicate getAntecedant() {
 		return antecedantPred;
@@ -138,17 +138,17 @@ public final class StateImplication implements Implication {
 	public String getVarState() {
 		return varState;
 	}
-	
+
 	private StateImplication() {
 		throw new RuntimeException("Should never be called.");
 	}
-	
+
 	private StateImplication(VariablePredicate ant, Aliasing dv, String state) {
 		this.antecedantPred = ant;
 		this.describedVar = dv;
 		this.varState = state;
 	}
-	
+
 	/**
 	 * Creates a new implication of the form
 	 * <code>antecedant -> describedVar in state describedState</code>
@@ -157,12 +157,12 @@ public final class StateImplication implements Implication {
 	 * @param describedState
 	 * @return new implication
 	 */
-	public static StateImplication createTrueVarImplies(Aliasing antecedant, 
+	public static StateImplication createTrueVarImplies(Aliasing antecedant,
 			Aliasing describedVar, String describedState) {
 		return new StateImplication(BooleanPredicate.createTrueVarPred(antecedant),
 				describedVar, describedState);
 	}
-	
+
 	/**
 	 * Creates a new implication of the form
 	 * <code>!antecedant -> describedVar in state describedState</code>
@@ -171,12 +171,12 @@ public final class StateImplication implements Implication {
 	 * @param describedState
 	 * @return new implication
 	 */
-	public static StateImplication createFalseVarImplies(Aliasing antecedant, 
+	public static StateImplication createFalseVarImplies(Aliasing antecedant,
 			Aliasing describedVar, String describedState) {
 		return new StateImplication(BooleanPredicate.createFalseVarPred(antecedant),
 				describedVar, describedState);
 	}
-	
+
 	@Override
 	public String toString() {
 		return antecedantPred.toString() + " implies "
@@ -191,7 +191,7 @@ public final class StateImplication implements Implication {
 		return new StateImplication(this.antecedantPred.createIdenticalPred(other),
 				this.describedVar, this.varState);
 	}
-	
+
 	/**
 	 * Just like createCopyWithNewAntecedant, but if the antecedant is true,
 	 * the copy will be false.
@@ -267,12 +267,12 @@ public final class StateImplication implements Implication {
 		 * I believe that a state implication can be freely duplicated, so
 		 * creating a linked implication in this case merely returns a copy.
 		 */
-		return this.createLinkedCopyWithNewAntecedant(other);
+		return this.createCopyWithNewAntecedant(other);
 	}
 
 	@Override
 	public Implication createLinkedCopyWithOppositeAntecedent(Aliasing other) {
 		// Same logic as previous method.
 		return this.createCopyWithOppositeAntecedant(other);
-	}	
+	}
 }
