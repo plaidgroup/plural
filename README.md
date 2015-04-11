@@ -1,9 +1,9 @@
 # plural
 [![alt text](http://farm1.static.flickr.com/29/47436435_747cb55015.jpg)](http://www.flickr.com/photos/massenpunkt/47436435/ "machine")
 
-Plural is a sound modular typestate checking tool for Java that employs fractional permissions to allow flexible aliasing control. Plural supports synchronized blocks and atomic blocks for checking concurrent programs. Typestates can be used to define object protocols with finite state machines; Plural's protocols can involve multiple interacting objects. Plural is developed by Nels Beckman and Kevin Bierhoff at Carnegie Mellon University based on their papers published together with Jonathan Aldrich at OOPSLA 2007 and 2008 and elsewhere.
+Plural is a sound modular typestate checking tool for Java that employs fractional permissions to allow flexible aliasing control. Plural supports synchronized blocks and atomic blocks for checking concurrent programs. Typestates can be used to define object protocols with finite state machines; Plural's protocols can involve multiple interacting objects. Plural is developed by [Nels Beckman][1] and [Kevin Bierhoff][2] at [Carnegie Mellon University][3] based on their papers published together with [Jonathan Aldrich][4] at [OOPSLA 2007][5] and [2008][6] and elsewhere.
 
-The tool is an Eclipse plugin that relies on the Crystal static analysis framework. It also uses the Antlr parser generator, which is released under the BSD license. Some Plural test code comes from the Jgroups project, which is released under the LPGL v2.1 license.
+The tool is an Eclipse plugin that relies on the [Crystal static analysis framework][7]. It also uses the [Antlr][8] parser generator, which is released under the BSD license. Some Plural test code comes from the [Jgroups][9] project, which is released under the LPGL v2.1 license.
 
 ## Latest News
 * We've moved our project to GitHub!
@@ -21,3 +21,8 @@ The tool is an Eclipse plugin that relies on the Crystal static analysis framewo
 This material is based upon work supported by the National Science Foundation under Grant #CCF-0546550 and #CCF-0811592, and DARPA grant #HR00110710019. Any opinions, findings and conclusions or recomendations expressed in this material are those of the author(s) and do not necessarily reflect the views of the National Science Foundation (NSF) or DARPA.
 
 Photo by [massenpunkt](http://www.flickr.com/photos/massenpunkt/47436435/ "massenpunkt").
+
+[1]:
+[1]:
+[1]:
+
