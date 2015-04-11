@@ -22,7 +22,12 @@ This material is based upon work supported by the National Science Foundation un
 
 Photo by [massenpunkt](http://www.flickr.com/photos/massenpunkt/47436435/ "massenpunkt").
 
-[1]:
-[1]:
-[1]:
-
+[1]: http://nelsbeckman.com
+[2]: http://www.cs.cmu.edu/~kbierhof/
+[3]: http://www.cmu.edu/
+[4]: http://www.cs.cmu.edu/~aldrich
+[5]: http://www.oopsla.org/oopsla2007/
+[6]: http://www.oopsla.org/oopsla2008/
+[7]: http://code.google.com/p/crystalsaf/
+[8]: http://antlr.org/
+[9]: http://www.jgroups.org/
